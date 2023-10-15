@@ -12,10 +12,10 @@ AMAGO can be used for more traditional multi-task RL that assumes
 we do not have task labels. In this case we can use short
 sequenes to identify the task. The RL^2 format (where past actions
 are in the input) can be surprisingly helpful because video games
-have actions that are more non-markov than frame-stacking usually gives 
+have actions that are more time-dependent than frame-stacking usually gives 
 them credit for. A good example of this is training on a group of 
 Mario levels at once. Mario's actions are very dependent on how 
-long buttons are held down for.
+long buttons are held down.
 
 Performance on a given set of games/levels has a lot to do
 with whether the scale of returns is similar across the set. 
@@ -81,7 +81,7 @@ if __name__ == "__main__":
             train_timesteps_per_epoch=args.timesteps_per_epoch,
             train_grad_updates_per_epoch=args.grads_per_epoch,
             val_interval=args.val_interval,
-            val_timesteps_per_epoch=0,
+            val_timesteps_per_epoch=10_000,
             ckpt_interval=args.ckpt_interval,
         )
 

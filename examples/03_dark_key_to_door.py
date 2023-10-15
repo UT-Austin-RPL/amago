@@ -48,8 +48,7 @@ if __name__ == "__main__":
         randomly generates a new environment while `RoomKeyDoor.reset(new_task=False) 
         resets the agent to the same environment.
 
-
-        To see how to do meta-RL by *episodes* (k-shot) instead of
+        For meta-RL by *episodes* (k-shot) instead of
         timesteps, see the metaworld example.
         """
         make_train_env = lambda: GymEnv(
