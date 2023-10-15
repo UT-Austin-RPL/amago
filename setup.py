@@ -7,6 +7,7 @@ setup(
     author_email="grigsby@cs.utexas.edu",
     license="MIT",
     packages=find_packages(include=["amago"]),
+    python_requires="==3.10",
     install_requires=[
         "gymnasium>=0.26",
         "torch==2.0",
