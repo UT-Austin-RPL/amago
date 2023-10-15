@@ -44,7 +44,6 @@ Applying AMAGO to any new environment requires 6 basic choices. The `examples/` 
 2. **How do sequences of timestep vectors become sequences of POMDP state vectors?** The `TrajEncoder` is a seq2seq model that enables long-term memory and in-context learning by processing `TstepEncoder` outputs. AMAGO is designed for large-scale sequence models like Transformers.
 
 > **Quick Start:** Switch the `TstepEncoder` to a CNN (`CNNTstepEncoder`) for pixel environments or an MLP (`FFTstepEncoder`) for array environments. The `TformerTrajEncoder` is a very strong/stable default Transformer model. The `GRUTrajEncoder` (RNN) is a good backup option when memory is not as important, or when FlashAttention can't be installed.
-
   
 3. **Do we need to use to the hindsight instruction relabeling technique from the AMAGO paper?** If yes, environment setup requires a few extra steps and we will refer you to a longer explanation (coming soon). Most other environments should be compatible automatically, and all of AMAGO's goal-conditioned features can be toggled off.
 
@@ -52,7 +51,7 @@ Applying AMAGO to any new environment requires 6 basic choices. The `examples/` 
    
 5. **What is the memory limit of our policy?** True meta-RL and long-term memory tasks would require a `max_seq_len` >= the horizon. If the horizon is unrealisticlly long or unncessary for the complexity of the problem, we can approximate by shortening the context.
    
-6. **How often do we save sequences as training samples, even if the rollout hasn't ended?** Parallel actors automatically save `.traj` files for rollouts up to this length, which should >= `max_seq_len`. As a general rule you should only set this < `horizon` if rollouts are >> `max_seq_len` and we need to speedup reads from disk during training. This is not an option when hindsight relabeling because we need to see the entire trajectory to accurately relabel.
+6. **How often do we save sequences as training samples, even if the rollout hasn't ended?** Parallel actors automatically save `.traj` files for rollouts up to this length, which should >= `max_seq_len`. As a general rule, `traj_save_len > horizon` unless rollouts are >> `max_seq_len` and we need to speedup reads from disk during training. This is not an option when hindsight relabeling because we need to see the entire trajectory to accurately relabel.
 
 <p align="center">
 <img src="media/context_length_diagram.png" alt="contextlength" width="850"/>
@@ -63,11 +62,16 @@ Applying AMAGO to any new environment requires 6 basic choices. The `examples/` 
 ## A Tour of AMAGO in 9 Examples
 
 To follow most of the examples you'll need to install the benchmark environments with `pip install amago[envs]`.
-AMAGO logs to [`wandb`](https://docs.wandb.ai). You can configure the project and account with `AMAGO_WANDB_PROJECT` and `AMAGO_WANDB_ENTITY` environment variables, respectively.
+AMAGO logs to [`wandb`](https://docs.wandb.ai). You can configure the project and account with environment variables:
+
+```bash
+export AMAGO_WANDB_PROJECT="wandb project name"
+export AMAGO_WANDB_ENTITY="wandb username"
+```
 
 1. **Regular MDPs (Classic Gym)**
    
-Most popular benchmarks are MDPs and can be treated as a simple special case of the full agent. Toggling *off* memory, goal-conditioning/relabeling, and multi-episodic resets reduces AMAGO to a regular off-policy actor-critic like you've seen before. This is mainly meant to be an ablation to test the impact of memory. However, AMAGO is a high-quality variant of [DDPG](https://arxiv.org/abs/1509.02971)/[TD3](https://arxiv.org/abs/1802.09477)/[REDQ](https://arxiv.org/abs/2101.05982)/[CRR](https://arxiv.org/abs/2006.15134) with improvements like "multi-gamma" training that are especially useful in sparse reward environments. See `examples/01_basic_gym.py` for an example.
+Many popular benchmarks are MDPs and can be treated as a simple special case of the full agent. Toggling *off* memory, goal-conditioning/relabeling, and multi-episodic resets reduces AMAGO to a regular off-policy actor-critic like you've seen before. This is mainly meant to be an ablation to test the impact of memory. However, AMAGO is a high-quality variant of [DDPG](https://arxiv.org/abs/1509.02971)/[TD3](https://arxiv.org/abs/1802.09477)/[REDQ](https://arxiv.org/abs/2101.05982)/[CRR](https://arxiv.org/abs/2006.15134) with improvements like "multi-gamma" training that are especially useful in sparse reward environments. See `examples/01_basic_gym.py` for an example.
 
 2. **POMDPs and Long-Term Memory (POPGym)**
    
@@ -82,9 +86,9 @@ From AMAGO's perspective, meta-RL problems are just POMDPs that automatically re
 
 `examples/04_mazerunner.py` uses the hindsight instruction relabeling technique from the AMAGO paper on our MazeRunner navigation domain. The ability to relabel rewards in hindsight is a key advantage of off-policy adaptive agents.
 
-5. & 6. **K-Shot Meta-RL (Metaworld and Alchemy)**
+5. and 6. **K-Shot Meta-RL (Metaworld and Alchemy)**
 
-`examples/05_kshot_metaworld.py` uses [Metaworld](https://meta-world.github.io) to show how we can setup a meta-RL problem that ends after a certain number of episodes, rather than a fixed horizon `H`. We can let the environment automatically reset itself `k` times while AMAGO pretends it's a zero-shot problem, as long as the resets are added to the observation space. `examples/06_alchemy.py` shows another example on the symbolic version of [DeepMind Alchemy](https://arxiv.org/abs/2102.02926).
+`examples/05_kshot_metaworld.py` uses [Metaworld](https://meta-world.github.io) to show how we can setup a meta-RL problem that ends after a certain number of episodes, rather than a fixed horizon `H`. We can let the environment automatically reset itself `k - 1` times while AMAGO pretends it's a zero-shot problem (as long as the resets are added to the observation space). `examples/06_alchemy.py` shows another example on the symbolic version of [DeepMind Alchemy](https://arxiv.org/abs/2102.02926).
 
 7. **Goal-Conditioned Open-Worlds (Crafter)**
 
@@ -92,16 +96,15 @@ AMAGO can adapt to procedurally generated environments while completing multi-st
   
 8. **Multi-Task Learning from Pixels (Retro Games)**
 
-Meta-learning and multi-task learning without task labels are essentially the same problem. We can use short sequences to train an agent on multiple levels of the same video game (or multiple games). AMAGO's sequence
-format can be surprisingly helpful in cases where traditional frame-stacking isn't enough to make sense of action spaces that were designed for human players. `examples/08_multitask_mario.py` provides a good example on levels from Super Mario using  [stable-retro](https://stable-retro.farama.org). Note that this script requires some extra installation beyond `pip install amago[envs]`. 
+Meta-learning and multi-task learning without task labels are essentially the same problem. We can use short sequences to train an agent on multiple levels of the same video game (or multiple games). AMAGO's sequence format can be surprisingly helpful in cases where traditional frame-stacking isn't enough to make sense of action spaces that were designed for human players. `examples/08_multitask_mario.py` provides an example on levels from Super Mario using [stable-retro](https://stable-retro.farama.org). Note that this script requires some extra installation beyond `pip install amago[envs]`. 
 
 9. **Super Long-Term Memory (Passive T-Maze)**
 
-AMAGO provides a stable way to train long-sequence Transformers with RL, which can turn traditionally hard memory-based environments into simple problems. `examples/09_tmaze.py` adds a few tricks to the TMaze environment from [Ni et al., 2023](https://arxiv.org/abs/2307.03864), which lets us recall information for thousands of timesteps. We have been able to solve this environment all the way until `H=10,000` before finally running out of GPU memory for the `TformerTrajEncoder`.
+AMAGO provides a stable way to train long-sequence Transformers with RL, which can turn traditionally hard memory-based environments into simple problems. `examples/09_tmaze.py` adds a few exploration changes to the TMaze environment from [Ni et al., 2023](https://arxiv.org/abs/2307.03864), which lets us recall information for thousands of timesteps. We have been able to solve this environment all the way until `H=10,000` before finally running out of GPU memory for the `TformerTrajEncoder`.
 
 ## Advanced Configuration
 
-AMAGO is built around [gin-config](https://github.com/google/gin-config), which makes it easy to customize experiments. This basically works by making every hyperparameter a default value for an object's `kwargs`, and letting you set that value to whatever you'd like without editing the source code. You can read more about gin [here](https://github.com/google/gin-config/blob/master/docs/index.md). gin is great for research, but isn't ideal for usability... you do have to read the code to know what you're changing. The `examples/` avoid any `.gin` config files and let you switch between the most important settings without worrying about any of this.
+AMAGO is built around [gin-config](https://github.com/google/gin-config), which makes it easy to customize experiments. `gin` makes hyperparameters a default value for an object's `kwargs`, and lets you set their value without editing the source code. You can read more about gin [here](https://github.com/google/gin-config/blob/master/docs/index.md). gin is great for research, but isn't ideal for usability... you do have to read the code to know what you're changing. The `examples/` avoid any `.gin` config files and let you switch between the most important settings without worrying about any of this.
 
 ## Reference and Acknowledgements
 If you use AMAGO in your research, please consider citing our paper:
