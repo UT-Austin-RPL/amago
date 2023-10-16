@@ -20,7 +20,7 @@ AMAGO learns from off-policy or offline data, which improves sample efficiency a
 
 ```bash
 # download source
-git clone git@github.com:jakegrigsby/amago.git
+git clone git@github.com:UT-Austin-RPL/amago.git
 cd amago
 # make a fresh conda environment with python 3.10
 conda create -n amago python==3.10

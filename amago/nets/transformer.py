@@ -168,7 +168,7 @@ class AttentionLayer(nn.Module):
 @gin.configurable(denylist=["activation", "norm", "dropout_ff"])
 class TransformerLayer(nn.Module):
     """
-    Pre-Norm Self/Cross Attention
+    Pre-Norm Self-Attention
     """
 
     def __init__(
