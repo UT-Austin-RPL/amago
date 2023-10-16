@@ -13,65 +13,6 @@ from .ff import FFBlock, MLP
 from .utils import activation_switch
 
 
-class _TanhWrappedDistribution(pyd.Distribution):
-    """
-    This is copied directly from Robomimic
-    (https://github.com/ARISE-Initiative/robomimic/blob/b5d2aa9902825c6c652e3b08b19446d199b49590/robomimic/models/distributions.py),
-    which orginally based it on rlkit and CQL
-    (https://github.com/aviralkumar2907/CQL/blob/d67dbe9cf5d2b96e3b462b6146f249b3d6569796/d4rl/rlkit/torch/distributions.py#L6).
-    """
-
-    def __init__(self, base_dist, scale=1.0, epsilon=1e-6):
-        super().__init__()
-        self.base_dist = base_dist
-        self.scale = scale
-        self.tanh_epsilon = epsilon
-
-    def log_prob(self, value, pre_tanh_value=None):
-        value = value / self.scale
-        if pre_tanh_value is None:
-            one_plus_x = (1.0 + value).clamp(min=self.tanh_epsilon)
-            one_minus_x = (1.0 - value).clamp(min=self.tanh_epsilon)
-            pre_tanh_value = 0.5 * torch.log(one_plus_x / one_minus_x)
-        lp = self.base_dist.log_prob(pre_tanh_value)
-        tanh_lp = torch.log(1 - value * value + self.tanh_epsilon)
-        if len(lp.shape) == len(tanh_lp.shape):
-            return lp - tanh_lp
-        else:
-            # unsqueeze for shape compatability with existing code
-            return (lp - tanh_lp.sum(-1)).unsqueeze(-1)
-
-    def sample(self, sample_shape=torch.Size(), return_pretanh_value=False):
-        z = self.base_dist.sample(sample_shape=sample_shape).detach()
-
-        if return_pretanh_value:
-            return torch.tanh(z) * self.scale, z
-        else:
-            return torch.tanh(z) * self.scale
-
-    def rsample(self, sample_shape=torch.Size(), return_pretanh_value=False):
-        z = self.base_dist.rsample(sample_shape=sample_shape)
-
-        if return_pretanh_value:
-            return torch.tanh(z) * self.scale, z
-        else:
-            return torch.tanh(z) * self.scale
-
-    @property
-    def mean(self):
-        return self.base_dist.mean
-
-    @property
-    def stddev(self):
-        return self.base_dist.stddev
-
-
-def _TanhNormal(means, stds):
-    dist = pyd.Independent(pyd.Normal(loc=means, scale=stds), 1)
-    dist = _TanhWrappedDistribution(base_dist=dist, scale=1.0)
-    return dist
-
-
 class _TanhTransform(pyd.transforms.Transform):
     # Credit: https://github.com/denisyarats/pytorch_sac/blob/master/agent/actor.py
     domain = pyd.constraints.real
@@ -119,27 +60,15 @@ class _SquashedNormal(pyd.transformed_distribution.TransformedDistribution):
 
 def ContinuousActionDist(
     vec,
-    implementation: str,
     log_std_low=-5.0,
     log_std_high=2.0,
     d_action=None,
 ):
-    assert implementation in ["squashed", "normal"]
-
-    if implementation == "squashed":
-        mu, log_std = vec.chunk(2, dim=-1)
-        log_std = torch.tanh(log_std)
-        log_std = log_std_low + 0.5 * (log_std_high - log_std_low) * (log_std + 1)
-        std = log_std.exp()
-        dist = _SquashedNormal(mu, std)
-    elif implementation == "normal":
-        mu, log_std = vec.chunk(2, dim=-1)
-        log_std = torch.tanh(log_std)
-        log_std = log_std_low + 0.5 * (log_std_high - log_std_low) * (log_std + 1)
-        stds = log_std.exp()
-        dist = _TanhNormal(means=mu, stds=stds)
-    else:
-        raise ValueError(f"Unrecognized distribution implementation `{implementation}`")
+    mu, log_std = vec.chunk(2, dim=-1)
+    log_std = torch.tanh(log_std)
+    log_std = log_std_low + 0.5 * (log_std_high - log_std_low) * (log_std + 1)
+    std = log_std.exp()
+    dist = _SquashedNormal(mu, std)
     return dist
 
 
@@ -172,7 +101,6 @@ class Actor(nn.Module):
         d_hidden: int = 256,
         activation: str = "leaky_relu",
         # dist-specific args
-        cont_dist: str = "squashed",
         log_std_low: float = -5.0,
         log_std_high: float = 2.0,
         dropout_p: float = 0.0,
@@ -191,7 +119,6 @@ class Actor(nn.Module):
             activation=activation,
         )
         self.discrete = discrete
-        self.cont_dist = cont_dist
         self.action_dim = action_dim
         self._log_std_low = log_std_low
         self._log_std_high = log_std_high
@@ -206,7 +133,6 @@ class Actor(nn.Module):
         else:
             return ContinuousActionDist(
                 dist_params,
-                implementation=self.cont_dist,
                 log_std_high=self._log_std_high,
                 log_std_low=self._log_std_low,
                 d_action=self.action_dim,
