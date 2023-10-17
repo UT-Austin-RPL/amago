@@ -44,7 +44,7 @@ if __name__ == "__main__":
             # in POPGym the max_seq_len is an arbitrary limit we'll never reach
             max_seq_len=2000,
             traj_save_len=2000 + 1,
-            dset_max_size=args.dset_max_size,
+            dset_max_size=args.dset_max_size,  # paper used a larger size of 80_000
             run_name=dset_name,
             gpu=args.gpu,
             dset_root=args.buffer_dir,

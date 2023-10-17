@@ -30,7 +30,7 @@ class Agent(nn.Module):
         offline_coeff: float = 0.1,
         gamma: float = 0.999,
         reward_multiplier: float = 10.0,
-        tau: float = 0.002,
+        tau: float = 0.003,
         fake_filter: bool = False,
         popart: bool = True,
         use_target_actor: bool = True,
