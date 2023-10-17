@@ -12,7 +12,9 @@ def add_cli(parser):
     parser.add_argument("--maze_dim", type=int, default=15)
     parser.add_argument("--min_goals", type=int, default=1)
     parser.add_argument("--max_goals", type=int, default=3)
-    parser.add_argument("--relabel", choices=["some", "none", "all"], default="some")
+    parser.add_argument(
+        "--relabel", choices=["some", "none", "all", "all_or_nothing"], default="some"
+    )
     return parser
 
 

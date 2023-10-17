@@ -31,17 +31,16 @@ from .hindsight import Relabeler, RelabelWarning
 @gin.configurable
 @dataclass
 class Experiment:
-    make_train_env: callable
-    make_val_env: callable
+    # General
+    make_train_env: Callable
+    make_val_env: Callable
     parallel_actors: int
     max_seq_len: int
     traj_save_len: int
-
-    # General
     run_name: str
     gpu: int
-    dset_root: str = None
-    dset_name: str = None
+
+    # Logging
     log_to_wandb: bool = False
     wandb_project: str = os.environ.get("AMAGO_WANDB_PROJECT")
     wandb_entity: str = os.environ.get("AMAGO_WANDB_ENTITY")
@@ -50,6 +49,8 @@ class Experiment:
     verbose: bool = True
 
     # Replay
+    dset_root: str = None
+    dset_name: str = None
     dset_max_size: int = 15_000
     dset_filter_pct: float = 0.1
     relabel: str = "none"
@@ -57,6 +58,7 @@ class Experiment:
 
     # Learning Schedule
     epochs: int = 1000
+    start_learning_after_epoch: int = 0
     train_timesteps_per_epoch: int = 1000
     train_grad_updates_per_epoch: int = 1000
     val_interval: int = 10
@@ -562,7 +564,7 @@ class Experiment:
         )
         return grads
 
-    def train_step(self, batch: tuple[torch.Tensor], log_step: bool):
+    def train_step(self, batch: Batch, log_step: bool):
         """
         See a simplified example of how this changes the classic
         actor-critic update to support a shared sequnce model
@@ -635,6 +637,9 @@ class Experiment:
                     category=Warning,
                 )
                 continue
+            elif epoch < self.start_learning_after_epoch:
+                # lets us skip early epochs to prevent overfitting on small datasets
+                continue
             for train_step, batch in make_pbar(self.train_dloader, True, epoch):
                 total_step = (epoch * self.train_grad_updates_per_epoch) + train_step
                 log_step = total_step % self.log_interval == 0
@@ -659,6 +664,7 @@ class Experiment:
             self.log({"trajectories": dset_size}, key="buffer")
 
             # end epoch
-            self.epoch += 1
+            self.epoch = epoch
+            print(self.epoch)
             if (epoch + 1) % self.ckpt_interval == 0:
                 self.save_checkpoint()

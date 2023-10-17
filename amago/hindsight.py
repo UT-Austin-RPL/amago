@@ -214,7 +214,7 @@ class Trajectory:
         rl2 = np.concatenate((resets, rews, time, actions), axis=-1).astype(np.float32)
         return obs, goals, rl2
 
-    def make_sequence(self, last_only=False):
+    def make_sequence(self, last_only: bool = False):
         if last_only:
             return self._make_sequence([self.timesteps[-1]])
         else:
@@ -335,10 +335,10 @@ class EpisodeCounter(GoalCounter):
 
 
 class Relabeler:
-    def __init__(self, relabel="none", goal_importance_sampling: bool = False):
+    def __init__(self, relabel: str = "none", goal_importance_sampling: bool = False):
         if relabel not in ["none", "some", "all", "all_or_nothing"]:
             raise ValueError(
-                f"Invalid `Relabeler.relabel` scheme `{relabel}`. Options are 'none', 'some', and 'all'"
+                f"Invalid `Relabeler.relabel` scheme `{relabel}`. Options are: 'none', 'some', `all_or_nothing`, 'all'"
             )
         self.relabel = relabel
         self.goal_statistics = GoalCounter()
@@ -374,6 +374,8 @@ class Relabeler:
         return weights
 
     def _select_norm(self):
+        # TODO:the specifics of how this is implemented are not important, but
+        # should probably be gin-config options.
         p = random.random()
         if p < 0.2:
             norm_method = self._norm_uniform
@@ -386,20 +388,37 @@ class Relabeler:
         return norm_method
 
     def __call__(self, traj: Trajectory) -> Trajectory:
-        # Step 0: Can we just skip this?
+        """
+        Hindsight Experience Replay for binary rewards and
+        multi-goal sequences / "instructions".
+
+        Follows the logic in Figure 2. We can pick a number of achieved
+        goals for relabeling, add them in the logical order to the real instruction,
+        and then replay the trajectory from the start.
+
+        In some environments there are so many possibilities that we need to start
+        sampling based on goal rarity. We do not think the specifics of how this is done
+        are important, as long as we are still relabeling with uniform selection
+        at some frequency to make sure whatever method we come up with isn't forgetting about
+        basic goals.
+        """
+        ############
+        ## Step 0 ##
+        ############
         if self.relabel == "none" or traj.is_success:
+            # can we just skip this?
             return traj
         if traj[-1].real_reward is not None:
+            # `real_rewards` are for the natural env reward, not AMAGO's goal-conditioned system.
             raise RuntimeError(
                 "Do not try to relabel trajs that use natural environment rewards"
             )
+        og_traj = traj  # save original traj for testing
+        traj = copy.deepcopy(traj)  # only deepcopies what we will actually edit (goals)
 
-        # save original traj for testing
-        og_traj = traj
-        # warning: special deepcopy that only deepcopies what we will actually edit (goals)
-        traj = copy.deepcopy(traj)
-
-        # Step 1: update goal frequency statistics
+        #########################################
+        ## Step 1: Update Goal Frequency Stats ##
+        #########################################
         update_stats = random.random() < 0.1 or (
             self.goal_statistics.i == 0 or self.episode_statistics.i == 0
         )
@@ -407,22 +426,28 @@ class Relabeler:
             self.goal_statistics(traj)
             self.episode_statistics(traj)
 
-        # Step 2: find all the goals that were completed
+        ####################################################
+        ## Step 2: Find all the goals that were completed ##
+        ####################################################
         t_success = []
         for t, timestep in enumerate(traj.timesteps[1:]):
-            # update goal stats
             if timestep.goal_completed:
                 t_success.append((t + 1, timestep.goal_seq.current_goal))
         successes = len(t_success)
 
-        # Step 3: pick a number of new / synthetic goals to relabel with
+        ####################################################################
+        ## Step 3: Pick a number of new / synthetic goals to relabel with ##
+        ####################################################################
         num_goals = len(traj[0].goal_seq)
         if self.relabel == "some":
+            # relabel a random number of goals
             assert num_goals >= successes
             num_syn_goals = random.randint(0, num_goals - successes)
         elif self.relabel == "all":
+            # relabel the trajectory to be a complete success
             num_syn_goals = num_goals - successes
         elif self.relabel == "all_or_nothing":
+            # either make the trajectory a complete success or leave it untouched
             num_syn_goals = num_goals - successes if random.random() < 0.8 else 0
         t_options = [
             t + 1
@@ -433,7 +458,9 @@ class Relabeler:
         t_options = list(set(t_options) - set([t_[0] for t_ in t_success]))
         num_syn_goals = min(num_syn_goals, len(t_options))
 
-        # Step 4: Assign probabilities of choosing each of these alternative times
+        ###########################################################
+        ## Step 4: Rank timesteps by an optional priority metric ##
+        ###########################################################
         if self.goal_importance_sampling and num_syn_goals > 0:
             statistic = (
                 self.goal_statistics
@@ -448,7 +475,9 @@ class Relabeler:
         else:
             t_option_weights = [1.0 for _ in range(len(t_options))]
 
-        # Step 5: Pick timesteps to relabel with based on their frequencies
+        ##############################################
+        ## Step 5: Sample timesteps to relabel with ##
+        ##############################################
         t_syn_goals = []
         for _ in range(num_syn_goals):
             global_norm_method = self._select_norm()
@@ -460,7 +489,9 @@ class Relabeler:
             del t_options[choice_idx]
             del t_option_weights[choice_idx]
 
-        # Step 6: pick goals from the timesteps we chose
+        ###################################################################################
+        ## Step 6: Pick goals from the timesteps we chose (if there are several options) ##
+        ###################################################################################
         for t_syn in t_syn_goals:
             local_norm_method = self._select_norm()
             alternate_goal_options = traj[t_syn].achieved_goal
@@ -476,13 +507,15 @@ class Relabeler:
             )[0]
             t_success.append((t_syn, alternate_goal))
 
-        # Step 7: replay the trajectory with the newly chosen goals
-        # put goals in chronological order
-        t_success = sorted(t_success, key=lambda x: x[0])
+        ###############################################################
+        ## Step 7: Replay the trajectory with the newly chosen goals ##
+        ###############################################################
+        t_success = sorted(
+            t_success, key=lambda x: x[0]
+        )  # put goals in chronological order
         syn_goal_seq = traj[0].goal_seq.seq
         for i, (_, goal) in enumerate(t_success):
             syn_goal_seq[i] = goal
-
         active_idx = 0
         end = len(traj)
         for i, timestep in enumerate(traj.timesteps):
