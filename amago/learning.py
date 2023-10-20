@@ -75,7 +75,7 @@ class Experiment:
     warmup_epochs: int = 10
     grad_clip: float = 1.0
     l2_coeff: float = 1e-3
-    half_precision: bool = True
+    half_precision: bool = False
     fast_inference: bool = True
 
     # Exploration

@@ -159,11 +159,27 @@ class Agent(nn.Module):
         """
         using_hidden = hidden_state is not None
         if using_hidden:
-            obs = self.get_current_timestep(obs, seq_lengths)
-            goals = self.get_current_timestep(goals, seq_lengths)
-            rl2s = self.get_current_timestep(rl2s, seq_lengths)
+            obs_ = self.get_current_timestep(obs, seq_lengths)
+            goals_ = self.get_current_timestep(goals, seq_lengths)
+            rl2s_ = self.get_current_timestep(rl2s, seq_lengths)
+            tstep_emb = self.tstep_encoder(obs=obs_, goals=goals_, rl2s=rl2s_)
 
-        tstep_emb = self.tstep_encoder(obs=obs, goals=goals, rl2s=rl2s)
+        def approx(x, y):
+            diff = abs(x - y).max()
+            if diff < 1e-4:
+                return True
+            else:
+                breakpoint()
+                return False
+
+        assert approx(obs_[0], obs[0, -1])
+        assert approx(goals_[0], goals[0, -1])
+        assert approx(rl2s_[0], rl2s[0, -1])
+
+        tstep_emb_full = self.tstep_encoder(obs=obs, goals=goals, rl2s=rl2s)
+        breakpoint()
+        assert approx(tstep_emb_full[:, -1, :].unsqueeze(1), tstep_emb)
+
 
         # sequence model embedding [batch, length, d_emb]
         traj_emb_t, hidden_state = self.traj_encoder(

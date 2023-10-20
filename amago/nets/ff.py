@@ -63,6 +63,7 @@ class MLP(nn.Module):
         self.out_layer = nn.Linear(d_hidden, d_output)
         self.activation = activation_switch(activation)
 
+    @torch.cuda.amp.custom_fwd(cast_inputs=torch.float32)
     def forward(self, x):
         x = self.dropout(self.activation(self.in_layer(x)))
         for layer in self.layers:

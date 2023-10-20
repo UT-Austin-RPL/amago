@@ -75,6 +75,7 @@ if __name__ == "__main__":
             log_to_wandb=not args.no_log,
             epochs=args.epochs,
             parallel_actors=args.parallel_actors,
+            start_learning_after_epoch=10,
             train_timesteps_per_epoch=args.timesteps_per_epoch,
             train_grad_updates_per_epoch=args.grads_per_epoch,
             val_interval=args.val_interval,
