@@ -36,7 +36,11 @@ if __name__ == "__main__":
     )
     switch_tstep_encoder(config, arch="cnn", channels_first=True)
     if args.use_aug:
-        config.update({"amago.nets.tstep_encoders.CNNTstepEncoder.aug_Cls" : amago.nets.cnn.DrQv2Aug})
+        config.update(
+            {
+                "amago.nets.tstep_encoders.CNNTstepEncoder.aug_Cls": amago.nets.cnn.DrQv2Aug
+            }
+        )
     if args.naive:
         naive(config)
     use_config(config, args.configs)
@@ -50,7 +54,7 @@ if __name__ == "__main__":
         convert_from_old_gym=True,
     )
     """
-    make_env = lambda : AtariAMAGOWrapper(ALE([args.env], use_discrete_actions=True))
+    make_env = lambda: AtariAMAGOWrapper(ALE([args.env], use_discrete_actions=True))
 
     group_name = f"{args.run_name}_{args.env}_atari_l_{args.max_seq_len}"
     for trial in range(args.trials):

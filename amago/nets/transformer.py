@@ -39,9 +39,10 @@ class FlashAttention(nn.Module):
         self.dropout = attention_dropout
 
     def forward(self, qkv, key_cache=None, val_cache=None, cache_seqlens=None):
+        qkv = qkv.to(torch.bfloat16)
         if key_cache is None or val_cache is None or cache_seqlens is None:
             out = flash_attn.flash_attn_qkvpacked_func(
-                qkv, dropout_p=self.dropout, causal=True
+                qkv, dropout_p=self.dropout if self.training else 0.0, causal=True
             )
         else:
             assert not self.training
@@ -200,7 +201,6 @@ class TransformerLayer(nn.Module):
             else lambda x: x
         )
         self.dropout_ff = nn.Dropout(dropout_ff)
-        self.activation = F.gelu if activation == "gelu" else F.leaky_relu
         self.activation = activation_switch(activation)
 
     def forward(self, self_seq, key_cache=None, val_cache=None, cache_seqlens=None):
@@ -235,6 +235,11 @@ class Cache:
     def __len__(self):
         return self.data.shape[1]
 
+    def roll_back(self, idx):
+        roll = self.data[idx, 1:].clone()
+        self.data[idx, :-1] = roll
+        self.data[idx, -1] = -88.0
+
 
 class TformerHiddenState:
     def __init__(
@@ -251,7 +256,13 @@ class TformerHiddenState:
         self.timesteps[idxs] = 0
 
     def update(self):
-        self.timesteps = (self.timesteps + 1).clamp(0, len(self.key_cache[0]) - 1)
+        self.timesteps += 1
+        for i, timestep in enumerate(self.timesteps):
+            if timestep == len(self.key_cache[0]):
+                for k, v in zip(self.key_cache, self.val_cache):
+                    k.roll_back(i)
+                    v.roll_back(i)
+                self.timesteps[i] -= 1
 
     def __getitem__(self, layer_idx):
         assert layer_idx < self.n_layers

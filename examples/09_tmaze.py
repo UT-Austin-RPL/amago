@@ -12,6 +12,7 @@ from utils import *
 
 def add_cli(parser):
     parser.add_argument("--horizon", type=int, required=True)
+    parser.add_argument("--slow_inference", action="store_true")
     return parser
 
 
@@ -110,6 +111,7 @@ if __name__ == "__main__":
             ckpt_interval=args.ckpt_interval,
             sample_actions=False,  # even softmax prob .999 isn't good enough for this env...
             exploration_wrapper_Cls=TMazeExploration,
+            fast_inference=not args.slow_inference,
         )
 
         experiment.start()

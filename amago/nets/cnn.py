@@ -15,7 +15,7 @@ from amago.nets.utils import activation_switch
 
 @gin.configurable(allowlist=["pad"])
 class DrQv2Aug(nn.Module):
-    def __init__(self, channels_first : bool, pad : int = 4):
+    def __init__(self, channels_first: bool, pad: int = 4):
         super().__init__()
         self.pad = pad
         self.channels_first = channels_first
@@ -28,18 +28,25 @@ class DrQv2Aug(nn.Module):
         assert H == W and self.channels_first, "not sure if this works yet"
         padding = tuple([self.pad] * 4)
         x = F.pad(imgs, padding, "replicate")
-        eps = 1. / (H + 2 * self.pad)
-        arange = torch.linspace(-1. + eps, 1. - eps, H + 2 * self.pad, device=imgs.device, dtype=imgs.dtype)[:H]
+        eps = 1.0 / (H + 2 * self.pad)
+        arange = torch.linspace(
+            -1.0 + eps,
+            1.0 - eps,
+            H + 2 * self.pad,
+            device=imgs.device,
+            dtype=imgs.dtype,
+        )[:H]
         arange = arange.unsqueeze(0).repeat(H, 1).unsqueeze(2)
         base_grid = torch.cat([arange, arange.transpose(1, 0)], dim=2)
         base_grid = base_grid.unsqueeze(0).repeat(B, 1, 1, 1)
-        shift = torch.randint(0, 2 * self.pad + 1, size=(B, 1, 1, 2), device=imgs.device, dtype=imgs.dtype)
-        shift *= 2. / (H + 2 * self.pad)
+        shift = torch.randint(
+            0, 2 * self.pad + 1, size=(B, 1, 1, 2), device=imgs.device, dtype=imgs.dtype
+        )
+        shift *= 2.0 / (H + 2 * self.pad)
         grid = base_grid + shift
-        
+
         out = F.grid_sample(imgs, grid, padding_mode="zeros", align_corners=False)
         return out
-
 
 
 def weight_init(m):
@@ -57,18 +64,23 @@ def weight_init(m):
 
 
 class CNN(nn.Module, ABC):
-    def __init__(self, img_shape: tuple[int, int, int], channels_first: bool, aug_Cls : Callable | None, activation : str):
+    def __init__(
+        self,
+        img_shape: tuple[int, int, int],
+        channels_first: bool,
+        aug_Cls: Callable | None,
+        activation: str,
+    ):
         super().__init__()
         self.img_shape = img_shape
         self.channels_first = channels_first
-        self.aug = aug_Cls(channels_first=channels_first) if aug_Cls else lambda x : x
+        self.aug = aug_Cls(channels_first=channels_first) if aug_Cls else lambda x: x
         self.activation = activation_switch(activation)
 
     @abstractmethod
     def conv_forward(self, imgs):
         pass
 
-    @torch.cuda.amp.custom_fwd(cast_inputs=torch.float32)
     def forward(self, obs):
         assert obs.dtype == torch.uint8
         assert obs.ndim == 5
@@ -82,13 +94,8 @@ class CNN(nn.Module, ABC):
         if self.training:
             img = self.aug(img)
         features = self.conv_forward(img)
-
-
-        out = rearrange(features, "(b l) c h w -> (b l) (c h w)", l=L)
-        out = rearrange(out, "(b l) f -> b l f", l=L)
-        #out = rearrange(features, "(b l) c h w -> b l (c h w)", l=L)
+        out = rearrange(features, "(b l) c h w -> b l (c h w)", l=L)
         return out
-
 
 
 class DrQCNN(CNN):

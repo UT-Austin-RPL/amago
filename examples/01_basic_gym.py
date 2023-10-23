@@ -11,12 +11,14 @@ from utils import *
 def add_cli(parser):
     parser.add_argument("--env", type=str, required=True)
     parser.add_argument("--max_seq_len", type=int, default=128)
+    parser.add_argument("--half_precision", action="store_true")
     parser.add_argument(
         "--horizon",
         type=int,
         required=True,
         help="The horizon (H) is the maximum length of a rollout. In most cases this should be >= the maximum length of an environment's episodes.",
     )
+    parser.add_argument("--slow_inference", action="store_true")
     return parser
 
 
@@ -36,7 +38,7 @@ if __name__ == "__main__":
     )
     use_config(config, args.configs)
 
-    group_name = f"{args.run_name}_{args.env}"
+    group_name = f"{args.run_name}_{args.env}_context_length_{args.max_seq_len}"
     for trial in range(args.trials):
         dset_name = group_name + f"_trial_{trial}"
 
@@ -59,11 +61,13 @@ if __name__ == "__main__":
             dset_name=dset_name,
             log_to_wandb=not args.no_log,
             epochs=args.epochs,
+            half_precision=args.half_precision,
+            fast_inference=not args.slow_inference,
             parallel_actors=args.parallel_actors,
             train_timesteps_per_epoch=args.timesteps_per_epoch,
             train_grad_updates_per_epoch=args.grads_per_epoch,
             val_interval=args.val_interval,
-            val_timesteps_per_epoch=args.horizon * 2,
+            val_timesteps_per_epoch=args.horizon * 5,
             ckpt_interval=args.ckpt_interval,
         )
 
