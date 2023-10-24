@@ -665,6 +665,5 @@ class Experiment:
 
             # end epoch
             self.epoch = epoch
-            print(self.epoch)
             if (epoch + 1) % self.ckpt_interval == 0:
                 self.save_checkpoint()

@@ -14,7 +14,6 @@ def add_cli(parser):
     parser.add_argument("--env", default="coinrun")
     parser.add_argument("--max_seq_len", type=int, default=256)
     parser.add_argument("--start_after_epochs", type=int, default=25)
-    parser.add_argument("--use_aug", action="store_true")
     parser.add_argument("--naive", action="store_true")
     parser.add_argument("--slow_inference", action="store_true")
     return parser
@@ -35,12 +34,6 @@ if __name__ == "__main__":
         layers=args.memory_layers,
     )
     switch_tstep_encoder(config, arch="cnn", channels_first=True)
-    if args.use_aug:
-        config.update(
-            {
-                "amago.nets.tstep_encoders.CNNTstepEncoder.aug_Cls": amago.nets.cnn.DrQv2Aug
-            }
-        )
     if args.naive:
         naive(config)
     use_config(config, args.configs)

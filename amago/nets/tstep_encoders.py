@@ -110,7 +110,6 @@ class CNNTstepEncoder(TstepEncoder):
         d_output: int = 256,
         norm: str = "layer",
         activation: str = "leaky_relu",
-        aug_Cls: Callable | None = None,
     ):
         super().__init__(
             obs_shape=obs_shape, goal_shape=goal_shape, rl2_shape=rl2_shape
@@ -119,7 +118,6 @@ class CNNTstepEncoder(TstepEncoder):
             img_shape=obs_shape,
             channels_first=channels_first,
             activation=activation,
-            aug_Cls=aug_Cls,
         )
         img_feature_dim = self.cnn(
             torch.zeros((1, 1) + obs_shape, dtype=torch.uint8)
