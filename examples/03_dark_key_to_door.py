@@ -5,7 +5,7 @@ import wandb
 import amago
 from amago.envs.builtin.gym_envs import GymEnv
 from amago.envs.builtin.room_key_door import RoomKeyDoor
-from utils import *
+from example_utils import *
 
 
 def add_cli(parser):
@@ -36,9 +36,7 @@ if __name__ == "__main__":
 
     group_name = f"{args.run_name}_dark_key_door"
     for trial in range(args.trials):
-        dset_name = group_name + f"_trial_{trial}"
-        make_train_env = lambda: POPGymEnv(args.env)
-
+        run_name = group_name + f"_trial_{trial}"
         """
         Meta-RL is the same as any other environment except that we reset
         the task over and over again until a fixed time limit. The easiest
@@ -61,24 +59,16 @@ if __name__ == "__main__":
             # (same task).
             soft_reset_kwargs={"new_task": False},
         )
-        experiment = amago.Experiment(
+
+        experiment = create_experiment_from_cli(
+            args,
             make_train_env=make_train_env,
             make_val_env=make_train_env,
-            max_seq_len=args.meta_horizon + 1,
-            traj_save_len=args.meta_horizon + 1,
-            dset_max_size=args.dset_max_size,
-            run_name=dset_name,
-            gpu=args.gpu,
-            dset_root=args.buffer_dir,
-            dset_name=dset_name,
-            log_to_wandb=not args.no_log,
-            epochs=args.epochs,
-            parallel_actors=args.parallel_actors,
-            train_timesteps_per_epoch=args.timesteps_per_epoch,
-            train_grad_updates_per_epoch=args.grads_per_epoch,
-            val_interval=args.val_interval,
-            val_timesteps_per_epoch=2_000,
-            ckpt_interval=args.ckpt_interval,
+            max_seq_len=args.meta_horizon,
+            traj_save_len=args.meta_horizon,
+            group_name=group_name,
+            run_name=run_name,
+            val_timesteps_per_epoch=2000,
         )
 
         experiment.start()

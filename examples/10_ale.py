@@ -5,15 +5,12 @@ import gym
 
 import amago
 from amago.envs.builtin.ale_retro import ALE, AtariAMAGOWrapper
-from utils import *
+from example_utils import *
 
 
 def add_cli(parser):
     parser.add_argument("--games", default="Pong", nargs="+")
     parser.add_argument("--max_seq_len", type=int, default=256)
-    parser.add_argument("--start_after_epochs", type=int, default=25)
-    parser.add_argument("--naive", action="store_true")
-    parser.add_argument("--slow_inference", action="store_true")
     return parser
 
 
@@ -32,37 +29,25 @@ if __name__ == "__main__":
         layers=args.memory_layers,
     )
     switch_tstep_encoder(config, arch="cnn", channels_first=True)
-    if args.naive:
-        naive(config)
     use_config(config, args.configs)
 
+    # ALE (and retro) stack can use MultiBinary actions, but this is not currently
+    # supported by the open-source version of the core agent.
     make_env = lambda: AtariAMAGOWrapper(ALE(args.games, use_discrete_actions=True))
 
     group_name = f"{args.run_name}_{''.join(args.games)}_atari_l_{args.max_seq_len}"
     for trial in range(args.trials):
-        dset_name = group_name + f"_trial_{trial}"
-        experiment = amago.Experiment(
+        run_name = group_name + f"_trial_{trial}"
+        experiment = create_experiment_from_cli(
+            args,
             make_train_env=make_env,
             make_val_env=make_env,
             max_seq_len=args.max_seq_len,
             traj_save_len=args.max_seq_len * 4,
-            dset_max_size=args.dset_max_size,
-            run_name=dset_name,
-            gpu=args.gpu,
-            dset_root=args.buffer_dir,
-            dset_name=dset_name,
-            log_to_wandb=not args.no_log,
-            epochs=args.epochs,
-            parallel_actors=args.parallel_actors,
-            start_learning_after_epoch=args.start_after_epochs,
-            train_timesteps_per_epoch=args.timesteps_per_epoch,
-            train_grad_updates_per_epoch=args.grads_per_epoch,
-            val_interval=args.val_interval,
+            run_name=run_name,
+            group_name=group_name,
             val_timesteps_per_epoch=10_000,
-            ckpt_interval=args.ckpt_interval,
-            fast_inference=not args.slow_inference,
         )
-
         experiment.start()
         if args.ckpt is not None:
             experiment.load_checkpoint(args.ckpt)
