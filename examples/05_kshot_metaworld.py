@@ -4,7 +4,7 @@ import wandb
 
 import amago
 from amago.envs.builtin.metaworld_ml import Metaworld
-from utils import *
+from example_utils import *
 
 
 def add_cli(parser):

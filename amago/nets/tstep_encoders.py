@@ -23,18 +23,10 @@ class TstepEncoder(nn.Module, ABC):
         self.goal_emb = goal_emb_Cls(goal_length=goal_shape[0], goal_dim=goal_shape[1])
         self.goal_emb_dim = self.goal_emb.goal_emb_dim
 
-    @torch.cuda.amp.custom_fwd(cast_inputs=torch.float32)
     def forward(self, obs, goals, rl2s):
         goal_rep = self.goal_emb(goals)
         B, L, *_ = obs.shape
-        if L == 1:
-            dup = lambda x: torch.cat((x, x), dim=1)
-            obs = dup(obs)
-            rl2s = dup(rl2s)
-            goal_rep = dup(goal_rep)
         out = self.inner_forward(obs, goal_rep, rl2s)
-        if L == 1:
-            out = out[:, 0, ...].unsqueeze(1)
         return out
 
     @abstractmethod
