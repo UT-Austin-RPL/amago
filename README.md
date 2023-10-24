@@ -16,6 +16,8 @@ AMAGO treats multi-task RL, meta-RL, RL generalization, and long-term memory as 
 
 AMAGO learns from off-policy or offline data, which improves sample efficiency and enables hindsight experience replay for goal-conditioned environments. All of the low-level details have been redesigned from scratch to be scalable enough to train Transformers on long sequences. In general, AMAGO's training process looks more like supervised sequence modeling than state-of-the-art off-policy RL: trajectory sequences are saved and loaded from disk and RL loss functions are optimized by a single sequence model in one forward pass.
 
+Read the paper [here](https://arxiv.org/abs/2310.09971v1).
+
 ## Installation 
 
 ```bash
@@ -108,9 +110,15 @@ AMAGO is built around [gin-config](https://github.com/google/gin-config), which 
 
 ## Reference and Acknowledgements
 If you use AMAGO in your research, please consider citing our paper:
+
 ```
-# TODO
 @article{grigsby2023amago,
+  title={AMAGO: Scalable In-Context Reinforcement Learning for Adaptive Agents},
+  author={Jake Grigsby and Linxi Fan and Yuke Zhu},
+  year={2023},
+  eprint={2310.09971},
+  archivePrefix={arXiv},
+  primaryClass={cs.LG}
 }
 ```
 

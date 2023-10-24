@@ -124,7 +124,7 @@ class RLData:
         return len(self.actions)
 
     def random_slice(self, length: int):
-        i = random.randrange(0, max(len(self) - length, 1))
+        i = random.randrange(0, max(len(self) - length + 1, 1))
         self.obs = self.obs[i : i + length + 1]
         self.goals = self.goals[i : i + length + 1]
         self.rl2s = self.rl2s[i : i + length + 1]
