@@ -238,7 +238,6 @@ class Cache:
     def roll_back(self, idx):
         roll = self.data[idx, 1:].clone()
         self.data[idx, :-1] = roll
-        self.data[idx, -1] = -88.0
 
 
 class TformerHiddenState:
