@@ -7,7 +7,7 @@ import amago
 from amago.envs.builtin.gym_envs import GymEnv
 from amago.envs.builtin.tmaze import TMazeAltPassive
 from amago.envs.env_utils import ExplorationWrapper
-from utils import *
+from example_utils import *
 
 
 def add_cli(parser):
@@ -81,37 +81,25 @@ if __name__ == "__main__":
 
     group_name = f"{args.run_name}_TMazePassive_H{args.horizon}"
     for trial in range(args.trials):
-        dset_name = group_name + f"_trial_{trial}"
-
+        run_name = group_name + f"_trial_{trial}"
         make_env = lambda: GymEnv(
             TMazeAltPassive(corridor_length=args.horizon, penalty=-1.0 / args.horizon),
             env_name=f"TMazePassive-H{args.horizon}",
             horizon=args.horizon + 1,
             zero_shot=True,
         )
-
-        experiment = amago.Experiment(
+        experiment = create_experiment_from_cli(
+            args,
             make_train_env=make_env,
             make_val_env=make_env,
             max_seq_len=args.horizon + 1,
-            traj_save_len=args.horizon * 3,
-            dset_max_size=args.dset_max_size,
-            run_name=dset_name,
-            gpu=args.gpu,
-            dset_root=args.buffer_dir,
-            dset_name=dset_name,
-            log_to_wandb=not args.no_log,
-            epochs=args.epochs,
-            parallel_actors=args.parallel_actors,
-            train_timesteps_per_epoch=args.timesteps_per_epoch,
-            train_grad_updates_per_epoch=args.grads_per_epoch,
-            val_interval=args.val_interval,
+            traj_save_len=args.horizon + 1,
+            group_name=group_name,
+            run_name=run_name,
             val_timesteps_per_epoch=args.horizon + 1,
-            ckpt_interval=args.ckpt_interval,
             sample_actions=False,  # even softmax prob .999 isn't good enough for this env...
             exploration_wrapper_Cls=TMazeExploration,
         )
-
         experiment.start()
         if args.ckpt is not None:
             experiment.load_checkpoint(args.ckpt)

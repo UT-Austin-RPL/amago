@@ -1,11 +1,15 @@
 from abc import ABC, abstractmethod
 import warnings
 
+import gin
+
 import torch
 from torch import nn
 import torch.nn.functional as F
 import numpy as np
 from einops import rearrange
+
+from amago.nets.utils import activation_switch
 
 
 def weight_init(m):
@@ -23,10 +27,16 @@ def weight_init(m):
 
 
 class CNN(nn.Module, ABC):
-    def __init__(self, img_shape: tuple[int, int, int], channels_first: bool):
+    def __init__(
+        self,
+        img_shape: tuple[int, int, int],
+        channels_first: bool,
+        activation: str,
+    ):
         super().__init__()
         self.img_shape = img_shape
         self.channels_first = channels_first
+        self.activation = activation_switch(activation)
 
     @abstractmethod
     def conv_forward(self, imgs):
@@ -43,12 +53,15 @@ class CNN(nn.Module, ABC):
             img = rearrange(obs, "b l c h w -> (b l) c h w")
         img = (img / 128.0) - 1.0
         features = self.conv_forward(img)
-        return rearrange(features, "(b l) c h w -> b l (c h w)", l=L)
+        out = rearrange(features, "(b l) c h w -> b l (c h w)", l=L)
+        return out
 
 
 class DrQCNN(CNN):
-    def __init__(self, img_shape, channels_first):
-        super().__init__(img_shape, channels_first=channels_first)
+    def __init__(self, img_shape: tuple[int], channels_first: bool, activation: str):
+        super().__init__(
+            img_shape, channels_first=channels_first, activation=activation
+        )
         C = img_shape[0] if self.channels_first else img_shape[-1]
         self.conv1 = nn.Conv2d(C, 32, kernel_size=3, stride=2)
         self.conv2 = nn.Conv2d(32, 32, kernel_size=3, stride=1)
@@ -57,16 +70,18 @@ class DrQCNN(CNN):
         self.apply(weight_init)
 
     def conv_forward(self, imgs):
-        x = F.leaky_relu(self.conv1(imgs))
-        x = F.leaky_relu(self.conv2(x))
-        x = F.leaky_relu(self.conv3(x))
-        x = F.leaky_relu(self.conv4(x))
+        x = self.activation(self.conv1(imgs))
+        x = self.activation(self.conv2(x))
+        x = self.activation(self.conv3(x))
+        x = self.activation(self.conv4(x))
         return x
 
 
 class NatureishCNN(CNN):
-    def __init__(self, img_shape, channels_first):
-        super().__init__(img_shape, channels_first=channels_first)
+    def __init__(self, img_shape: tuple[int], channels_first: bool, activation):
+        super().__init__(
+            img_shape, channels_first=channels_first, activation=activation
+        )
         C = img_shape[0] if self.channels_first else img_shape[-1]
         self.conv1 = nn.Conv2d(C, 32, kernel_size=8, stride=4)
         self.conv2 = nn.Conv2d(32, 64, kernel_size=4, stride=2)
@@ -74,7 +89,7 @@ class NatureishCNN(CNN):
         self.apply(weight_init)
 
     def conv_forward(self, imgs):
-        x = F.leaky_relu(self.conv1(imgs))
-        x = F.leaky_relu(self.conv2(x))
-        x = F.leaky_relu(self.conv3(x))
+        x = self.activation(self.conv1(imgs))
+        x = self.activation(self.conv2(x))
+        x = self.activation(self.conv3(x))
         return x

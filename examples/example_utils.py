@@ -1,5 +1,8 @@
-import gin
+from functools import partial
 from argparse import ArgumentParser
+from typing import Callable
+
+import gin
 
 import amago
 
@@ -92,6 +95,22 @@ def add_common_cli(parser: ArgumentParser) -> ArgumentParser:
         default=20_000,
         help="Maximum size of the replay buffer (measured in trajectories, not timesteps).",
     )
+    parser.add_argument(
+        "--start_learning_after_epoch",
+        type=int,
+        default=0,
+        help="Skip learning updates for this many epochs at the beginning of training (if worried about overfitting to a small dataset)",
+    )
+    parser.add_argument(
+        "--slow_inference",
+        action="store_true",
+        help="Turn OFF fast-inference mode (key-value caching for Transformer, hidden state caching for RNN)",
+    )
+    parser.add_argument(
+        "--half_precision",
+        action="store_true",
+        help="Train in bfloat16 half precision",
+    )
     return parser
 
 
@@ -178,6 +197,26 @@ def switch_traj_encoder(config: dict, arch: str, memory_size: int, layers: int):
     return config
 
 
+def naive(config: dict):
+    config.update(
+        {
+            "amago.nets.traj_encoders.TformerTrajEncoder.activation": "gelu",
+            "amago.nets.actor_critic.NCritics.activation": "relu",
+            "amago.nets.actor_critic.Actor.activation": "relu",
+            "amago.nets.tstep_encoders.FFTstepEncoder.activation": "relu",
+            "amago.nets.tstep_encoders.CNNTstepEncoder.activation": "relu",
+            "amago.nets.transformer.TransformerLayer.normformer_norms": False,
+            "amago.nets.transformer.TransformerLayer.sigma_reparam": False,
+            "amago.nets.transformer.AttentionLayer.sigma_reparam": False,
+            "amago.nets.transformer.AttentionLayer.head_scaling": False,
+            "amago.agent.Agent.num_critics": 2,
+            "amago.agent.Agent.gamma": 0.99,
+            "amago.agent.Agent.use_multigamma": False,
+        }
+    )
+    return config
+
+
 def use_config(custom_params: dict, gin_configs: list[str] | None = None):
     """
     Bind all the gin parameters from real .gin configs (which the examples avoid using)
@@ -192,3 +231,41 @@ def use_config(custom_params: dict, gin_configs: list[str] | None = None):
         for config in gin_configs:
             gin.parse_config_file(config)
     gin.finalize()
+
+
+def create_experiment_from_cli(
+    command_line_args,
+    make_train_env: Callable,
+    make_val_env: Callable,
+    max_seq_len: int,
+    traj_save_len: int,
+    group_name: str,
+    run_name: str,
+    **extra_experiment_kwargs,
+):
+    cli = command_line_args
+
+    experiment = amago.Experiment(
+        make_train_env=make_train_env,
+        make_val_env=make_val_env,
+        max_seq_len=max_seq_len,
+        traj_save_len=traj_save_len,
+        dset_max_size=cli.dset_max_size,
+        run_name=run_name,
+        dset_name=run_name,
+        gpu=cli.gpu,
+        dset_root=cli.buffer_dir,
+        log_to_wandb=not cli.no_log,
+        epochs=cli.epochs,
+        parallel_actors=cli.parallel_actors,
+        train_timesteps_per_epoch=cli.timesteps_per_epoch,
+        train_grad_updates_per_epoch=cli.grads_per_epoch,
+        start_learning_after_epoch=cli.start_learning_after_epoch,
+        val_interval=cli.val_interval,
+        ckpt_interval=cli.ckpt_interval,
+        half_precision=cli.half_precision,
+        fast_inference=not cli.slow_inference,
+        **extra_experiment_kwargs,
+    )
+
+    return experiment

@@ -162,9 +162,7 @@ class Agent(nn.Module):
             obs = self.get_current_timestep(obs, seq_lengths)
             goals = self.get_current_timestep(goals, seq_lengths)
             rl2s = self.get_current_timestep(rl2s, seq_lengths)
-
         tstep_emb = self.tstep_encoder(obs=obs, goals=goals, rl2s=rl2s)
-
         # sequence model embedding [batch, length, d_emb]
         traj_emb_t, hidden_state = self.traj_encoder(
             tstep_emb, hidden_state=hidden_state

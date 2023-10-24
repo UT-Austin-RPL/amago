@@ -4,7 +4,7 @@ import wandb
 
 import amago
 from amago.envs.builtin.ale_retro import RetroArcade, RetroAMAGOWrapper
-from utils import *
+from example_utils import *
 
 
 """
@@ -63,28 +63,17 @@ if __name__ == "__main__":
 
     group_name = f"{args.run_name}_mario_retro_example"
     for trial in range(args.trials):
-        dset_name = group_name + f"_trial_{trial}"
-
-        experiment = amago.Experiment(
+        run_name = group_name + f"_trial_{trial}"
+        experiment = create_experiment_from_cli(
+            args,
             make_train_env=make_env,
             make_val_env=make_env,
             max_seq_len=args.max_seq_len,
             traj_save_len=args.max_seq_len * 4,
-            dset_max_size=args.dset_max_size,
-            run_name=dset_name,
-            gpu=args.gpu,
-            dset_root=args.buffer_dir,
-            dset_name=dset_name,
-            log_to_wandb=not args.no_log,
-            epochs=args.epochs,
-            parallel_actors=args.parallel_actors,
-            train_timesteps_per_epoch=args.timesteps_per_epoch,
-            train_grad_updates_per_epoch=args.grads_per_epoch,
-            val_interval=args.val_interval,
+            run_name=run_name,
+            group_name=group_name,
             val_timesteps_per_epoch=10_000,
-            ckpt_interval=args.ckpt_interval,
         )
-
         experiment.start()
         if args.ckpt is not None:
             experiment.load_checkpoint(args.ckpt)

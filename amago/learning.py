@@ -75,7 +75,7 @@ class Experiment:
     warmup_epochs: int = 10
     grad_clip: float = 1.0
     l2_coeff: float = 1e-3
-    half_precision: bool = True
+    half_precision: bool = False
     fast_inference: bool = True
 
     # Exploration
@@ -133,22 +133,32 @@ class Experiment:
         \t Policy Max Sequence Length: {self.max_seq_len}
         \t Trajectory File Sequence Length: {self.traj_save_len}
         \t Mode: {mode}
+        \t Half Precision: {self.half_precision}
+        \t Fast Inference: {self.fast_inference}
         \t Total Parameters: {total_params:,d} \n\n"""
         )
 
     def init_envs(self):
         self._env_horizon = 0
+        self._already_warned = False
 
         def _make_env(fn, split):
             env = fn()
             if split == "train" and self.exploration_wrapper_Cls:
                 env = self.exploration_wrapper_Cls(env)
+
             assert self.traj_save_len >= self.max_seq_len
             if self.max_seq_len < self.traj_save_len:
                 save_every_low = self.traj_save_len - self.max_seq_len
                 save_every_high = self.traj_save_len + self.max_seq_len
+                if self.verbose and not self._already_warned:
+                    print(
+                        f"Note: Partial Context Mode. Randomizing trajectory file lengths in [{save_every_low}, {save_every_high}]"
+                    )
+                    self._already_warned = True
             else:
                 save_every_low = save_every_high = self.max_seq_len
+
             self._env_horizon = max(
                 env.horizon, self._env_horizon if self._env_horizon is not None else 0
             )
@@ -665,6 +675,5 @@ class Experiment:
 
             # end epoch
             self.epoch = epoch
-            print(self.epoch)
             if (epoch + 1) % self.ckpt_interval == 0:
                 self.save_checkpoint()

@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Callable
 import math
 
 import torch
@@ -24,7 +25,9 @@ class TstepEncoder(nn.Module, ABC):
 
     def forward(self, obs, goals, rl2s):
         goal_rep = self.goal_emb(goals)
-        return self.inner_forward(obs, goal_rep, rl2s)
+        B, L, *_ = obs.shape
+        out = self.inner_forward(obs, goal_rep, rl2s)
+        return out
 
     @abstractmethod
     def inner_forward(self, obs, goal_rep, rl2s):
@@ -98,11 +101,16 @@ class CNNTstepEncoder(TstepEncoder):
         n_layers: int = 2,
         d_output: int = 256,
         norm: str = "layer",
+        activation: str = "leaky_relu",
     ):
         super().__init__(
             obs_shape=obs_shape, goal_shape=goal_shape, rl2_shape=rl2_shape
         )
-        self.cnn = cnn_Cls(img_shape=obs_shape, channels_first=channels_first)
+        self.cnn = cnn_Cls(
+            img_shape=obs_shape,
+            channels_first=channels_first,
+            activation=activation,
+        )
         img_feature_dim = self.cnn(
             torch.zeros((1, 1) + obs_shape, dtype=torch.uint8)
         ).shape[-1]
@@ -117,11 +125,12 @@ class CNNTstepEncoder(TstepEncoder):
         self._emb_dim = d_output
 
     def inner_forward(self, obs, goal_rep, rl2s):
-        img_rep = self.img_norm(self.img_features(self.cnn(obs)))
-        rl2s = self.rl2_norm(rl2s)
+        img_rep = self.img_features(self.cnn(obs))
+        img_rep = self.img_norm(img_rep)
+        rl2s_norm = self.rl2_norm(rl2s)
         if self.training:
             self.rl2_norm.update_stats(rl2s)
-        inp = torch.cat((img_rep, goal_rep, rl2s), dim=-1)
+        inp = torch.cat((img_rep, goal_rep, rl2s_norm), dim=-1)
         out = self.out_norm(self.merge(inp))
         return out
 

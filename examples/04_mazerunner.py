@@ -4,7 +4,7 @@ import wandb
 
 import amago
 from amago.envs.builtin.mazerunner import MazeRunnerEnv
-from utils import *
+from example_utils import *
 
 
 def add_cli(parser):
@@ -50,25 +50,16 @@ if __name__ == "__main__":
         f"{args.run_name}_mazerunner_{args.maze_dim}x{args.maze_dim}_k{args.max_goals}"
     )
     for trial in range(args.trials):
-        dset_name = group_name + f"_trial_{trial}"
-        experiment = amago.Experiment(
+        run_name = group_name + f"_trial_{trial}"
+        experiment = create_experiment_from_cli(
+            args,
             make_train_env=make_env,
             make_val_env=make_env,
-            max_seq_len=max_seq_len + 1,
-            traj_save_len=traj_save_len + 1,
-            dset_max_size=args.dset_max_size,
-            run_name=dset_name,
-            gpu=args.gpu,
-            dset_root=args.buffer_dir,
-            dset_name=dset_name,
-            log_to_wandb=not args.no_log,
-            epochs=args.epochs,
-            parallel_actors=args.parallel_actors,
-            train_timesteps_per_epoch=args.timesteps_per_epoch,
-            train_grad_updates_per_epoch=args.grads_per_epoch,
-            val_interval=args.val_interval,
-            val_timesteps_per_epoch=2_000,
-            ckpt_interval=args.ckpt_interval,
+            max_seq_len=args.horizon,
+            traj_save_len=args.horizon,
+            run_name=run_name,
+            group_name=group_name,
+            val_timesteps_per_epoch=args.horizon * 5,
             # Hindsight Relabeling!
             relabel=args.relabel,
         )
