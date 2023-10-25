@@ -18,18 +18,14 @@ except ImportError:
 class Normalization(nn.Module):
     def __init__(self, method: str, d_model: int):
         super().__init__()
-        assert method in ["layer", "batch", "none"]
+        assert method in ["layer", "none"]
         if method == "layer":
             self.norm = nn.LayerNorm(d_model)
         elif method == "none":
             self.norm = lambda x: x
-        else:
-            self.norm = nn.BatchNorm1d(d_model)
         self.method = method
 
     def forward(self, x):
-        if self.method == "batch":
-            return self.norm(x.transpose(-1, 1)).transpose(-1, 1)
         return self.norm(x)
 
 
@@ -231,6 +227,8 @@ class Cache:
         self.data = torch.zeros(
             (batch_size, max_seq_len, n_heads, head_dim), dtype=dtype, device=device
         )
+        # make silent bugs in k/v cache... much louder
+        self.data[:] = torch.nan
 
     def __len__(self):
         return self.data.shape[1]
@@ -238,6 +236,7 @@ class Cache:
     def roll_back(self, idx):
         roll = self.data[idx, 1:].clone()
         self.data[idx, :-1] = roll
+        self.data[idx, -1] = torch.nan  # no silent bugs
 
 
 class TformerHiddenState:
@@ -276,7 +275,7 @@ class Transformer(nn.Module):
     def __init__(
         self,
         inp_dim: int,
-        max_seq_len: int,
+        max_pos_idx: int,
         d_model: int = 128,
         d_ff: int = 512,
         d_emb_ff: int = None,
@@ -294,15 +293,13 @@ class Transformer(nn.Module):
         assert attention in ["flash", "vanilla"]
 
         # embedding
-        self.max_seq_len = max_seq_len
-        self.position_embedding = nn.Embedding(max_seq_len + 1, embedding_dim=d_model)
+        self.position_embedding = nn.Embedding(max_pos_idx + 1, embedding_dim=d_model)
         d_emb_ff = d_emb_ff or d_model
         self.inp = nn.Linear(inp_dim, d_model)
         self.dropout = nn.Dropout(dropout_emb)
 
         self.head_dim = d_model // n_heads
         assert self.head_dim in range(8, 129, 8)
-        self.max_seq_len = max_seq_len
         self.n_heads = n_heads
         self.n_layers = layers
         Attn = FlashAttention if attention == "flash" else VanillaAttention
@@ -331,25 +328,17 @@ class Transformer(nn.Module):
     def emb_dim(self):
         return self.d_model
 
-    def forward(self, seq, hidden_state=None | TformerHiddenState):
+    def forward(self, seq, pos_idxs, hidden_state=None | TformerHiddenState):
         if self.training:
             assert hidden_state is None
-
         batch, length, dim = seq.shape
         h = hidden_state or [[None, None, None] for _ in range(self.n_layers)]
 
-        # position embedding
-        if hidden_state is None:
-            pos_idxs = torch.arange(length, device=seq.device, dtype=torch.long)
-            pos_emb = self.position_embedding(pos_idxs)
-            pos_emb = repeat(pos_emb, f"length d_model -> {batch} length d_model")
-        else:
-            pos_idxs = hidden_state.timesteps.long().unsqueeze(1)
-            pos_emb = self.position_embedding(pos_idxs)
-
-        # project sequence to d_model, add position embedding
+        # emedding
+        pos_emb = self.position_embedding(pos_idxs)
         traj_emb = self.inp(seq)
         traj_emb = self.dropout(traj_emb + pos_emb)
+
         # self-attention
         for i, layer in enumerate(self.layers):
             traj_emb = layer(traj_emb, *h[i])

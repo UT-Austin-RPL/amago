@@ -25,7 +25,7 @@ def load_traj_from_disk(path: str) -> Trajectory:
 class TrajDset(Dataset):
     """
     Load trajectory files from disk in parallel with pytroch Dataset/DataLoader
-    pipeline. Hacked together to get a fixed number of grad updates per epoch.
+    pipeline.
     """
 
     def __init__(
@@ -95,51 +95,49 @@ class TrajDset(Dataset):
         for file_to_delete in to_delete:
             os.remove(os.path.join(self.dset_path, file_to_delete))
 
-    def __getitem__(self, i) -> tuple[torch.Tensor]:
+    def __getitem__(self, i):
         filename = random.choice(self.filenames)
         traj = load_traj_from_disk(os.path.join(self.dset_path, filename))
         hseq = self.relabeler(traj)
         data = RLData(hseq)
         if self.max_seq_len is not None:
             data = data.random_slice(length=self.max_seq_len)
-        data.torch_()
         return data
 
 
 class RLData:
     def __init__(self, traj: Trajectory):
-        self.obs, self.goals, self.rl2s = traj.make_sequence()
-        # rews dones and actions are shifted back by one timestep
-        self.rews = np.array([t.reward for t in traj.timesteps[1:]]).astype(np.float32)[
-            :, np.newaxis
-        ]
-        self.dones = np.array([t.terminal for t in traj.timesteps[1:]]).astype(bool)[
-            :, np.newaxis
-        ]
-        self.actions = np.array([t.prev_action for t in traj.timesteps[1:]]).astype(
-            np.float32
+        obs, goals, rl2s = traj.make_sequence()
+        self.obs = torch.from_numpy(
+            obs
+        )  # dtype cast needs to happen inside TstepEncoder
+        self.goals = torch.from_numpy(goals).float()
+        self.rl2s = torch.from_numpy(rl2s).float()
+        self.time_idxs = torch.Tensor([t.raw_time_idx for t in traj.timesteps]).long()
+        # rews, dones, and actions are shifted back by one timestep
+        to_torch = lambda x: torch.from_numpy(np.array(x))
+        self.rews = (
+            to_torch([t.reward for t in traj.timesteps[1:]]).unsqueeze(-1).float()
         )
+        self.dones = (
+            to_torch([t.terminal for t in traj.timesteps[1:]]).unsqueeze(-1).bool()
+        )
+        self.actions = to_torch([t.prev_action for t in traj.timesteps[1:]]).float()
 
     def __len__(self):
         return len(self.actions)
 
     def random_slice(self, length: int):
         i = random.randrange(0, max(len(self) - length + 1, 1))
+        # the causal RL loss requires these off-by-one lengths
         self.obs = self.obs[i : i + length + 1]
         self.goals = self.goals[i : i + length + 1]
         self.rl2s = self.rl2s[i : i + length + 1]
+        self.time_idxs = self.time_idxs[i : i + length + 1]
         self.dones = self.dones[i : i + length]
         self.rews = self.rews[i : i + length]
         self.actions = self.actions[i : i + length]
         return self
-
-    def torch_(self):
-        self.obs = torch.from_numpy(self.obs)
-        self.goals = torch.from_numpy(self.goals).float()
-        self.rl2s = torch.from_numpy(self.rl2s).float()
-        self.rews = torch.from_numpy(self.rews).float()
-        self.dones = torch.from_numpy(self.dones).bool()
-        self.actions = torch.from_numpy(self.actions).float()
 
 
 MAGIC_PAD_VAL = 0
@@ -158,6 +156,7 @@ class Batch:
     rews: torch.Tensor
     dones: torch.Tensor
     actions: torch.Tensor
+    time_idxs: torch.Tensor
 
     def to(self, device):
         self.obs = self.obs.to(device)
@@ -166,6 +165,7 @@ class Batch:
         self.rews = self.rews.to(device)
         self.dones = self.dones.to(device)
         self.actions = self.actions.to(device)
+        self.time_idxs = self.time_idxs.to(device)
 
 
 def RLData_pad_collate(samples: list[RLData]) -> Batch:
@@ -175,6 +175,13 @@ def RLData_pad_collate(samples: list[RLData]) -> Batch:
     rews = pad([s.rews for s in samples])
     dones = pad([s.dones for s in samples])
     actions = pad([s.actions for s in samples])
+    time_idxs = pad([s.time_idxs for s in samples])
     return Batch(
-        obs=obs, goals=goals, rl2s=rl2s, rews=rews, dones=dones, actions=actions
+        obs=obs,
+        goals=goals,
+        rl2s=rl2s,
+        rews=rews,
+        dones=dones,
+        actions=actions,
+        time_idxs=time_idxs,
     )

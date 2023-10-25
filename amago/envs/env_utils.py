@@ -74,6 +74,11 @@ class GPUSequenceBuffer:
         self.num_parallel = num_parallel
         self.buffers = [None for _ in range(num_parallel)]
         self.cur_idxs = [0 for _ in range(num_parallel)]
+        self.time_start = [0 for _ in range(num_parallel)]
+        self.time_end = [1 for _ in range(num_parallel)]
+        self._time_idx_buffer = torch.zeros(
+            (num_parallel, max_len), device=self.device, dtype=torch.long
+        )
 
     def _make_blank_buffer(self, arr):
         shape = (self.max_len,) + arr.shape[1:]
@@ -88,13 +93,17 @@ class GPUSequenceBuffer:
         arrays = torch.from_numpy(arrays).to(self.device)
 
         for i in range(arrays.shape[0]):
+            self.time_end[i] += 1
             if dones[i] or self.buffers[i] is None:
                 self.buffers[i] = self._make_blank_buffer(arrays[i])
                 self.cur_idxs[i] = 0
+                self.time_start[i] = 0
+                self.time_end[i] = 1
             if self.cur_idxs[i] < self.max_len:
                 self.buffers[i][self.cur_idxs[i]] = arrays[i]
                 self.cur_idxs[i] += 1
             else:
+                self.time_start[i] += 1
                 self.buffers[i] = torch.cat((self.buffers[i], arrays[i]), axis=0)[
                     -self.max_len :
                 ]
@@ -103,6 +112,16 @@ class GPUSequenceBuffer:
     def sequences(self):
         longest = max(self.cur_idxs)
         return torch.stack(self.buffers, axis=0)[:, :longest]
+
+    @property
+    def time_idxs(self):
+        longest = max(self.cur_idxs)
+        time_intervals = zip(self.time_start, self.time_end)
+        for i, interval in enumerate(time_intervals):
+            arange = torch.arange(*interval)
+            self._time_idx_buffer[i, : len(arange)] = arange
+        out = self._time_idx_buffer[:, :longest]
+        return out
 
     @property
     def sequence_lengths(self):
@@ -306,5 +325,5 @@ class SequenceWrapper(gym.Wrapper):
         return self._total_frames
 
     @property
-    def current_timestep(self):
+    def current_timestep(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         return self._current_timestep

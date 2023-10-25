@@ -13,8 +13,13 @@ import gin
 @gin.configurable
 @dataclass
 class GoalSeq:
+    """
+    Holds a sequence of up to k goals.
+    """
+
     seq: list[np.ndarray]
     active_idx: int
+    # ablation used in paper Crafter results
     hide_full_plan: bool = False
 
     @property
@@ -66,6 +71,11 @@ class GoalSeq:
         return goal_array
 
     def __eq__(self, other):
+        """
+        All the __eq__ methods in this file are more complicated than
+        they need to be because they are run in tests that check the
+        the goal relabeling logic against the real environment rewards.
+        """
         if len(other) != len(self):
             return False
         for g_self, g_other in zip(self.seq, other.seq):
@@ -89,17 +99,27 @@ class RelabelWarning(Warning):
 @dataclass
 class Timestep:
     obs: np.ndarray
+    # action from the *previous* timestep
     prev_action: np.ndarray
+    # candiate goal(s) for relabeling
     achieved_goal: list[np.ndarray]
+    # real goal sequence (until we relabel it)
     goal_seq: GoalSeq
+    # time *as an input to the TstepEncoder* (float [0, 1])
     time: float
+    # "soft resets" (only used in RL^2 inputs)
     reset: bool
+    # reward from the previous timestep; None when using goal-conditioned setup
     real_reward: float
+    # time as an int (for position embeddings only)
+    raw_time_idx: int
+    # terminal signal for the value loss
     terminal: bool = False
 
     @property
     def reward(self):
         if self.real_reward is not None:
+            # "regular" envs that don't use relabeled (sparse) rewards
             return self.real_reward
         elif self.goal_seq.current_goal is None:
             return 0.0
@@ -124,6 +144,9 @@ class Timestep:
         return self.goal_seq.on_last_goal and self.reward > 0
 
     def __eq__(self, other):
+        # overly complicated fail-fast comparison
+        if self.raw_time_idx != other.raw_time_idx:
+            return False
         if len(self.achieved_goal) != len(other.achieved_goal):
             return False
         if self.real_reward != other.real_reward:
@@ -144,8 +167,10 @@ class Timestep:
         return self.goal_seq == other.goal_seq
 
     def __deepcopy__(self, memo):
+        # (We used to cache Trajectories, which made relabeling them
+        # inplace risky. Not needed anymore.)
         warnings.warn(
-            "python shenanigans. `Timestep` deepcopies return *shallow* copies of raw data but *deep* copies of goal sequences (for relabeling).",
+            "`Timestep` deepcopies return *shallow* copies of raw data but *deep* copies of goal sequences (for relabeling).",
             category=RelabelWarning,
         )
         new = self.__class__(
@@ -160,6 +185,7 @@ class Timestep:
                 seq=[g.copy() for g in self.goal_seq.seq],
                 active_idx=self.goal_seq.active_idx,
             ),
+            raw_time_idx=self.raw_time_idx,
         )
         memo[id(self)] = new
         return new
@@ -212,6 +238,7 @@ class Trajectory:
         time = np.array([t.time for t in timesteps], dtype=np.float32)[:, np.newaxis]
         rews = np.stack([t.reward for t in timesteps], axis=0)[:, np.newaxis]
         rl2 = np.concatenate((resets, rews, time, actions), axis=-1).astype(np.float32)
+        # becomes the input to a TstepEncoder
         return obs, goals, rl2
 
     def make_sequence(self, last_only: bool = False):
@@ -421,7 +448,7 @@ class Relabeler:
         #########################################
         update_stats = random.random() < 0.1 or (
             self.goal_statistics.i == 0 or self.episode_statistics.i == 0
-        )
+        )  # no need to do this every time
         if self.goal_importance_sampling and update_stats:
             self.goal_statistics(traj)
             self.episode_statistics(traj)
@@ -444,10 +471,11 @@ class Relabeler:
             assert num_goals >= successes
             num_syn_goals = random.randint(0, num_goals - successes)
         elif self.relabel == "all":
-            # relabel the trajectory to be a complete success
+            # relabel the trajectory to be a complete success (~GCSL-style)
             num_syn_goals = num_goals - successes
         elif self.relabel == "all_or_nothing":
             # either make the trajectory a complete success or leave it untouched
+            # TODO: this should be a gin configurable.
             num_syn_goals = num_goals - successes if random.random() < 0.8 else 0
         t_options = [
             t + 1
