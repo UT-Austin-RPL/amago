@@ -10,13 +10,13 @@ setup(
     python_requires="==3.10",
     install_requires=[
         "gymnasium>=0.26",
-        "torch==2.0",
+        "torch==2.0.1",
         "matplotlib",
         "gin-config",
         "wandb",
         "einops",
         "tqdm",
-        "gym==0.21.0",
+        "gym",
     ],
     extras_require={
         "envs": [
