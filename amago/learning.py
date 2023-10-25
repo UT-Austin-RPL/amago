@@ -55,6 +55,7 @@ class Experiment:
     dset_filter_pct: float = 0.1
     relabel: str = "none"
     goal_importance_sampling: bool = False
+    stagger_traj_file_lengths: bool = True
 
     # Learning Schedule
     epochs: int = 1000
@@ -108,20 +109,11 @@ class Experiment:
             self.traj_save_len >= self.max_seq_len
         ), "Save longer trajectories than the model can process"
 
-        if (
-            self._env_horizon <= self.max_seq_len
-            and self._env_horizon <= self.traj_save_len
-        ):
+        if self.horizon <= self.max_seq_len and self.horizon <= self.traj_save_len:
             mode = "Maximum Context (Perfect Meta-RL / Long-Term Memory)"
-        elif (
-            self._env_horizon > self.max_seq_len
-            and self._env_horizon <= self.traj_save_len
-        ):
+        elif self.horizon > self.max_seq_len and self.horizon <= self.traj_save_len:
             mode = "Fixed Context with Valid Relabeling (Approximate Meta-RL / POMDPs)"
-        elif (
-            self._env_horizon > self.max_seq_len
-            and self._env_horizon > self.traj_save_len
-        ):
+        elif self.horizon > self.max_seq_len and self.horizon > self.traj_save_len:
             mode = (
                 "Fixed Context with Invalid Relabeling (Approximate Meta-RL / POMDPs)"
             )
@@ -129,7 +121,7 @@ class Experiment:
         print(
             f"""\n\n \t\t AMAGO
         \t -------------------------
-        \t Environment Horizon: {self._env_horizon}
+        \t Environment Horizon: {self.horizon}
         \t Policy Max Sequence Length: {self.max_seq_len}
         \t Trajectory File Sequence Length: {self.traj_save_len}
         \t Mode: {mode}
@@ -139,29 +131,30 @@ class Experiment:
         )
 
     def init_envs(self):
-        self._env_horizon = 0
-        self._already_warned = False
+        assert self.traj_save_len >= self.max_seq_len
+        if self.max_seq_len < self.traj_save_len and self.stagger_traj_file_lengths:
+            # staggered traj file lengths fix a potential bug where, for example,
+            # a policy with a max_seq_len of 10 trained on trajectory files
+            # of length 100 has never seen the sequence of [t=95,...,t=105]
+            # during training.
+            save_every_low = self.traj_save_len - self.max_seq_len
+            save_every_high = self.traj_save_len + self.max_seq_len
+            if self.verbose:
+                print(
+                    f"Note: Partial Context Mode. Randomizing trajectory file lengths in [{save_every_low}, {save_every_high}]"
+                )
+        else:
+            save_every_low = save_every_high = self.traj_save_len
+
+        self.horizon = -float("inf")
 
         def _make_env(fn, split):
             env = fn()
+            self.horizon = max(self.horizon, env.horizon)
             if split == "train" and self.exploration_wrapper_Cls:
+                # exploration is handled by a wrapper
                 env = self.exploration_wrapper_Cls(env)
-
-            assert self.traj_save_len >= self.max_seq_len
-            if self.max_seq_len < self.traj_save_len:
-                save_every_low = self.traj_save_len - self.max_seq_len
-                save_every_high = self.traj_save_len + self.max_seq_len
-                if self.verbose and not self._already_warned:
-                    print(
-                        f"Note: Partial Context Mode. Randomizing trajectory file lengths in [{save_every_low}, {save_every_high}]"
-                    )
-                    self._already_warned = True
-            else:
-                save_every_low = save_every_high = self.max_seq_len
-
-            self._env_horizon = max(
-                env.horizon, self._env_horizon if self._env_horizon is not None else 0
-            )
+            # SequenceWrapper handles all the disk writing
             env = SequenceWrapper(
                 env,
                 save_every=(save_every_low, save_every_high),
@@ -320,6 +313,7 @@ class Experiment:
             "rl2_shape": rl2_shape,
             "action_dim": action_dim,
             "max_seq_len": self.max_seq_len,
+            "horizon": self.horizon,
             "discrete": self.discrete,
         }
         self.policy = Agent(**policy_kwargs)
@@ -358,15 +352,12 @@ class Experiment:
         if buffers is None:
             # start of training or new eval cycle
             envs.reset()
-            obs_seqs = GPUSequenceBuffer(
-                self.DEVICE, self.max_seq_len, self.parallel_actors
+            make_buffer = partial(
+                GPUSequenceBuffer, self.DEVICE, self.max_seq_len, self.parallel_actors
             )
-            goal_seqs = GPUSequenceBuffer(
-                self.DEVICE, self.max_seq_len, self.parallel_actors
-            )
-            rl2_seqs = GPUSequenceBuffer(
-                self.DEVICE, self.max_seq_len, self.parallel_actors
-            )
+            obs_seqs = make_buffer()
+            goal_seqs = make_buffer()
+            rl2_seqs = make_buffer()
         else:
             # continue interaction from previous epoch
             obs_seqs, goal_seqs, rl2_seqs = buffers
@@ -401,6 +392,7 @@ class Experiment:
             goals_tc_t = goal_seqs.sequences
             rl2_tc_t = rl2_seqs.sequences
             seq_lengths = obs_seqs.sequence_lengths
+            time_idxs = obs_seqs.time_idxs
 
             with torch.no_grad():
                 with self.caster():
@@ -409,6 +401,7 @@ class Experiment:
                         goals=goals_tc_t,
                         rl2s=rl2_tc_t,
                         seq_lengths=seq_lengths,
+                        time_idxs=time_idxs,
                         sample=self.sample_actions,
                         hidden_state=hidden_state if self.fast_inference else None,
                     )
@@ -454,6 +447,8 @@ class Experiment:
                 self.val_timesteps_per_epoch,
             )
             logs = self.policy_metrics(returns, successes)
+            if self.verbose:
+                print(f"Average Return : {logs['avg_return']}")
             if logs["avg_return"] >= self.best_return:
                 self.save_checkpoint(saving_best=True)
                 self.best_return = logs["avg_return"]
@@ -633,6 +628,7 @@ class Experiment:
 
         start_epoch = self.epoch
         for epoch in range(start_epoch, self.epochs):
+            # environment interaction
             self.policy.eval()
             if epoch % self.val_interval == 0:
                 self.evaluate_val()
@@ -660,6 +656,9 @@ class Experiment:
                 self.warmup_scheduler.step(total_step)
 
             if epoch % self.val_interval == 0:
+                # the "training" metrics on validation data could help identify
+                # overfitting or highlight distribution shift between (approx.)
+                # on-policy data and way-off-policy data in the disk buffer.
                 self.policy.eval()
                 for val_step, batch in make_pbar(self.val_dloader, False, epoch):
                     loss_dict = self.val_step(batch)
@@ -675,5 +674,5 @@ class Experiment:
 
             # end epoch
             self.epoch = epoch
-            if (epoch + 1) % self.ckpt_interval == 0:
+            if epoch % self.ckpt_interval == 0:
                 self.save_checkpoint()

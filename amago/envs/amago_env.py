@@ -88,6 +88,7 @@ class AMAGOEnv(gym.Wrapper, ABC):
             reset=True,
             real_reward=None,
             terminal=False,
+            raw_time_idx=0,
         )
         return timestep
 
@@ -133,6 +134,7 @@ class AMAGOEnv(gym.Wrapper, ABC):
             time=float(self.step_count) / self.horizon,
             reset=soft_done,
             real_reward=real_reward,
+            raw_time_idx=self.step_count,
         )
 
         # meta-termination (triggers resets of this environment,

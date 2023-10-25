@@ -21,6 +21,7 @@ class Agent(nn.Module):
         rl2_shape: tuple[int],
         action_dim: int,
         max_seq_len: int,
+        horizon: int,
         discrete: bool,
         tstep_encoder_Cls=FFTstepEncoder,
         traj_encoder_Cls=TformerTrajEncoder,
@@ -56,7 +57,9 @@ class Agent(nn.Module):
             obs_shape=obs_shape, goal_shape=goal_shape, rl2_shape=rl2_shape
         )
         self.traj_encoder = traj_encoder_Cls(
-            tstep_dim=self.tstep_encoder.emb_dim, max_seq_len=max_seq_len
+            tstep_dim=self.tstep_encoder.emb_dim,
+            max_seq_len=max_seq_len,
+            horizon=horizon,
         )
         self.emb_dim = self.traj_encoder.emb_dim
 
@@ -104,10 +107,6 @@ class Agent(nn.Module):
         self.hard_sync_targets()
 
     def get_current_timestep(self, sequences: torch.Tensor, seq_lengths: torch.Tensor):
-        """
-        seq2seq format recomputes values at previous timesteps.
-        get the value from the current timestep of a padded sequence.
-        """
         while sequences.ndim > seq_lengths.ndim:
             seq_lengths = seq_lengths.unsqueeze(-1)
         timesteps = torch.take_along_dim(sequences, seq_lengths - 1, dim=1)
@@ -152,7 +151,14 @@ class Agent(nn.Module):
         self._ema_copy(self.target_actor, self.actor)
 
     def get_actions(
-        self, obs, goals, rl2s, seq_lengths, hidden_state=None, sample: bool = True
+        self,
+        obs,
+        goals,
+        rl2s,
+        seq_lengths,
+        time_idxs,
+        hidden_state=None,
+        sample: bool = True,
     ):
         """
         Get rollout actions from the current policy.
@@ -162,10 +168,12 @@ class Agent(nn.Module):
             obs = self.get_current_timestep(obs, seq_lengths)
             goals = self.get_current_timestep(goals, seq_lengths)
             rl2s = self.get_current_timestep(rl2s, seq_lengths)
+            time_idxs = self.get_current_timestep(time_idxs, seq_lengths.squeeze(-1))
         tstep_emb = self.tstep_encoder(obs=obs, goals=goals, rl2s=rl2s)
+
         # sequence model embedding [batch, length, d_emb]
         traj_emb_t, hidden_state = self.traj_encoder(
-            tstep_emb, hidden_state=hidden_state
+            tstep_emb, time_idxs=time_idxs, hidden_state=hidden_state
         )
         if not using_hidden:
             traj_emb_t = self.get_current_timestep(traj_emb_t, seq_lengths)
@@ -303,7 +311,9 @@ class Agent(nn.Module):
         ## Step 2: Sequence Embedding ##
         ################################
         # one trajectory encoder forward pass
-        s_rep, hidden_state = self.traj_encoder(seq=o, hidden_state=None)
+        s_rep, hidden_state = self.traj_encoder(
+            seq=o, time_idxs=batch.time_idxs, hidden_state=None
+        )
         assert s_rep.shape == (B, L, D_emb)
 
         #########################################
@@ -318,6 +328,7 @@ class Agent(nn.Module):
             s_a_agent_g = (s_rep.detach(), a_agent)
             # detach() above b/c these grads flow to traj_encoder through the policy
             s_a_g = (s_rep[:, :-1, ...], a_buffer[:, :-1, ...])
+            # all the `phi` terms are only here b/c we used to implement DR3
             q_s_a_agent_g, phi_s_a_agent_g = self.critics(*s_a_agent_g)
             assert q_s_a_agent_g.shape == (B, L, C, G, 1)
             q_s_a_g, phi_s_a_g = self.critics(*s_a_g)

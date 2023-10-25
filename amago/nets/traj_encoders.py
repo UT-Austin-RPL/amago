@@ -9,10 +9,11 @@ from amago.nets import ff, transformer, utils
 
 
 class TrajEncoder(nn.Module, ABC):
-    def __init__(self, tstep_dim: int, max_seq_len: int):
+    def __init__(self, tstep_dim: int, max_seq_len: int, horizon: int):
         super().__init__()
         self.tstep_dim = tstep_dim
         self.max_seq_len = max_seq_len
+        self.horzion = horizon
 
     def reset_hidden_state(self, hidden_state, dones):
         return hidden_state
@@ -21,7 +22,7 @@ class TrajEncoder(nn.Module, ABC):
         return None
 
     @abstractmethod
-    def forward(self, seq, hidden_state=None):
+    def forward(self, seq: torch.Tensor, time_idxs: torch.Tensor, hidden_state=None):
         pass
 
     @abstractmethod
@@ -35,6 +36,7 @@ class FFTrajEncoder(TrajEncoder):
         self,
         tstep_dim,
         max_seq_len,
+        horizon,
         d_model: int = 256,
         d_ff: int | None = None,
         n_layers: int = 1,
@@ -42,7 +44,7 @@ class FFTrajEncoder(TrajEncoder):
         activation="leaky_relu",
         norm="layer",
     ):
-        super().__init__(tstep_dim, max_seq_len)
+        super().__init__(tstep_dim, max_seq_len, horizon)
         d_ff = d_ff or d_model * 4
         self.traj_emb = nn.Linear(tstep_dim, d_model)
         self.traj_blocks = nn.ModuleList(
@@ -62,7 +64,7 @@ class FFTrajEncoder(TrajEncoder):
         # from the sequence.
         return True
 
-    def forward(self, seq, hidden_state=None):
+    def forward(self, seq, time_idxs=None, hidden_state=None):
         traj_emb = self.dropout(self.activation(self.traj_emb(seq)))
         for traj_block in self.traj_blocks:
             traj_emb = traj_block(traj_emb)
@@ -86,7 +88,7 @@ class GRUTrajEncoder(TrajEncoder):
         d_output: int = 256,
         norm: str = "layer",
     ):
-        super().__init__(tstep_dim, max_seq_len)
+        super().__init__(tstep_dim, max_seq_len, horizon)
 
         self.rnn = nn.GRU(
             input_size=tstep_dim,
@@ -105,7 +107,7 @@ class GRUTrajEncoder(TrajEncoder):
         hidden_state[:, dones] = 0.0
         return hidden_state
 
-    def forward(self, seq, hidden_state=None):
+    def forward(self, seq, time_idxs=None, hidden_state=None):
         output_seq, new_hidden_state = self.rnn(seq, hidden_state)
         out = self.out_norm(self.out(output_seq))
         return out, new_hidden_state
@@ -121,6 +123,7 @@ class TformerTrajEncoder(TrajEncoder):
         self,
         tstep_dim: int,
         max_seq_len: int,
+        horizon: int,
         d_model: int = 256,
         n_heads: int = 8,
         d_ff: int = 1024,
@@ -133,10 +136,10 @@ class TformerTrajEncoder(TrajEncoder):
         norm: str = "layer",
         attention: str = "flash",
     ):
-        super().__init__(tstep_dim, max_seq_len)
+        super().__init__(tstep_dim, max_seq_len, horizon)
         self.tformer = transformer.Transformer(
             inp_dim=tstep_dim,
-            max_seq_len=max_seq_len,
+            max_pos_idx=horizon,
             d_model=d_model,
             d_ff=d_ff,
             n_heads=n_heads,
@@ -157,7 +160,7 @@ class TformerTrajEncoder(TrajEncoder):
                 device=device,
                 dtype=torch.bfloat16,
                 batch_size=batch_size,
-                max_seq_len=self.tformer.max_seq_len,
+                max_seq_len=self.max_seq_len,
                 n_heads=self.tformer.n_heads,
                 head_dim=self.tformer.head_dim,
             )
@@ -176,8 +179,9 @@ class TformerTrajEncoder(TrajEncoder):
         hidden_state.reset(idxs=dones)
         return hidden_state
 
-    def forward(self, seq, hidden_state=None):
-        return self.tformer(seq, hidden_state=hidden_state)
+    def forward(self, seq, time_idxs, hidden_state=None):
+        assert time_idxs is not None
+        return self.tformer(seq, pos_idxs=time_idxs, hidden_state=hidden_state)
 
     @property
     def emb_dim(self):

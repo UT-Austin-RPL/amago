@@ -28,6 +28,9 @@ def init_plt():
 
 
 def q_curve_plot(loss_info: dict, num_curves: int = 3) -> wandb.Image:
+    """ "
+    Creates a figure of the Q-value across the timesteps of a trajectory.
+    """
     q_seq_keys = sorted([k for k in loss_info.keys() if "q_seq_mean" in k])
     q_std_keys = sorted([k for k in loss_info.keys() if "q_seq_std" in k])
 

@@ -9,6 +9,8 @@ from example_utils import *
 
 def add_cli(parser):
     parser.add_argument("--env", type=str, default="AutoencodeEasy")
+    parser.add_argument("--max_seq_len", type=int, default=2000)
+    parser.add_argument("--traj_save_len", type=int, default=2000)
     parser.add_argument("--naive", action="store_true")
     return parser
 
@@ -47,8 +49,8 @@ if __name__ == "__main__":
             make_val_env=make_train_env,
             # For this one script to work across every environment,
             # these are arbitrary sequence limits we'll never each.
-            max_seq_len=2000,
-            traj_save_len=2000,
+            max_seq_len=args.max_seq_len,
+            traj_save_len=args.traj_save_len,
             group_name=group_name,
             run_name=run_name,
             val_timesteps_per_epoch=2000,
