@@ -24,7 +24,7 @@ def load_traj_from_disk(path: str) -> Trajectory:
 
 class TrajDset(Dataset):
     """
-    Load trajectory files from disk in parallel with pytroch Dataset/DataLoader
+    Load trajectory files from disk in parallel with pytorch Dataset/DataLoader
     pipeline.
     """
 

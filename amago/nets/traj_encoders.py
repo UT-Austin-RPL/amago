@@ -83,6 +83,7 @@ class GRUTrajEncoder(TrajEncoder):
         self,
         tstep_dim: int,
         max_seq_len: int,
+        horizon: int,
         d_hidden: int = 256,
         n_layers: int = 2,
         d_output: int = 256,
