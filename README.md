@@ -1,6 +1,6 @@
 # AMAGO 
 
-<img src="media/amago_fish_icon.png" alt="amagologo" width="150" align="right"/>
+<img src="media/amago_logo_2.png" alt="amagologo" width="150" align="right"/>
 
 ### A simple and scalable agent for sequence-based Reinforcement Learning
 
