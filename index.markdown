@@ -21,7 +21,7 @@ usemathjax: true
 
 
 <!-- <meta property="og:image" content="src/figure/approach.png"> -->
-<meta property="og:title" content="TRILL">
+<meta property="og:title" content="AMAGO">
 
 <script src="./src/popup.js" type="text/javascript"></script>
 
@@ -168,7 +168,6 @@ highlight {
     <a href="https://www.utexas.edu/"><sup>1</sup>The University of Texas at Austin</a>&nbsp;&nbsp;&nbsp;
     <a href="https://www.nvidia.com/en-us/research/"><sup>2</sup>NVIDIA Research</a>&nbsp;&nbsp;&nbsp;
   </h2>
-<img src="./src/logos/amago_logo_2.png" alt="amagologo" width="250" align="center"/>
 <h2><a href="https://arxiv.org/abs/2310.09971v1">Paper</a>&nbsp; | &nbsp;<a href="https://github.com/UT-Austin-RPL/amago">Code</a></h2>
   </center>
 
@@ -180,10 +179,13 @@ highlight {
   <table align=center width=800px>
                 <tr>
                     <td>
-<p align="center" width="20%">
+<p align="justify" width="20%">
+<img src="./src/logos/amago_logo_2.png" alt="amagologo" width="25%" align="right"/>
+<div style="display:inline">
 <h3>
 "In-context" RL trains memory-equipped agents to adapt to new environments from test-time experience and unifies meta-RL, zero-shot generalization, and long-term memory into a single problem. While this technique was one of the first approaches to deep meta-RL <a href="https://arxiv.org/abs/1611.02779">[1]</a>, it is often outperformed by more complicated methods. Fortunately, the right off-policy implementation details and tuning can make in-context RL stable and competitive <a href="https://arxiv.org/abs/2110.05038">[2]</a>. Off-policy in-context RL creates a tradeoff because it is conceptually simple but hard to use, and agents are limited by their model size, memory length, and planning horizon. <b>AMAGO</b> redesigns off-policy sequence-based RL to break these bottlenecks and stably train long-context Transformers with end-to-end RL. AMAGO is open-source and designed to require minimal tuning with the goal of making in-context RL an easy-to-use default in new research on adaptive agents. <br><br>
 </h3>
+</div>
 </p></td></tr></table>
 </p>
   </div>
@@ -326,10 +328,15 @@ Above, we use several single-task instructions to evaluate the exploration capab
 <h1 align="center">Using AMAGO</h1>
 
 <h4>
-In-context RL is applicable to any memory, generalization, or meta-learning problem, and we have designed AMAGO to be flexible enough to support all of these cases. Our code is fully open-source and includes examples of how to apply AMAGO to new domains. We hope our agent can serve as a strong baseline in the development of new benchmarks that require long-term memory and adaptation. <a href="https://github.com/UT-Austin-RPL/amago">Check it out on GitHub here</a>.
-</h4>
+In-context RL is applicable to any memory, generalization, or meta-learning problem, and we have designed AMAGO to be flexible enough to support all of these cases. Our code is fully open-source <a href="https://github.com/UT-Austin-RPL/amago">and available on GitHub</a>. We hope our agent can serve as a strong baseline in the development of new benchmarks that require long-term memory and adaptation, and include many <a href="https://github.com/UT-Austin-RPL/amago/tree/main/examples">examples</a> of how to apply AMAGO to:
+<ul>
+<li> Standard (Memory-Free) MDPs/gym Environments </li>
+<li> POMDPs and Long-Term Memory Tasks </li>
+<li> K-Shot Meta-RL </li>
+<li> Goal-Conditioned Environment Adaptation </li>
+<li> Multi-task Learning from Pixels </li>
+</ul>
 
-<a href="https://github.com/UT-Austin-RPL/amago"><img src="./src/logos/rpl_logo.png" style="width:30%;"> </a>
 
 
  
