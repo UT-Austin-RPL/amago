@@ -107,20 +107,24 @@ class TrajDset(Dataset):
 
 class RLData:
     def __init__(self, traj: Trajectory):
-        obs, goals, rl2s = traj.make_sequence()
-        self.obs = torch.from_numpy(
-            obs
-        )  # dtype cast needs to happen inside TstepEncoder
+        if traj.frozen:
+            obs = traj._frozen_obs
+            goals = traj._frozen_goals
+            rl2s = traj._frozen_rl2s
+        else:
+            obs, goals, rl2s = traj.make_sequence()
+        # dtype cast needs to happen inside TstepEncoder
+        self.obs = torch.from_numpy(obs)
         self.goals = torch.from_numpy(goals).float()
         self.rl2s = torch.from_numpy(rl2s).float()
         self.time_idxs = torch.Tensor([t.raw_time_idx for t in traj.timesteps]).long()
         # rews, dones, and actions are shifted back by one timestep
         to_torch = lambda x: torch.from_numpy(np.array(x))
         self.rews = (
-            to_torch([t.reward for t in traj.timesteps[1:]]).unsqueeze(-1).float()
+            to_torch([t.reward for t in traj.timesteps[1:]]).float().unsqueeze(-1)
         )
         self.dones = (
-            to_torch([t.terminal for t in traj.timesteps[1:]]).unsqueeze(-1).bool()
+            to_torch([t.terminal for t in traj.timesteps[1:]]).bool().unsqueeze(-1)
         )
         self.actions = to_torch([t.prev_action for t in traj.timesteps[1:]]).float()
 

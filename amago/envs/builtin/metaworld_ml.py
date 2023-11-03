@@ -42,6 +42,8 @@ class Metaworld(GymEnv):
 
 
 class KShotMetaworld(gym.Env):
+    reward_scales = {}
+
     def __init__(self, benchmark, split: str, k_shots: int):
         assert split in ["train", "test"]
         self.benchmark = benchmark
@@ -103,6 +105,10 @@ class KShotMetaworld(gym.Env):
             self.current_trial += 1
 
         truncated = terminated = self.current_trial >= self.k_shots
+
+        if self.task_name in self.reward_scales:
+            reward *= self.reward_scales[self.task_name]
+
         return (
             self.get_obs(next_obs, soft_reset),
             reward,

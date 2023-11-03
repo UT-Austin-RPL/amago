@@ -111,6 +111,11 @@ def add_common_cli(parser: ArgumentParser) -> ArgumentParser:
         action="store_true",
         help="Train in bfloat16 half precision",
     )
+    parser.add_argument(
+        "--dloader_workers",
+        type=int,
+        default=8,
+    )
     return parser
 
 
@@ -255,6 +260,7 @@ def create_experiment_from_cli(
         dset_name=run_name,
         gpu=cli.gpu,
         dset_root=cli.buffer_dir,
+        dloader_workers=cli.dloader_workers,
         log_to_wandb=not cli.no_log,
         epochs=cli.epochs,
         parallel_actors=cli.parallel_actors,

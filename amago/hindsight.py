@@ -204,6 +204,7 @@ class Trajectory:
         self.goal_pad_val = goal_pad_val
         self.goal_completed_val = goal_completed_val
         self.timesteps = timesteps or []
+        self.frozen = False
 
     def add_timestep(self, timestep: Timestep):
         assert isinstance(timestep, Timestep)
@@ -251,14 +252,28 @@ class Trajectory:
         return len(self.timesteps)
 
     def save_to_disk(self, path):
+        self.freeze()
         with open(path, "wb") as f:
             pickle.dump(self, f)
+
+    def freeze(self):
+        self._frozen_obs, self._frozen_goals, self._frozen_rl2s = self.make_sequence()
+        self.frozen = True
 
     @staticmethod
     def load_from_disk(path):
         with open(path, "rb") as f:
             disk = pickle.load(f)
         traj = Trajectory(max_goals=disk.max_goals, timesteps=disk.timesteps)
+        if disk.frozen:
+            traj._frozen_obs = disk._frozen_obs
+            traj._frozen_goals = disk._frozen_goals
+            traj._frozen_rl2s = disk._frozen_rl2s
+            traj.frozen = True
+        else:
+            warnings.warn(
+                "Loading unfrozen Trajectory from disk...", category=RuntimeWarning
+            )
         return traj
 
     def __eq__(self, other):
@@ -442,6 +457,7 @@ class Relabeler:
             )
         og_traj = traj  # save original traj for testing
         traj = copy.deepcopy(traj)  # only deepcopies what we will actually edit (goals)
+        traj.frozen = False
 
         #########################################
         ## Step 1: Update Goal Frequency Stats ##
@@ -562,9 +578,11 @@ class Relabeler:
         traj.timesteps = traj[: end + 2]
         traj.timesteps[-1].terminal = True
 
+        traj.freeze()
         if end < len(traj):
             assert traj.is_success
         if num_syn_goals == 0:
             # check to be sure the hindsight reward logic matches the real environment logic
             assert traj == og_traj
+
         return traj
