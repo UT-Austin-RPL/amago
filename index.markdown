@@ -353,4 +353,3 @@ In-context RL is applicable to any memory, generalization, or meta-learning prob
  </tr>
 </table>
 
-<img src="./src/logos/amago_big_logo.png" alt="amagologo" width="200" align="center"/>
