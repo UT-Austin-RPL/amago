@@ -16,7 +16,7 @@ usemathjax: true
     TeX: { equationNumbers: { autoNumber: "AMS" } }
     });
   </script>
-  <script type="text/javascript" async src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  <script type="text/javascript" async src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 {% endif %}
 
 
