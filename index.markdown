@@ -44,7 +44,7 @@ var _POPUP_FEATURES = 'width=500,height=300,resizable=1,scrollbars=1,titlebar=1,
 body {
     font-family: "Titillium Web","HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
     font-weight:300;
-    font-size:20px;
+    font-size:17px;
     margin-left: auto;
     margin-right: auto;
     width: 100%;
@@ -55,9 +55,17 @@ body {
   }
   h2 {
     font-weight:300;
-    font-size:24px;
+    font-size:20px;
   }
   h3 {
+    font-size:18px;
+    font-weight:300;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+  }
+  h4 {
+    font-size:17px;
     font-weight:300;
     margin-left: auto;
     margin-right: auto;
@@ -161,7 +169,7 @@ highlight {
     <a href="https://www.nvidia.com/en-us/research/"><sup>2</sup>NVIDIA Research</a>&nbsp;&nbsp;&nbsp;
   </h2>
 <img src="./src/logos/amago_logo_2.png" alt="amagologo" width="250" align="center"/>
-  <h2><a href="https://arxiv.org/abs/2310.09971v1">Paper</a>&nbsp;&nbsp;&nbsp; | &nbsp;&nbsp;&nbsp;<a href="https://github.com/UT-Austin-RPL/amago">Code</a></h2>
+<h2><a href="https://arxiv.org/abs/2310.09971v1">Paper</a>&nbsp; | &nbsp;<a href="https://github.com/UT-Austin-RPL/amago">Code</a></h2>
   </center>
 
  <center><p><span style="font-size:20px;"></span></p></center>
@@ -172,53 +180,48 @@ highlight {
   <table align=center width=800px>
                 <tr>
                     <td>
-<p align="justify" width="20%">
-
+<p align="center" width="20%">
 <h3>
-"In-context" or "context-based" RL trains memory-equipped agents to identify and adapt to their new surroundings from test-time experience. In-context RL is extremely flexible because it turns meta-RL, zero-shot generalization, and long-term memory into the same problem. While this technique was one of the first approaches to deep meta-RL <a href="https://arxiv.org/abs/1611.02779">[1]</a>, it is often outperformed by more complicated methods. Fortunately, the right off-policy implementation details and tuning can make in-context RL stable and competitive <a href="https://arxiv.org/abs/2110.05038">[2]</a>. This creates a tradeoff: off-policy in-context RL is conceptually simple but hard to use and limits model size, memory length, and planning horizons. <b>AMAGO</b> redesigns off-policy sequence-based RL to break these bottlenecks and stably train long-context Transformers with end-to-end RL. AMAGO is open-source and designed to require minimal tuning with the goal of making in-context RL an easy-to-use default in new research on adaptive agents. <br><br>
+"In-context" RL trains memory-equipped agents to adapt to new environments from test-time experience and unifies meta-RL, zero-shot generalization, and long-term memory into a single problem. While this technique was one of the first approaches to deep meta-RL <a href="https://arxiv.org/abs/1611.02779">[1]</a>, it is often outperformed by more complicated methods. Fortunately, the right off-policy implementation details and tuning can make in-context RL stable and competitive <a href="https://arxiv.org/abs/2110.05038">[2]</a>. This creates a tradeoff: off-policy in-context RL is conceptually simple but hard to use, and agents are limited by their model size, memory length, and planning horizon. <b>AMAGO</b> redesigns off-policy sequence-based RL to break these bottlenecks and stably train long-context Transformers with end-to-end RL. AMAGO is open-source and designed to require minimal tuning with the goal of making in-context RL an easy-to-use default in new research on adaptive agents. <br><br>
 </h3>
+</p></td></tr></table>
+</p>
+  </div>
+</p>
 
 <hr>
 
 <h1 align="center">Improving Off-Policy Actor-Critics with Transformers</h1>
 
-<h3>
+<h4>
 AMAGO improves memory and adaptation by optimizing long-context Transformers on sequences gathered from large off-policy datasets. This creates many technical challenges that we address with three main ideas:
 
 <ol>
 <li> <b> Sharing One Sequence Model. </b> &nbsp; AMAGO performs actor and critic updates in parallel on top of the outputs of a single sequence model that learns from every training objective and maximizes throughput. AMAGO's update looks more like supervised sequence modeling than an actor-critic. This approach is discouraged in previous work but can be stabilized with careful details. </li> <br>
 <li> <b> Long-Horizon Off-Policy Updates. </b> &nbsp; AMAGO's learning update improves performance and reduces tuning by always giving the sequence model "something to learn about": we compute RL losses over many planning horizons (\(\gamma\)) that have different optimization landscapes depending on current performance. When all else fails, AMAGO includes an offline RL term that resembles supervised learning and does not depend on the scale of returns. This "multi-\(\gamma\)" update makes AMAGO especially effective for sparse rewards over long horizons.</li> <br>
-<li> <b> Stabilizing Long-Context Transformers. </b> Both RL and Transformers can be unstable on their own, and combining them creates more obstacles. An especially relevant issue in memory-intensive RL is <i> attention entropy collapse</i>; the optimal memory patterns in RL environments can be far more specific than in language modeling. We use a stable Transformer block that prevents collapse and reduces tuning by letting us pick model sizes that are safely too large for the problem.</li>
+<li> <b> Stabilizing Long-Context Transformers. </b> Both RL and Transformers can be unstable on their own, and combining them creates more obstacles. An especially relevant issue in memory-intensive RL is <i> attention entropy collapse</i> because the optimal memory patterns in RL environments can be far more specific than in language modeling. We use a stable Transformer block that prevents collapse and reduces tuning by letting us pick model sizes that are safely too large for the problem.</li>
 </ol>
-</h3>
+</h4>
 
-  <table border="0" cellspacing="10" cellpadding="0" align="center"> 
-    <tbody>
-      <tr>
-	<td align="center" valign="middle">
+<div class="container">
 	  <a href="./src/figure/fig1_iclr_e_notation.pdf"><img src="./src/figure/fig1_iclr_e_notation.pdf" style="width:100%;"> </a>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+</div>
 
-  <table align=center width=800px><tr><td><p align="justify" width="20%">
+
 
 
 <br>
-<h3>
-In-Context RL's flexibility lets us evaluate AMAGO on many generalization, memory, and meta-learning domains.
-</h3>
-
-  </p></td></tr></table>
+<h4>
+In-Context RL's flexibility lets us evaluate AMAGO on many generalization, memory, and meta-learning domains with minimal changes.
+</h4>
 
   
 <br><br><hr> <h1 align="center">Meta-RL and Long-Term Memory</h1>
 
 
-<h3>
-Transformers are incredibly good at recall, and AMAGO lets us put that to effective use. We evaluate AMAGO on 39 environments from the <a href="https://arxiv.org/abs/2303.01859">POPGym suite</a>, where it leads to dramatic improvements in memory-intensive generalization problems and creates a strong default for sequence-based RL: <br><br>
-</h3>
+<h4>
+<b> AMAGO lets us put Transformers' impressive recall to effective use in RL tasks.</b> We evaluate AMAGO on 39 environments from the <a href="https://arxiv.org/abs/2303.01859">POPGym suite</a>, where it leads to dramatic improvements in memory-intensive generalization problems and creates a strong default for sequence-based RL: <br><br>
+</h4>
 
 <table border="0" cellspacing="10" cellpadding="0" align="center"> 
   <tbody>
@@ -231,9 +234,9 @@ Transformers are incredibly good at recall, and AMAGO lets us put that to effect
 </table>
 
 
-<h3>
-AMAGO treats meta-learning exactly the same as zero-shot generalization, and we demonstrate its stability and flexibility on several common meta-RL benchmarks. AMAGO also makes it easy to tune memory lengths to the adaptation difficulty of the problem, which can improve sample efficiency. <br> <br>
-</h3>
+<h4>
+AMAGO handles meta-learning as a simple extension of zero-shot generalization, and we demonstrate its stability and flexibility on several common meta-RL benchmarks. AMAGO makes it easy to tune memory lengths to the adaptation difficulty of the problem for increased sample efficiency, but is efficient enough to train with context lengths of hundreds or thousands of timesteps. <br> <br>
+</h4>
 
 <table border="0" cellspacing="10" cellpadding="0" align="center"> 
   <tbody>
@@ -253,13 +256,13 @@ METAWORLD FIGURE HERE
 
 <h1 align="center">Adaptive Instruction-Following</h1>
 
-<h3>
-<b> An important benefit of off-policy learning is the ability to <i> relabel </i> rewards in hindsight </b>. AMAGO extends <a href="https://arxiv.org/abs/1707.01495">hindsight experience replay</a> (HER) to "instructions" or sequences of multiple goals. Relabeling instructions extends the diversity of our dataset and plays to the strengths of data-hungry Transformers while generating automatic exploration curricula for more complex objectives. The combination of AMAGO's relabeling, memory-based adaptation, and long-horizon learning update can be extremely effective in goal-conditioned generalization tasks. 
+<h4>
+<b> An important benefit of off-policy learning is the ability to <i> relabel </i> rewards in hindsight </b>. AMAGO extends <a href="https://arxiv.org/abs/1707.01495">hindsight experience replay</a> to "instructions" or sequences of multiple goals. Relabeling instructions extends the diversity of our dataset and plays to the strengths of data-hungry Transformers while generating automatic exploration curricula for more complex objectives. The combination of AMAGO's relabeling, memory-based adaptation, and long-horizon learning update can be very effective in goal-conditioned generalization tasks. 
 
 <br><br>
 
 As an example, we evaluate instruction-conditioned agents in the procedurally generated worlds of <a href="https://arxiv.org/abs/2109.06780">Crafter</a>. Instructions are strings from a closed vocabulary of Crafter's achievement system, with added goals for navigation and block placement.
-</h3>
+</h4>
 
 
 <table border="0" cellspacing="10" cellpadding="0" align="center"> 
@@ -273,9 +276,9 @@ As an example, we evaluate instruction-conditioned agents in the procedurally ge
 </table>
 
 
-<h3>
+<h4>
 Above, we use several single-task instructions to evaluate the exploration capabilities of various ablations. As tasks require more exploration and adaptation to new world layouts, AMAGO's memory and relabeling become essential to success. Multi-step goals require considerable generalization, and AMAGO qualitatively demonstrates a clear understanding of the instruction with sample videos below. <br><br>
-</h3>
+</h4>
 
 <table border="0" cellspacing="10" cellpadding="0" align="center"> 
    <tr>
@@ -322,11 +325,14 @@ Above, we use several single-task instructions to evaluate the exploration capab
 
 <h1 align="center">Using AMAGO</h1>
 
-<h3>
-In-context RL is applicable to any memory, generalization, or meta-learning problem, and we have designed AMAGO to be flexible enough to support all of those cases. Our code is fully open-source and includes examples of how to apply AMAGO to new domains. We hope our agent can serve as a strong baseline in the development of new benchmarks that require long-term memory and adaptation. <a href="https://github.com/UT-Austin-RPL/amago">Check it out on GitHub here</a>.
-</h3>
+<h4>
+In-context RL is applicable to any memory, generalization, or meta-learning problem, and we have designed AMAGO to be flexible enough to support all of these cases. Our code is fully open-source and includes examples of how to apply AMAGO to new domains. We hope our agent can serve as a strong baseline in the development of new benchmarks that require long-term memory and adaptation. <a href="https://github.com/UT-Austin-RPL/amago">Check it out on GitHub here</a>.
+</h4>
+
+<a href="https://github.com/UT-Austin-RPL/amago"><img src="./src/logos/rpl_logo.pdf" style="width:30%;"> </a>
+
+
  
-<img src="./src/logos/amago_big_logo.png" alt="amagologo" width="200" align="center"/>
 <hr>
 
 <center><h1>Citation</h1></center>
@@ -346,3 +352,5 @@ In-context RL is applicable to any memory, generalization, or meta-learning prob
   </td>
  </tr>
 </table>
+
+<img src="./src/logos/amago_big_logo.png" alt="amagologo" width="200" align="center"/>

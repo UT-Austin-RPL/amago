@@ -1,4 +1,4 @@
-<link href="https://fonts.googleapis.com/css?family=Titillium+Web:400,600,400italic,600italic,300,300italic" rel="stylesheet" type="text/css" />
+I"U4<link href="https://fonts.googleapis.com/css?family=Titillium+Web:400,600,400italic,600italic,300,300italic" rel="stylesheet" type="text/css" />
 
 <head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
   <title>AMAGO: Scalable In-Context Reinforcement Learning for Adaptive Agents</title>
@@ -224,7 +224,7 @@ In-Context RL's flexibility lets us evaluate AMAGO on many generalization, memor
 
 
 <h4>
-AMAGO handles meta-learning as a simple extension of zero-shot generalization, and we demonstrate its stability and flexibility on several common meta-RL benchmarks. AMAGO makes it easy to tune memory lengths to the adaptation difficulty of the problem for increased sample efficiency, but is efficient enough to train with context lengths of hundreds or thousands of timesteps. <br /> <br />
+AMAGO handles meta-learning as an extension zero-shot generalization, and we demonstrate its stability and flexibility on several common meta-RL benchmarks. AMAGO makes it easy to tune memory lengths to the adaptation difficulty of the problem for increased sample efficiency, but is efficient enough to train with context lengths of hundreds or thousands of timesteps. <br /> <br />
 </h4>
 
 <table border="0" cellspacing="10" cellpadding="0" align="center"> 
@@ -318,9 +318,7 @@ Above, we use several single-task instructions to evaluate the exploration capab
 In-context RL is applicable to any memory, generalization, or meta-learning problem, and we have designed AMAGO to be flexible enough to support all of these cases. Our code is fully open-source and includes examples of how to apply AMAGO to new domains. We hope our agent can serve as a strong baseline in the development of new benchmarks that require long-term memory and adaptation. <a href="https://github.com/UT-Austin-RPL/amago">Check it out on GitHub here</a>.
 </h4>
 
-<a href="https://github.com/UT-Austin-RPL/amago"><img src="./src/logos/rpl_logo.pdf" style="width:30%;" /> </a>
-
-
+<img src="./src/logos/amago_big_logo.png" alt="amagologo" width="200" align="center" />
  
 <hr />
 
@@ -342,5 +340,5 @@ In-context RL is applicable to any memory, generalization, or meta-learning prob
  </tr>
 </table>
 
-<img src="./src/logos/amago_big_logo.png" alt="amagologo" width="200" align="center" />
 </div></body>
+:ET

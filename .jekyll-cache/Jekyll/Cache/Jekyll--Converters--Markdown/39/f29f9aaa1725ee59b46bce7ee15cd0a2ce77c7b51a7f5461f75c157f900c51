@@ -1,4 +1,4 @@
-<link href="https://fonts.googleapis.com/css?family=Titillium+Web:400,600,400italic,600italic,300,300italic" rel="stylesheet" type="text/css" />
+I"Ð4<link href="https://fonts.googleapis.com/css?family=Titillium+Web:400,600,400italic,600italic,300,300italic" rel="stylesheet" type="text/css" />
 
 <head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
   <title>AMAGO: Scalable In-Context Reinforcement Learning for Adaptive Agents</title>
@@ -344,3 +344,4 @@ In-context RL is applicable to any memory, generalization, or meta-learning prob
 
 <img src="./src/logos/amago_big_logo.png" alt="amagologo" width="200" align="center" />
 </div></body>
+:ET

@@ -1,4 +1,4 @@
-<link href="https://fonts.googleapis.com/css?family=Titillium+Web:400,600,400italic,600italic,300,300italic" rel="stylesheet" type="text/css" />
+I"¶3<link href="https://fonts.googleapis.com/css?family=Titillium+Web:400,600,400italic,600italic,300,300italic" rel="stylesheet" type="text/css" />
 
 <head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
   <title>AMAGO: Scalable In-Context Reinforcement Learning for Adaptive Agents</title>
@@ -157,8 +157,6 @@ highlight {
     <a href="https://www.utexas.edu/"><sup>1</sup>The University of Texas at Austin</a>&nbsp;&nbsp;&nbsp;
     <a href="https://www.nvidia.com/en-us/research/"><sup>2</sup>NVIDIA Research</a>&nbsp;&nbsp;&nbsp;
   </h2>
-<img src="./src/logos/amago_logo_2.png" alt="amagologo" width="250" align="center" />
-<h2><a href="https://arxiv.org/abs/2310.09971v1">Paper</a>&nbsp; | &nbsp;<a href="https://github.com/UT-Austin-RPL/amago">Code</a></h2>
   </center>
 
  <center><p><span style="font-size:20px;"></span></p></center>
@@ -168,6 +166,7 @@ highlight {
 <div width="500"><p>
   <table align="center" width="800px">
                 <tr>
+<h2><a href="https://arxiv.org/abs/2310.09971v1">Paper</a>&nbsp; | &nbsp;<a href="https://github.com/UT-Austin-RPL/amago">Code</a></h2>
                     <td>
 <p align="center" width="20%">
 <h3>
@@ -177,6 +176,7 @@ highlight {
 </p>
   </div>
 </p>
+
 
 <hr />
 
@@ -188,7 +188,7 @@ AMAGO improves memory and adaptation by optimizing long-context Transformers on 
 <ol>
 <li> <b> Sharing One Sequence Model. </b> &nbsp; AMAGO performs actor and critic updates in parallel on top of the outputs of a single sequence model that learns from every training objective and maximizes throughput. AMAGO's update looks more like supervised sequence modeling than an actor-critic. This approach is discouraged in previous work but can be stabilized with careful details. </li> <br />
 <li> <b> Long-Horizon Off-Policy Updates. </b> &nbsp; AMAGO's learning update improves performance and reduces tuning by always giving the sequence model "something to learn about": we compute RL losses over many planning horizons (\(\gamma\)) that have different optimization landscapes depending on current performance. When all else fails, AMAGO includes an offline RL term that resembles supervised learning and does not depend on the scale of returns. This "multi-\(\gamma\)" update makes AMAGO especially effective for sparse rewards over long horizons.</li> <br />
-<li> <b> Stabilizing Long-Context Transformers. </b> Both RL and Transformers can be unstable on their own, and combining them creates more obstacles. An especially relevant issue in memory-intensive RL is <i> attention entropy collapse</i> because the optimal memory patterns in RL environments can be far more specific than in language modeling. We use a stable Transformer block that prevents collapse and reduces tuning by letting us pick model sizes that are safely too large for the problem.</li>
+<li> <b> Stabilizing Long-Context Transformers. </b> Both RL and Transformers can be unstable on their own, and combining them creates more obstacles. An especially relevant issue in memory-intensive RL is <i> attention entropy collapse</i>; the optimal memory patterns in RL environments can be far more specific than in language modeling. We use a stable Transformer block that prevents collapse and reduces tuning by letting us pick model sizes that are safely too large for the problem.</li>
 </ol>
 </h4>
 
@@ -209,7 +209,7 @@ In-Context RL's flexibility lets us evaluate AMAGO on many generalization, memor
 
 
 <h4>
-<b> AMAGO lets us put Transformers' impressive recall to effective use in RL tasks.</b> We evaluate AMAGO on 39 environments from the <a href="https://arxiv.org/abs/2303.01859">POPGym suite</a>, where it leads to dramatic improvements in memory-intensive generalization problems and creates a strong default for sequence-based RL: <br /><br />
+<b> Transformers are incredibly good at recall, and AMAGO lets us put that to effective use </b>. We evaluate AMAGO on 39 environments from the <a href="https://arxiv.org/abs/2303.01859">POPGym suite</a>, where it leads to dramatic improvements in memory-intensive generalization problems and creates a strong default for sequence-based RL: <br /><br />
 </h4>
 
 <table border="0" cellspacing="10" cellpadding="0" align="center"> 
@@ -224,7 +224,7 @@ In-Context RL's flexibility lets us evaluate AMAGO on many generalization, memor
 
 
 <h4>
-AMAGO handles meta-learning as a simple extension of zero-shot generalization, and we demonstrate its stability and flexibility on several common meta-RL benchmarks. AMAGO makes it easy to tune memory lengths to the adaptation difficulty of the problem for increased sample efficiency, but is efficient enough to train with context lengths of hundreds or thousands of timesteps. <br /> <br />
+AMAGO treats meta-learning exactly the same as zero-shot generalization, and we demonstrate its stability and flexibility on several common meta-RL benchmarks. AMAGO also makes it easy to tune memory lengths to the adaptation difficulty of the problem, which can improve sample efficiency. <br /> <br />
 </h4>
 
 <table border="0" cellspacing="10" cellpadding="0" align="center"> 
@@ -246,7 +246,7 @@ METAWORLD FIGURE HERE
 <h1 align="center">Adaptive Instruction-Following</h1>
 
 <h4>
-<b> An important benefit of off-policy learning is the ability to <i> relabel </i> rewards in hindsight </b>. AMAGO extends <a href="https://arxiv.org/abs/1707.01495">hindsight experience replay</a> to "instructions" or sequences of multiple goals. Relabeling instructions extends the diversity of our dataset and plays to the strengths of data-hungry Transformers while generating automatic exploration curricula for more complex objectives. The combination of AMAGO's relabeling, memory-based adaptation, and long-horizon learning update can be very effective in goal-conditioned generalization tasks. 
+<b> An important benefit of off-policy learning is the ability to <i> relabel </i> rewards in hindsight </b>. AMAGO extends <a href="https://arxiv.org/abs/1707.01495">hindsight experience replay</a> (HER) to "instructions" or sequences of multiple goals. Relabeling instructions extends the diversity of our dataset and plays to the strengths of data-hungry Transformers while generating automatic exploration curricula for more complex objectives. The combination of AMAGO's relabeling, memory-based adaptation, and long-horizon learning update can be very effective in goal-conditioned generalization tasks. 
 
 <br /><br />
 
@@ -317,10 +317,7 @@ Above, we use several single-task instructions to evaluate the exploration capab
 <h4>
 In-context RL is applicable to any memory, generalization, or meta-learning problem, and we have designed AMAGO to be flexible enough to support all of these cases. Our code is fully open-source and includes examples of how to apply AMAGO to new domains. We hope our agent can serve as a strong baseline in the development of new benchmarks that require long-term memory and adaptation. <a href="https://github.com/UT-Austin-RPL/amago">Check it out on GitHub here</a>.
 </h4>
-
-<a href="https://github.com/UT-Austin-RPL/amago"><img src="./src/logos/rpl_logo.pdf" style="width:30%;" /> </a>
-
-
+<img src="./src/logos/amago_logo_2.png" alt="amagologo" width="250" align="center" />
  
 <hr />
 
@@ -342,5 +339,5 @@ In-context RL is applicable to any memory, generalization, or meta-learning prob
  </tr>
 </table>
 
-<img src="./src/logos/amago_big_logo.png" alt="amagologo" width="200" align="center" />
 </div></body>
+:ET
