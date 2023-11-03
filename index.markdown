@@ -182,7 +182,7 @@ highlight {
                     <td>
 <p align="center" width="20%">
 <h3>
-"In-context" RL trains memory-equipped agents to adapt to new environments from test-time experience and unifies meta-RL, zero-shot generalization, and long-term memory into a single problem. While this technique was one of the first approaches to deep meta-RL <a href="https://arxiv.org/abs/1611.02779">[1]</a>, it is often outperformed by more complicated methods. Fortunately, the right off-policy implementation details and tuning can make in-context RL stable and competitive <a href="https://arxiv.org/abs/2110.05038">[2]</a>. This creates a tradeoff: off-policy in-context RL is conceptually simple but hard to use, and agents are limited by their model size, memory length, and planning horizon. <b>AMAGO</b> redesigns off-policy sequence-based RL to break these bottlenecks and stably train long-context Transformers with end-to-end RL. AMAGO is open-source and designed to require minimal tuning with the goal of making in-context RL an easy-to-use default in new research on adaptive agents. <br><br>
+"In-context" RL trains memory-equipped agents to adapt to new environments from test-time experience and unifies meta-RL, zero-shot generalization, and long-term memory into a single problem. While this technique was one of the first approaches to deep meta-RL <a href="https://arxiv.org/abs/1611.02779">[1]</a>, it is often outperformed by more complicated methods. Fortunately, the right off-policy implementation details and tuning can make in-context RL stable and competitive <a href="https://arxiv.org/abs/2110.05038">[2]</a>. Off-policy in-context RL creates a tradeoff because it is conceptually simple but hard to use, and agents are limited by their model size, memory length, and planning horizon. <b>AMAGO</b> redesigns off-policy sequence-based RL to break these bottlenecks and stably train long-context Transformers with end-to-end RL. AMAGO is open-source and designed to require minimal tuning with the goal of making in-context RL an easy-to-use default in new research on adaptive agents. <br><br>
 </h3>
 </p></td></tr></table>
 </p>
@@ -197,7 +197,7 @@ highlight {
 AMAGO improves memory and adaptation by optimizing long-context Transformers on sequences gathered from large off-policy datasets. This creates many technical challenges that we address with three main ideas:
 
 <ol>
-<li> <b> Sharing One Sequence Model. </b> &nbsp; AMAGO performs actor and critic updates in parallel on top of the outputs of a single sequence model that learns from every training objective and maximizes throughput. AMAGO's update looks more like supervised sequence modeling than an actor-critic. This approach is discouraged in previous work but can be stabilized with careful details. </li> <br>
+<li> <b> Sharing One Sequence Model. </b> &nbsp; Actors and critics are updated simultaneously on top of the outputs of a single sequence model that learns from every training objective and maximizes throughput. AMAGO's update looks more like supervised sequence modeling than an actor-critic. This approach is discouraged in previous work but can be stabilized with careful details. </li> <br>
 <li> <b> Long-Horizon Off-Policy Updates. </b> &nbsp; AMAGO's learning update improves performance and reduces tuning by always giving the sequence model "something to learn about": we compute RL losses over many planning horizons (\(\gamma\)) that have different optimization landscapes depending on current performance. When all else fails, AMAGO includes an offline RL term that resembles supervised learning and does not depend on the scale of returns. This "multi-\(\gamma\)" update makes AMAGO especially effective for sparse rewards over long horizons.</li> <br>
 <li> <b> Stabilizing Long-Context Transformers. </b> Both RL and Transformers can be unstable on their own, and combining them creates more obstacles. An especially relevant issue in memory-intensive RL is <i> attention entropy collapse</i> because the optimal memory patterns in RL environments can be far more specific than in language modeling. We use a stable Transformer block that prevents collapse and reduces tuning by letting us pick model sizes that are safely too large for the problem.</li>
 </ol>
@@ -235,7 +235,7 @@ In-Context RL's flexibility lets us evaluate AMAGO on many generalization, memor
 
 
 <h4>
-AMAGO handles meta-learning as a simple extension of zero-shot generalization, and we demonstrate its stability and flexibility on several common meta-RL benchmarks. AMAGO makes it easy to tune memory lengths to the adaptation difficulty of the problem for increased sample efficiency, but is efficient enough to train with context lengths of hundreds or thousands of timesteps. <br> <br>
+AMAGO handles meta-learning as a simple extension of zero-shot generalization, and we demonstrate its stability and flexibility on several common meta-RL benchmarks. AMAGO makes it easy to tune memory lengths to the adaptation difficulty of the problem but is efficient enough to train with context lengths of hundreds or thousands of timesteps. <br> <br>
 </h4>
 
 <table border="0" cellspacing="10" cellpadding="0" align="center"> 
