@@ -42,22 +42,6 @@ class Metaworld(GymEnv):
 
 
 class KShotMetaworld(gym.Env):
-
-    """
-    reward_scales = {
-        "reach-v2" : .01,
-        "drawer-close-v2" : .01,
-        "button-press-topdown-v2" : .01,
-        "door-open-v2" : .01,
-        "window-open-v2" : .01,
-        "push-v2" : .01,
-        "pick-place-v2" : .01,
-        "basketball-v2" : .1,
-        "sweep-v2" : .01,
-        "peg-insert-side-v2" : .1,
-    }
-    """
-
     reward_scales = {}
 
     def __init__(self, benchmark, split: str, k_shots: int):
