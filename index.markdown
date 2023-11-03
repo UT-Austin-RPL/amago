@@ -158,7 +158,7 @@ highlight {
 </style>
 
 <div id="primarycontent">
-<center><h1><strong>AMAGO: Scalable In-Context Reinforcement Learning for Adaptive Agents</strong></h1></center>
+<center><h1><strong>AMAGO: Scalable In-Context Reinforcement Learning <br>for Adaptive Agents</strong></h1></center>
 <center><h2>
     <a href="https://jakegrigsby.github.io">Jake Grigsby<sup>1</sup></a>&nbsp;&nbsp;&nbsp;
     <a href="https://jimfan.me">Jim Fan<sup>2</sup></a>&nbsp;&nbsp;&nbsp;
@@ -204,7 +204,7 @@ AMAGO improves memory and adaptation by optimizing long-context Transformers on 
 </h4>
 
 <div class="container">
-	  <a href="./src/figure/fig1_iclr_e_notation.pdf"><img src="./src/figure/fig1_iclr_e_notation.pdf" style="width:100%;"> </a>
+	  <a href="./src/figure/fig1_iclr_e_notation.png"><img src="./src/figure/fig1_iclr_e_notation.png" style="width:100%;"> </a>
 </div>
 
 
@@ -228,7 +228,7 @@ In-Context RL's flexibility lets us evaluate AMAGO on many generalization, memor
    <tr>
 	<td align="center" valign="middle">
     </td>
-	 <a href="./src/figure/popgym_summary_expanded_outliers.pdf"><img src="./src/figure/popgym_summary_expanded_outliers.pdf" style="width:100%;"> </a>
+	 <a href="./src/figure/popgym_summary_expanded_outliers.png"><img src="./src/figure/popgym_summary_expanded_outliers.png" style="width:100%;"> </a>
    </tr>
   </tbody>
 </table>
@@ -243,7 +243,7 @@ AMAGO handles meta-learning as a simple extension of zero-shot generalization, a
    <tr>
 	<td align="center" valign="middle">
     </td>
-	 <a href="./src/figure/case_studies_arxiv_v2.pdf"><img src="./src/figure/case_studies_arxiv_v2.pdf" style="width:100%;"> </a>
+	 <a href="./src/figure/case_studies_arxiv_v2.png"><img src="./src/figure/case_studies_arxiv_v2.png" style="width:100%;"> </a>
    </tr>
   </tbody>
 </table>
@@ -270,7 +270,7 @@ As an example, we evaluate instruction-conditioned agents in the procedurally ge
    <tr>
 	<td align="center" valign="middle">
     </td>
-	 <a href="./src/figure/crafter_condensed_results.pdf"><img src="./src/figure/crafter_condensed_results.pdf" style="width:100%;"> </a>
+	 <a href="./src/figure/crafter_condensed_results.png"><img src="./src/figure/crafter_condensed_results.png" style="width:100%;"> </a>
    </tr>
   </tbody>
 </table>
@@ -329,7 +329,7 @@ Above, we use several single-task instructions to evaluate the exploration capab
 In-context RL is applicable to any memory, generalization, or meta-learning problem, and we have designed AMAGO to be flexible enough to support all of these cases. Our code is fully open-source and includes examples of how to apply AMAGO to new domains. We hope our agent can serve as a strong baseline in the development of new benchmarks that require long-term memory and adaptation. <a href="https://github.com/UT-Austin-RPL/amago">Check it out on GitHub here</a>.
 </h4>
 
-<a href="https://github.com/UT-Austin-RPL/amago"><img src="./src/logos/rpl_logo.pdf" style="width:30%;"> </a>
+<a href="https://github.com/UT-Austin-RPL/amago"><img src="./src/logos/rpl_logo.png" style="width:30%;"> </a>
 
 
  
