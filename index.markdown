@@ -250,8 +250,19 @@ AMAGO handles meta-learning as a simple extension of zero-shot generalization, a
   </tbody>
 </table>
 
+<table border="0" cellspacing="10" cellpadding="0" align="center"> 
+  <tbody>
+   <tr>
+	<td align="center" valign="middle">
+    </td>
+	 <a href="./src/figure/combined_metaworld_throughput.png"><img src="./src/figure/combined_metaworld_throughput.png" style="width:100%;"> </a>
+   </tr>
+  </tbody>
+</table>
 
-METAWORLD FIGURE HERE
+
+
+
 
 
 <hr>
@@ -259,11 +270,25 @@ METAWORLD FIGURE HERE
 <h1 align="center">Adaptive Instruction-Following</h1>
 
 <h4>
-<b> An important benefit of off-policy learning is the ability to <i> relabel </i> rewards in hindsight </b>. AMAGO extends <a href="https://arxiv.org/abs/1707.01495">hindsight experience replay</a> to "instructions" or sequences of multiple goals. Relabeling instructions extends the diversity of our dataset and plays to the strengths of data-hungry Transformers while generating automatic exploration curricula for more complex objectives. The combination of AMAGO's relabeling, memory-based adaptation, and long-horizon learning update can be very effective in goal-conditioned generalization tasks. 
+<b> An important benefit of off-policy learning is the ability to <i> relabel </i> rewards in hindsight </b>. AMAGO extends <a href="https://arxiv.org/abs/1707.01495">hindsight experience replay</a> to "instructions" or sequences of multiple goals. Relabeling instructions extends the diversity of our dataset and plays to the strengths of data-hungry Transformers while generating automatic exploration curricula for more complex objectives. The combination of AMAGO's relabeling, memory-based adaptation, and long-horizon learning update can be very effective in goal-conditioned generalization tasks. We introduce several easily-simulated benchmarks to research this setting, which highlight the importance of AMAGO's technical details:
 
 <br><br>
 
-As an example, we evaluate instruction-conditioned agents in the procedurally generated worlds of <a href="https://arxiv.org/abs/2109.06780">Crafter</a>. Instructions are strings from a closed vocabulary of Crafter's achievement system, with added goals for navigation and block placement.
+<table border="0" cellspacing="10" cellpadding="0" align="center"> 
+  <tbody>
+   <tr>
+	<td align="center" valign="middle">
+    </td>
+	 <a href="./src/figure/maze_results_from_ptt.png"><img src="./src/figure/maze_results_from_ppt.png" style="width:100%;"> </a>
+   </tr>
+  </tbody>
+</table>
+
+
+<br><br>
+
+Finally, we evaluate AMAGO in the procedurally generated worlds of <a href="https://arxiv.org/abs/2109.06780">Crafter</a>. Instructions are strings from a closed vocabulary of Crafter's achievement system, with added goals for navigation and block placement. Our agents need to generalize over thousands of unique goals in previously unseen environments, creating a highly general instruction-following agent.
+
 </h4>
 
 
@@ -279,7 +304,9 @@ As an example, we evaluate instruction-conditioned agents in the procedurally ge
 
 
 <h4>
-Above, we use several single-task instructions to evaluate the exploration capabilities of various ablations. As tasks require more exploration and adaptation to new world layouts, AMAGO's memory and relabeling become essential to success. Multi-step goals require considerable generalization, and AMAGO qualitatively demonstrates a clear understanding of the instruction with sample videos below. <br><br>
+Above, we use several single-task instructions to evaluate the exploration capabilities of various ablations. As tasks require more exploration and adaptation to new world layouts, AMAGO's memory and relabeling become essential to success. Multi-step goals require considerable generalization, and AMAGO qualitatively demonstrates a clear understanding of the instruction. Sample videos are shown below; these tasks are prompted by the user at test-time, and each video represents just one of the thousands of instructions an agent was trained on.
+
+<br><br>
 </h4>
 
 <table border="0" cellspacing="10" cellpadding="0" align="center"> 
@@ -322,6 +349,8 @@ Above, we use several single-task instructions to evaluate the exploration capab
 </table>
 
 
+<br><br>
+Check out our paper for more details and results!
 
 <hr>
 
