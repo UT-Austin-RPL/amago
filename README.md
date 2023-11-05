@@ -11,12 +11,13 @@ AMAGO is POMDP solver with an emphasis on long sequences, sparse rewards, and la
 - **Easy to Use**. Technical details can be easily customized but are designed to require little hyperparamter tuning.
 
 
+#### [Paper](https://arxiv.org/abs/2310.09971) | [Project Website](https://ut-austin-rpl.github.io/amago/)
+
+
 ## Background
 AMAGO treats multi-task RL, meta-RL, RL generalization, and long-term memory as variations of the same POMDP problem that can be solved with sequence learning. This core framework goes by many different names including [implicit partial observability](https://arxiv.org/abs/2107.06277), [context-based meta-learning](https://arxiv.org/abs/2301.08028), or [contextual MDPs](https://arxiv.org/abs/2111.09794).
 
 AMAGO learns from off-policy or offline data, which improves sample efficiency and enables hindsight experience replay for goal-conditioned environments. All of the low-level details have been redesigned from scratch to be scalable enough to train Transformers on long sequences. In general, AMAGO's training process looks more like supervised sequence modeling than state-of-the-art off-policy RL: trajectory sequences are saved and loaded from disk and RL loss functions are optimized by a single sequence model in one forward pass.
-
-Read the paper [here](https://arxiv.org/abs/2310.09971v1).
 
 ## Installation 
 
@@ -107,6 +108,12 @@ AMAGO provides a stable way to train long-sequence Transformers with RL, which c
 ## Advanced Configuration
 
 AMAGO is built around [gin-config](https://github.com/google/gin-config), which makes it easy to customize experiments. `gin` makes hyperparameters a default value for an object's `kwargs`, and lets you set their value without editing the source code. You can read more about gin [here](https://github.com/google/gin-config/blob/master/docs/index.md). gin is great for research, but isn't ideal for usability... you do have to read the code to know what you're changing. The `examples/` avoid any `.gin` config files and let you switch between the most important settings without worrying about any of this.
+
+## Roadmap
+
+- Multimodal (dict-based) observations
+- `MultiBinary` and `MultiDiscrete` action spaces
+- Faster backward pass with second target critic using `tau=1.0`
 
 ## Reference and Acknowledgements
 If you use AMAGO in your research, please consider citing our paper:
