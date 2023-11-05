@@ -130,5 +130,3 @@ If you use AMAGO in your research, please consider citing our paper:
   primaryClass={cs.LG}
 }
 ```
-
-Logo by [pngtree.com](pngtree.com)
