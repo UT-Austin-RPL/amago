@@ -1,4 +1,5 @@
 # AMAGO 
+#### [Paper](https://arxiv.org/abs/2310.09971) | [Project Website](https://ut-austin-rpl.github.io/amago/)
 
 <img src="media/amago_logo_2.png" alt="amagologo" width="150" align="right"/>
 
@@ -11,7 +12,6 @@ AMAGO is POMDP solver with an emphasis on long sequences, sparse rewards, and la
 - **Easy to Use**. Technical details can be easily customized but are designed to require little hyperparamter tuning.
 
 
-#### [Paper](https://arxiv.org/abs/2310.09971) | [Project Website](https://ut-austin-rpl.github.io/amago/)
 
 
 ## Background
