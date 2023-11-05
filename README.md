@@ -1,4 +1,5 @@
 # AMAGO 
+#### [Paper](https://arxiv.org/abs/2310.09971) | [Project Website](https://ut-austin-rpl.github.io/amago/)
 
 <img src="media/amago_logo_2.png" alt="amagologo" width="150" align="right"/>
 
@@ -11,12 +12,12 @@ AMAGO is POMDP solver with an emphasis on long sequences, sparse rewards, and la
 - **Easy to Use**. Technical details can be easily customized but are designed to require little hyperparamter tuning.
 
 
+
+
 ## Background
 AMAGO treats multi-task RL, meta-RL, RL generalization, and long-term memory as variations of the same POMDP problem that can be solved with sequence learning. This core framework goes by many different names including [implicit partial observability](https://arxiv.org/abs/2107.06277), [context-based meta-learning](https://arxiv.org/abs/2301.08028), or [contextual MDPs](https://arxiv.org/abs/2111.09794).
 
 AMAGO learns from off-policy or offline data, which improves sample efficiency and enables hindsight experience replay for goal-conditioned environments. All of the low-level details have been redesigned from scratch to be scalable enough to train Transformers on long sequences. In general, AMAGO's training process looks more like supervised sequence modeling than state-of-the-art off-policy RL: trajectory sequences are saved and loaded from disk and RL loss functions are optimized by a single sequence model in one forward pass.
-
-Read the paper [here](https://arxiv.org/abs/2310.09971v1).
 
 ## Installation 
 
@@ -71,6 +72,8 @@ export AMAGO_WANDB_PROJECT="wandb project name"
 export AMAGO_WANDB_ENTITY="wandb username"
 ```
 
+Example `wandb` training logs for each example coming soon.
+
 1. **Regular MDPs (Classic Gym)**
    
 Many popular benchmarks are MDPs and can be treated as a simple special case of the full agent. Toggling *off* memory, goal-conditioning/relabeling, and multi-episodic resets reduces AMAGO to a regular off-policy actor-critic like you've seen before. This is mainly meant to be an ablation to test the impact of memory. However, AMAGO is a stable variant of [REDQ](https://arxiv.org/abs/2101.05982)/[CRR](https://arxiv.org/abs/2006.15134) with improvements like "multi-gamma" training that are especially useful in sparse reward environments. See `examples/01_basic_gym.py` for an example.
@@ -107,6 +110,12 @@ AMAGO provides a stable way to train long-sequence Transformers with RL, which c
 ## Advanced Configuration
 
 AMAGO is built around [gin-config](https://github.com/google/gin-config), which makes it easy to customize experiments. `gin` makes hyperparameters a default value for an object's `kwargs`, and lets you set their value without editing the source code. You can read more about gin [here](https://github.com/google/gin-config/blob/master/docs/index.md). gin is great for research, but isn't ideal for usability... you do have to read the code to know what you're changing. The `examples/` avoid any `.gin` config files and let you switch between the most important settings without worrying about any of this.
+
+## Roadmap
+
+- Multimodal (dict-based) observations
+- `MultiBinary` and `MultiDiscrete` action spaces
+- Faster backward pass with second target critic using `tau=1.0`
 
 ## Reference and Acknowledgements
 If you use AMAGO in your research, please consider citing our paper:
