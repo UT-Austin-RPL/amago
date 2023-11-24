@@ -20,7 +20,8 @@ class Multigammas:
         # fmt: off
         discrete = [0.7, 0.9, 0.93, 0.95, 0.98, 0.99, 0.992, 0.994, 0.995, 0.997, 0.998, 0.999, 0.9991, 0.9992, 0.9993, 0.9994, 0.9995],
         continuous = [0.9, 0.95, 0.99, 0.993, 0.996],
-        # better? = [.1, .9, .95, .97, .99, .995]
+        # potential better default (work in progress):
+        # better = [.1, .9, .95, .97, .99, .995]
         # fmt: on
     ):
         self.discrete = discrete
@@ -50,7 +51,7 @@ class Agent(nn.Module):
         fake_filter: bool = False,
         popart: bool = True,
         use_target_actor: bool = True,
-        use_multigamma: int = True,
+        use_multigamma: bool = True,
     ):
         super().__init__()
         self.discrete = discrete
