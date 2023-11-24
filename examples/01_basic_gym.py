@@ -11,6 +11,8 @@ from example_utils import *
 def add_cli(parser):
     parser.add_argument("--env", type=str, required=True)
     parser.add_argument("--max_seq_len", type=int, default=128)
+    parser.add_argument("--reward_scale", type=int, default=1.0)
+    parser.add_argument("--no_popart", action="store_true")
     parser.add_argument(
         "--horizon",
         type=int,
@@ -26,7 +28,10 @@ if __name__ == "__main__":
     add_cli(parser)
     args = parser.parse_args()
 
-    config = {}
+    config = {
+        "amago.agent.Agent.reward_multiplier": args.reward_scale,
+        "amago.agent.Agent.popart": not args.no_popart,
+    }
     turn_off_goal_conditioning(config)
     switch_traj_encoder(
         config,

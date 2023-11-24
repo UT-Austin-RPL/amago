@@ -262,6 +262,7 @@ def create_experiment_from_cli(
         dset_root=cli.buffer_dir,
         dloader_workers=cli.dloader_workers,
         log_to_wandb=not cli.no_log,
+        wandb_group_name=group_name,
         epochs=cli.epochs,
         parallel_actors=cli.parallel_actors,
         train_timesteps_per_epoch=cli.timesteps_per_epoch,
