@@ -27,8 +27,8 @@ if __name__ == "__main__":
     config = {
         # no need to risk numerical instability when returns are this bounded
         "amago.agent.Agent.reward_multiplier": 100.0,
+        "amago.nets.tstep_encoders.TstepEncoder.goal_emb_Cls": amago.nets.goal_embedders.FFGoalEmb,
     }
-    turn_off_goal_conditioning(config)
     switch_traj_encoder(
         config,
         arch=args.traj_encoder,

@@ -12,7 +12,7 @@ class FFGoalEmb(nn.Module):
         self,
         goal_length: int,
         goal_dim: int,
-        goal_emb_dim: int = 1,
+        goal_emb_dim: int = 32,
         zero_embedding: bool = False,
     ):
         super().__init__()

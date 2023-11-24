@@ -1,4 +1,5 @@
 from itertools import chain
+from dataclasses import dataclass
 
 import torch
 from torch import nn
@@ -10,6 +11,20 @@ from amago.loading import Batch, MAGIC_PAD_VAL
 from amago.nets.tstep_encoders import *
 from amago.nets.traj_encoders import *
 from amago.nets import actor_critic
+
+
+@gin.configurable
+class Multigammas:
+    def __init__(
+        self,
+        # fmt: off
+        discrete = [0.7, 0.9, 0.93, 0.95, 0.98, 0.99, 0.992, 0.994, 0.995, 0.997, 0.998, 0.999, 0.9991, 0.9992, 0.9993, 0.9994, 0.9995],
+        continuous = [0.9, 0.95, 0.99, 0.993, 0.996],
+        # better? = [.1, .9, .95, .97, .99, .995]
+        # fmt: on
+    ):
+        self.discrete = discrete
+        self.continuous = continuous
 
 
 @gin.configurable
@@ -35,7 +50,7 @@ class Agent(nn.Module):
         fake_filter: bool = False,
         popart: bool = True,
         use_target_actor: bool = True,
-        use_multigamma: bool = True,
+        use_multigamma: int = True,
     ):
         super().__init__()
         self.discrete = discrete
@@ -64,13 +79,9 @@ class Agent(nn.Module):
         self.emb_dim = self.traj_encoder.emb_dim
 
         if discrete:
-            # the multigamma trick is basically free for discrete actor/critics so we can get carried away
-            # fmt: off
-            multigammas = [0.7, 0.9, 0.93, 0.95, 0.98, 0.99, 0.992, 0.994, 0.995, 0.997, 0.998, 0.999, 0.9991, 0.9992, 0.9993, 0.9994, 0.9995]
-            # fmt: on
+            multigammas = Multigammas().discrete
         else:
-            # multigamma multiplies actor/critic (not traj encoder) batch size for cont. actions
-            multigammas = [0.9, 0.95, 0.99, 0.993, 0.996]
+            multigammas = Multigammas().continuous
         # provided hparam `gamma` will stay in the -1 index
         # of gammas, actor, and critic outputs.
         gammas = (multigammas if use_multigamma else []) + [gamma]

@@ -10,6 +10,8 @@ from example_utils import *
 
 def add_cli(parser):
     parser.add_argument("--meta_horizon", type=int, default=500)
+    parser.add_argument("--room_size", type=int, default=9)
+    parser.add_argument("--episode_length", type=int, default=50)
     return parser
 
 
@@ -50,7 +52,9 @@ if __name__ == "__main__":
         timesteps, see the metaworld example.
         """
         make_train_env = lambda: GymEnv(
-            gym_env=RoomKeyDoor(),
+            gym_env=RoomKeyDoor(
+                size=args.room_size, max_episode_steps=args.episode_length
+            ),
             env_name="Dark-Key-To-Door",
             horizon=args.meta_horizon,
             zero_shot=False,

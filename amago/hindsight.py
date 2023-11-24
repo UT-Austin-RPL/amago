@@ -1,4 +1,5 @@
 import random
+import time
 import math
 import warnings
 import copy
@@ -443,6 +444,9 @@ class Relabeler:
         are important, as long as we are still relabeling with uniform selection
         at some frequency to make sure whatever method we come up with isn't forgetting about
         basic goals.
+
+        TODO: recent optimizations in the open-source codebase have turned the relabeling
+        process into a data pipeline bottleneck.
         """
         ############
         ## Step 0 ##
@@ -455,6 +459,7 @@ class Relabeler:
             raise RuntimeError(
                 "Do not try to relabel trajs that use natural environment rewards"
             )
+
         og_traj = traj  # save original traj for testing
         traj = copy.deepcopy(traj)  # only deepcopies what we will actually edit (goals)
         traj.frozen = False
