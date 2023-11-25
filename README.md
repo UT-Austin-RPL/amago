@@ -43,8 +43,8 @@ Applying AMAGO to any new environment requires 6 basic choices. The `examples/` 
 </p>
 
 1. **How do timesteps become vectors?** AMAGO standardizes its training process by creating a `TstepEncoder` to map timesteps to a fixed size representation. Timesteps (`hindsight.Timestep`) consist of observations, meta-RL data (rewards, dones, actions, reset signals), and optional goal descriptions. We include customizable defaults for the two most common cases of images and state arrays.
-   
-2. **How do sequences of timestep vectors become sequences of POMDP state vectors?** The `TrajEncoder` is a seq2seq model that enables long-term memory and in-context learning by processing `TstepEncoder` outputs. AMAGO is designed for large-scale sequence models like Transformers.
+
+2. **How do sequences of timestep vectors become sequences of POMDP state vectors?** The `TrajEncoder` is a seq2seq model that enables long-term memory and in-context learning by processing `TstepEncoder` outputs. AMAGO is designed for large-scale sequence models like Transformers.
 
 > **Quick Start:** Switch the `TstepEncoder` to a CNN (`CNNTstepEncoder`) for pixel environments or an MLP (`FFTstepEncoder`) for array environments. The `TformerTrajEncoder` is a very strong/stable default Transformer model. The `GRUTrajEncoder` (RNN) is a good backup option when memory is not as important, or when FlashAttention can't be installed.
   
@@ -109,7 +109,7 @@ AMAGO provides a stable way to train long-sequence Transformers with RL, which c
 
 ## Advanced Configuration
 
-AMAGO is built around [gin-config](https://github.com/google/gin-config), which makes it easy to customize experiments. `gin` makes hyperparameters a default value for an object's `kwargs`, and lets you set their value without editing the source code. You can read more about gin [here](https://github.com/google/gin-config/blob/master/docs/index.md). gin is great for research, but isn't ideal for usability... you do have to read the code to know what you're changing. The `examples/` avoid any `.gin` config files and let you switch between the most important settings without worrying about any of this.
+AMAGO is built around [gin-config](https://github.com/google/gin-config), which makes it easy to customize experiments. `gin` makes hyperparameters a default value for an object's `kwargs`, and lets you set their value without editing the source code. You can read more about gin [here](https://github.com/google/gin-config/blob/master/docs/index.md). The `examples/` avoid any `.gin` config files and let you switch between the most important settings without worrying about any of this.
 
 ## Roadmap
 
