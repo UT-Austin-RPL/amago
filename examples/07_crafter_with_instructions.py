@@ -1,6 +1,11 @@
 from argparse import ArgumentParser
+from functools import partial
 
 import wandb
+import torch
+from torch import nn
+from torch.nn import functional as F
+from einops import rearrange
 
 import amago
 from amago.envs.builtin.crafter_envs import CrafterEnv
@@ -20,7 +25,89 @@ def add_cli(parser):
     )
     parser.add_argument("--relabel", choices=["some", "none", "all"], default="some")
     parser.add_argument("--max_seq_len", type=int, default=2500)
+    parser.add_argument(
+        "--obs_kind", choices=["render", "crop", "textures"], default="textures"
+    )
     return parser
+
+
+class CrafterTstepEncoder(amago.nets.tstep_encoders.TstepEncoder):
+    def __init__(
+        self,
+        obs_kind: str,
+        obs_space,
+        goal_space,
+        rl2_space,
+        img_features: int = 256,
+        emb_dim: int = 256,
+    ):
+        super().__init__(
+            obs_space=obs_space, goal_space=goal_space, rl2_space=rl2_space
+        )
+
+        self.obs_kind = obs_kind
+        self.out_norm = amago.nets.ff.Normalization("layer", emb_dim)
+        self.rl2_norm = amago.nets.utils.InputNorm(self.rl2_space.shape[-1])
+        if obs_kind in ["crop", "render"]:
+            img_shape = obs_space["image"].shape
+            self.cnn = amago.nets.cnn.NatureishCNN(
+                img_shape=img_shape, channels_first=False, activation="leaky_relu"
+            )
+            img_feature_dim = self.cnn(
+                torch.zeros((1, 1) + img_shape, dtype=torch.uint8)
+            ).shape[-1]
+            self.img_features = nn.Linear(img_feature_dim, img_features)
+            self.img_norm = amago.nets.ff.Normalization("layer", img_features)
+            mlp_in_dim = (
+                img_features
+                + (0 if obs_kind == "render" else self.obs_space["inventory"].shape[-1])
+                + self.rl2_space.shape[-1]
+                + self.goal_emb_dim
+            )
+        else:
+            self.texture_emb = nn.Embedding(64 + 1, 4)
+            self.texture_ff1 = nn.Linear(4 * 9 * 7, 192)
+            self.texture_ff2 = nn.Linear(192, 192)
+            self.texture_norm = amago.nets.ff.Normalization("layer", 192)
+            mlp_in_dim = (
+                192
+                + self.obs_space["info"].shape[-1]
+                + self.rl2_space.shape[-1]
+                + self.goal_emb_dim
+            )
+        self.ff = amago.nets.ff.MLP(
+            d_inp=mlp_in_dim, d_hidden=mlp_in_dim * 2, n_layers=2, d_output=emb_dim
+        )
+        self._emb_dim = emb_dim
+
+    @property
+    def emb_dim(self):
+        # TstepEncoders need an emb_dim for AMAGO to build the rest of the architecture from here
+        return self._emb_dim
+
+    def inner_forward(self, obs, goal_rep, rl2s):
+        rl2s = self.rl2_norm(rl2s)
+        if self.training:
+            self.rl2_norm.update_stats(rl2s)
+        if self.obs_kind in ["crop", "render"]:
+            img_features = self.cnn(obs["image"])
+            img_features = self.img_norm(self.img_features(img_features))
+            extra = (rl2s, goal_rep)
+            if self.obs_kind == "crop":
+                extra += (obs["inventory"],)
+            mlp_input = torch.cat(extra + (img_features,), dim=-1)
+        else:
+            textures = rearrange(obs["textures"], "b l h w -> b l (h w)").long()
+            texture_features = rearrange(
+                self.texture_emb(textures), "b l f d -> b l (f d)"
+            )
+            texture_features = F.leaky_relu(self.texture_ff1(texture_features))
+            texture_features = self.texture_norm(self.texture_ff2(texture_features))
+            mlp_input = torch.cat(
+                (rl2s, goal_rep, obs["info"], texture_features), dim=-1
+            )
+        out = self.out_norm(self.ff(mlp_input))
+        return out
 
 
 if __name__ == "__main__":
@@ -32,10 +119,15 @@ if __name__ == "__main__":
     config = {
         # no need to risk numerical instability when returns are this bounded
         "amago.agent.Agent.reward_multiplier": 10.0,
+        "amago.agent.Agent.tstep_encoder_Cls": partial(
+            CrafterTstepEncoder, obs_kind=args.obs_kind
+        ),
         # token-based goal embedding
         "amago.nets.tstep_encoders.TstepEncoder.goal_emb_Cls": amago.nets.goal_embedders.TokenGoalEmb,
         "amago.nets.goal_embedders.TokenGoalEmb.zero_embedding": False,
         "amago.nets.goal_embedders.TokenGoalEmb.goal_emb_dim": 64,
+        # "amago.hindsight.Trajectory.goal_pad_val" : 98,
+        # "amago.hindsight.Trajectory.goal_completed_val" : 99,
     }
     switch_traj_encoder(
         config,
@@ -43,22 +135,19 @@ if __name__ == "__main__":
         memory_size=args.memory_size,
         layers=args.memory_layers,
     )
-    switch_tstep_encoder(config, arch="cnn", channels_first=False)
     use_config(config, args.configs)
 
     make_env = lambda: CrafterEnv(
         directed=not args.default_rew,
         k=5,
         min_k=1,
-        time_limit=5000,
-        obs_kind="render",
+        time_limit=2500,
+        obs_kind=args.obs_kind,
         # obs_kind=args.obs_kind,
         use_tech_tree=args.use_tech_tree,
     )
 
-    group_name = (
-        f"{args.run_name}_{'undirected' if args.default_rew else 'directed'}_crafter"
-    )
+    group_name = f"{args.run_name}_{'undirected' if args.default_rew else 'directed'}_crafter_{args.obs_kind}"
     for trial in range(args.trials):
         run_name = group_name + f"_trial_{trial}"
         experiment = create_experiment_from_cli(
@@ -66,12 +155,15 @@ if __name__ == "__main__":
             make_train_env=make_env,
             make_val_env=make_env,
             max_seq_len=args.max_seq_len,
-            traj_save_len=5000,
+            traj_save_len=2501,
+            stagger_traj_file_lengths=False,
             run_name=run_name,
             group_name=group_name,
+            batch_size=18,
             val_timesteps_per_epoch=5000,
             # Hindsight Relabeling!
             relabel=args.relabel,
+            goal_importance_sampling=True,
         )
         experiment.start()
         if args.ckpt is not None:
