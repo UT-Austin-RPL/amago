@@ -114,7 +114,7 @@ class RLData:
         else:
             obs, goals, rl2s = traj.make_sequence()
         # dtype cast needs to happen inside TstepEncoder
-        self.obs = torch.from_numpy(obs)
+        self.obs = {k: torch.from_numpy(v) for k, v in obs.items()}
         self.goals = torch.from_numpy(goals).float()
         self.rl2s = torch.from_numpy(rl2s).float()
         self.time_idxs = torch.Tensor([t.raw_time_idx for t in traj.timesteps]).long()
@@ -134,7 +134,7 @@ class RLData:
     def random_slice(self, length: int):
         i = random.randrange(0, max(len(self) - length + 1, 1))
         # the causal RL loss requires these off-by-one lengths
-        self.obs = self.obs[i : i + length + 1]
+        self.obs = {k: v[i : i + length + 1] for k, v in self.obs.items()}
         self.goals = self.goals[i : i + length + 1]
         self.rl2s = self.rl2s[i : i + length + 1]
         self.time_idxs = self.time_idxs[i : i + length + 1]
@@ -154,7 +154,7 @@ class Batch:
     Keeps data organized during training step
     """
 
-    obs: torch.Tensor
+    obs: dict[torch.Tensor]
     goals: torch.Tensor
     rl2s: torch.Tensor
     rews: torch.Tensor
@@ -163,7 +163,7 @@ class Batch:
     time_idxs: torch.Tensor
 
     def to(self, device):
-        self.obs = self.obs.to(device)
+        self.obs = {k: v.to(device) for k, v in self.obs.items()}
         self.goals = self.goals.to(device)
         self.rl2s = self.rl2s.to(device)
         self.rews = self.rews.to(device)
@@ -173,7 +173,8 @@ class Batch:
 
 
 def RLData_pad_collate(samples: list[RLData]) -> Batch:
-    obs = pad([s.obs for s in samples])
+    assert samples[0].obs.keys() == samples[-1].obs.keys()
+    obs = {k: pad([s.obs[k] for s in samples]) for k in samples[0].obs.keys()}
     goals = pad([s.goals for s in samples])
     rl2s = pad([s.rl2s for s in samples])
     rews = pad([s.rews for s in samples])

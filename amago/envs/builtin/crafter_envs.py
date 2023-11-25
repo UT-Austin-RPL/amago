@@ -79,8 +79,15 @@ class CrafterEnv(AMAGOEnv):
         use_tech_tree: bool = False,
         verbose: bool = False,
     ):
+        env = CrafterOptionalRender(
+            reward=not directed, length=time_limit, render=obs_kind != "gridworld"
+        )
+
         if obs_kind == "render":
             obs_shape = (64, 64, 3)
+            self.observation_space = gym.spaces.Box(
+                low=0, high=255, shape=obs_shape, dtype=np.uint8
+            )
         elif obs_kind == "crop":
             obs_shape = (3 * 38 * 38 + 16,)
         elif obs_kind == "gridworld":
@@ -89,9 +96,7 @@ class CrafterEnv(AMAGOEnv):
             raise ValueError(
                 f"Unrecognized `obs_kind` '{obs_kind}'. Options are: render, crop, gridworld."
             )
-        env = CrafterOptionalRender(
-            reward=not directed, length=time_limit, render=obs_kind != "gridworld"
-        )
+
         self.clear_fixed_task()
         self.k = k
         self.min_k = min_k
@@ -103,9 +108,6 @@ class CrafterEnv(AMAGOEnv):
         self.verbose = verbose
         self.use_tech_tree = use_tech_tree
         self._best_tech_tree_idx = 0
-        self.observation_space = gym.spaces.Box(
-            low=0, high=255, shape=obs_shape, dtype=np.uint8
-        )
 
     @property
     def env_name(self):

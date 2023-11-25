@@ -9,7 +9,7 @@ from example_utils import *
 
 
 def add_cli(parser):
-    parser.add_argument("--games", default="Pong", nargs="+")
+    parser.add_argument("--games", nargs="+")
     parser.add_argument("--max_seq_len", type=int, default=256)
     return parser
 

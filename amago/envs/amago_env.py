@@ -19,7 +19,7 @@ class AMAGOEnv(gym.Wrapper, ABC):
 
         self.horizon = horizon
         self.start = start
-
+        # action space conversion
         self.discrete = isinstance(space_convert(env.action_space), gym.spaces.Discrete)
         if self.discrete:
             self.env = DiscreteActionWrapper(self.env)
@@ -28,7 +28,13 @@ class AMAGOEnv(gym.Wrapper, ABC):
             self.env = ContinuousActionWrapper(self.env)
             self.action_size = self.action_space.shape[-1]
         self.action_space = space_convert(self.env.action_space)
-        self.observation_space = space_convert(self.env.observation_space)
+        # observation space conversion (defaults to dict)
+        obs_space = self.env.observation_space
+        if not isinstance(obs_space, gym.spaces.Dict):
+            obs_space = gym.spaces.Dict({"observation": space_convert(obs_space)})
+        self.observation_space = gym.spaces.Dict(
+            {k: space_convert(v) for k, v in obs_space.items()}
+        )
 
     def render(self, *args, **kwargs):
         return self.env.render(*args, **kwargs)
@@ -79,6 +85,8 @@ class AMAGOEnv(gym.Wrapper, ABC):
     def reset(self, seed=None, options=None) -> Timestep:
         self.step_count = 0
         obs, _ = self.inner_reset(seed=seed, options=options)
+        if not isinstance(obs, dict):
+            obs = {"observation": obs}
         timestep = Timestep(
             obs=obs,
             prev_action=self.make_action_rep(self.blank_action),
@@ -124,6 +132,9 @@ class AMAGOEnv(gym.Wrapper, ABC):
         if soft_done and not normal_rl_reset:
             # roll through episode resets
             obs, info = self.env.reset(**soft_reset_kwargs)
+
+        if not isinstance(obs, dict):
+            obs = {"observation": obs}
         # create Timestep. goal_seq holds desired goal before this timestep,
         # achieved_goal holds goal we actually achieved this timestep.
         timestep = Timestep(

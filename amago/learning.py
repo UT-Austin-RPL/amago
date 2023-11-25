@@ -177,12 +177,6 @@ class Experiment:
             [make_val_env for _ in range(self.parallel_actors)]
         )
         self.val_envs.reset()
-        self.discrete = isinstance(
-            self.train_envs.single_action_space, gym.spaces.Discrete
-        )
-        if not self.discrete:
-            assert (self.train_envs.single_action_space.low >= -1).all()
-            assert (self.train_envs.single_action_space.high <= 1.0).all()
         # self.train_buffers holds the env state between rollout cycles
         # that are shorter than the horizon length
         self.train_buffers = None
@@ -303,18 +297,13 @@ class Experiment:
         obs_shape = self.gcrl2_space["obs"].shape
         goal_shape = self.gcrl2_space["goal"].shape
         rl2_shape = self.gcrl2_space["rl2"].shape
-        if self.discrete:
-            action_dim = self.train_envs.single_action_space.n
-        else:
-            action_dim = self.train_envs.single_action_space.shape[-1]
         policy_kwargs = {
-            "obs_shape": obs_shape,
-            "goal_shape": goal_shape,
-            "rl2_shape": rl2_shape,
-            "action_dim": action_dim,
+            "obs_space": self.gcrl2_space["obs"],
+            "goal_space": self.gcrl2_space["goal"],
+            "rl2_space": self.gcrl2_space["rl2"],
+            "action_space": self.train_envs.single_action_space,
             "max_seq_len": self.max_seq_len,
             "horizon": self.horizon,
-            "discrete": self.discrete,
         }
         self.policy = Agent(**policy_kwargs)
         self.policy.to(self.DEVICE)
@@ -371,7 +360,7 @@ class Experiment:
         def get_t(_dones=None):
             envs.call_async("current_timestep")
             par_obs_goal_rl2 = envs.call_wait()
-            _obs = np.stack(
+            _obs = utils.stack_list_array_dicts(
                 [obs_goal_rl2[0] for obs_goal_rl2 in par_obs_goal_rl2], axis=0
             )
             _goal = np.stack(
@@ -389,8 +378,8 @@ class Experiment:
 
         for step in iter_:
             obs_tc_t = obs_seqs.sequences
-            goals_tc_t = goal_seqs.sequences
-            rl2_tc_t = rl2_seqs.sequences
+            goals_tc_t = goal_seqs.sequences["_"]
+            rl2_tc_t = rl2_seqs.sequences["_"]
             seq_lengths = obs_seqs.sequence_lengths
             time_idxs = obs_seqs.time_idxs
 
@@ -405,12 +394,6 @@ class Experiment:
                         sample=self.sample_actions,
                         hidden_state=hidden_state if self.fast_inference else None,
                     )
-
-            actions = actions.float().cpu().numpy()
-            if self.discrete:
-                actions = actions.astype(np.uint8)
-            else:
-                actions = actions.astype(np.float32)
             _, ext_rew, terminated, truncated, info = envs.step(actions)
             done = terminated | truncated
             get_t(done)

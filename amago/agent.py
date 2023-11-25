@@ -6,6 +6,7 @@ from torch import nn
 from einops import repeat, rearrange
 import numpy as np
 import gin
+import gymnasium as gym
 
 from amago.loading import Batch, MAGIC_PAD_VAL
 from amago.nets.tstep_encoders import *
@@ -18,10 +19,11 @@ class Multigammas:
     def __init__(
         self,
         # fmt: off
-        discrete = [0.7, 0.9, 0.93, 0.95, 0.98, 0.99, 0.992, 0.994, 0.995, 0.997, 0.998, 0.999, 0.9991, 0.9992, 0.9993, 0.9994, 0.9995],
-        continuous = [0.9, 0.95, 0.99, 0.993, 0.996],
         # potential better default (work in progress):
-        # better = [.1, .9, .95, .97, .99, .995]
+        discrete = [.1, .9, .95, .97, .99, .995],
+        continuous = [.1, .9, .95, .97, .99, .995],
+        # discrete = [0.7, 0.9, 0.93, 0.95, 0.98, 0.99, 0.992, 0.994, 0.995, 0.997, 0.998, 0.999, 0.9991, 0.9992, 0.9993, 0.9994, 0.9995],
+        # continuous = [0.9, 0.95, 0.99, 0.993, 0.996],
         # fmt: on
     ):
         self.discrete = discrete
@@ -32,13 +34,12 @@ class Multigammas:
 class Agent(nn.Module):
     def __init__(
         self,
-        obs_shape: tuple[int],
-        goal_shape: tuple[int],
-        rl2_shape: tuple[int],
-        action_dim: int,
+        obs_space: gym.spaces.Dict,
+        goal_space: gym.spaces.Box,
+        rl2_space: gym.spaces.Box,
+        action_space: gym.spaces.Space,
         max_seq_len: int,
         horizon: int,
-        discrete: bool,
         tstep_encoder_Cls=FFTstepEncoder,
         traj_encoder_Cls=TformerTrajEncoder,
         num_critics: int = 4,
@@ -54,11 +55,18 @@ class Agent(nn.Module):
         use_multigamma: bool = True,
     ):
         super().__init__()
-        self.discrete = discrete
-        self.obs_shape = obs_shape
-        self.goal_shape = goal_shape
-        self.rl2_shape = rl2_shape
-        self.action_dim = action_dim
+        self.obs_space = obs_space
+        self.goal_space = goal_space
+        self.rl2_space = rl2_space
+        # TODO: refactor for MultiBinary + MultiDiscrete
+        self.action_space = action_space
+        if isinstance(self.action_space, gym.spaces.Discrete):
+            self.action_dim = self.action_space.n
+        elif isinstance(self.action_space, gym.spaces.Box):
+            self.action_dim = self.action_space.shape[-1]
+        else:
+            raise ValueError(f"Unsupported action space: `{type(self.action_space)}`")
+        self.discrete = isinstance(action_space, gym.spaces.Discrete)
         self.reward_multiplier = reward_multiplier
         self.pad_val = MAGIC_PAD_VAL
         self.fake_filter = fake_filter
@@ -70,7 +78,9 @@ class Agent(nn.Module):
         self.num_critics_td = num_critics_td
 
         self.tstep_encoder = tstep_encoder_Cls(
-            obs_shape=obs_shape, goal_shape=goal_shape, rl2_shape=rl2_shape
+            obs_space=obs_space,
+            goal_space=goal_space,
+            rl2_space=rl2_space,
         )
         self.traj_encoder = traj_encoder_Cls(
             tstep_dim=self.tstep_encoder.emb_dim,
@@ -79,7 +89,7 @@ class Agent(nn.Module):
         )
         self.emb_dim = self.traj_encoder.emb_dim
 
-        if discrete:
+        if self.discrete:
             multigammas = Multigammas().discrete
         else:
             multigammas = Multigammas().continuous
@@ -89,39 +99,35 @@ class Agent(nn.Module):
         self.gammas = torch.Tensor(gammas).float()
 
         self.popart = actor_critic.PopArtLayer(gammas=len(gammas), enabled=popart)
-        self.critics = actor_critic.NCritics(
-            state_dim=self.traj_encoder.emb_dim,
-            action_dim=action_dim,
-            discrete=discrete,
-            num_critics=num_critics,
-            gammas=self.gammas,
-        )
+
+        ac_kwargs = {
+            "state_dim": self.traj_encoder.emb_dim,
+            "action_dim": self.action_dim,
+            "discrete": self.discrete,
+            "gammas": self.gammas,
+        }
+        self.critics = actor_critic.NCritics(**ac_kwargs, num_critics=num_critics)
         self.target_critics = actor_critic.NCritics(
-            state_dim=self.traj_encoder.emb_dim,
-            action_dim=action_dim,
-            discrete=discrete,
-            num_critics=num_critics,
-            gammas=self.gammas,
+            **ac_kwargs, num_critics=num_critics
         )
-        self.actor = actor_critic.Actor(
-            state_dim=self.traj_encoder.emb_dim,
-            action_dim=action_dim,
-            discrete=discrete,
-            gammas=self.gammas,
-        )
-        self.target_actor = actor_critic.Actor(
-            state_dim=self.traj_encoder.emb_dim,
-            action_dim=action_dim,
-            discrete=discrete,
-            gammas=self.gammas,
-        )
+        self.actor = actor_critic.Actor(**ac_kwargs)
+        self.target_actor = actor_critic.Actor(**ac_kwargs)
         # full weight copy to targets
         self.hard_sync_targets()
 
-    def get_current_timestep(self, sequences: torch.Tensor, seq_lengths: torch.Tensor):
-        while sequences.ndim > seq_lengths.ndim:
-            seq_lengths = seq_lengths.unsqueeze(-1)
-        timesteps = torch.take_along_dim(sequences, seq_lengths - 1, dim=1)
+    def get_current_timestep(
+        self, sequences: torch.Tensor | dict[torch.Tensor], seq_lengths: torch.Tensor
+    ):
+        dict_based = isinstance(sequences, dict)
+        if not dict_based:
+            sequences = {"dummy": sequences}
+        timesteps = {}
+        for k, v in sequences.items():
+            missing_dims = v.ndim - seq_lengths.ndim
+            seq_lengths_ = seq_lengths.reshape(seq_lengths.shape + (1,) * missing_dims)
+            timesteps[k] = torch.take_along_dim(v, seq_lengths_ - 1, dim=1)
+        if not dict_based:
+            timesteps = timesteps["dummy"]
         return timesteps
 
     @property
@@ -201,7 +207,11 @@ class Agent(nn.Module):
                 actions = action_dists.mean
 
         # get intended gamma distribution (always in -1 idx)
-        actions = actions[..., -1, :]
+        actions = actions[..., -1, :].float().cpu().numpy()
+        if self.discrete:
+            actions = actions.astype(np.uint8)
+        else:
+            actions = actions.astype(np.float32)
         return actions, hidden_state
 
     def _td_stats(self, mask, q_s_a_g, r, td_target) -> dict:
