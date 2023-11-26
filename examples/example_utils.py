@@ -96,7 +96,7 @@ def add_common_cli(parser: ArgumentParser) -> ArgumentParser:
         help="Maximum size of the replay buffer (measured in trajectories, not timesteps).",
     )
     parser.add_argument(
-        "--start_learning_after_epoch",
+        "--start_learning_at_epoch",
         type=int,
         default=0,
         help="Skip learning updates for this many epochs at the beginning of training (if worried about overfitting to a small dataset)",
@@ -267,7 +267,7 @@ def create_experiment_from_cli(
         parallel_actors=cli.parallel_actors,
         train_timesteps_per_epoch=cli.timesteps_per_epoch,
         train_grad_updates_per_epoch=cli.grads_per_epoch,
-        start_learning_after_epoch=cli.start_learning_after_epoch,
+        start_learning_at_epoch=cli.start_learning_at_epoch,
         val_interval=cli.val_interval,
         ckpt_interval=cli.ckpt_interval,
         half_precision=cli.half_precision,

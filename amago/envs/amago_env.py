@@ -30,7 +30,6 @@ class AMAGOEnv(gym.Wrapper, ABC):
         self.action_space = space_convert(self.env.action_space)
         # observation space conversion (defaults to dict)
         obs_space = self.env.observation_space
-        print(obs_space)
         if not isinstance(obs_space, gym.spaces.Dict):
             obs_space = gym.spaces.Dict({"observation": space_convert(obs_space)})
         self.observation_space = gym.spaces.Dict(

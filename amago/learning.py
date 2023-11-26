@@ -59,7 +59,8 @@ class Experiment:
 
     # Learning Schedule
     epochs: int = 1000
-    start_learning_after_epoch: int = 0
+    start_learning_at_epoch: int = 0
+    start_collecting_at_epoch: int = 0
     train_timesteps_per_epoch: int = 1000
     train_grad_updates_per_epoch: int = 1000
     val_interval: int = 10
@@ -615,7 +616,8 @@ class Experiment:
             self.policy.eval()
             if epoch % self.val_interval == 0:
                 self.evaluate_val()
-            self.collect_new_training_data()
+            if epoch >= self.start_collecting_at_epoch:
+                self.collect_new_training_data()
 
             # make dataloaders aware of new .traj files
             self.init_dloaders()
@@ -626,7 +628,7 @@ class Experiment:
                     category=Warning,
                 )
                 continue
-            elif epoch < self.start_learning_after_epoch:
+            elif epoch < self.start_learning_at_epoch:
                 # lets us skip early epochs to prevent overfitting on small datasets
                 continue
             for train_step, batch in make_pbar(self.train_dloader, True, epoch):
