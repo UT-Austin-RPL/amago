@@ -99,6 +99,7 @@ if __name__ == "__main__":
             val_timesteps_per_epoch=args.horizon + 1,
             sample_actions=False,  # even softmax prob .999 isn't good enough for this env...
             exploration_wrapper_Cls=TMazeExploration,
+            batch_size=18 if args.horizon > 5000 else 24,
         )
         experiment.start()
         if args.ckpt is not None:

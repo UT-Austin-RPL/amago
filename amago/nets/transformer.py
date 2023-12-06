@@ -116,6 +116,7 @@ class VanillaAttention(nn.Module):
         scores.masked_fill_(self._mask, -torch.inf)
 
         A = self.dropout(torch.softmax(scale * scores, dim=-1))
+        breakpoint()
         V = torch.einsum("bhls,bshd->blhd", A, values)
         return V
 
@@ -136,6 +137,9 @@ class AttentionLayer(nn.Module):
         self.attention = attention
         FF = SigmaReparam if sigma_reparam else nn.Linear
         self.qkv_projection = FF(d_model, 3 * d_qkv * n_heads, bias=False)
+        # self.q_projection = FF(d_model, d_qkv * n_heads, bias=False)
+        # self.k_projection = FF(d_model, d_qkv * n_heads, bias=False)
+        # self.v_projection = FF(d_model, d_qkv * n_heads, bias=False)
         self.dropout_qkv = nn.Dropout(dropout_qkv)
         self.out_projection = FF(d_qkv * n_heads, d_model)
         self.head_scaler = nn.Parameter(
@@ -144,6 +148,12 @@ class AttentionLayer(nn.Module):
         self.n_heads = n_heads
 
     def forward(self, sequence, key_cache=None, val_cache=None, cache_seqlens=None):
+        """
+        q = self.q_projection(sequence)
+        k = self.k_projection(sequence)
+        v = self.v_projection(sequence)
+        qkv = torch.cat([q, k, v], dim=-1)
+        """
         qkv = self.dropout_qkv(self.qkv_projection(sequence))
         qkv = rearrange(
             qkv,
