@@ -50,10 +50,11 @@ class CNN(nn.Module, ABC):
     def conv_forward(self, imgs):
         pass
 
-    def forward(self, obs):
-        assert obs.dtype == torch.uint8
+    def forward(self, obs, from_float=False):
         assert obs.ndim == 5
-        obs = obs / 255.0
+        if not from_float:
+            assert obs.dtype == torch.uint8
+            img = img.float() / 255.
         obs = torch.cat(self.data_aug(obs.split(3, dim=2)), axis=2)
         if not self.channels_first:
             B, L, H, W, C = obs.shape
