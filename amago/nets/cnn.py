@@ -22,21 +22,29 @@ def weight_init(m):
         m.weight.data.fill_(0.0)
         m.bias.data.fill_(0.0)
         mid = m.weight.size(2) // 2
-        gain = nn.init.calculate_gain("relu")
+        gain = nn.init.calculate_gain("leaky_relu")
         nn.init.orthogonal_(m.weight.data[:, :, mid, mid], gain)
 
 
+@gin.configurable
 class CNN(nn.Module, ABC):
     def __init__(
         self,
         img_shape: tuple[int, int, int],
         channels_first: bool,
         activation: str,
+        data_aug: bool = False,
     ):
         super().__init__()
         self.img_shape = img_shape
         self.channels_first = channels_first
         self.activation = activation_switch(activation)
+        _i = (9, 84, 84)
+        if data_aug:
+            augs = [TranslationAug(_i, 4), BatchWiseImgColorJitterAug(_i)]
+        else:
+            augs = [IdentityAug()]
+        self.data_aug = DataAugGroup(augs)
 
     @abstractmethod
     def conv_forward(self, imgs):
@@ -45,16 +53,20 @@ class CNN(nn.Module, ABC):
     def forward(self, obs):
         assert obs.dtype == torch.uint8
         assert obs.ndim == 5
+        obs = obs / 255.0
+        obs = torch.cat(self.data_aug(obs.split(3, dim=2)), axis=2)
         if not self.channels_first:
             B, L, H, W, C = obs.shape
             img = rearrange(obs, "b l h w c -> (b l) c h w")
         else:
             B, L, C, H, W = obs.shape
             img = rearrange(obs, "b l c h w -> (b l) c h w")
-        img = (img / 128.0) - 1.0
         features = self.conv_forward(img)
         out = rearrange(features, "(b l) c h w -> b l (c h w)", l=L)
         return out
+
+
+from libero.lifelong.models.modules.data_augmentation import *
 
 
 class DrQCNN(CNN):

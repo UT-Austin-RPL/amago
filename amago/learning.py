@@ -173,11 +173,11 @@ class Experiment:
         self.train_envs = gym.vector.AsyncVectorEnv(
             [make_train_env for _ in range(self.parallel_actors)]
         )
-        self.train_envs.reset()
+        # self.train_envs.reset()
         self.val_envs = gym.vector.AsyncVectorEnv(
             [make_val_env for _ in range(self.parallel_actors)]
         )
-        self.val_envs.reset()
+        # self.val_envs.reset()
         # self.train_buffers holds the env state between rollout cycles
         # that are shorter than the horizon length
         self.train_buffers = None
