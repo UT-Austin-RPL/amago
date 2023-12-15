@@ -30,6 +30,9 @@ setup(
             # deepmind alchemy
             "dm_env",
             "dm_alchemy @ git+https://github.com/deepmind/dm_alchemy.git",
+            "robosuite",
+            "termcolor",
+            "h5py",
         ],
         "flash": ["ninja", "packaging", "flash-attn"],
     },
