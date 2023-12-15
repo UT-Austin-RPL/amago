@@ -253,11 +253,6 @@ class CrafterEnv(AMAGOEnv):
         return next_state, reward, done, False, info
 
     def inner_reset(self, seed=None, options=None):
-        """
-        Crafter's reset() is a huge bottleneck for us.
-        This is why the Env Interaction progress bar
-        moves so unevenly.
-        """
         obs = self.env.reset()
         info = self.get_game_info()
         self._last_game_info = copy.deepcopy(info)
@@ -286,13 +281,6 @@ class CrafterEnv(AMAGOEnv):
     """
     Goal frequencies are conditioned on their type (the first word of the goal).
     TASKS[type][idx] = (goal, probability)
-
-    I made these numbers up and froze them before a full training run ever
-    finished. They are so specific that it might look like they were tuned
-    for performance.... but that's just me overthinking them. The main idea
-    was to make a reasonable curriculum that prevents the w/o Relabeling
-    baseline from being an obvious waste of compute at a time when AMAGO
-    ran far slower than the open-source version.
     """
 
     TASKS = {
@@ -379,7 +367,7 @@ class CrafterEnv(AMAGOEnv):
         k_this_ep = random.randint(self.min_k, self.k)
         for _ in range(k_this_ep):
             r = random.random()
-            # again: these probabilities look specific but were not tuned and would
+            # these probabilities look specific but were not tuned and would
             # probably be sub-optimal if we really cared about Crafter as an end goal...
             if r < 0.3:
                 goal = _sample_task("collect")
