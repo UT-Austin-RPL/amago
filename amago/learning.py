@@ -23,6 +23,7 @@ from amago.envs.env_utils import (
     ExplorationWrapper,
     SequenceWrapper,
     GPUSequenceBuffer,
+    DummyAsyncVectorEnv,
 )
 from .loading import Batch, TrajDset, RLData_pad_collate, MAGIC_PAD_VAL
 from .hindsight import Relabeler, RelabelWarning
@@ -39,6 +40,7 @@ class Experiment:
     traj_save_len: int
     run_name: str
     gpu: int
+    async_envs: bool = True
 
     # Logging
     log_to_wandb: bool = False
@@ -170,13 +172,10 @@ class Experiment:
 
         make_train_env = partial(_make_env, self.make_train_env, "train")
         make_val_env = partial(_make_env, self.make_val_env, "val")
-        self.train_envs = gym.vector.AsyncVectorEnv(
-            [make_train_env for _ in range(self.parallel_actors)]
-        )
+        Par = gym.vector.AsyncVectorEnv if self.async_envs else DummyAsyncVectorEnv
+        self.train_envs = Par([make_train_env for _ in range(self.parallel_actors)])
         self.train_envs.reset()
-        self.val_envs = gym.vector.AsyncVectorEnv(
-            [make_val_env for _ in range(self.parallel_actors)]
-        )
+        self.val_envs = Par([make_val_env for _ in range(self.parallel_actors)])
         self.val_envs.reset()
         # self.train_buffers holds the env state between rollout cycles
         # that are shorter than the horizon length

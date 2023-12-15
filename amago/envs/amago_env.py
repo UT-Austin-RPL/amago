@@ -3,6 +3,7 @@ from abc import ABC, abstractmethod
 import copy
 
 import numpy as np
+import gym as og_gym
 import gymnasium as gym
 
 from amago.envs.env_utils import (
@@ -30,7 +31,7 @@ class AMAGOEnv(gym.Wrapper, ABC):
         self.action_space = space_convert(self.env.action_space)
         # observation space conversion (defaults to dict)
         obs_space = self.env.observation_space
-        if not isinstance(obs_space, gym.spaces.Dict):
+        if not isinstance(obs_space, gym.spaces.Dict | og_gym.spaces.Dict):
             obs_space = gym.spaces.Dict({"observation": space_convert(obs_space)})
         self.observation_space = gym.spaces.Dict(
             {k: space_convert(v) for k, v in obs_space.items()}

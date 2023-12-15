@@ -19,6 +19,11 @@ def add_common_cli(parser: ArgumentParser) -> ArgumentParser:
     parser.add_argument("--trials", type=int, default=1)
     parser.add_argument("--gpu", type=int, default=0)
     parser.add_argument(
+        "--no_async",
+        action="store_true",
+        help="Run the 'parallel' actors in one thread",
+    )
+    parser.add_argument(
         "--no_log",
         action="store_true",
         help="Turn off wandb logging (usually for debugging).",
@@ -272,6 +277,7 @@ def create_experiment_from_cli(
         ckpt_interval=cli.ckpt_interval,
         half_precision=cli.half_precision,
         fast_inference=not cli.slow_inference,
+        async_envs=not cli.no_async,
         **extra_experiment_kwargs,
     )
 

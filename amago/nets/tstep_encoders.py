@@ -53,7 +53,9 @@ class FFTstepEncoder(TstepEncoder):
         activation: str = "leaky_relu",
         hide_rl2s: bool = False,
     ):
-        super().__init__(obs_space=obs_space, goal_space=goal_space, rl2_space=rl2_space)
+        super().__init__(
+            obs_space=obs_space, goal_space=goal_space, rl2_space=rl2_space
+        )
         flat_obs_shape = math.prod(self.obs_space["observation"].shape)
         in_dim = flat_obs_shape + self.goal_emb_dim + self.rl2_space.shape[-1]
         self.in_norm = InputNorm(flat_obs_shape + self.rl2_space.shape[-1])
@@ -102,8 +104,12 @@ class CNNTstepEncoder(TstepEncoder):
         d_output: int = 256,
         norm: str = "layer",
         activation: str = "leaky_relu",
+        skip_rl2_norm: bool = False,
+        hide_rl2s: bool = False,
     ):
-        super().__init__(obs_space=obs_space, goal_space=goal_space, rl2_space=rl2_space)
+        super().__init__(
+            obs_space=obs_space, goal_space=goal_space, rl2_space=rl2_space
+        )
         obs_shape = self.obs_space["observation"].shape
         self.cnn = cnn_Cls(
             img_shape=obs_shape,
@@ -115,12 +121,13 @@ class CNNTstepEncoder(TstepEncoder):
         ).shape[-1]
         self.img_features = nn.Linear(img_feature_dim, img_features)
         self.img_norm = ff.Normalization(norm, img_features)
-        self.rl2_norm = InputNorm(self.rl2_space.shape[-1])
+        self.rl2_norm = InputNorm(self.rl2_space.shape[-1], skip=skip_rl2_norm)
         mlp_in = img_features + self.goal_emb_dim + self.rl2_space.shape[-1]
         self.merge = ff.MLP(
             d_inp=mlp_in, d_hidden=d_hidden, n_layers=n_layers, d_output=d_output
         )
         self.out_norm = ff.Normalization(norm, d_output)
+        self.hide_rl2s = hide_rl2s
         self._emb_dim = d_output
 
     def inner_forward(self, obs, goal_rep, rl2s):
@@ -131,6 +138,8 @@ class CNNTstepEncoder(TstepEncoder):
         rl2s_norm = self.rl2_norm(rl2s)
         if self.training:
             self.rl2_norm.update_stats(rl2s)
+        if self.hide_rl2s:
+            rl2s = rl2s * 0
         inp = torch.cat((img_rep, goal_rep, rl2s_norm), dim=-1)
         out = self.out_norm(self.merge(inp))
         return out
