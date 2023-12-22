@@ -100,7 +100,7 @@ From AMAGO's perspective, meta-RL problems are just POMDPs that automatically re
 AMAGO can adapt to procedurally generated environments while completing multi-step instructions. `examples/07_crafter_with_instructions.py` shows how we turn [Crafter](https://danijar.com/project/crafter/) into an instruction-conditioned environment, and then use AMAGO's hindsight relabeling to explore sparse rewards. Please note that the open-source release is currently missing some of the features used in the paper's Crafter results, but these will be added in the coming weeks.
 
 <details>
-<summary>**Example Training Commands**
+<summary> **Example Training Commands** </summary>
 <br>
 
 Memory-conservative settings with pixel-based observations:
