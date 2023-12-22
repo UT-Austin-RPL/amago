@@ -141,12 +141,16 @@ class CrafterEnv(AMAGOEnv):
         self.env = env
         self.action_size = env.action_space.n
         self.action_space = space_convert(env.action_space)
+        self._env_name = (
+            "Crafter" if self.dense_reward else "Crafter-Instruction-Conditioned"
+        ) + self.obs_kind
 
     @property
     def env_name(self):
-        return (
-            "Crafter" if self.dense_reward else "Crafter-Instruction-Conditioned"
-        ) + self.obs_kind
+        return self._env_name
+
+    def set_env_name(self, name: str):
+        self._env_name = name
 
     @property
     def achieved_goal(self):

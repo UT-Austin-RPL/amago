@@ -453,6 +453,7 @@ class Experiment:
         )
         logs = self.policy_metrics(returns, successes)
         self.log(logs, key="test")
+        test_envs.close()
         return logs
 
     def log(self, metrics_dict, key):

@@ -28,6 +28,7 @@ def add_cli(parser):
     parser.add_argument(
         "--obs_kind", choices=["render", "crop", "textures"], default="textures"
     )
+    parser.add_argument("--eval_mode", action="store_true")
     return parser
 
 
@@ -126,8 +127,6 @@ if __name__ == "__main__":
         "amago.nets.tstep_encoders.TstepEncoder.goal_emb_Cls": amago.nets.goal_embedders.TokenGoalEmb,
         "amago.nets.goal_embedders.TokenGoalEmb.zero_embedding": False,
         "amago.nets.goal_embedders.TokenGoalEmb.goal_emb_dim": 64,
-        # "amago.hindsight.Trajectory.goal_pad_val" : 98,
-        # "amago.hindsight.Trajectory.goal_completed_val" : 99,
     }
     switch_traj_encoder(
         config,
@@ -168,7 +167,77 @@ if __name__ == "__main__":
         experiment.start()
         if args.ckpt is not None:
             experiment.load_checkpoint(args.ckpt)
-        experiment.learn()
-        experiment.load_checkpoint(loading_best=True)
-        experiment.evaluate_test(make_env, timesteps=50_000, render=False)
+
+        if not args.eval_mode:
+            ###########
+            ## Train ##
+            ###########
+            experiment.learn()
+
+        else:
+            ##########
+            ## Test ##
+            ##########
+            # (including manual tasks used in Figures and Appendix tables)
+
+            if args.ckpt is None:
+                experiment.load_checkpoint(loading_best=True)
+
+            # full task distribution
+            experiment.evaluate_test(make_env, timesteps=20_000, render=False)
+
+            single_tasks = [
+                "collect_sapling",
+                "place_table",
+                "collect_wood",
+                "collect_stone",
+                "collect_drink",
+                "place_stone",
+                "collect_coal",
+                "defeat_zombie",
+                "defeat_skeleton",
+                "eat_cow",
+                "collect_iron",
+                "place_furnace",
+                "collect_diamond",
+                "make_wood_pickaxe",
+                "make_wood_sword",
+                "make_stone_pickaxe",
+                "make_stone_sword",
+                "make_iron_pickaxe",
+                "make_iron_sword",
+                "place_plant",
+                "wake_up",
+                "eat_plant",
+            ]
+
+            # fmt: off
+            extra_tasks = [
+                # add any task as a list of <= 5 subgoals here
+                ["collect_sapling", "place_plant", "place_plant", "place_plant", "eat_cow"],
+                ["travel_10m_10m", "place_stone", "travel_50m_50m", "place_stone"],
+                ["make_stone_pickaxe", "collect_stone", "collect_stone", "collect_iron"],
+                ["make_stone_pickaxe", "collect_iron"],
+                ["make_stone_pickaxe", "collect_iron", "collect_iron"],
+                ["collect_wood", "place_table", "make_wood_pickaxe", "collect_coal"],
+                ["make_stone_pickaxe", "collect_coal", "collect_iron", "place_furnace", "make_iron_sword"],
+                ["collect_drink", "eat_cow", "wake_up", "make_stone_sword", "defeat_zombie"],
+                ["make_wood_sword", "defeat_zombie", "defeat_zombie"],
+                ["eat_cow", "make_stone_pickaxe", "collect_coal", "make_wood_sword", "defeat_zombie"],
+            ]
+            # fmt: on
+
+            TASKS = [[t] for t in single_tasks] + extra_tasks
+            for i, task in enumerate(TASKS):
+
+                def _make_env():
+                    e = make_env()
+                    # changing the name will create a new metric on wandb
+                    e.set_env_name(f"crafter_eval_{'_'.join(task)}")
+                    # manually set the task
+                    e.set_fixed_task([t.split("_") for t in task])
+                    return e
+
+                experiment.evaluate_test(_make_env, timesteps=5 * 2501)
+
         wandb.finish()
