@@ -98,6 +98,21 @@ From AMAGO's perspective, meta-RL problems are just POMDPs that automatically re
 7. **Goal-Conditioned Open-Worlds (Crafter)**
 
 AMAGO can adapt to procedurally generated environments while completing multi-step instructions. `examples/07_crafter_with_instructions.py` shows how we turn [Crafter](https://danijar.com/project/crafter/) into an instruction-conditioned environment, and then use AMAGO's hindsight relabeling to explore sparse rewards. Please note that the open-source release is currently missing some of the features used in the paper's Crafter results, but these will be added in the coming weeks.
+
+<details>
+<summary>**Example Training Commands**
+<br>
+
+Memory-conservative settings with pixel-based observations:
+
+```bash
+python 07_crafter_with_instructions.py --max_seq_len 512 --obs_kind crop --start_learning_at_epoch 5 --memory_size 256 --memory_layers 3 --relabel some --epochs 5000 --timesteps_per_epoch 2000 --gpu <int> --run_name <str> --buffer_dir <path>
+```
+
+The open-source architecture and command above are not 1:1 with the paper. This experiment is expensive. We provide a pretrained checkpoint here (link TODO). Many of the paper's main runs were done on the `--obs_kind textures` setting. 
+
+After training you can run the same command with an added `--eval_mode` argument to evaluate the full random task distribution in addition to a hardcoded list of specified tasks (including individual goals). The "best" checkpoint is loaded by default (highest average return on train distribution) but you can specify an epoch checkpoint number with `--ckpt`.
+</details>
   
 8. **Multi-Task Learning from Pixels (Retro Games)**
 
