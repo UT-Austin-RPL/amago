@@ -30,15 +30,18 @@ class Normalization(nn.Module):
 
 
 class FlashAttention(nn.Module):
-    def __init__(self, attention_dropout: float = 0.0):
+    def __init__(self, causal: bool = True, attention_dropout: float = 0.0):
         super().__init__()
         self.dropout = attention_dropout
+        self.causal = causal
 
     def forward(self, qkv, key_cache=None, val_cache=None, cache_seqlens=None):
         qkv = qkv.to(torch.bfloat16)
         if key_cache is None or val_cache is None or cache_seqlens is None:
             out = flash_attn.flash_attn_qkvpacked_func(
-                qkv, dropout_p=self.dropout if self.training else 0.0, causal=True
+                qkv,
+                dropout_p=self.dropout if self.training else 0.0,
+                causal=self.causal,
             )
         else:
             assert not self.training
@@ -50,7 +53,7 @@ class FlashAttention(nn.Module):
                 cache_seqlens=cache_seqlens,
                 k=k,
                 v=v,
-                causal=True,
+                causal=self.causal,
             )
         return out
 
@@ -93,9 +96,10 @@ class SigmaReparam(nn.Module):
 
 
 class VanillaAttention(nn.Module):
-    def __init__(self, attention_dropout: float = 0.0):
+    def __init__(self, causal: bool = True, attention_dropout: float = 0.0):
         super().__init__()
         self.dropout = nn.Dropout(attention_dropout)
+        self.causal = causal
         self._mask = None
 
     def forward(self, qkv, key_cache=None, val_cache=None, cache_seqlens=None):
@@ -113,7 +117,8 @@ class VanillaAttention(nn.Module):
                 torch.ones((B, 1, L, L), dtype=torch.bool, device=qkv.device),
                 diagonal=1,
             )
-        scores.masked_fill_(self._mask, -torch.inf)
+        if self.causal:
+            scores.masked_fill_(self._mask, -torch.inf)
 
         A = self.dropout(torch.softmax(scale * scores, dim=-1))
         V = torch.einsum("bhls,bshd->blhd", A, values)
@@ -288,6 +293,7 @@ class Transformer(nn.Module):
         attention: str = "flash",
         activation: str = "leaky_relu",
         norm: str = "layer",
+        causal: bool = True,
     ):
         super().__init__()
         assert attention in ["flash", "vanilla"]
@@ -307,7 +313,7 @@ class Transformer(nn.Module):
         def make_layer():
             return TransformerLayer(
                 self_attention=AttentionLayer(
-                    attention=Attn(attention_dropout=dropout_attn),
+                    attention=Attn(causal=causal, attention_dropout=dropout_attn),
                     d_model=d_model,
                     d_qkv=self.head_dim,
                     n_heads=self.n_heads,
@@ -328,7 +334,7 @@ class Transformer(nn.Module):
     def emb_dim(self):
         return self.d_model
 
-    def forward(self, seq, pos_idxs, hidden_state=None | TformerHiddenState):
+    def forward(self, seq, pos_idxs, hidden_state: None | TformerHiddenState):
         if self.training:
             assert hidden_state is None
         batch, length, dim = seq.shape

@@ -42,7 +42,7 @@ class CNN(nn.Module, ABC):
     def conv_forward(self, imgs):
         pass
 
-    def forward(self, obs, from_float: bool = False):
+    def forward(self, obs, from_float: bool = False, flatten: bool = True):
         assert obs.ndim == 5
         if not from_float:
             assert obs.dtype == torch.uint8
@@ -54,8 +54,11 @@ class CNN(nn.Module, ABC):
             B, L, C, H, W = obs.shape
             img = rearrange(obs, "b l c h w -> (b l) c h w")
         features = self.conv_forward(img)
-        out = rearrange(features, "(b l) c h w -> b l (c h w)", l=L)
-        return out
+        if flatten:
+            features = rearrange(features, "(b l) c h w -> b l (c h w)", l=L)
+        else:
+            features = rearrange(features, "(b l) c h w -> b l c h w", l=L)
+        return features
 
 
 class DrQCNN(CNN):
