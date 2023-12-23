@@ -1,4 +1,5 @@
 import math
+import datetime
 import time
 import warnings
 import copy
@@ -32,12 +33,12 @@ class CrafterOptionalRender(crafter.Env):
         return super().reset()
 
     def render(self, mode="human"):
-        return super().render(size=None)
+        return super().render(size=(512, 512))
 
     def _obs(self):
         # actual observation creation handled by CrafterEnv below
         if self.enable_render:
-            return super()._obs()
+            return super().render(size=None)
         else:
             return None
 
@@ -82,12 +83,17 @@ class CrafterEnv(AMAGOEnv):
         obs_kind: str = "render",
         use_tech_tree: bool = False,
         verbose: bool = False,
+        save_video_to: str | None = None,
     ):
-        env = DiscreteActionWrapper(
-            CrafterOptionalRender(
-                reward=not directed, length=time_limit, render=obs_kind != "textures"
-            )
+        env = CrafterOptionalRender(
+            reward=not directed, length=time_limit, render=obs_kind != "textures"
         )
+        if save_video_to is not None:
+            env = crafter.recorder.VideoRecorder(env, directory=save_video_to)
+            self.video_hook = env
+        else:
+            self.video_hook = None
+        env = DiscreteActionWrapper(env)
         if obs_kind == "render":
             obs_shape = (64, 64, 3)
             self.observation_space = gym.spaces.Dict(
@@ -180,18 +186,21 @@ class CrafterEnv(AMAGOEnv):
         return gym.spaces.Box(low=0, high=99, shape=(self.k, 3))
 
     def render(self, *args, **kwargs):
-        if not self._plotting:
-            plt.switch_backend("tkagg")
-            fig = plt.figure(figsize=(9, 6))
-            self._ax = fig.add_subplot(111)
-            plt.ion()
-            self._plotting = True
-        obs = self.env.render()
-        obs = self.obs(obs, {}, kind="render")
-        plt.tight_layout()
-        plt.imshow(obs)
-        plt.draw()
-        plt.pause(0.001)
+        if self.obs_kind == "textures":
+            if not self._plotting:
+                plt.switch_backend("tkagg")
+                fig = plt.figure(figsize=(9, 6))
+                self._ax = fig.add_subplot(111)
+                plt.ion()
+                self._plotting = True
+            obs = self.env.render()
+            obs = self.obs(obs, {}, kind="render")
+            plt.tight_layout()
+            plt.imshow(obs)
+            plt.draw()
+            plt.pause(0.001)
+        else:
+            return self.env.unwrapped.render()
 
     def obs(self, raw_obs, info, kind="textures"):
         assert kind in ["render", "crop", "textures"]
@@ -257,6 +266,14 @@ class CrafterEnv(AMAGOEnv):
         return next_state, reward, done, False, info
 
     def inner_reset(self, seed=None, options=None):
+        if self.video_hook is not None and self.video_hook._frames is not None:
+            # navigating around the problem that the VideoRecorder only saves on
+            # termination but success is determined in a wrapper above this.
+            # not a perfect system - just here for the jupyter notebook demo.
+            self.video_hook._env._timestamp = datetime.datetime.now().strftime(
+                "%Y%m%dT%H%M%S"
+            )
+            self.video_hook._save()
         obs = self.env.reset()
         info = self.get_game_info()
         self._last_game_info = copy.deepcopy(info)

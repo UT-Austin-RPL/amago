@@ -142,7 +142,6 @@ if __name__ == "__main__":
         min_k=1,
         time_limit=2500,
         obs_kind=args.obs_kind,
-        # obs_kind=args.obs_kind,
         use_tech_tree=args.use_tech_tree,
     )
 

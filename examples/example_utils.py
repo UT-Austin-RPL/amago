@@ -227,7 +227,9 @@ def naive(config: dict):
     return config
 
 
-def use_config(custom_params: dict, gin_configs: list[str] | None = None):
+def use_config(
+    custom_params: dict, gin_configs: list[str] | None = None, finalize: bool = True
+):
     """
     Bind all the gin parameters from real .gin configs (which the examples avoid using)
     and regular dictionaries.
@@ -240,7 +242,8 @@ def use_config(custom_params: dict, gin_configs: list[str] | None = None):
     if gin_configs is not None:
         for config in gin_configs:
             gin.parse_config_file(config)
-    gin.finalize()
+    if finalize:
+        gin.finalize()
 
 
 def create_experiment_from_cli(

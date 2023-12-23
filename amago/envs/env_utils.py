@@ -34,6 +34,9 @@ class DummyAsyncVectorEnv(gym.Env):
     def call_wait(self):
         return self._call_buffer
 
+    def render(self):
+        return self.envs[0].render()
+
     def step(self, action):
         assert action.shape[0] == len(self.envs)
         outs = []

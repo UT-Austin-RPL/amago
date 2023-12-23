@@ -443,9 +443,8 @@ class Experiment:
         make = lambda: SequenceWrapper(
             make_test_env(), save_every=None, make_dset=False
         )
-        test_envs = gym.vector.AsyncVectorEnv(
-            [make for _ in range(self.parallel_actors)]
-        )
+        Par = gym.vector.AsyncVectorEnv if self.async_envs else DummyAsyncVectorEnv
+        test_envs = Par([make for _ in range(self.parallel_actors)])
         *_, returns, successes = self.interact(
             test_envs,
             timesteps,
