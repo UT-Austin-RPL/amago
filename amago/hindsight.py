@@ -9,6 +9,8 @@ import torch
 import numpy as np
 import gin
 
+from amago import utils
+
 
 @gin.configurable
 @dataclass
@@ -98,7 +100,7 @@ class RelabelWarning(Warning):
 
 @dataclass
 class Timestep:
-    obs: np.ndarray
+    obs: dict[np.ndarray]
     # action from the *previous* timestep
     prev_action: np.ndarray
     # candiate goal(s) for relabeling
@@ -162,8 +164,11 @@ class Timestep:
                 return False
         if (self.prev_action != other.prev_action).any():
             return False
-        if (self.obs != other.obs).any():
+        if len(self.obs.keys()) != len(other.obs.keys()):
             return False
+        for (k1, v1), (k2, v2) in zip(self.obs.items(), other.obs.items()):
+            if k1 != k2 or (v1 != v2).any():
+                return False
         return self.goal_seq == other.goal_seq
 
     def __deepcopy__(self, memo):
@@ -233,7 +238,7 @@ class Trajectory:
         )
         goals = map(make_array, timesteps)
         goals = np.stack(list(goals), axis=0)
-        obs = np.stack([t.obs for t in timesteps], axis=0)
+        obs = utils.stack_list_array_dicts([t.obs for t in timesteps], axis=0)
         actions = np.stack([t.prev_action for t in timesteps], axis=0)
         resets = np.array([t.reset for t in timesteps], dtype=np.float32)[:, np.newaxis]
         time = np.array([t.time for t in timesteps], dtype=np.float32)[:, np.newaxis]

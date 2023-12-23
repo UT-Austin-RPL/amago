@@ -15,17 +15,17 @@ from amago.nets import ff, cnn
 
 @gin.configurable
 class TstepEncoder(nn.Module, ABC):
-    def __init__(self, obs_shape, goal_shape, rl2_shape, goal_emb_Cls=TokenGoalEmb):
+    def __init__(self, obs_space, goal_space, rl2_space, goal_emb_Cls=TokenGoalEmb):
         super().__init__()
-        self.obs_shape = obs_shape
-        self.goal_shape = goal_shape
-        self.rl2_shape = rl2_shape
-        self.goal_emb = goal_emb_Cls(goal_length=goal_shape[0], goal_dim=goal_shape[1])
+        self.obs_space = obs_space
+        self.goal_space = goal_space
+        self.rl2_space = rl2_space
+        goal_length, goal_dim = goal_space.shape
+        self.goal_emb = goal_emb_Cls(goal_length=goal_length, goal_dim=goal_dim)
         self.goal_emb_dim = self.goal_emb.goal_emb_dim
 
     def forward(self, obs, goals, rl2s):
         goal_rep = self.goal_emb(goals)
-        B, L, *_ = obs.shape
         out = self.inner_forward(obs, goal_rep, rl2s)
         return out
 
@@ -43,9 +43,9 @@ class TstepEncoder(nn.Module, ABC):
 class FFTstepEncoder(TstepEncoder):
     def __init__(
         self,
-        obs_shape,
-        goal_shape,
-        rl2_shape,
+        obs_space,
+        goal_space,
+        rl2_space,
         n_layers: int = 2,
         d_hidden: int = 512,
         d_output: int = 256,
@@ -54,11 +54,11 @@ class FFTstepEncoder(TstepEncoder):
         hide_rl2s: bool = False,
     ):
         super().__init__(
-            obs_shape=obs_shape, goal_shape=goal_shape, rl2_shape=rl2_shape
+            obs_space=obs_space, goal_space=goal_space, rl2_space=rl2_space
         )
-        flat_obs_shape = math.prod(obs_shape)
-        in_dim = flat_obs_shape + self.goal_emb_dim + self.rl2_shape[-1]
-        self.in_norm = InputNorm(flat_obs_shape + self.rl2_shape[-1])
+        flat_obs_shape = math.prod(self.obs_space["observation"].shape)
+        in_dim = flat_obs_shape + self.goal_emb_dim + self.rl2_space.shape[-1]
+        self.in_norm = InputNorm(flat_obs_shape + self.rl2_space.shape[-1])
         self.base = ff.MLP(
             d_inp=in_dim,
             d_hidden=d_hidden,
@@ -71,6 +71,8 @@ class FFTstepEncoder(TstepEncoder):
         self.hide_rl2s = hide_rl2s
 
     def inner_forward(self, obs, goal_rep, rl2s):
+        # multi-modal envs that do not use the default `observation` key need their own custom encoders.
+        obs = obs["observation"]
         B, L, *_ = obs.shape
         if self.hide_rl2s:
             rl2s = rl2s * 0
@@ -91,9 +93,9 @@ class FFTstepEncoder(TstepEncoder):
 class CNNTstepEncoder(TstepEncoder):
     def __init__(
         self,
-        obs_shape,
-        goal_shape,
-        rl2_shape,
+        obs_space,
+        goal_space,
+        rl2_space,
         cnn_Cls=cnn.NatureishCNN,
         channels_first: bool = False,
         img_features: int = 512,
@@ -102,10 +104,13 @@ class CNNTstepEncoder(TstepEncoder):
         d_output: int = 256,
         norm: str = "layer",
         activation: str = "leaky_relu",
+        skip_rl2_norm: bool = False,
+        hide_rl2s: bool = False,
     ):
         super().__init__(
-            obs_shape=obs_shape, goal_shape=goal_shape, rl2_shape=rl2_shape
+            obs_space=obs_space, goal_space=goal_space, rl2_space=rl2_space
         )
+        obs_shape = self.obs_space["observation"].shape
         self.cnn = cnn_Cls(
             img_shape=obs_shape,
             channels_first=channels_first,
@@ -116,20 +121,25 @@ class CNNTstepEncoder(TstepEncoder):
         ).shape[-1]
         self.img_features = nn.Linear(img_feature_dim, img_features)
         self.img_norm = ff.Normalization(norm, img_features)
-        self.rl2_norm = InputNorm(self.rl2_shape[-1])
-        mlp_in = img_features + self.goal_emb_dim + self.rl2_shape[-1]
+        self.rl2_norm = InputNorm(self.rl2_space.shape[-1], skip=skip_rl2_norm)
+        mlp_in = img_features + self.goal_emb_dim + self.rl2_space.shape[-1]
         self.merge = ff.MLP(
             d_inp=mlp_in, d_hidden=d_hidden, n_layers=n_layers, d_output=d_output
         )
         self.out_norm = ff.Normalization(norm, d_output)
+        self.hide_rl2s = hide_rl2s
         self._emb_dim = d_output
 
     def inner_forward(self, obs, goal_rep, rl2s):
+        # multi-modal envs that do not use the default `observation` key need their own custom encoders.
+        obs = obs["observation"]
         img_rep = self.img_features(self.cnn(obs))
         img_rep = self.img_norm(img_rep)
         rl2s_norm = self.rl2_norm(rl2s)
         if self.training:
             self.rl2_norm.update_stats(rl2s)
+        if self.hide_rl2s:
+            rl2s = rl2s * 0
         inp = torch.cat((img_rep, goal_rep, rl2s_norm), dim=-1)
         out = self.out_norm(self.merge(inp))
         return out

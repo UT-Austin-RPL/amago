@@ -13,6 +13,51 @@ from amago.loading import MAGIC_PAD_VAL
 from amago.hindsight import Timestep, Trajectory, GoalSeq
 
 
+class DummyAsyncVectorEnv(gym.Env):
+    def __init__(self, env_funcs):
+        self.envs = [e() for e in env_funcs]
+        self.observation_space = self.envs[0].observation_space
+        self.action_space = self.envs[0].action_space
+        self.single_action_space = self.action_space
+        self._call_buffer = None
+
+    def reset(self, *args, **kwargs):
+        outs = [e.reset() for e in self.envs]
+        return np.stack([o[0] for o in outs], axis=0), [o[1] for o in outs]
+
+    def call_async(self, prop):
+        try:
+            self._call_buffer = [eval(f"e.{prop}()") for e in self.envs]
+        except:
+            self._call_buffer = [eval(f"e.{prop}") for e in self.envs]
+
+    def call_wait(self):
+        return self._call_buffer
+
+    def render(self):
+        return self.envs[0].render()
+
+    def step(self, action):
+        assert action.shape[0] == len(self.envs)
+        outs = []
+        for i in range(len(self.envs)):
+            outs.append(self.envs[i].step(action[i]))
+        states = [o[0] for o in outs]
+        rewards = np.stack([o[1] for o in outs], axis=0)
+        te = [o[2] for o in outs]
+        tr = [o[3] for o in outs]
+        info = [o[4] for o in outs]
+
+        for i, (terminal, truncated) in enumerate(zip(te, tr)):
+            if terminal or truncated:
+                states[i], info[i] = self.envs[i].reset()
+        te = np.stack(te, axis=0)
+        tr = np.stack(tr, axis=0)
+        states = np.stack(states, axis=0)
+
+        return states, rewards, te, tr, info
+
+
 def space_convert(gym_space):
     import gym as og_gym
 
@@ -80,38 +125,54 @@ class GPUSequenceBuffer:
             (num_parallel, max_len), device=self.device, dtype=torch.long
         )
 
-    def _make_blank_buffer(self, arr):
-        shape = (self.max_len,) + arr.shape[1:]
-        return torch.full(shape, MAGIC_PAD_VAL).to(dtype=arr.dtype, device=self.device)
+    def _make_blank_buffer(self, array: np.ndarray):
+        shape = (self.max_len,) + array.shape[1:]
+        return torch.full(shape, MAGIC_PAD_VAL).to(
+            dtype=array.dtype, device=self.device
+        )
 
-    def add_timestep(self, arrays, dones=None):
-        assert arrays.shape[0] == self.num_parallel
-        assert arrays.shape[1] == 1
+    def add_timestep(self, arrays: np.ndarray | dict[np.ndarray], dones=None):
+        if not isinstance(arrays, dict):
+            arrays = {"_": arrays}
+
+        for k in arrays.keys():
+            v = torch.from_numpy(arrays[k]).to(self.device)
+            assert v.shape[0] == self.num_parallel
+            assert v.shape[1] == 1
+            arrays[k] = v
 
         if dones is None:
             dones = [False for _ in range(self.num_parallel)]
-        arrays = torch.from_numpy(arrays).to(self.device)
 
-        for i in range(arrays.shape[0]):
+        for i in range(self.num_parallel):
             self.time_end[i] += 1
             if dones[i] or self.buffers[i] is None:
-                self.buffers[i] = self._make_blank_buffer(arrays[i])
+                self.buffers[i] = {
+                    k: self._make_blank_buffer(arrays[k][i]) for k in arrays
+                }
                 self.cur_idxs[i] = 0
                 self.time_start[i] = 0
                 self.time_end[i] = 1
             if self.cur_idxs[i] < self.max_len:
-                self.buffers[i][self.cur_idxs[i]] = arrays[i]
+                for k in arrays.keys():
+                    self.buffers[i][k][self.cur_idxs[i]] = arrays[k][i]
                 self.cur_idxs[i] += 1
             else:
                 self.time_start[i] += 1
-                self.buffers[i] = torch.cat((self.buffers[i], arrays[i]), axis=0)[
-                    -self.max_len :
-                ]
+                for k in arrays.keys():
+                    self.buffers[i][k] = torch.cat(
+                        (self.buffers[i][k], arrays[k][i]), axis=0
+                    )[-self.max_len :]
 
     @property
     def sequences(self):
         longest = max(self.cur_idxs)
-        return torch.stack(self.buffers, axis=0)[:, :longest]
+        out = {}
+        for k in self.buffers[0].keys():
+            out[k] = torch.stack([buffer[k] for buffer in self.buffers], axis=0)[
+                :, :longest
+            ]
+        return out
 
     @property
     def time_idxs(self):
@@ -241,11 +302,12 @@ class SequenceWrapper(gym.Wrapper):
         self.save_every = save_every
         self.since_last_save = 0
         self._total_frames = 0
+        # TODO: refactor this logic to be a new util everywhere
         if isinstance(self.env.action_space, gym.spaces.Discrete):
             action_shape = self.env.action_space.n
         else:
             action_shape = self.env.action_space.shape[-1]
-        rl2_shape = action_shape + 1 + 1 + 1
+        rl2_shape = action_shape + 3  # action + reward + done + time
         self.gcrl2_space = gym.spaces.Dict(
             {
                 "obs": self.env.observation_space,
