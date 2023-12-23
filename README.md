@@ -36,7 +36,7 @@ pip install -e .[envs]
 The default Transformer policy (`nets.traj_encoders.TformerTrajEncoder`) has an option for [FlashAttention 2.0](https://github.com/Dao-AILab/flash-attention). FlashAttention leads to significant speedups on long sequences if your GPU is compatible. We try to install this for you with: `pip install -e .[flash]`, but please refer to the [official installation instructions](https://github.com/Dao-AILab/flash-attention) if you run into issues.
 
 ## Getting Started
-Applying AMAGO to any new environment requires 6 basic choices. The `examples/` folder includes helpful starting points for common cases.
+Applying AMAGO to any new environment requires 5 basic choices. The `examples/` folder includes helpful starting points for common cases.
 
 <p align="center">
 <img src="media/amago_overview.png" alt="amagoarch" width="850"/>
@@ -46,21 +46,15 @@ Applying AMAGO to any new environment requires 6 basic choices. The `examples/` 
 
 2. **How do sequences of timestep vectors become sequences of POMDP state vectors?** The `TrajEncoder` is a seq2seq model that enables long-term memory and in-context learning by processing `TstepEncoder` outputs. AMAGO is designed for large-scale sequence models like Transformers.
 
-> **Quick Start:** Switch the `TstepEncoder` to a CNN (`CNNTstepEncoder`) for pixel environments or an MLP (`FFTstepEncoder`) for array environments. The `TformerTrajEncoder` is a very strong/stable default Transformer model. The `GRUTrajEncoder` (RNN) is a good backup option when memory is not as important, or when FlashAttention can't be installed.
-  
-3. **Do we need to use to the hindsight instruction relabeling technique from the AMAGO paper?** If yes, environment setup requires a few extra steps and we will refer you to a longer explanation (coming soon). Most other environments should be compatible automatically, and all of AMAGO's goal-conditioned features can be toggled off.
-
-4. **What defines the end of a rollout?** Are we optimizing a single trial that ends when the environment terminates, or is this a meta-RL setting where we should auto reset to the same environment until a fixed time limit is reached? We can also define an exploration grace period where rewards do not count towards the return (see [E-RL^2](https://arxiv.org/abs/1803.01118), [DREAM](https://arxiv.org/abs/2008.02790), ...). In any case we need to define an upper bound on the rollout length (`horizon`).
+3. **What defines the end of a rollout?** Are we optimizing a single trial that ends when the environment terminates, or is this a meta-RL setting where we should auto reset to the same environment until a fixed time limit is reached? In any case we need to define an upper bound on the rollout length (`horizon`).
    
-5. **What is the memory limit of our policy?** True meta-RL and long-term memory tasks would require a `max_seq_len` >= the horizon. If the horizon is unrealisticlly long or unncessary for the complexity of the problem, we can approximate by shortening the context.
+4. **What is the memory limit of our policy?** True meta-RL and long-term memory tasks would require a `max_seq_len` >= the horizon. If the horizon is unrealisticlly long or unncessary for the complexity of the problem, we can approximate by shortening the context.
    
-6. **How often do we save sequences as training samples, even if the rollout hasn't ended?** Parallel actors automatically save `.traj` files for rollouts up to this length, which should >= `max_seq_len`. As a general rule, `traj_save_len > horizon` unless rollouts are >> `max_seq_len` and we need to speedup reads from disk during training. This is not an option when hindsight relabeling because we need to see the entire trajectory to accurately relabel.
+5. **How often do we save sequences as training samples, even if the rollout hasn't ended?** Parallel actors automatically save `.traj` files for rollouts up to this length, which should >= `max_seq_len`. As a general rule, `traj_save_len > horizon` unless rollouts are >> `max_seq_len` and we need to speedup reads from disk during training.
 
 <p align="center">
 <img src="media/context_length_diagram.png" alt="contextlength" width="850"/>
 </p>
-
-> **Quick Start:** Set all the sequence lengths to the `horizon` ("max context") when possible, and `max_seq_len < traj_save_len < horizon` ("partial context") otherwise. AMAGO should train stably even when it has too much context for simple problems.
 
 ## A Tour of AMAGO in 9 Examples
 
@@ -71,8 +65,6 @@ AMAGO logs to [`wandb`](https://docs.wandb.ai). You can configure the project an
 export AMAGO_WANDB_PROJECT="wandb project name"
 export AMAGO_WANDB_ENTITY="wandb username"
 ```
-
-Example `wandb` training logs for each example coming soon.
 
 ### 1. **Regular MDPs (Classic Gym)**
    
@@ -93,7 +85,7 @@ This examples uses a `TrajEncoder` that is just a feedforward network. Training 
  
 ### 2. **POMDPs and Long-Term Memory (POPGym)**
    
-Using a memory-equipped `TrajEncoder`, but toggling *off* goals and multi-episodic resets creates an effective POMDP solver. AMAGO is efficient enough to use *entire* trajectories as context beyond 1k timesteps depending on model size, and the `TformerTrajEncoder` is a strong default Transformer tuned specifically for stability in RL. See `examples/02_popgym_suite.py` where the same hyperparameters can lead to state-of-the-art performance across the [POPGym](https://arxiv.org/abs/2303.01859) suite.
+Using a memory-equipped `TrajEncoder`, but toggling *off* goals and multi-episodic resets creates an effective POMDP solver. AMAGO is efficient enough to use *entire* trajectories as context, and the `TformerTrajEncoder` is a strong default Transformer tuned specifically for stability in RL. See `examples/02_popgym_suite.py` where the same hyperparameters can lead to state-of-the-art performance across the [POPGym](https://arxiv.org/abs/2303.01859) suite.
 
 <details>
 <summary> <b>Example Training Commands</b> </summary>
@@ -106,7 +98,7 @@ python 02_popgym_suite.py --env AutoencodeMedium --parallel_actors 24 --trials 3
  
 ### 3. **Fixed-Horizon Meta-RL (Dark-Key-To-Door)**
 
-From AMAGO's perspective, meta-RL problems are just POMDPs that automatically reset the task up until a fixed time limit. `TrajEncoder` sequence models let us remember and improve upon past attempts. `examples/03_dark_key_to_door.py` walks through a toy example from the [Algorithm Distillation](https://arxiv.org/abs/2210.14215) paper.
+Meta-RL problems are just POMDPs that automatically reset the task up until a fixed time limit. `TrajEncoder` sequence models let us remember and improve upon past attempts. `examples/03_dark_key_to_door.py` walks through a toy example from the [Algorithm Distillation](https://arxiv.org/abs/2210.14215) paper.
 
 <details>
 <summary> <b>Example Training Commands</b> </summary>
@@ -137,7 +129,7 @@ python 05_kshot_metaworld.py --k 2 --benchmark reach-v2 --max_seq_len 128 --epoc
  
 ### 7. **Goal-Conditioned Open-Worlds (Crafter)**
 
-AMAGO can adapt to procedurally generated environments while completing multi-step instructions. `examples/07_crafter_with_instructions.py` shows how we turn [Crafter](https://danijar.com/project/crafter/) into an instruction-conditioned environment, and then use AMAGO's hindsight relabeling to explore sparse rewards. Please note that the open-source release is currently missing some of the features used in the paper's Crafter results, but these will be added in the coming weeks.
+AMAGO can adapt to procedurally generated environments while completing multi-step instructions. `examples/07_crafter_with_instructions.py` shows how we turn [Crafter](https://danijar.com/project/crafter/) into an instruction-conditioned environment, and then use AMAGO's hindsight relabeling to explore sparse rewards.
 
 <details>
 <summary> <b>Example Training Commands</b> </summary>
@@ -156,11 +148,11 @@ After training you can run the same command with an added `--eval_mode` argument
   
 ### 8. **Multi-Task Learning from Pixels (Retro Games)**
 
-Meta-learning and multi-task learning without task labels are essentially the same problem. We can use short sequences to train an agent on multiple levels of the same video game (or multiple games). AMAGO's sequence format can be surprisingly helpful in cases where traditional frame-stacking isn't enough to make sense of action spaces that were designed for human players. `examples/08_multitask_mario.py` provides an example on levels from Super Mario using [stable-retro](https://stable-retro.farama.org). Note that this script requires some extra installation beyond `pip install amago[envs]`. 
+Meta-learning and multi-task learning without task labels are essentially the same problem. We can use short sequences to train an agent on multiple levels of the same video game (or multiple games). `examples/08_multitask_mario.py` provides an example on levels from Super Mario using [stable-retro](https://stable-retro.farama.org). Note that this script requires some extra installation beyond `pip install amago[envs]`. 
 
 ### 9. **Super Long-Term Memory (Passive T-Maze)**
 
-AMAGO provides a stable way to train long-sequence Transformers with RL, which can turn traditionally hard memory-based environments into simple problems. `examples/09_tmaze.py` adds a few exploration changes to the TMaze environment from [Ni et al., 2023](https://arxiv.org/abs/2307.03864), which lets us recall information for thousands of timesteps. We have been able to solve this environment all the way until `H=10,000` before finally running out of GPU memory for the `TformerTrajEncoder`.
+AMAGO provides a stable way to train long-sequence Transformers with RL, which can turn traditionally hard memory-based environments into simple problems. `examples/09_tmaze.py` adds a few exploration changes to the TMaze environment from [Ni et al., 2023](https://arxiv.org/abs/2307.03864), which lets us recall information for thousands of timesteps.
 
 <details>
 <summary> <b>Example Training Commands</b> </summary>
