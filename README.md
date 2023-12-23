@@ -85,7 +85,7 @@ Many popular benchmarks are MDPs and can be treated as a simple special case of 
 Train a memory-free policy on built-in gymnasium benchmarks:
 
 ```bash
-python 01_basic_gym.py --env LunarLander-v2 --horizon 200 --traj_encoder ff --max_seq_len 32 --memory_layers 2 --no_async --gpu <int> --run_name <str> --buffer_dir <path>
+python 01_basic_gym.py --env LunarLander-v2 --horizon 500 --traj_encoder ff --max_seq_len 32 --memory_layers 2 --no_async --gpu <int> --run_name <str> --buffer_dir <path>
 ```
 This examples uses a `TrajEncoder` that is just a feedforward network. Training still depends on sequences of `--max_seq_len` timesteps, which is effectively increasing the training batch size.
 
@@ -95,11 +95,28 @@ This examples uses a `TrajEncoder` that is just a feedforward network. Training 
    
 Using a memory-equipped `TrajEncoder`, but toggling *off* goals and multi-episodic resets creates an effective POMDP solver. AMAGO is efficient enough to use *entire* trajectories as context beyond 1k timesteps depending on model size, and the `TformerTrajEncoder` is a strong default Transformer tuned specifically for stability in RL. See `examples/02_popgym_suite.py` where the same hyperparameters can lead to state-of-the-art performance across the [POPGym](https://arxiv.org/abs/2303.01859) suite.
 
+<details>
+<summary> <b>Example Training Commands</b> </summary>
+<br>
+
+```bash
+python 02_popgym_suite.py --env AutoencodeMedium --parallel_actors 24 --trials 3 --epochs 650 --dset_max_size 80_000 --memory_layers 3 --memory_size 256 --gpu <int> --run_name <str> --buffer_dir <path>
+```
+</details>
  
 3. **Fixed-Horizon Meta-RL (Dark-Key-To-Door)**
 
 From AMAGO's perspective, meta-RL problems are just POMDPs that automatically reset the task up until a fixed time limit. `TrajEncoder` sequence models let us remember and improve upon past attempts. `examples/03_dark_key_to_door.py` walks through a toy example from the [Algorithm Distillation](https://arxiv.org/abs/2210.14215) paper.
 
+<details>
+<summary> <b>Example Training Commands</b> </summary>
+<br>
+
+```bash
+python 03_dark_key_to_door.py --memory_layers 3 --memory_size 256 --epochs 650 --room_size 9 --episode_length 50 --meta_horizon 500 --gpu <int> --run_name <str> --buffer_dir <path>
+```
+</details>
+ 
 4. **Zero-Shot Adaptation to Goal-Conditioned Environments (Mazerunner)**
 
 `examples/04_mazerunner.py` uses the hindsight instruction relabeling technique from the AMAGO paper on our MazeRunner navigation domain. The ability to relabel rewards in hindsight is a key advantage of off-policy adaptive agents.
