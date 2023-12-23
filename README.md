@@ -152,6 +152,17 @@ Meta-learning and multi-task learning without task labels are essentially the sa
 
 AMAGO provides a stable way to train long-sequence Transformers with RL, which can turn traditionally hard memory-based environments into simple problems. `examples/09_tmaze.py` adds a few exploration changes to the TMaze environment from [Ni et al., 2023](https://arxiv.org/abs/2307.03864), which lets us recall information for thousands of timesteps. We have been able to solve this environment all the way until `H=10,000` before finally running out of GPU memory for the `TformerTrajEncoder`.
 
+<details>
+<summary> <b>Example Training Commands</b> </summary>
+<br>
+
+Example on a horizon of 400 timesteps:
+```bash
+python 09_tmaze.py --memory_size 128 --memory_layers 2 --parallel_actors 36 --horizon 400 --timesteps_per_epoch 800  --grads_per_epoch 600 --dset_max_size 5000 --gpu <int> --run_name <str> --buffer_dir <path>
+```
+This command with `--horizon 10000 --timesteps_per_epoch 10000` will also train the extreme 10k sequence length mentioned in the paper, although this takes several days to converge due to the inference cost of generating each trajectory.
+</details>
+ 
 ## Advanced Configuration
 
 AMAGO is built around [gin-config](https://github.com/google/gin-config), which makes it easy to customize experiments. `gin` makes hyperparameters a default value for an object's `kwargs`, and lets you set their value without editing the source code. You can read more about gin [here](https://github.com/google/gin-config/blob/master/docs/index.md). gin is great for research, but isn't ideal for usability... you do have to read the code to know what you're changing. The `examples/` avoid any `.gin` config files and let you switch between the most important settings without worrying about any of this.
