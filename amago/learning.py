@@ -23,6 +23,7 @@ from amago.envs.env_utils import (
     ExplorationWrapper,
     SequenceWrapper,
     GPUSequenceBuffer,
+    DummyAsyncVectorEnv,
 )
 from .loading import Batch, TrajDset, RLData_pad_collate, MAGIC_PAD_VAL
 from .hindsight import Relabeler, RelabelWarning
@@ -39,6 +40,7 @@ class Experiment:
     traj_save_len: int
     run_name: str
     gpu: int
+    async_envs: bool = True
 
     # Logging
     log_to_wandb: bool = False
@@ -59,7 +61,8 @@ class Experiment:
 
     # Learning Schedule
     epochs: int = 1000
-    start_learning_after_epoch: int = 0
+    start_learning_at_epoch: int = 0
+    start_collecting_at_epoch: int = 0
     train_timesteps_per_epoch: int = 1000
     train_grad_updates_per_epoch: int = 1000
     val_interval: int = 10
@@ -169,13 +172,10 @@ class Experiment:
 
         make_train_env = partial(_make_env, self.make_train_env, "train")
         make_val_env = partial(_make_env, self.make_val_env, "val")
-        self.train_envs = gym.vector.AsyncVectorEnv(
-            [make_train_env for _ in range(self.parallel_actors)]
-        )
+        Par = gym.vector.AsyncVectorEnv if self.async_envs else DummyAsyncVectorEnv
+        self.train_envs = Par([make_train_env for _ in range(self.parallel_actors)])
         self.train_envs.reset()
-        self.val_envs = gym.vector.AsyncVectorEnv(
-            [make_val_env for _ in range(self.parallel_actors)]
-        )
+        self.val_envs = Par([make_val_env for _ in range(self.parallel_actors)])
         self.val_envs.reset()
         # self.train_buffers holds the env state between rollout cycles
         # that are shorter than the horizon length
@@ -443,9 +443,8 @@ class Experiment:
         make = lambda: SequenceWrapper(
             make_test_env(), save_every=None, make_dset=False
         )
-        test_envs = gym.vector.AsyncVectorEnv(
-            [make for _ in range(self.parallel_actors)]
-        )
+        Par = gym.vector.AsyncVectorEnv if self.async_envs else DummyAsyncVectorEnv
+        test_envs = Par([make for _ in range(self.parallel_actors)])
         *_, returns, successes = self.interact(
             test_envs,
             timesteps,
@@ -453,6 +452,7 @@ class Experiment:
         )
         logs = self.policy_metrics(returns, successes)
         self.log(logs, key="test")
+        test_envs.close()
         return logs
 
     def log(self, metrics_dict, key):
@@ -615,7 +615,8 @@ class Experiment:
             self.policy.eval()
             if epoch % self.val_interval == 0:
                 self.evaluate_val()
-            self.collect_new_training_data()
+            if epoch >= self.start_collecting_at_epoch:
+                self.collect_new_training_data()
 
             # make dataloaders aware of new .traj files
             self.init_dloaders()
@@ -626,7 +627,7 @@ class Experiment:
                     category=Warning,
                 )
                 continue
-            elif epoch < self.start_learning_after_epoch:
+            elif epoch < self.start_learning_at_epoch:
                 # lets us skip early epochs to prevent overfitting on small datasets
                 continue
             for train_step, batch in make_pbar(self.train_dloader, True, epoch):

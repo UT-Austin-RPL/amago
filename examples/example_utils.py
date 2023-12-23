@@ -19,6 +19,11 @@ def add_common_cli(parser: ArgumentParser) -> ArgumentParser:
     parser.add_argument("--trials", type=int, default=1)
     parser.add_argument("--gpu", type=int, default=0)
     parser.add_argument(
+        "--no_async",
+        action="store_true",
+        help="Run the 'parallel' actors in one thread",
+    )
+    parser.add_argument(
         "--no_log",
         action="store_true",
         help="Turn off wandb logging (usually for debugging).",
@@ -96,7 +101,7 @@ def add_common_cli(parser: ArgumentParser) -> ArgumentParser:
         help="Maximum size of the replay buffer (measured in trajectories, not timesteps).",
     )
     parser.add_argument(
-        "--start_learning_after_epoch",
+        "--start_learning_at_epoch",
         type=int,
         default=0,
         help="Skip learning updates for this many epochs at the beginning of training (if worried about overfitting to a small dataset)",
@@ -222,7 +227,9 @@ def naive(config: dict):
     return config
 
 
-def use_config(custom_params: dict, gin_configs: list[str] | None = None):
+def use_config(
+    custom_params: dict, gin_configs: list[str] | None = None, finalize: bool = True
+):
     """
     Bind all the gin parameters from real .gin configs (which the examples avoid using)
     and regular dictionaries.
@@ -235,7 +242,8 @@ def use_config(custom_params: dict, gin_configs: list[str] | None = None):
     if gin_configs is not None:
         for config in gin_configs:
             gin.parse_config_file(config)
-    gin.finalize()
+    if finalize:
+        gin.finalize()
 
 
 def create_experiment_from_cli(
@@ -267,11 +275,12 @@ def create_experiment_from_cli(
         parallel_actors=cli.parallel_actors,
         train_timesteps_per_epoch=cli.timesteps_per_epoch,
         train_grad_updates_per_epoch=cli.grads_per_epoch,
-        start_learning_after_epoch=cli.start_learning_after_epoch,
+        start_learning_at_epoch=cli.start_learning_at_epoch,
         val_interval=cli.val_interval,
         ckpt_interval=cli.ckpt_interval,
         half_precision=cli.half_precision,
         fast_inference=not cli.slow_inference,
+        async_envs=not cli.no_async,
         **extra_experiment_kwargs,
     )
 

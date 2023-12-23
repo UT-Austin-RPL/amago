@@ -13,6 +13,51 @@ from amago.loading import MAGIC_PAD_VAL
 from amago.hindsight import Timestep, Trajectory, GoalSeq
 
 
+class DummyAsyncVectorEnv(gym.Env):
+    def __init__(self, env_funcs):
+        self.envs = [e() for e in env_funcs]
+        self.observation_space = self.envs[0].observation_space
+        self.action_space = self.envs[0].action_space
+        self.single_action_space = self.action_space
+        self._call_buffer = None
+
+    def reset(self, *args, **kwargs):
+        outs = [e.reset() for e in self.envs]
+        return np.stack([o[0] for o in outs], axis=0), [o[1] for o in outs]
+
+    def call_async(self, prop):
+        try:
+            self._call_buffer = [eval(f"e.{prop}()") for e in self.envs]
+        except:
+            self._call_buffer = [eval(f"e.{prop}") for e in self.envs]
+
+    def call_wait(self):
+        return self._call_buffer
+
+    def render(self):
+        return self.envs[0].render()
+
+    def step(self, action):
+        assert action.shape[0] == len(self.envs)
+        outs = []
+        for i in range(len(self.envs)):
+            outs.append(self.envs[i].step(action[i]))
+        states = [o[0] for o in outs]
+        rewards = np.stack([o[1] for o in outs], axis=0)
+        te = [o[2] for o in outs]
+        tr = [o[3] for o in outs]
+        info = [o[4] for o in outs]
+
+        for i, (terminal, truncated) in enumerate(zip(te, tr)):
+            if terminal or truncated:
+                states[i], info[i] = self.envs[i].reset()
+        te = np.stack(te, axis=0)
+        tr = np.stack(tr, axis=0)
+        states = np.stack(states, axis=0)
+
+        return states, rewards, te, tr, info
+
+
 def space_convert(gym_space):
     import gym as og_gym
 

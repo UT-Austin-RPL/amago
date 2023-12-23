@@ -1,4 +1,6 @@
 import math
+import datetime
+import time
 import warnings
 import copy
 import random
@@ -18,22 +20,25 @@ from einops import rearrange
 
 from amago.envs import AMAGOEnv
 from amago.hindsight import GoalSeq
+from amago.envs.env_utils import space_convert, DiscreteActionWrapper
 
 
 class CrafterOptionalRender(crafter.Env):
     def __init__(self, reward, length, render: bool):
         super().__init__(reward=reward, length=length)
+
         self.enable_render = render
 
     def reset(self, *args, **kwargs):
         return super().reset()
 
     def render(self, mode="human"):
-        return super().render(size=None)
+        return super().render(size=(512, 512))
 
     def _obs(self):
+        # actual observation creation handled by CrafterEnv below
         if self.enable_render:
-            return super()._obs()
+            return super().render(size=None)
         else:
             return None
 
@@ -78,40 +83,80 @@ class CrafterEnv(AMAGOEnv):
         obs_kind: str = "render",
         use_tech_tree: bool = False,
         verbose: bool = False,
+        save_video_to: str | None = None,
     ):
         env = CrafterOptionalRender(
-            reward=not directed, length=time_limit, render=obs_kind != "gridworld"
+            reward=not directed, length=time_limit, render=obs_kind != "textures"
         )
-
+        if save_video_to is not None:
+            env = crafter.recorder.VideoRecorder(env, directory=save_video_to)
+            self.video_hook = env
+        else:
+            self.video_hook = None
+        env = DiscreteActionWrapper(env)
         if obs_kind == "render":
             obs_shape = (64, 64, 3)
-            self.observation_space = gym.spaces.Box(
-                low=0, high=255, shape=obs_shape, dtype=np.uint8
+            self.observation_space = gym.spaces.Dict(
+                {
+                    "image": gym.spaces.Box(
+                        low=0, high=255, shape=obs_shape, dtype=np.uint8
+                    ),
+                }
             )
         elif obs_kind == "crop":
-            obs_shape = (3 * 38 * 38 + 16,)
-        elif obs_kind == "gridworld":
-            obs_shape = (9 * 7 + 2 + 16 + 2 + 1,)
+            self.observation_space = gym.spaces.Dict(
+                {
+                    "image": gym.spaces.Box(
+                        low=0, high=255, shape=(48, 64, 3), dtype=np.uint8
+                    ),
+                    "inventory": gym.spaces.Box(
+                        low=0.0, high=1.0, shape=(16,), dtype=np.float32
+                    ),
+                }
+            )
+        elif obs_kind == "textures":
+            self.observation_space = gym.spaces.Dict(
+                {
+                    "textures": gym.spaces.Box(
+                        low=0, high=64, shape=(9, 7), dtype=np.uint8
+                    ),
+                    "info": gym.spaces.Box(
+                        low=-1.0, high=1.0, shape=(2 + 16 + 2 + 1,), dtype=np.float32
+                    ),
+                }
+            )
         else:
             raise ValueError(
-                f"Unrecognized `obs_kind` '{obs_kind}'. Options are: render, crop, gridworld."
+                f"Unrecognized `obs_kind` '{obs_kind}'. Options are: render, crop, textures."
             )
-
+        self.obs_kind = obs_kind
         self.clear_fixed_task()
         self.k = k
         self.min_k = min_k
         self.obs_kind = obs_kind
         self.dense_reward = not directed
-        super().__init__(env, horizon=time_limit)
         self._plotting = None
         self._ax = None
         self.verbose = verbose
         self.use_tech_tree = use_tech_tree
         self._best_tech_tree_idx = 0
+        # skipping super().__init__() to handle observation space edge case
+        self.horizon = time_limit
+        self.start = 0
+        self.discrete = True
+        self.env = env
+        self.action_size = env.action_space.n
+        self.action_space = space_convert(env.action_space)
+        self._env_name = (
+            "Crafter" if self.dense_reward else "Crafter-Instruction-Conditioned"
+        ) + self.obs_kind
 
     @property
     def env_name(self):
-        return "Crafter" if self.dense_reward else "Crafter-Instruction-Conditioned"
+        return self._env_name
+
+    def set_env_name(self, name: str):
+        self._env_name = name
 
     @property
     def achieved_goal(self):
@@ -141,48 +186,55 @@ class CrafterEnv(AMAGOEnv):
         return gym.spaces.Box(low=0, high=99, shape=(self.k, 3))
 
     def render(self, *args, **kwargs):
-        if not self._plotting:
-            plt.switch_backend("tkagg")
-            fig = plt.figure(figsize=(9, 6))
-            self._ax = fig.add_subplot(111)
-            plt.ion()
-            self._plotting = True
-        obs = self.env.render()
-        obs = self.obs(obs, {}, kind="render")
-        plt.tight_layout()
-        plt.imshow(obs)
-        plt.draw()
-        plt.pause(0.001)
+        if self.obs_kind == "textures":
+            if not self._plotting:
+                plt.switch_backend("tkagg")
+                fig = plt.figure(figsize=(9, 6))
+                self._ax = fig.add_subplot(111)
+                plt.ion()
+                self._plotting = True
+            obs = self.env.render()
+            obs = self.obs(obs, {}, kind="render")
+            plt.tight_layout()
+            plt.imshow(obs)
+            plt.draw()
+            plt.pause(0.001)
+        else:
+            return self.env.unwrapped.render()
 
-    def obs(self, raw_obs, info, kind="gridworld"):
-        assert kind in ["render", "crop", "gridworld"]
+    def obs(self, raw_obs, info, kind="textures"):
+        assert kind in ["render", "crop", "textures"]
 
         if kind == "crop":
             scaled = raw_obs[:48, :, :]  # crop black inventory portion
-            scaled = cv2.resize(scaled, (38, 38))  # resize
-            scaled = rearrange(scaled, "h w c -> (c h w)")  # flatten
-            inv = np.array(
-                list(info["inventory"].values()), dtype=np.uint8
+            inv = (
+                np.array(list(info["inventory"].values()), dtype=np.float32) / 10.0
             )  # get missing inventory
-            breakpoint()
-            obs = np.concatenate((scaled, inv), axis=-1)  # concat
-        elif kind == "gridworld":
-            gridworld_view = self.get_gridworld_view(info).astype(np.uint8).flatten()
+            return {"image": scaled, "inventory": inv}
+        elif kind == "textures":
+            gridworld_view = self.get_gridworld_view(info).astype(np.uint8) + 1
+            h, w = gridworld_view.shape
+            pad_view = np.zeros((7, 9), dtype=np.uint8)
+            pad_view[:h, :w] = gridworld_view
+            """
+            # original version: breaks the spatial ordering of embeddings at the world
+            # border when the grid is smaller than expected. I get this wrong in the paper
+            # version and it leads to weird behavior at the edge of the map.
             pad_view = np.zeros((9 * 7,), dtype=np.uint8)
-            pad_view[: len(gridworld_view)] = gridworld_view
-            # player_facing + 1 to keep it in uint8 range
-            player_facing = (np.array(self.env.unwrapped._player.facing) + 1).astype(
-                np.uint8
-            )
-            # daylight value is [0, 1]. bound it in [0, 20] as a compromise to keep it uint8
-            # and let us turn off input normalization.
-            daylight = (self.env.unwrapped._world.daylight / 1.0) * 20.0
-            daylight = np.array([daylight], dtype=np.uint8)
-            inv = np.array(list(info["inventory"].values()), dtype=np.uint8)
-            pos = np.array(info["player_pos"], dtype=np.uint8)
-            obs = np.concatenate((pad_view, player_facing, inv, pos, daylight), axis=0)
+            pad_view[: len(gridworld_view)] = gridworld_view.flatten()
+            """
+            player_facing = np.array(self.env.unwrapped._player.facing)
+            daylight = np.array(self.env.unwrapped._world.daylight / 1.0)[np.newaxis]
+            inv = np.array(list(info["inventory"].values())) / 10.0
+            pos = (np.array(info["player_pos"]).flatten() - 30.0) / 60.0
+            return {
+                "textures": pad_view,
+                "info": np.concatenate((player_facing, inv, pos, daylight)).astype(
+                    np.float32
+                ),
+            }
         else:
-            obs = raw_obs
+            obs = {"image": raw_obs}
 
         return obs
 
@@ -214,6 +266,14 @@ class CrafterEnv(AMAGOEnv):
         return next_state, reward, done, False, info
 
     def inner_reset(self, seed=None, options=None):
+        if self.video_hook is not None and self.video_hook._frames is not None:
+            # navigating around the problem that the VideoRecorder only saves on
+            # termination but success is determined in a wrapper above this.
+            # not a perfect system - just here for the jupyter notebook demo.
+            self.video_hook._env._timestamp = datetime.datetime.now().strftime(
+                "%Y%m%dT%H%M%S"
+            )
+            self.video_hook._save()
         obs = self.env.reset()
         info = self.get_game_info()
         self._last_game_info = copy.deepcopy(info)
@@ -238,6 +298,11 @@ class CrafterEnv(AMAGOEnv):
         if "pad" in words:
             words.remove("pad")
         return words
+
+    """
+    Goal frequencies are conditioned on their type (the first word of the goal).
+    TASKS[type][idx] = (goal, probability)
+    """
 
     TASKS = {
         "collect": [
@@ -291,6 +356,7 @@ class CrafterEnv(AMAGOEnv):
         if self._fixed_task is not None:
             return self._fixed_task
         if self.use_tech_tree and random.random() < 0.333:
+            # 1/3 number was not tuned
             return self._generate_tech_tree_task()
         return self._generate_random_task()
 
@@ -322,6 +388,8 @@ class CrafterEnv(AMAGOEnv):
         k_this_ep = random.randint(self.min_k, self.k)
         for _ in range(k_this_ep):
             r = random.random()
+            # these probabilities look specific but were not tuned and would
+            # probably be sub-optimal if we really cared about Crafter as an end goal...
             if r < 0.3:
                 goal = _sample_task("collect")
             elif r < 0.4:
@@ -385,6 +453,7 @@ class CrafterEnv(AMAGOEnv):
         dists = sorted(dists, key=lambda j: j[-1])
         closest_x, closest_y, closest_dist = dists[0]
         if closest_dist < 2.0:
+            # travel goals have an error tolerance of 2 units
             achieved_goals.append(
                 self._str2token(["travel", f"{closest_x}m", f"{closest_y}m"])
             )
@@ -395,6 +464,6 @@ class CrafterEnv(AMAGOEnv):
 
 
 if __name__ == "__main__":
-    env = CrafterEnv()
+    env = CrafterEnv(obs_kind="crop")
     env.reset()
     env.step(np.array(env.action_space.sample(), dtype=np.uint8))

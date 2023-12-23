@@ -16,16 +16,16 @@ def weight_init(m):
     if isinstance(m, nn.Linear):
         nn.init.orthogonal_(m.weight.data)
         m.bias.data.fill_(0.0)
-    elif isinstance(m, nn.Conv2d) or isinstance(m, nn.ConvTranspose2d):
-        # delta-orthogonal init from https://arxiv.org/pdf/1806.05393.pdf
+    elif isinstance(m, nn.Conv2d):
         assert m.weight.size(2) == m.weight.size(3)
         m.weight.data.fill_(0.0)
         m.bias.data.fill_(0.0)
         mid = m.weight.size(2) // 2
-        gain = nn.init.calculate_gain("relu")
+        gain = nn.init.calculate_gain("leaky_relu")
         nn.init.orthogonal_(m.weight.data[:, :, mid, mid], gain)
 
 
+@gin.configurable
 class CNN(nn.Module, ABC):
     def __init__(
         self,
@@ -42,19 +42,23 @@ class CNN(nn.Module, ABC):
     def conv_forward(self, imgs):
         pass
 
-    def forward(self, obs):
-        assert obs.dtype == torch.uint8
+    def forward(self, obs, from_float: bool = False, flatten: bool = True):
         assert obs.ndim == 5
+        if not from_float:
+            assert obs.dtype == torch.uint8
+            obs = (obs.float() / 128.0) - 1.0
         if not self.channels_first:
             B, L, H, W, C = obs.shape
             img = rearrange(obs, "b l h w c -> (b l) c h w")
         else:
             B, L, C, H, W = obs.shape
             img = rearrange(obs, "b l c h w -> (b l) c h w")
-        img = (img / 128.0) - 1.0
         features = self.conv_forward(img)
-        out = rearrange(features, "(b l) c h w -> b l (c h w)", l=L)
-        return out
+        if flatten:
+            features = rearrange(features, "(b l) c h w -> b l (c h w)", l=L)
+        else:
+            features = rearrange(features, "(b l) c h w -> b l c h w", l=L)
+        return features
 
 
 class DrQCNN(CNN):
