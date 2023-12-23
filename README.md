@@ -168,7 +168,7 @@ AMAGO provides a stable way to train long-sequence Transformers with RL, which c
 
 Example on a horizon of 400 timesteps:
 ```bash
-python 09_tmaze.py --memory_size 128 --memory_layers 2 --parallel_actors 36 --horizon 400 --timesteps_per_epoch 800  --grads_per_epoch 600 --dset_max_size 5000 --gpu <int> --run_name <str> --buffer_dir <path>
+python 09_tmaze.py --no_async --memory_size 128 --memory_layers 2 --parallel_actors 36 --horizon 400 --timesteps_per_epoch 800  --grads_per_epoch 600 --dset_max_size 5000 --gpu <int> --run_name <str> --buffer_dir <path>
 ```
 This command with `--horizon 10000 --timesteps_per_epoch 10000` will also train the extreme 10k sequence length mentioned in the paper, although this takes several days to converge due to the inference cost of generating each trajectory.
 </details>
