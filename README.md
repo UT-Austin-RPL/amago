@@ -78,6 +78,19 @@ Example `wandb` training logs for each example coming soon.
    
 Many popular benchmarks are MDPs and can be treated as a simple special case of the full agent. Toggling *off* memory, goal-conditioning/relabeling, and multi-episodic resets reduces AMAGO to a regular off-policy actor-critic like you've seen before. This is mainly meant to be an ablation to test the impact of memory. However, AMAGO is a stable variant of [REDQ](https://arxiv.org/abs/2101.05982)/[CRR](https://arxiv.org/abs/2006.15134) with improvements like "multi-gamma" training that are especially useful in sparse reward environments. See `examples/01_basic_gym.py` for an example.
 
+<details>
+<summary> <b>Example Training Commands</b> </summary>
+<br>
+
+Train a memory-free policy on built-in gymnasium benchmarks:
+
+```bash
+python 01_basic_gym.py --env LunarLander-v2 --horizon 200 --traj_encoder ff --max_seq_len 32 --memory_layers 2 --no_async --gpu <int> --run_name <str> --buffer_dir <path>
+```
+This examples uses a `TrajEncoder` that is just a feedforward network. Training still depends on sequences of `--max_seq_len` timesteps, which is effectively increasing the training batch size.
+
+</details>
+ 
 2. **POMDPs and Long-Term Memory (POPGym)**
    
 Using a memory-equipped `TrajEncoder`, but toggling *off* goals and multi-episodic resets creates an effective POMDP solver. AMAGO is efficient enough to use *entire* trajectories as context beyond 1k timesteps depending on model size, and the `TformerTrajEncoder` is a strong default Transformer tuned specifically for stability in RL. See `examples/02_popgym_suite.py` where the same hyperparameters can lead to state-of-the-art performance across the [POPGym](https://arxiv.org/abs/2303.01859) suite.
