@@ -125,6 +125,16 @@ python 03_dark_key_to_door.py --memory_layers 3 --memory_size 256 --epochs 650 -
 
 `examples/05_kshot_metaworld.py` uses [Metaworld](https://meta-world.github.io) to show how we can setup a meta-RL problem that ends after a certain number of episodes, rather than a fixed horizon `H`. We can let the environment automatically reset itself `k - 1` times while AMAGO pretends it's a zero-shot problem (as long as the resets are added to the observation space). `examples/06_alchemy.py` shows another example on the symbolic version of [DeepMind Alchemy](https://arxiv.org/abs/2102.02926).
 
+<details>
+<summary> <b>Example Training Commands</b> </summary>
+<br>
+
+Train a transformer policy with a context length of 128 timesteps on 2-shot (`--k 2`) Reach-v2:
+```bash
+python 05_kshot_metaworld.py --k 2 --benchmark reach-v2 --max_seq_len 128 --epochs 700 --timesteps_per_epoch 1500 --grads_per_epoch 700 --gpu <int> --run_name <str> --buffer_dir <path>
+```
+</details>
+ 
 7. **Goal-Conditioned Open-Worlds (Crafter)**
 
 AMAGO can adapt to procedurally generated environments while completing multi-step instructions. `examples/07_crafter_with_instructions.py` shows how we turn [Crafter](https://danijar.com/project/crafter/) into an instruction-conditioned environment, and then use AMAGO's hindsight relabeling to explore sparse rewards. Please note that the open-source release is currently missing some of the features used in the paper's Crafter results, but these will be added in the coming weeks.
