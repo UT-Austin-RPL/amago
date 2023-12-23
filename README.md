@@ -109,7 +109,7 @@ Memory-conservative settings with pixel-based observations:
 python 07_crafter_with_instructions.py --max_seq_len 512 --obs_kind crop --start_learning_at_epoch 5 --memory_size 256 --memory_layers 3 --relabel some --epochs 5000 --timesteps_per_epoch 2000 --gpu <int> --run_name <str> --buffer_dir <path>
 ```
 
-The open-source architecture and command above are not 1:1 with the main paper but is a close replication of the pixel-based version (Table 2) in the Appendix. We provide a pretrained checkpoint here (link TODO). Many of the paper's main runs were done on the `--obs_kind textures` setting. 
+The command above is a close replication of the pixel-based version (Appendix C5 Table 2). You can watch gameplay of a pretrained checkpoint on user-specified tasks with the `examples/crafter_pixels_demo.ipynb` notebook.
 
 After training you can run the same command with an added `--eval_mode` argument to evaluate the full random task distribution in addition to a hardcoded list of specified tasks (including individual goals). The "best" checkpoint is loaded by default (highest average return on train distribution) but you can specify an epoch checkpoint number with `--ckpt`.
 </details>
