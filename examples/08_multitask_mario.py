@@ -43,10 +43,11 @@ MarioGameStarts = {
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--max_seq_len", type=int, default=128)
+    parser.add_argument("--multibinary", action="store_true")
     add_common_cli(parser)
     args = parser.parse_args()
 
-    config = {}
+    config = {"amago.agent.Agent.online_coeff": 0.0 if args.multibinary else 1.0}
     turn_off_goal_conditioning(config)
     switch_traj_encoder(
         config,
@@ -58,7 +59,9 @@ if __name__ == "__main__":
     use_config(config, args.configs)
 
     make_env = lambda: RetroAMAGOWrapper(
-        RetroArcade(game_start_dict=MarioGameStarts, use_discrete_actions=True)
+        RetroArcade(
+            game_start_dict=MarioGameStarts, use_discrete_actions=not args.multibinary
+        )
     )
 
     group_name = f"{args.run_name}_mario_retro_example"
