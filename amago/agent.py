@@ -58,15 +58,21 @@ class Agent(nn.Module):
         self.obs_space = obs_space
         self.goal_space = goal_space
         self.rl2_space = rl2_space
-        # TODO: refactor for MultiBinary + MultiDiscrete
+
         self.action_space = action_space
+        self.multibinary = False
+        self.discrete = False
         if isinstance(self.action_space, gym.spaces.Discrete):
             self.action_dim = self.action_space.n
+            self.discrete = True
+        elif isinstance(self.action_space, gym.spaces.MultiBinary):
+            self.action_dim = self.action_space.n
+            self.multibinary = True
         elif isinstance(self.action_space, gym.spaces.Box):
             self.action_dim = self.action_space.shape[-1]
         else:
             raise ValueError(f"Unsupported action space: `{type(self.action_space)}`")
-        self.discrete = isinstance(action_space, gym.spaces.Discrete)
+
         self.reward_multiplier = reward_multiplier
         self.pad_val = MAGIC_PAD_VAL
         self.fake_filter = fake_filter
@@ -110,6 +116,8 @@ class Agent(nn.Module):
         self.target_critics = actor_critic.NCritics(
             **ac_kwargs, num_critics=num_critics
         )
+        if self.multibinary:
+            ac_kwargs["cont_dist_kind"] = "multibinary"
         self.actor = actor_critic.Actor(**ac_kwargs)
         self.target_actor = actor_critic.Actor(**ac_kwargs)
         # full weight copy to targets
@@ -447,13 +455,14 @@ class Agent(nn.Module):
             if self.discrete:
                 # buffer actions are one-hot encoded
                 logp_a = a_dist.log_prob(a_buffer.argmax(-1)).unsqueeze(-1)
+            elif self.multibinary:
+                logp_a = a_dist.log_prob(a_buffer).mean(-1, keepdim=True)
             else:
                 # action probs at the [-1, 1] border can be very unstable with some
                 # distribution implementations
                 logp_a = a_dist.log_prob(a_buffer.clamp(-0.995, 0.995)).sum(
                     -1, keepdim=True
                 )
-            assert logp_a.shape == (B, L, G, 1)
             # clamp for stability and throw away last action that was a duplicate
             logp_a = logp_a[:, :-1, ...].clamp(-1e3, 1e3)
             # filtered nll

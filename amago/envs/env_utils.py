@@ -112,6 +112,11 @@ class ContinuousActionWrapper(gym.ActionWrapper):
         return action
 
 
+class MultiBinaryActionWrapper(gym.ActionWrapper):
+    def action(self, action):
+        return action.astype(np.int8)
+
+
 class GPUSequenceBuffer:
     def __init__(self, device, max_len: int, num_parallel: int):
         self.device = device
@@ -209,6 +214,7 @@ class ExplorationWrapper(gym.ActionWrapper):
         self.eps_end_end = eps_end_end
         self.global_slope = (eps_start_start - eps_start_end) / steps_anneal
         self.discrete = isinstance(self.env.action_space, gym.spaces.Discrete)
+        self.multibinary = isinstance(self.env.action_space, gym.spaces.MultiBinary)
         self.global_step = 0
 
     def reset(self, *args, **kwargs):
@@ -242,6 +248,11 @@ class ExplorationWrapper(gym.ActionWrapper):
             else:
                 expl_action = a
             assert expl_action.dtype == np.uint8
+        elif self.multibinary:
+            random_actions = np.random.randn(*a.shape) < 0.0
+            use_random = np.random.random(*a.shape) <= noise
+            expl_action = (1 - use_random) * a + use_random * random_actions
+            expl_action = expl_action.astype(np.int8)
         else:
             # random noise (TD3-style)
             expl_action = a + noise * np.random.randn(*a.shape)
@@ -302,7 +313,6 @@ class SequenceWrapper(gym.Wrapper):
         self.save_every = save_every
         self.since_last_save = 0
         self._total_frames = 0
-        # TODO: refactor this logic to be a new util everywhere
         if isinstance(self.env.action_space, gym.spaces.Discrete):
             action_shape = self.env.action_space.n
         else:

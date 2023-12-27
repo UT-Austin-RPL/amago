@@ -22,7 +22,7 @@ class _TanhWrappedDistribution(pyd.Distribution):
     """
 
     def __init__(self, base_dist, scale=1.0, epsilon=1e-6):
-        super().__init__()
+        super().__init__(validate_args=False)
         self.base_dist = base_dist
         self.scale = scale
         self.tanh_epsilon = epsilon
@@ -127,7 +127,7 @@ def ContinuousActionDist(
     d_action: int | None = None,
     gmm_modes: int | None = None,
 ):
-    assert kind in ["normal", "gmm"]
+    assert kind in ["normal", "gmm", "multibinary"]
 
     if kind == "normal":
         mu, log_std = vec.chunk(2, dim=-1)
@@ -146,6 +146,8 @@ def ContinuousActionDist(
         stds = log_std.exp()
         logits = vec[..., 2 * idx :]
         dist = _TanhGMM(means=means, stds=stds, logits=logits)
+    elif kind == "multibinary":
+        dist = pyd.Bernoulli(logits=vec)
     return dist
 
 
@@ -193,6 +195,9 @@ class Actor(nn.Module):
             self.actions_differentiable = True
         elif cont_dist_kind == "gmm":
             d_output = gmm_modes * 2 * action_dim + gmm_modes
+            self.actions_differentiable = False
+        elif cont_dist_kind == "multibinary":
+            d_output = action_dim
             self.actions_differentiable = False
         self.num_gammas = len(gammas)
         d_output *= self.num_gammas

@@ -9,6 +9,7 @@ import gymnasium as gym
 from amago.envs.env_utils import (
     ContinuousActionWrapper,
     DiscreteActionWrapper,
+    MultiBinaryActionWrapper,
     space_convert,
 )
 from amago.hindsight import Trajectory, GoalSeq, Timestep
@@ -20,15 +21,23 @@ class AMAGOEnv(gym.Wrapper, ABC):
 
         self.horizon = horizon
         self.start = start
+
         # action space conversion
         self.discrete = isinstance(space_convert(env.action_space), gym.spaces.Discrete)
+        self.multibinary = isinstance(
+            space_convert(env.action_space), gym.spaces.MultiBinary
+        )
         if self.discrete:
             self.env = DiscreteActionWrapper(self.env)
+            self.action_size = self.action_space.n
+        elif self.multibinary:
+            self.env = MultiBinaryActionWrapper(self.env)
             self.action_size = self.action_space.n
         else:
             self.env = ContinuousActionWrapper(self.env)
             self.action_size = self.action_space.shape[-1]
         self.action_space = space_convert(self.env.action_space)
+
         # observation space conversion (defaults to dict)
         obs_space = self.env.observation_space
         if not isinstance(obs_space, gym.spaces.Dict | og_gym.spaces.Dict):
@@ -68,6 +77,8 @@ class AMAGOEnv(gym.Wrapper, ABC):
     def blank_action(self):
         if self.discrete:
             action = [i for i in range(self.action_size)]
+        elif self.multibinary:
+            action = np.zeros((self.action_size,), dtype=np.int8)
         else:
             action = np.full((self.action_size,), -2.0)
         return action
@@ -111,12 +122,6 @@ class AMAGOEnv(gym.Wrapper, ABC):
         normal_rl_reset: bool = False,
         soft_reset_kwargs: dict = {},
     ) -> tuple[Timestep, float, bool, bool, dict]:
-        assert isinstance(action, np.ndarray)
-        if self.discrete:
-            assert action.dtype == np.uint8
-        else:
-            assert action.dtype == np.float32
-
         # freeze goal sequence before this timestep
         goal_seq = copy.deepcopy(self.goal_sequence)
 
