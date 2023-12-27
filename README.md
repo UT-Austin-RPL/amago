@@ -169,10 +169,6 @@ This command with `--horizon 10000 --timesteps_per_epoch 10000` will also train 
 
 AMAGO is built around [gin-config](https://github.com/google/gin-config), which makes it easy to customize experiments. `gin` makes hyperparameters a default value for an object's `kwargs`, and lets you set their value without editing the source code. You can read more about gin [here](https://github.com/google/gin-config/blob/master/docs/index.md). The `examples/` avoid any `.gin` config files and let you switch between the most important settings without worrying about any of this.
 
-## Roadmap
-
-- `MultiBinary` and `MultiDiscrete` action spaces
-- Faster backward pass with second target critic using `tau=1.0`
 
 ## Reference and Acknowledgements
 If you use AMAGO in your research, please consider citing our paper:
