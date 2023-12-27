@@ -118,6 +118,113 @@ class GRUTrajEncoder(TrajEncoder):
         return self._emb_dim
 
 
+try:
+    from mamba_ssm import Mamba
+except:
+    Mamba = None
+
+
+class _MambaBlock(nn.Module):
+    def __init__(self, d_model: int, d_state: int, d_conv: int, expand: int, norm: str):
+        super().__init__()
+        self.norm = ff.Normalization(norm, d_model)
+        self.mamba = Mamba(
+            d_model=d_model, d_state=d_state, d_conv=d_conv, expand=expand
+        )
+
+    def forward(self, x):
+        return x + self.mamba(self.norm(x))
+
+
+class _MambaHiddenState:
+    def __init__(
+        self, key_cache: list[Cache], val_cache: list[Cache], timesteps: torch.Tensor
+    ):
+        assert isinstance(key_cache, list) and len(key_cache) == len(val_cache)
+        assert timesteps.dtype == torch.int32
+        self.n_layers = len(key_cache)
+        self.key_cache = key_cache
+        self.val_cache = val_cache
+        self.timesteps = timesteps
+
+    def reset(self, idxs):
+        self.timesteps[idxs] = 0
+
+    def update(self):
+        self.timesteps += 1
+        for i, timestep in enumerate(self.timesteps):
+            if timestep == len(self.key_cache[0]):
+                for k, v in zip(self.key_cache, self.val_cache):
+                    k.roll_back(i)
+                    v.roll_back(i)
+                self.timesteps[i] -= 1
+
+    def __getitem__(self, layer_idx):
+        assert layer_idx < self.n_layers
+        return (
+            self.key_cache[layer_idx].data,
+            self.val_cache[layer_idx].data,
+            self.timesteps,
+        )
+
+
+@gin.configurable
+class MambaTrajEncoder(TrajEncoder):
+    def __init__(
+        self,
+        tstep_dim: int,
+        max_seq_len: int,
+        horizon: int,
+        d_state: int = 16,
+        d_conv: int = 4,
+        expand: int = 2,
+        n_layers: int = 2,
+        norm: str = "layer",
+    ):
+        super().__init__(tstep_dim, max_seq_len, horizon)
+
+        assert (
+            Mamba is not None
+        ), "Missing Mamba installation (pip install amago[mamba])"
+        self.mambas = nn.ModuleList(
+            [
+                _MambaBlock(
+                    d_model=tstep_dim, d_state=d_state, d_conv=d_conv, expand=expand
+                )
+                for _ in range(n_layers)
+            ]
+        )
+        self.out_norm = ff.Normalization(norm, tstep_dim)
+        self._emb_dim = tstep_dim
+
+    def reset_hidden_state(self, hidden_state, dones):
+        # TODO
+        assert hidden_state is not None
+        hidden_state[:, dones] = 0.0
+        return hidden_state
+
+    def forward(self, seq, time_idxs=None, hidden_state=None):
+        if hidden_state is None:
+            for mamba in self.mambas:
+                seq = mamba(seq)
+            new_hidden_state = None
+        else:
+            # TODO
+            assert not self.training
+            assert isinstance(hidden_state, _MambaHiddenState)
+            for i, mamba in enumerate(self.mambas):
+                conv_state_i, ssm_state_i = hidden_state[i]
+                seq, new_conv_state_i, new_ssm_state_i = mamba.step(
+                    seq, conv_state=conv_state_i, ssm_state=ssm_state_i
+                )
+                hidden_state[i] = conv_state_i, ssm_state_i
+        return self.out_norm(seq), new_hidden_state
+
+    @property
+    def emb_dim(self):
+        return self._emb_dim
+
+
 @gin.configurable
 class TformerTrajEncoder(TrajEncoder):
     def __init__(
