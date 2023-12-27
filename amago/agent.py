@@ -344,7 +344,14 @@ class Agent(nn.Module):
         critic_loss = None
         # one actor forward pass
         a_dist = self.actor(s_rep)
-        a_agent = a_dist.probs if self.discrete else a_dist.rsample()
+
+        if self.discrete:
+            a_agent = a_dist.probs
+        elif self.actor.actions_differentiable:
+            a_agent = a_dist.rsample()
+        else:
+            a_agent = a_dist.sample()
+
         if not self.fake_filter or self.online_coeff > 0:
             # in practice two critic passes is same speed on forward, faster on backward
             s_a_agent_g = (s_rep.detach(), a_agent)
@@ -413,6 +420,9 @@ class Agent(nn.Module):
         ######################
         actor_loss = torch.zeros((B, L - 1, G, 1), device=a.device)
         if self.online_coeff > 0:
+            assert (
+                self.actor.actions_differentiable
+            ), "online-style actor loss is not compatible with action distribution"
             actor_loss += self.online_coeff * -(
                 self.popart(q_s_a_agent_g[:, :-1, ...].min(2).values)
             )
