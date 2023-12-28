@@ -132,40 +132,40 @@ class _MambaBlock(nn.Module):
             d_model=d_model, d_state=d_state, d_conv=d_conv, expand=expand
         )
 
-    def forward(self, x):
-        return x + self.mamba(self.norm(x))
+    def forward(self, seq):
+        return seq + self.mamba(self.norm(seq))
+
+    def step(self, seq, conv_state, ssm_state):
+        res, new_conv_state, new_ssm_state = self.mamba.step(
+            self.norm(seq), conv_state, ssm_state
+        )
+        return seq + res, new_conv_state, new_ssm_state
 
 
 class _MambaHiddenState:
-    def __init__(
-        self, key_cache: list[Cache], val_cache: list[Cache], timesteps: torch.Tensor
-    ):
-        assert isinstance(key_cache, list) and len(key_cache) == len(val_cache)
-        assert timesteps.dtype == torch.int32
-        self.n_layers = len(key_cache)
-        self.key_cache = key_cache
-        self.val_cache = val_cache
-        self.timesteps = timesteps
+    def __init__(self, conv_states: list[torch.Tensor], ssm_states: list[torch.Tensor]):
+        assert len(conv_states) == len(ssm_states)
+        self.n_layers = len(conv_states)
+        self.conv_states = conv_states
+        self.ssm_states = ssm_states
 
     def reset(self, idxs):
-        self.timesteps[idxs] = 0
+        for i in range(self.n_layers):
+            # hidden states are initialized to zero
+            self.conv_states[i][idxs] = 0.0
+            self.ssm_states[i][idxs] = 0.0
 
     def update(self):
-        self.timesteps += 1
-        for i, timestep in enumerate(self.timesteps):
-            if timestep == len(self.key_cache[0]):
-                for k, v in zip(self.key_cache, self.val_cache):
-                    k.roll_back(i)
-                    v.roll_back(i)
-                self.timesteps[i] -= 1
+        pass
 
     def __getitem__(self, layer_idx):
         assert layer_idx < self.n_layers
-        return (
-            self.key_cache[layer_idx].data,
-            self.val_cache[layer_idx].data,
-            self.timesteps,
-        )
+        return self.conv_states[layer_idx], self.ssm_states[layer_idx]
+
+    def __setitem__(self, idx, conv_ssm: tuple[torch.Tensor]):
+        conv, ssm = conv_ssm
+        self.conv_states[idx] = conv
+        self.ssm_states[idx] = ssm
 
 
 @gin.configurable
@@ -175,6 +175,7 @@ class MambaTrajEncoder(TrajEncoder):
         tstep_dim: int,
         max_seq_len: int,
         horizon: int,
+        d_model: int = 256,
         d_state: int = 16,
         d_conv: int = 4,
         expand: int = 2,
@@ -186,30 +187,46 @@ class MambaTrajEncoder(TrajEncoder):
         assert (
             Mamba is not None
         ), "Missing Mamba installation (pip install amago[mamba])"
+        self.inp = nn.Linear(tstep_dim, d_model)
+
         self.mambas = nn.ModuleList(
             [
                 _MambaBlock(
-                    d_model=tstep_dim, d_state=d_state, d_conv=d_conv, expand=expand
+                    d_model=d_model,
+                    d_state=d_state,
+                    d_conv=d_conv,
+                    expand=expand,
+                    norm=norm,
                 )
                 for _ in range(n_layers)
             ]
         )
-        self.out_norm = ff.Normalization(norm, tstep_dim)
-        self._emb_dim = tstep_dim
+        self.out_norm = ff.Normalization(norm, d_model)
+        self._emb_dim = d_model
+
+    def init_hidden_state(self, batch_size: int, device: torch.device):
+        conv_states, ssm_states = [], []
+        for mamba_block in self.mambas:
+            conv_state, ssm_state = mamba_block.mamba.allocate_inference_cache(
+                batch_size, max_seqlen=self.max_seq_len
+            )
+            conv_states.append(conv_state)
+            ssm_states.append(ssm_state)
+        return _MambaHiddenState(conv_states, ssm_states)
 
     def reset_hidden_state(self, hidden_state, dones):
-        # TODO
-        assert hidden_state is not None
-        hidden_state[:, dones] = 0.0
+        if hidden_state is None:
+            return None
+        assert isinstance(hidden_state, _MambaHiddenState)
+        hidden_state.reset(idxs=dones)
         return hidden_state
 
     def forward(self, seq, time_idxs=None, hidden_state=None):
+        seq = self.inp(seq)
         if hidden_state is None:
             for mamba in self.mambas:
                 seq = mamba(seq)
-            new_hidden_state = None
         else:
-            # TODO
             assert not self.training
             assert isinstance(hidden_state, _MambaHiddenState)
             for i, mamba in enumerate(self.mambas):
@@ -218,7 +235,7 @@ class MambaTrajEncoder(TrajEncoder):
                     seq, conv_state=conv_state_i, ssm_state=ssm_state_i
                 )
                 hidden_state[i] = conv_state_i, ssm_state_i
-        return self.out_norm(seq), new_hidden_state
+        return self.out_norm(seq), hidden_state
 
     @property
     def emb_dim(self):
