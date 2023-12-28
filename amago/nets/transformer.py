@@ -276,6 +276,27 @@ class TformerHiddenState:
         )
 
 
+class FixedPosEmb(nn.Module):
+    def __init__(self, d_model: int):
+        super().__init__()
+        self.d_model = d_model
+
+    def forward(self, pos_idxs: torch.LongTensor):
+        B, L = pos_idxs.shape
+        emb = torch.zeros(
+            (B, L, self.d_model), device=pos_idxs.device, dtype=torch.float32
+        )
+        coeff = torch.exp(
+            (
+                torch.arange(0, self.d_model, 2, device=emb.device, dtype=torch.float32)
+                * -(math.log(10000.0) / self.d_model)
+            )
+        )
+        emb[..., 0::2] = torch.sin(pos_idxs.float().unsqueeze(-1) * coeff)
+        emb[..., 1::2] = torch.cos(pos_idxs.float().unsqueeze(-1) * coeff)
+        return emb
+
+
 class Transformer(nn.Module):
     def __init__(
         self,
@@ -294,12 +315,19 @@ class Transformer(nn.Module):
         activation: str = "leaky_relu",
         norm: str = "layer",
         causal: bool = True,
+        pos_emb: str = "learnable",
     ):
         super().__init__()
         assert attention in ["flash", "vanilla"]
+        assert pos_emb in ["learnable", "fixed"]
 
         # embedding
-        self.position_embedding = nn.Embedding(max_pos_idx + 1, embedding_dim=d_model)
+        if pos_emb == "learnable":
+            self.position_embedding = nn.Embedding(
+                max_pos_idx + 1, embedding_dim=d_model
+            )
+        elif pos_emb == "fixed":
+            self.position_embedding = FixedPosEmb(d_model)
         d_emb_ff = d_emb_ff or d_model
         self.inp = nn.Linear(inp_dim, d_model)
         self.dropout = nn.Dropout(dropout_emb)
