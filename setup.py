@@ -32,5 +32,6 @@ setup(
             "dm_alchemy @ git+https://github.com/deepmind/dm_alchemy.git",
         ],
         "flash": ["ninja", "packaging", "flash-attn"],
+        "mamba": ["causal-conv1d>=1.1.0", "mamba-ssm"],
     },
 )
