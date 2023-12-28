@@ -136,6 +136,7 @@ class TformerTrajEncoder(TrajEncoder):
         activation: str = "leaky_relu",
         norm: str = "layer",
         attention: str = "flash",
+        pos_emb: str = "learnable",
     ):
         super().__init__(tstep_dim, max_seq_len, horizon)
         self.tformer = transformer.Transformer(
@@ -152,6 +153,7 @@ class TformerTrajEncoder(TrajEncoder):
             activation=activation,
             attention=attention,
             norm=norm,
+            pos_emb=pos_emb,
         )
         self.d_model = d_model
 
