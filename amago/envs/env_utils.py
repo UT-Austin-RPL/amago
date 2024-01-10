@@ -216,6 +216,13 @@ class ExplorationWrapper(gym.ActionWrapper):
         self.discrete = isinstance(self.env.action_space, gym.spaces.Discrete)
         self.multibinary = isinstance(self.env.action_space, gym.spaces.MultiBinary)
         self.global_step = 0
+        self.disabled = False
+
+    def turn_off_exploration(self):
+        self.disabled = True
+
+    def turn_on_exploration(self):
+        self.disabled = False
 
     def reset(self, *args, **kwargs):
         out = super().reset(*args, **kwargs)
@@ -237,7 +244,11 @@ class ExplorationWrapper(gym.ActionWrapper):
         return current
 
     def action(self, a):
-        noise = self.current_eps(self.env.step_count, self.env.horizon)
+        noise = (
+            self.current_eps(self.env.step_count, self.env.horizon)
+            if not self.disabled
+            else 0.0
+        )
         if self.discrete:
             # epsilon greedy (DQN-style)
             num_actions = self.env.action_space.n
@@ -259,7 +270,8 @@ class ExplorationWrapper(gym.ActionWrapper):
             expl_action = np.clip(expl_action, -1.0, 1.0).astype(np.float32)
             assert expl_action.dtype == np.float32
 
-        self.global_step += 1
+        if not self.disabled:
+            self.global_step += 1
         return expl_action
 
     @property
@@ -395,6 +407,14 @@ class SequenceWrapper(gym.Wrapper):
     @property
     def total_frames(self):
         return self._total_frames
+
+    def turn_off_exploration(self):
+        if isinstance(self.env, ExplorationWrapper):
+            self.env.turn_off_exploration()
+
+    def turn_on_exploration(self):
+        if isinstance(self.env, ExplorationWrapper):
+            self.env.turn_on_exploration()
 
     @property
     def current_timestep(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:

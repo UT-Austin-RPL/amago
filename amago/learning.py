@@ -41,6 +41,7 @@ class Experiment:
     run_name: str
     gpu: int
     async_envs: bool = True
+    share_train_val_envs: bool = False
 
     # Logging
     log_to_wandb: bool = False
@@ -170,13 +171,16 @@ class Experiment:
             self.gcrl2_space = env.gcrl2_space
             return env
 
-        make_train_env = partial(_make_env, self.make_train_env, "train")
-        make_val_env = partial(_make_env, self.make_val_env, "val")
         Par = gym.vector.AsyncVectorEnv if self.async_envs else DummyAsyncVectorEnv
+        make_train_env = partial(_make_env, self.make_train_env, "train")
         self.train_envs = Par([make_train_env for _ in range(self.parallel_actors)])
         self.train_envs.reset()
-        self.val_envs = Par([make_val_env for _ in range(self.parallel_actors)])
-        self.val_envs.reset()
+        if not self.share_train_val_envs:
+            make_val_env = partial(_make_env, self.make_val_env, "val")
+            self.val_envs = Par([make_val_env for _ in range(self.parallel_actors)])
+            self.val_envs.reset()
+        else:
+            self.val_envs = self.train_envs
         # self.train_buffers holds the env state between rollout cycles
         # that are shorter than the horizon length
         self.train_buffers = None
@@ -425,10 +429,19 @@ class Experiment:
 
     def evaluate_val(self):
         if self.val_timesteps_per_epoch > 0:
+            if self.share_train_val_envs:
+                self.val_envs.call_async("turn_off_exploration")
+                self.val_envs.call_wait()
             *_, returns, successes = self.interact(
                 self.val_envs,
                 self.val_timesteps_per_epoch,
             )
+            if self.share_train_val_envs:
+                # make sure we reset again in case we're sharing val envs with train envs
+                self.val_envs.call_async("turn_on_exploration")
+                self.val_envs.call_wait()
+                self.val_envs.reset()
+                self.train_buffers, self.hidden_state = None, None
             logs = self.policy_metrics(returns, successes)
             if self.verbose:
                 print(f"Average Return : {logs['avg_return']}")
@@ -639,7 +652,10 @@ class Experiment:
                 # lr scheduling done here so we can see epoch/step
                 self.warmup_scheduler.step(total_step)
 
-            if epoch % self.val_interval == 0:
+            if (
+                epoch % self.val_interval == 0
+                and self.val_dset.count_trajectories() > 0
+            ):
                 # the "training" metrics on validation data could help identify
                 # overfitting or highlight distribution shift between (approx.)
                 # on-policy data and way-off-policy data in the disk buffer.
