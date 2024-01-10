@@ -52,13 +52,16 @@ class FFTstepEncoder(TstepEncoder):
         norm: str = "layer",
         activation: str = "leaky_relu",
         hide_rl2s: bool = False,
+        normalize_inputs: bool = True,
     ):
         super().__init__(
             obs_space=obs_space, goal_space=goal_space, rl2_space=rl2_space
         )
         flat_obs_shape = math.prod(self.obs_space["observation"].shape)
         in_dim = flat_obs_shape + self.goal_emb_dim + self.rl2_space.shape[-1]
-        self.in_norm = InputNorm(flat_obs_shape + self.rl2_space.shape[-1])
+        self.in_norm = InputNorm(
+            flat_obs_shape + self.rl2_space.shape[-1], skip=not normalize_inputs
+        )
         self.base = ff.MLP(
             d_inp=in_dim,
             d_hidden=d_hidden,
