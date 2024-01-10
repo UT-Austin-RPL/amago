@@ -49,7 +49,9 @@ def add_common_cli(parser: ArgumentParser) -> ArgumentParser:
     )
     # trajectory encoder
     parser.add_argument(
-        "--traj_encoder", choices=["ff", "transformer", "rnn"], default="transformer"
+        "--traj_encoder",
+        choices=["ff", "transformer", "rnn", "mamba"],
+        default="transformer",
     )
     parser.add_argument(
         "--memory_size",
@@ -173,7 +175,7 @@ def switch_traj_encoder(config: dict, arch: str, memory_size: int, layers: int):
     """
     Convenient way to switch between TrajEncoders of different sizes without gin config files.
     """
-    assert arch in ["ff", "rnn", "transformer"]
+    assert arch in ["ff", "rnn", "transformer", "mamba"]
     if arch == "transformer":
         tformer_config = "amago.nets.traj_encoders.TformerTrajEncoder"
         config.update(
@@ -202,6 +204,15 @@ def switch_traj_encoder(config: dict, arch: str, memory_size: int, layers: int):
                 "amago.agent.Agent.traj_encoder_Cls": amago.nets.traj_encoders.FFTrajEncoder,
                 f"{ff_config}.d_model": memory_size,
                 f"{ff_config}.n_layers": layers,
+            }
+        )
+    elif arch == "mamba":
+        mamba_config = "amago.nets.traj_encoders.MambaTrajEncoder"
+        config.update(
+            {
+                "amago.agent.Agent.traj_encoder_Cls": amago.nets.traj_encoders.MambaTrajEncoder,
+                f"{mamba_config}.d_model": memory_size,
+                f"{mamba_config}.n_layers": layers,
             }
         )
     return config
