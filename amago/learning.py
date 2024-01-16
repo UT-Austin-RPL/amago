@@ -42,6 +42,7 @@ class Experiment:
     gpu: int
     async_envs: bool = True
     share_train_val_envs: bool = False
+    agent_Cls = Agent
 
     # Logging
     log_to_wandb: bool = False
@@ -309,7 +310,8 @@ class Experiment:
             "max_seq_len": self.max_seq_len,
             "horizon": self.horizon,
         }
-        self.policy = Agent(**policy_kwargs)
+        self.policy = self.agent_Cls(**policy_kwargs)
+        assert isinstance(self.policy, Agent)
         self.policy.to(self.DEVICE)
 
     def interact(

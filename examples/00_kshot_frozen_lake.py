@@ -75,7 +75,7 @@ if __name__ == "__main__":
             + ("_hard" if args.hard_mode else "_easy")
             + ("_recover" if args.recover_mode else "_reset"),
             horizon=args.max_rollout_length,
-            # "zero-shot" from the *wrapper's perspective*; the RandomFrozenLake
+            # "zero-shot" from the *wrapper's perspective*; the MetaFrozenLake
             # is handling k-shots on its own!
             zero_shot=True,
         )
