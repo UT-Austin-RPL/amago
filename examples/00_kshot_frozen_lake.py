@@ -2,7 +2,7 @@ import gymnasium as gym
 import numpy as np
 
 import amago
-from amago.envs.builtin.gym_envs import GymEnv, RandomFrozenLake
+from amago.envs.builtin.gym_envs import GymEnv, MetaFrozenLake
 from example_utils import *
 
 
@@ -17,8 +17,11 @@ def add_cli(parser):
     parser.add_argument("--log", action="store_true")
     parser.add_argument("--trials", type=int, default=3)
     parser.add_argument("--lake_size", type=int, default=5)
-    parser.add_argument("--k_shots", type=int, default=10)
-    parser.add_argument("--max_rollout_length", type=int, default=1000)
+    parser.add_argument("--k_shots", type=int, default=15)
+    parser.add_argument("--hard_mode", action="store_true")
+    parser.add_argument("--recover_mode", action="store_true")
+    parser.add_argument("--max_rollout_length", type=int, default=512)
+    parser.add_argument("--naive", action="store_true")
     return parser
 
 
@@ -51,6 +54,9 @@ if __name__ == "__main__":
         memory_size=128,
         layers=3,
     )
+    if args.naive:
+        naive(config, turn_off_fbc=True)
+
     use_config(config)
 
     group_name = f"{args.run_name}_{args.experiment}"
@@ -59,8 +65,15 @@ if __name__ == "__main__":
 
         # wrap environment
         make_env = lambda: GymEnv(
-            RandomFrozenLake(k_shots=args.k_shots, size=args.lake_size),
-            env_name="random_frozen_lake_k{args.k_shots}_{args.lake_size}x{args.lake_size}",
+            MetaFrozenLake(
+                k_shots=args.k_shots,
+                size=args.lake_size,
+                hard_mode=args.hard_mode,
+                recover_mode=args.recover_mode,
+            ),
+            env_name=f"meta_frozen_lake_k{args.k_shots}_{args.lake_size}x{args.lake_size}"
+            + ("_hard" if args.hard_mode else "_easy")
+            + ("_recover" if args.recover_mode else "_reset"),
             horizon=args.max_rollout_length,
             # "zero-shot" from the *wrapper's perspective*; the RandomFrozenLake
             # is handling k-shots on its own!
@@ -81,7 +94,7 @@ if __name__ == "__main__":
             dloader_workers=10,
             log_to_wandb=args.log,
             wandb_group_name=group_name,
-            epochs=300,
+            epochs=500 if not args.hard_mode else 900,
             parallel_actors=24,
             train_timesteps_per_epoch=350,
             train_grad_updates_per_epoch=700,
@@ -98,5 +111,5 @@ if __name__ == "__main__":
         # load the best checkpoint (highest validation env return)
         experiment.load_checkpoint(loading_best=True)
         # evaluate best policy
-        experiment.evaluate_test(make_val_env, timesteps=10_000)
+        experiment.evaluate_test(make_env, timesteps=10_000)
         wandb.finish()
