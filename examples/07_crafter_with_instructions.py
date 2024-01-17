@@ -9,7 +9,7 @@ from einops import rearrange
 
 import amago
 from amago.envs.builtin.crafter_envs import CrafterEnv
-from example_utils import *
+from amago.cli_utils import *
 
 
 def add_cli(parser):

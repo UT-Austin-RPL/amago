@@ -19,11 +19,8 @@ class Multigammas:
     def __init__(
         self,
         # fmt: off
-        # potential better default (work in progress):
         discrete = [.1, .9, .95, .97, .99, .995],
         continuous = [.1, .9, .95, .97, .99, .995],
-        # discrete = [0.7, 0.9, 0.93, 0.95, 0.98, 0.99, 0.992, 0.994, 0.995, 0.997, 0.998, 0.999, 0.9991, 0.9992, 0.9993, 0.9994, 0.9995],
-        # continuous = [0.9, 0.95, 0.99, 0.993, 0.996],
         # fmt: on
     ):
         self.discrete = discrete
@@ -215,84 +212,12 @@ class Agent(nn.Module):
                 actions = action_dists.mean
 
         # get intended gamma distribution (always in -1 idx)
-        actions = actions[..., -1, :].float().cpu().numpy()
+        actions = actions[..., -1, :].cpu().numpy()
         if self.discrete:
             actions = actions.astype(np.uint8)
         else:
             actions = actions.astype(np.float32)
         return actions, hidden_state
-
-    def _td_stats(self, mask, q_s_a_g, r, td_target) -> dict:
-        # messy data gathering for wandb console
-        def masked_avg(x_, dim=0):
-            return (mask[..., dim, :] * x_[..., dim, :]).sum().detach() / mask[
-                ..., dim, :
-            ].sum()
-
-        q_seq = self.popart(q_s_a_g.detach(), normalized=False)
-        stats = {}
-        for i, gamma in enumerate(self.gammas):
-            stats[f"q_s_a_g gamma={gamma}"] = masked_avg(q_s_a_g, i)
-            stats[f"q_s_a_g (rescaled) gamma={gamma}"] = masked_avg(
-                q_seq.mean(2, keepdims=True), i
-            )
-            stats[f"q_seq_mean gamma={gamma}"] = q_seq[..., i, :].mean(2)
-            stats[f"q_seq_std gamma={gamma}"] = q_seq[..., i, :].std(2)
-
-        stats.update(
-            {
-                "q_s_a_g unmasked std": q_s_a_g.std(),
-                "min_td_target": (mask * td_target).min(),
-                "mean_r": masked_avg(r),
-                "td_target (target gamma)": masked_avg(td_target, -1),
-                "real_return": torch.flip(
-                    torch.cumsum(torch.flip(mask.all(2, keepdims=True) * r, (1,)), 1),
-                    (1,),
-                ).squeeze(-1),
-                "q_s_a_g popart (target gamma)": masked_avg(self.popart(q_s_a_g), -1),
-            }
-        )
-        return stats
-
-    def _policy_stats(self, mask, a_dist) -> dict:
-        # messy data gathering for wandb console
-        # mask shape is batch length gammas 1
-        sum_ = mask.sum((0, 1))
-        masked_avg = (
-            lambda x_, dim: (mask[..., dim, :] * x_[..., dim, :]).sum().detach() / sum_
-        )
-
-        if self.discrete:
-            entropy = a_dist.entropy().unsqueeze(-1)
-            low_prob = torch.min(a_dist.probs, dim=-1, keepdims=True).values
-            high_prob = torch.max(a_dist.probs, dim=-1, keepdims=True).values
-            return {
-                "pi_entropy (target gamma)": masked_avg(entropy, -1),
-                "pi_low_prob (target gamma)": masked_avg(low_prob, -1),
-                "pi_high_prob (target gamma)": masked_avg(high_prob, -1),
-                "pi_overall_high": (mask * a_dist.probs).max(),
-            }
-        else:
-            entropy = -a_dist.log_prob(a_dist.sample()).sum(-1, keepdims=True)
-            return {"pi_entropy (target_gamma)": masked_avg(entropy, -1)}
-
-    def _filter_stats(self, mask, logp_a, filter_) -> dict:
-        # messy data gathering for wandb console
-        return {
-            "filter": (mask[:, :-1, :] * filter_).sum() / mask[:, :-1, :].sum(),
-            "min_logp_a": logp_a.min(),
-            "max_logp_a": logp_a.max(),
-        }
-
-    def _popart_stats(self) -> dict:
-        # messy data gathering for wandb console
-        return {
-            "popart_mu (mean over gamma)": self.popart.mu.data.mean().item(),
-            "popart_nu (mean over gamma)": self.popart.nu.data.mean().item(),
-            "popart_w (mean over gamma)": self.popart.w.data.mean().item(),
-            "popart_b (mean over gamma)": self.popart.b.data.mean().item(),
-            "popart_sigma (mean over gamma)": self.popart.sigma.mean().item(),
-        }
 
     def forward(self, batch: Batch, log_step: bool):
         """
@@ -472,3 +397,75 @@ class Agent(nn.Module):
                 self.update_info.update(filter_stats)
 
         return critic_loss, actor_loss
+
+    def _td_stats(self, mask, q_s_a_g, r, td_target) -> dict:
+        # messy data gathering for wandb console
+        def masked_avg(x_, dim=0):
+            return (mask[..., dim, :] * x_[..., dim, :]).sum().detach() / mask[
+                ..., dim, :
+            ].sum()
+
+        q_seq = self.popart(q_s_a_g.detach(), normalized=False)
+        stats = {}
+        for i, gamma in enumerate(self.gammas):
+            stats[f"q_s_a_g gamma={gamma}"] = masked_avg(q_s_a_g, i)
+            stats[f"q_s_a_g (rescaled) gamma={gamma}"] = masked_avg(
+                q_seq.mean(2, keepdims=True), i
+            )
+            stats[f"q_seq_mean gamma={gamma}"] = q_seq[..., i, :].mean(2)
+            stats[f"q_seq_std gamma={gamma}"] = q_seq[..., i, :].std(2)
+
+        stats.update(
+            {
+                "q_s_a_g unmasked std": q_s_a_g.std(),
+                "min_td_target": (mask * td_target).min(),
+                "mean_r": masked_avg(r),
+                "td_target (target gamma)": masked_avg(td_target, -1),
+                "real_return": torch.flip(
+                    torch.cumsum(torch.flip(mask.all(2, keepdims=True) * r, (1,)), 1),
+                    (1,),
+                ).squeeze(-1),
+                "q_s_a_g popart (target gamma)": masked_avg(self.popart(q_s_a_g), -1),
+            }
+        )
+        return stats
+
+    def _policy_stats(self, mask, a_dist) -> dict:
+        # messy data gathering for wandb console
+        # mask shape is batch length gammas 1
+        sum_ = mask.sum((0, 1))
+        masked_avg = (
+            lambda x_, dim: (mask[..., dim, :] * x_[..., dim, :]).sum().detach() / sum_
+        )
+
+        if self.discrete:
+            entropy = a_dist.entropy().unsqueeze(-1)
+            low_prob = torch.min(a_dist.probs, dim=-1, keepdims=True).values
+            high_prob = torch.max(a_dist.probs, dim=-1, keepdims=True).values
+            return {
+                "pi_entropy (target gamma)": masked_avg(entropy, -1),
+                "pi_low_prob (target gamma)": masked_avg(low_prob, -1),
+                "pi_high_prob (target gamma)": masked_avg(high_prob, -1),
+                "pi_overall_high": (mask * a_dist.probs).max(),
+            }
+        else:
+            entropy = -a_dist.log_prob(a_dist.sample()).sum(-1, keepdims=True)
+            return {"pi_entropy (target_gamma)": masked_avg(entropy, -1)}
+
+    def _filter_stats(self, mask, logp_a, filter_) -> dict:
+        # messy data gathering for wandb console
+        return {
+            "filter": (mask[:, :-1, :] * filter_).sum() / mask[:, :-1, :].sum(),
+            "min_logp_a": logp_a.min(),
+            "max_logp_a": logp_a.max(),
+        }
+
+    def _popart_stats(self) -> dict:
+        # messy data gathering for wandb console
+        return {
+            "popart_mu (mean over gamma)": self.popart.mu.data.mean().item(),
+            "popart_nu (mean over gamma)": self.popart.nu.data.mean().item(),
+            "popart_w (mean over gamma)": self.popart.w.data.mean().item(),
+            "popart_b (mean over gamma)": self.popart.b.data.mean().item(),
+            "popart_sigma (mean over gamma)": self.popart.sigma.mean().item(),
+        }

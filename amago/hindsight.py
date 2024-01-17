@@ -146,18 +146,14 @@ class Timestep:
         return self.goal_seq.on_last_goal and self.reward > 0
 
     def __eq__(self, other):
-        # overly complicated fail-fast comparison
-        if self.raw_time_idx != other.raw_time_idx:
-            return False
-        if len(self.achieved_goal) != len(other.achieved_goal):
-            return False
-        if self.real_reward != other.real_reward:
-            return False
-        if self.time != other.time:
-            return False
-        if self.reset != other.reset:
-            return False
-        if self.terminal != other.terminal:
+        if (
+            (self.raw_time_idx != other.raw_time_idx)
+            or (len(self.achieved_goal) != len(other.achieved_goal))
+            or (self.real_reward != other.real_reward)
+            or (self.time != other.time)
+            or (self.reset != other.reset)
+            or (self.terminal != other.terminal)
+        ):
             return False
         for goal, other_goal in zip(self.achieved_goal, other.achieved_goal):
             if (goal != other_goal).any():
@@ -239,6 +235,7 @@ class Trajectory:
         goals = map(make_array, timesteps)
         goals = np.stack(list(goals), axis=0)
         obs = utils.stack_list_array_dicts([t.obs for t in timesteps], axis=0)
+
         actions = np.stack([t.prev_action for t in timesteps], axis=0)
         resets = np.array([t.reset for t in timesteps], dtype=np.float32)[:, np.newaxis]
         time = np.array([t.time for t in timesteps], dtype=np.float32)[:, np.newaxis]

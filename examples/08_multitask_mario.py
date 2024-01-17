@@ -4,7 +4,7 @@ import wandb
 
 import amago
 from amago.envs.builtin.ale_retro import RetroArcade, RetroAMAGOWrapper
-from example_utils import *
+from amago.cli_utils import *
 
 
 """

@@ -133,7 +133,7 @@ Switch between the most common configurations without needing `.gin` config file
 """
 
 
-def switch_tstep_encoder(config, arch: str, **kwargs):
+def switch_tstep_encoder(config : dict, arch: str, **kwargs):
     """
     Convenient way to switch between TstepEncoders without gin config files
 
@@ -218,7 +218,7 @@ def switch_traj_encoder(config: dict, arch: str, memory_size: int, layers: int):
     return config
 
 
-def naive(config: dict):
+def naive(config: dict, turn_off_fbc: bool = False):
     config.update(
         {
             "amago.nets.traj_encoders.TformerTrajEncoder.activation": "gelu",
@@ -235,6 +235,10 @@ def naive(config: dict):
             "amago.agent.Agent.use_multigamma": False,
         }
     )
+
+    if turn_off_fbc:
+        config.update({"amago.agent.Agent.offline_coeff": 0.0})
+
     return config
 
 
