@@ -7,7 +7,7 @@ import amago
 from amago.envs.builtin.gym_envs import GymEnv
 from amago.envs.builtin.tmaze import TMazeAltPassive
 from amago.envs.env_utils import ExplorationWrapper
-from example_utils import *
+from amago.cli_utils import *
 
 
 def add_cli(parser):

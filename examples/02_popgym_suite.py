@@ -4,7 +4,7 @@ import wandb
 
 import amago
 from amago.envs.builtin.gym_envs import POPGymEnv
-from example_utils import *
+from amago.cli_utils import *
 
 
 def add_cli(parser):

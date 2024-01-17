@@ -5,7 +5,7 @@ import wandb
 import amago
 from amago.envs.builtin.gym_envs import GymEnv
 from amago.envs.builtin.alchemy import SymbolicAlchemy
-from example_utils import *
+from amago.cli_utils import *
 
 
 if __name__ == "__main__":

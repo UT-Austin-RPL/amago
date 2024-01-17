@@ -3,7 +3,7 @@ import numpy as np
 
 import amago
 from amago.envs.builtin.gym_envs import GymEnv, MetaFrozenLake
-from example_utils import *
+from amago.envs.cli_utils import *
 
 
 def add_cli(parser):

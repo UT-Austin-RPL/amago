@@ -131,7 +131,7 @@ Switch between the most common configurations without needing `.gin` config file
 """
 
 
-def switch_tstep_encoder(config, arch: str, **kwargs):
+def switch_tstep_encoder(config : dict, arch: str, **kwargs):
     """
     Convenient way to switch between TstepEncoders without gin config files
 

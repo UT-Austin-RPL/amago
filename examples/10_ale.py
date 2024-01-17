@@ -5,7 +5,7 @@ import gym
 
 import amago
 from amago.envs.builtin.ale_retro import ALE, AtariAMAGOWrapper
-from example_utils import *
+from amago.cli_utils import *
 
 
 def add_cli(parser):
