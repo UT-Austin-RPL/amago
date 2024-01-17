@@ -42,7 +42,7 @@ class Experiment:
     gpu: int
     async_envs: bool = True
     share_train_val_envs: bool = False
-    agent_Cls = Agent
+    agent_Cls: Callable = Agent
 
     # Logging
     log_to_wandb: bool = False
@@ -278,7 +278,6 @@ class Experiment:
                 dir=log_dir,
                 name=self.run_name,
                 group=self.wandb_group_name,
-                #reinit=True,
             )
             wandb.save(config_path)
 
