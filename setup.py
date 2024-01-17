@@ -10,7 +10,7 @@ setup(
     python_requires="==3.10",
     install_requires=[
         "gymnasium>=0.26",
-        "torch==2.0.1",
+        "torch>=2.0",
         "matplotlib",
         "gin-config",
         "wandb",
@@ -32,5 +32,6 @@ setup(
             "dm_alchemy @ git+https://github.com/deepmind/dm_alchemy.git",
         ],
         "flash": ["ninja", "packaging", "flash-attn"],
+        "mamba": ["causal-conv1d>=1.1.0", "mamba-ssm"],
     },
 )
