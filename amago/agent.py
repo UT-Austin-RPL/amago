@@ -19,11 +19,8 @@ class Multigammas:
     def __init__(
         self,
         # fmt: off
-        # potential better default (work in progress):
         discrete = [.1, .9, .95, .97, .99, .995],
         continuous = [.1, .9, .95, .97, .99, .995],
-        # discrete = [0.7, 0.9, 0.93, 0.95, 0.98, 0.99, 0.992, 0.994, 0.995, 0.997, 0.998, 0.999, 0.9991, 0.9992, 0.9993, 0.9994, 0.9995],
-        # continuous = [0.9, 0.95, 0.99, 0.993, 0.996],
         # fmt: on
     ):
         self.discrete = discrete
@@ -215,7 +212,7 @@ class Agent(nn.Module):
                 actions = action_dists.mean
 
         # get intended gamma distribution (always in -1 idx)
-        actions = actions[..., -1, :].float().cpu().numpy()
+        actions = actions[..., -1, :].cpu().numpy()
         if self.discrete:
             actions = actions.astype(np.uint8)
         else:

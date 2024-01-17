@@ -76,7 +76,7 @@ class Experiment:
     # Optimization
     batch_size: int = 24
     dloader_workers: int = 8
-    init_learning_rate: float = 1e-4
+    learning_rate: float = 1e-4
     critic_loss_weight: float = 10.0
     warmup_epochs: int = 10
     grad_clip: float = 1.0
@@ -278,14 +278,14 @@ class Experiment:
                 dir=log_dir,
                 name=self.run_name,
                 group=self.wandb_group_name,
-                reinit=True,
+                #reinit=True,
             )
             wandb.save(config_path)
 
     def init_optimizer(self):
         self.optimizer = torch.optim.AdamW(
             self.policy.trainable_params,
-            lr=self.init_learning_rate,
+            lr=self.learning_rate,
             weight_decay=self.l2_coeff,
         )
         self.warmup_scheduler = torch.optim.lr_scheduler.LinearLR(
