@@ -408,24 +408,28 @@ class Agent(nn.Module):
         q_seq = self.popart(q_s_a_g.detach(), normalized=False)
         stats = {}
         for i, gamma in enumerate(self.gammas):
-            stats[f"q_s_a_g gamma={gamma}"] = masked_avg(q_s_a_g, i)
-            stats[f"q_s_a_g (rescaled) gamma={gamma}"] = masked_avg(
+            stats[f"Q(s, a) (rescaled) gamma={gamma:.3f}"] = masked_avg(q_s_a_g, i)
+            stats[f"Q(s,a) (raw scale) gamma={gamma:.3f}"] = masked_avg(
                 q_seq.mean(2, keepdims=True), i
             )
-            stats[f"q_seq_mean gamma={gamma}"] = q_seq[..., i, :].mean(2)
-            stats[f"q_seq_std gamma={gamma}"] = q_seq[..., i, :].std(2)
+            stats[f"Q(s, a) (raw scale) gamma={gamma:.3f}"] = q_seq[..., i, :].mean(2)
+            stats[f"Std. Dev. Q(s, a) (raw scale) gamma={gamma:.3f}"] = q_seq[
+                ..., i, :
+            ].std(2)
 
         stats.update(
             {
-                "q_s_a_g unmasked std": q_s_a_g.std(),
-                "min_td_target": (mask * td_target).min(),
-                "mean_r": masked_avg(r),
-                "td_target (target gamma)": masked_avg(td_target, -1),
+                "Std. Dev. Q(s, a) (rescaled, ignoring padding)": q_s_a_g.std(),
+                "Minimum TD Target": (mask * td_target).min(),
+                "Mean Reward (in training sequences)": masked_avg(r),
+                "TD Target (test-time gamma)": masked_avg(td_target, -1),
                 "real_return": torch.flip(
                     torch.cumsum(torch.flip(mask.all(2, keepdims=True) * r, (1,)), 1),
                     (1,),
                 ).squeeze(-1),
-                "q_s_a_g popart (target gamma)": masked_avg(self.popart(q_s_a_g), -1),
+                "Q(s, a) (rescaled, test-time gamma)": masked_avg(
+                    self.popart(q_s_a_g), -1
+                ),
             }
         )
         return stats
@@ -443,29 +447,39 @@ class Agent(nn.Module):
             low_prob = torch.min(a_dist.probs, dim=-1, keepdims=True).values
             high_prob = torch.max(a_dist.probs, dim=-1, keepdims=True).values
             return {
-                "pi_entropy (target gamma)": masked_avg(entropy, -1),
-                "pi_low_prob (target gamma)": masked_avg(low_prob, -1),
-                "pi_high_prob (target gamma)": masked_avg(high_prob, -1),
-                "pi_overall_high": (mask * a_dist.probs).max(),
+                "Policy Per-timestep Entropy (test-time gamma)": masked_avg(
+                    entropy, -1
+                ),
+                "Policy Per-timstep Low Prob. (test-time gamma)": masked_avg(
+                    low_prob, -1
+                ),
+                "Policy Per-timestep High Prob. (test-time gamma)": masked_avg(
+                    high_prob, -1
+                ),
+                "Policy Overall Highest Prob.": (mask * a_dist.probs).max(),
             }
         else:
             entropy = -a_dist.log_prob(a_dist.sample()).sum(-1, keepdims=True)
-            return {"pi_entropy (target_gamma)": masked_avg(entropy, -1)}
+            return {"Policy Entropy (test-time gamma)": masked_avg(entropy, -1)}
 
     def _filter_stats(self, mask, logp_a, filter_) -> dict:
         # messy data gathering for wandb console
         return {
-            "filter": (mask[:, :-1, :] * filter_).sum() / mask[:, :-1, :].sum(),
-            "min_logp_a": logp_a.min(),
-            "max_logp_a": logp_a.max(),
+            "Pct. of Actions Approved by Binary FBC Filter": (
+                mask[:, :-1, :] * filter_
+            ).sum()
+            / mask[:, :-1, :].sum()
+            * 100.0,
+            "Minimum Action Logprob": logp_a.min(),
+            "Maximum Action Logprob": logp_a.max(),
         }
 
     def _popart_stats(self) -> dict:
         # messy data gathering for wandb console
         return {
-            "popart_mu (mean over gamma)": self.popart.mu.data.mean().item(),
-            "popart_nu (mean over gamma)": self.popart.nu.data.mean().item(),
-            "popart_w (mean over gamma)": self.popart.w.data.mean().item(),
-            "popart_b (mean over gamma)": self.popart.b.data.mean().item(),
-            "popart_sigma (mean over gamma)": self.popart.sigma.mean().item(),
+            "PopArt mu (mean over gamma)": self.popart.mu.data.mean().item(),
+            "PopArt nu (mean over gamma)": self.popart.nu.data.mean().item(),
+            "PopArt w (mean over gamma)": self.popart.w.data.mean().item(),
+            "PopArt b (mean over gamma)": self.popart.b.data.mean().item(),
+            "PopArt sigma (mean over gamma)": self.popart.sigma.mean().item(),
         }

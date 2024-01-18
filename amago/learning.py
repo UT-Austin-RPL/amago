@@ -263,7 +263,6 @@ class Experiment:
         )
 
     def init_logger(self):
-        utils.init_plt()
         gin_config = gin.operative_config_str()
         config_path = os.path.join(self.dset_root, self.dset_name, "config.txt")
         with open(config_path, "w") as f:
@@ -444,11 +443,12 @@ class Experiment:
                 self.val_envs.reset()
                 self.train_buffers, self.hidden_state = None, None
             logs = self.policy_metrics(returns, successes)
+            cur_return = logs["Average Total Return (Across All Env Names)"]
             if self.verbose:
-                print(f"Average Return : {logs['avg_return']}")
-            if logs["avg_return"] >= self.best_return:
+                print(f"Average Return : {cur_return}")
+            if cur_return >= self.best_return:
                 self.save_checkpoint(saving_best=True)
-                self.best_return = logs["avg_return"]
+                self.best_return = cur_return
             self.log(logs, key="val")
 
     def evaluate_test(
@@ -486,14 +486,12 @@ class Experiment:
                 | {"total_frames": total_frames}
             )
 
-    def make_figures(self, loss_info):
-        figs = {}
-        for key in loss_info.keys():
-            if "q_seq_mean" in key:
-                q_curves = utils.q_curve_plot(loss_info)
-                figs.update(q_curves)
-                break
-        return figs
+    def make_figures(self, loss_info) -> dict[str, wandb.Image]:
+        """
+        Override this to create polished figures from raw logging
+        info and automatically dump them to wandb.
+        """
+        return {}
 
     def policy_metrics(self, returns: ReturnHistory, successes: SuccessHistory):
         return_by_env_name = {}
@@ -511,15 +509,17 @@ class Experiment:
                     success_by_env_name[env_name] = scores
 
         avg_ret_per_env = {
-            f"{name}-return": np.array(scores).mean()
+            f"Average Total Return in {name}": np.array(scores).mean()
             for name, scores in return_by_env_name.items()
         }
         avg_suc_per_env = {
-            f"{name}-success": np.array(scores).mean()
+            f"Average Success Rate [0, 1] in {name}": np.array(scores).mean()
             for name, scores in success_by_env_name.items()
         }
         avg_return_overall = {
-            "avg_return": np.array(list(avg_ret_per_env.values())).mean()
+            "Average Total Return (Across All Env Names)": np.array(
+                list(avg_ret_per_env.values())
+            ).mean()
         }
         return avg_ret_per_env | avg_suc_per_env | avg_return_overall
 
@@ -557,13 +557,13 @@ class Experiment:
 
     def _get_grad_norms(self):
         ggn = utils.get_grad_norm
-        grads = dict(
-            actor_grad_norm=ggn(self.policy.actor),
-            crtic_grad_norm=ggn(self.policy.critics),
-            traj_encoder_grad_norm=ggn(self.policy.traj_encoder),
-            tstep_encoder_grad_norm=ggn(self.policy.tstep_encoder),
-            goal_emb_grad_norm=ggn(self.policy.tstep_encoder.goal_emb),
-        )
+        grads = {
+            "Actor Grad Norm": ggn(self.policy.actor),
+            "Critic Grad Norm": ggn(self.policy.critics),
+            "TrajEncoder Grad Norm": ggn(self.policy.traj_encoder),
+            "TstepEncoder Grad Norm": ggn(self.policy.tstep_encoder),
+            "TstepEncoder Goal Emb. Grad Norm": ggn(self.policy.tstep_encoder.goal_emb),
+        }
         return grads
 
     def train_step(self, batch: Batch, log_step: bool):
@@ -589,12 +589,12 @@ class Experiment:
         grad_norm = nn.utils.clip_grad_norm_(
             self.policy.trainable_params, max_norm=self.grad_clip
         )
-        l["global_grad_norm"] = grad_norm
+        l["Global Grad Norm"] = grad_norm
         self.grad_scaler.step(self.optimizer)
         self.grad_scaler.update()
         self.policy.soft_sync_targets()
         if self.half_precision and log_step:
-            l["grad_scaler_scale"] = self.grad_scaler.get_scale()
+            l["Half-Precision Grad Scaler Scale"] = self.grad_scaler.get_scale()
         return l
 
     def caster(self):
@@ -671,7 +671,9 @@ class Experiment:
             dset_size = self.train_dset.count_trajectories()
             if dset_size > self.dset_max_size:
                 self.train_dset.filter(self.dset_filter_pct)
-            self.log({"trajectories": dset_size}, key="buffer")
+            self.log(
+                {"Trajectory Files Saved in Replay Buffer": dset_size}, key="buffer"
+            )
 
             # end epoch
             self.epoch = epoch
