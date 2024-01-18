@@ -269,11 +269,12 @@ def create_experiment_from_cli(
     traj_save_len: int,
     group_name: str,
     run_name: str,
+    experiment_Cls = amago.Experiment,
     **extra_experiment_kwargs,
 ):
     cli = command_line_args
 
-    experiment = amago.Experiment(
+    experiment = experiment_Cls(
         make_train_env=make_train_env,
         make_val_env=make_val_env,
         max_seq_len=max_seq_len,
