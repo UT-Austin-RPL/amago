@@ -17,7 +17,9 @@ def add_common_cli(parser: ArgumentParser) -> ArgumentParser:
     )
     # basics
     parser.add_argument("--trials", type=int, default=1)
-    parser.add_argument("--gpu", type=int, default=0)
+    parser.add_argument(
+        "--gpu", type=int, default=0, help="GPU Device ID. Use -1 for CPU"
+    )
     parser.add_argument(
         "--no_async",
         action="store_true",

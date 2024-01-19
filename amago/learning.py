@@ -89,7 +89,7 @@ class Experiment:
     sample_actions: bool = True
 
     def start(self):
-        self.DEVICE = torch.device(f"cuda:{self.gpu}")
+        self.DEVICE = torch.device(f"cuda:{self.gpu}" if self.gpu >= 0 else "cpu")
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             self.init_envs()
