@@ -203,7 +203,9 @@ class Experiment:
         else:
             ckpt_name = f"{self.run_name}_BEST.pt"
 
-        ckpt = torch.load(os.path.join(self.ckpt_dir, ckpt_name))
+        ckpt = torch.load(
+            os.path.join(self.ckpt_dir, ckpt_name), map_location=self.DEVICE
+        )
         self.policy.load_state_dict(ckpt["model_state"])
         self.optimizer.load_state_dict(ckpt["optimizer_state"])
         self.epoch = ckpt["epoch"]
