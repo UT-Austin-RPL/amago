@@ -3,13 +3,14 @@ import numpy as np
 
 import amago
 from amago.envs.builtin.gym_envs import GymEnv, MetaFrozenLake
-from amago.envs.cli_utils import *
+from amago.cli_utils import *
 
 
 def add_cli(parser):
     parser.add_argument(
         "--experiment",
         choices=["no-memory", "memory-rnn", "memory-transformer"],
+        required=True,
     )
     parser.add_argument("--run_name", type=str, required=True)
     parser.add_argument("--buffer_dir", type=str, required=True)

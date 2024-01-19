@@ -212,7 +212,7 @@ class Agent(nn.Module):
                 actions = action_dists.mean
 
         # get intended gamma distribution (always in -1 idx)
-        actions = actions[..., -1, :].cpu().numpy()
+        actions = actions[..., -1, :].cpu().float().numpy()
         if self.discrete:
             actions = actions.astype(np.uint8)
         else:
@@ -344,7 +344,13 @@ class Agent(nn.Module):
             critic_loss = (self.popart(q_s_a_g) - td_target_norm.detach()).pow(2)
             assert critic_loss.shape == (B, L - 1, C, G, 1)
             if log_step:
-                td_stats = self._td_stats(critic_mask, q_s_a_g, r, td_target)
+                td_stats = self._td_stats(
+                    critic_mask,
+                    q_s_a_g,
+                    self.popart(q_s_a_g, normalized=False),
+                    r,
+                    td_target,
+                )
                 popart_stats = self._popart_stats()
                 self.update_info.update(td_stats | popart_stats)
 
@@ -398,38 +404,40 @@ class Agent(nn.Module):
 
         return critic_loss, actor_loss
 
-    def _td_stats(self, mask, q_s_a_g, r, td_target) -> dict:
+    def _td_stats(self, mask, raw_q_s_a_g, q_s_a_g, r, td_target) -> dict:
         # messy data gathering for wandb console
         def masked_avg(x_, dim=0):
             return (mask[..., dim, :] * x_[..., dim, :]).sum().detach() / mask[
                 ..., dim, :
             ].sum()
 
-        q_seq = self.popart(q_s_a_g.detach(), normalized=False)
         stats = {}
         for i, gamma in enumerate(self.gammas):
-            stats[f"Q(s, a) (rescaled) gamma={gamma:.3f}"] = masked_avg(q_s_a_g, i)
-            stats[f"Q(s,a) (raw scale) gamma={gamma:.3f}"] = masked_avg(
-                q_seq.mean(2, keepdims=True), i
+            stats[f"Q(s, a) (global mean, rescaled) gamma={gamma:.3f}"] = masked_avg(
+                q_s_a_g, i
             )
-            stats[f"Q(s, a) (raw scale) gamma={gamma:.3f}"] = q_seq[..., i, :].mean(2)
-            stats[f"Std. Dev. Q(s, a) (raw scale) gamma={gamma:.3f}"] = q_seq[
-                ..., i, :
-            ].std(2)
+            stats[f"Q(s,a) (global mean, raw scale) gamma={gamma:.3f}"] = masked_avg(
+                raw_q_s_a_g, i
+            )
+            stats[
+                f"Q(s, a) Ensemble Stdev. (raw scale, ignoring padding) gamma={gamma:.3f}"
+            ] = (raw_q_s_a_g[..., i, :].std(2).mean())
 
         stats.update(
             {
-                "Std. Dev. Q(s, a) (rescaled, ignoring padding)": q_s_a_g.std(),
-                "Minimum TD Target": (mask * td_target).min(),
-                "Mean Reward (in training sequences)": masked_avg(r),
+                "Q(s, a) (global std, rescaled, ignoring padding)": q_s_a_g.std(),
+                "Min TD Target": td_target[
+                    torch.where(mask.all(2, keepdims=True) > 0)
+                ].min(),
+                "Max TD Target": td_target[
+                    torch.where(mask.all(2, keepdims=True) > 0)
+                ].max(),
                 "TD Target (test-time gamma)": masked_avg(td_target, -1),
+                "Mean Reward (in training sequences)": masked_avg(r),
                 "real_return": torch.flip(
                     torch.cumsum(torch.flip(mask.all(2, keepdims=True) * r, (1,)), 1),
                     (1,),
                 ).squeeze(-1),
-                "Q(s, a) (rescaled, test-time gamma)": masked_avg(
-                    self.popart(q_s_a_g), -1
-                ),
             }
         )
         return stats
