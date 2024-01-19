@@ -133,7 +133,7 @@ Switch between the most common configurations without needing `.gin` config file
 """
 
 
-def switch_tstep_encoder(config : dict, arch: str, **kwargs):
+def switch_tstep_encoder(config: dict, arch: str, **kwargs):
     """
     Convenient way to switch between TstepEncoders without gin config files
 
@@ -269,7 +269,7 @@ def create_experiment_from_cli(
     traj_save_len: int,
     group_name: str,
     run_name: str,
-    experiment_Cls = amago.Experiment,
+    experiment_Cls=amago.Experiment,
     **extra_experiment_kwargs,
 ):
     cli = command_line_args
