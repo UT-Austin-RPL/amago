@@ -77,8 +77,7 @@ class Agent(nn.Module):
         self.online_coeff = online_coeff
         self.tau = tau
         self.use_target_actor = use_target_actor
-        assert num_critics_td <= num_critics
-        self.num_critics_td = num_critics_td
+        self.max_seq_len = max_seq_len
 
         self.tstep_encoder = tstep_encoder_Cls(
             obs_space=obs_space,
@@ -100,6 +99,9 @@ class Agent(nn.Module):
         # of gammas, actor, and critic outputs.
         gammas = (multigammas if use_multigamma else []) + [gamma]
         self.gammas = torch.Tensor(gammas).float()
+        assert num_critics_td <= num_critics
+        self.num_critics = num_critics
+        self.num_critics_td = num_critics_td
 
         self.popart = actor_critic.PopArtLayer(gammas=len(gammas), enabled=popart)
 
@@ -471,16 +473,31 @@ class Agent(nn.Module):
             return {"Policy Entropy (test-time gamma)": masked_avg(entropy, -1)}
 
     def _filter_stats(self, mask, logp_a, filter_) -> dict:
+        mask = mask[:, :-1, ...]
+
         # messy data gathering for wandb console
-        return {
-            "Pct. of Actions Approved by Binary FBC Filter": (
-                mask[:, :-1, :] * filter_
-            ).sum()
-            / mask[:, :-1, :].sum()
-            * 100.0,
+        def masked_avg(x_, dim=0):
+            return (mask[..., dim, :] * x_[..., dim, :]).sum().detach() / mask[
+                ..., dim, :
+            ].sum()
+
+        # messy data gathering for wandb console
+        stats = {
             "Minimum Action Logprob": logp_a.min(),
             "Maximum Action Logprob": logp_a.max(),
+            "Pct. of Actions Approved by Binary FBC Filter (All Gammas)": (
+                mask * filter_
+            ).sum()
+            / mask.sum()
+            * 100.0,
         }
+
+        for i, gamma in enumerate(self.gammas):
+            stats[f"Pct. of Actions Approved by Binary FBC (gamma = {gamma : .3f})"] = (
+                masked_avg(filter_, dim=i) * 100.0
+            )
+
+        return stats
 
     def _popart_stats(self) -> dict:
         # messy data gathering for wandb console

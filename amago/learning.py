@@ -299,9 +299,6 @@ class Experiment:
         )
 
     def init_model(self):
-        obs_shape = self.gcrl2_space["obs"].shape
-        goal_shape = self.gcrl2_space["goal"].shape
-        rl2_shape = self.gcrl2_space["rl2"].shape
         policy_kwargs = {
             "obs_space": self.gcrl2_space["obs"],
             "goal_space": self.gcrl2_space["goal"],
