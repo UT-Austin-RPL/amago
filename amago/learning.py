@@ -512,7 +512,7 @@ class Experiment:
             for name, scores in return_by_env_name.items()
         }
         avg_suc_per_env = {
-            f"Average Success Rate [0, 1] in {name}": np.array(scores).mean()
+            f"Average Success Rate in {name}": np.array(scores).mean()
             for name, scores in success_by_env_name.items()
         }
         avg_return_overall = {
