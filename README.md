@@ -5,19 +5,17 @@
 
 ### A simple and scalable agent for sequence-based Reinforcement Learning
 
-AMAGO is POMDP solver with an emphasis on long sequences, sparse rewards, and large networks. It is:
+AMAGO is a POMDP solver with an emphasis on long sequences, sparse rewards, and large networks. It is:
 - **Broadly Applicable**. Environments are converted to a universal sequence format for memory-enabled policies. Classic benchmarks, goal-conditioning, long-term memory, meta-learning, and generalization are all special cases of its POMDP format. Supports discrete and continuous actions.
 - **Scalable**. AMAGO is powered by an efficient learning update that looks more like supervised sequence modeling than RL. It is specifically designed for training large policies (like Transformers) on long sequences (500+ timesteps). Large replay buffers are stored on disk.
 - **Sample Efficient**. AMAGO is off-policy and can continuously reuse (and hindsight relabel) large datasets of past trajectories.
 - **Easy to Use**. Technical details can be easily customized but are designed to require little hyperparamter tuning.
 
 
-
-
 ## Background
 AMAGO treats multi-task RL, meta-RL, RL generalization, and long-term memory as variations of the same POMDP problem that can be solved with sequence learning. This core framework goes by many different names including [implicit partial observability](https://arxiv.org/abs/2107.06277), [context-based meta-learning](https://arxiv.org/abs/2301.08028), or [contextual MDPs](https://arxiv.org/abs/2111.09794).
 
-AMAGO learns from off-policy or offline data, which improves sample efficiency and enables hindsight experience replay for goal-conditioned environments. We find a stable and high-performance way to train off-policy actor-critic agents on top of the representations from a shared sequence model, and all of the low-level details have been redesigned from scratch to be scalable enough to train Transformers on long sequences. Please refer to our [paper](https://arxiv.org/abs/2310.09971) for a detailed explanation.
+AMAGO learns from off-policy or offline data, which improves sample efficiency and enables hindsight experience replay for goal-conditioned environments. We find a stable and high-performance way to train off-policy actor-critic agents on top of the representations from a shared sequence model, and all of the low-level details have been redesigned from scratch to be scalable enough to train long-context Transformers. Please refer to our [paper](https://arxiv.org/abs/2310.09971) for a detailed explanation.
 
 ## Installation 
 
