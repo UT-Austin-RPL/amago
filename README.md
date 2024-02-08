@@ -1,5 +1,5 @@
 # AMAGO 
-#### [Paper](https://arxiv.org/abs/2310.09971) | [Project Website](https://ut-austin-rpl.github.io/amago/)
+#### [Paper (ICLR 2024 Spotlight)](https://arxiv.org/abs/2310.09971) | [Project Website](https://ut-austin-rpl.github.io/amago/)
 
 <img src="media/amago_logo_2.png" alt="amagologo" width="150" align="right"/>
 
@@ -17,7 +17,7 @@ AMAGO is POMDP solver with an emphasis on long sequences, sparse rewards, and la
 ## Background
 AMAGO treats multi-task RL, meta-RL, RL generalization, and long-term memory as variations of the same POMDP problem that can be solved with sequence learning. This core framework goes by many different names including [implicit partial observability](https://arxiv.org/abs/2107.06277), [context-based meta-learning](https://arxiv.org/abs/2301.08028), or [contextual MDPs](https://arxiv.org/abs/2111.09794).
 
-AMAGO learns from off-policy or offline data, which improves sample efficiency and enables hindsight experience replay for goal-conditioned environments. All of the low-level details have been redesigned from scratch to be scalable enough to train Transformers on long sequences. In general, AMAGO's training process looks more like supervised sequence modeling than state-of-the-art off-policy RL: trajectory sequences are saved and loaded from disk and RL loss functions are optimized by a single sequence model in one forward pass.
+AMAGO learns from off-policy or offline data, which improves sample efficiency and enables hindsight experience replay for goal-conditioned environments. We find a stable and high-performance way to train off-policy actor-critic agents on top of the representations from a shared sequence model, and all of the low-level details have been redesigned from scratch to be scalable enough to train Transformers on long sequences. Please refer to our [paper](https://arxiv.org/abs/2310.09971) for a detailed explanation.
 
 ## Installation 
 
