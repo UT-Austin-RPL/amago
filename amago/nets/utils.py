@@ -6,12 +6,6 @@ import gin
 from amago.loading import MAGIC_PAD_VAL
 
 
-def activation_switch(activation: str) -> callable:
-    choices = {"leaky_relu": F.leaky_relu, "relu": F.relu, "gelu": F.gelu}
-    assert activation in choices
-    return choices[activation]
-
-
 @gin.configurable
 class InputNorm(nn.Module):
     def __init__(self, dim, beta=1e-4, init_nu=1.0, skip: bool = False):
@@ -79,3 +73,54 @@ class InputNorm(nn.Module):
             return self.denormalize_values(x)
         else:
             return self.normalize_values(x)
+
+
+class SlowAdaptiveRational(nn.Module):
+    """
+    A slow non-cuda version of "Adaptive Rational Activations to Boost Deep Reinforcement Learning",
+    Delfosse et al., 2021 (https://arxiv.org/pdf/2102.09407.pdf).
+    Uses Leaky ReLU init.
+    """
+
+    def __init__(self, trainable: bool = True):
+        super().__init__()
+        # hardcoded to leaky relu version
+        degrees = (6, 4)
+        num_init = [
+            0.029792778657264946,
+            0.6183735264987601,
+            2.323309062531321,
+            3.051936237265109,
+            1.4854203263828845,
+            0.2510244961111299,
+        ]
+
+        den_init = [
+            -1.1419548357285474,
+            4.393159974992486,
+            0.8714712309957245,
+            0.34719662339598834,
+        ]
+        self.numerator = nn.Parameter(torch.Tensor(num_init), requires_grad=trainable)
+        self.denominator = nn.Parameter(torch.Tensor(den_init), requires_grad=trainable)
+        self.num_d, self.den_d = degrees
+        self.max_d = max(degrees)
+
+    def forward(self, x):
+        pows = torch.linalg.vander(x, N=self.max_d + 1)
+        num = (self.numerator * pows[..., : self.num_d]).sum(-1)
+        den = (self.denominator * pows[..., 1 : 1 + self.den_d]).abs().sum(-1) + 1
+        return num / den
+
+
+def activation_switch(activation: str) -> callable:
+    if activation == "leaky_relu":
+        return F.leaky_relu
+    elif activation == "relu":
+        return F.relu
+    elif activation == "gelu":
+        return F.gelu
+    elif activation == "adaptive":
+        return SlowAdaptiveRational()
+    else:
+        raise ValueError(f"Unrecognized `activation` func: {activation}")
