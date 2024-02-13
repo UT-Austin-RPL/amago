@@ -244,6 +244,18 @@ def naive(config: dict, turn_off_fbc: bool = False):
     return config
 
 
+def adaptive(config: dict):
+    config.update(
+        {
+            "amago.nets.traj_encoders.TformerTrajEncoder.activation": "adaptive",
+            "amago.nets.actor_critic.NCritics.activation": "adaptive",
+            "amago.nets.actor_critic.Actor.activation": "adaptive",
+            "amago.nets.tstep_encoders.FFTstepEncoder.activation": "adaptive",
+            "amago.nets.tstep_encoders.CNNTstepEncoder.activation": "adaptive",
+        }
+    )
+
+
 def use_config(
     custom_params: dict, gin_configs: list[str] | None = None, finalize: bool = True
 ):

@@ -49,7 +49,7 @@ class KShotMetaworld(gym.Env):
         self.benchmark = benchmark
         self.split = split
         self.k_shots = k_shots
-        self._envs = self.get_env_funcs(benchmark, split)
+        self._envs = self.get_env_funcs(benchmark, train_set=split == "train")
         self.reset()
         self.action_space = space_convert(self.env.action_space)
         og_obs = space_convert(self.env.observation_space)
@@ -58,15 +58,12 @@ class KShotMetaworld(gym.Env):
             high=np.asarray(og_obs.high.tolist() + [1.0]),
         )
 
-    def get_env_funcs(self, benchmark, split: str):
-        classes = (
-            benchmark.train_classes if split == "train" else benchmark.test_classes
-        )
+    def get_env_funcs(self, benchmark, train_set: bool):
+        classes = benchmark.train_classes if train_set else benchmark.test_classes
+        tasks = benchmark.train_tasks if train_set else benchmark.test_tasks
         env_tasks = {}
         for name, env_cls in classes.items():
-            all_tasks = [
-                task for task in benchmark.train_tasks if task.env_name == name
-            ]
+            all_tasks = [task for task in tasks if task.env_name == name]
             env_tasks[name] = (env_cls(), all_tasks)
         return env_tasks
 
