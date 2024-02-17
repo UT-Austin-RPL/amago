@@ -95,6 +95,7 @@ class Agent(nn.Module):
             multigammas = Multigammas().discrete
         else:
             multigammas = Multigammas().continuous
+
         # provided hparam `gamma` will stay in the -1 index
         # of gammas, actor, and critic outputs.
         gammas = (multigammas if use_multigamma else []) + [gamma]
@@ -113,6 +114,9 @@ class Agent(nn.Module):
         }
         self.critics = actor_critic.NCritics(**ac_kwargs, num_critics=num_critics)
         self.target_critics = actor_critic.NCritics(
+            **ac_kwargs, num_critics=num_critics
+        )
+        self.maximized_critics = actor_critic.NCritics(
             **ac_kwargs, num_critics=num_critics
         )
         if self.multibinary:
@@ -149,17 +153,8 @@ class Agent(nn.Module):
             self.actor.parameters(),
         )
 
-    def hard_sync_targets(self):
-        """
-        Hard copy online actor/critics to target actor/critics
-        """
-        for target_param, param in zip(
-            self.target_critics.parameters(), self.critics.parameters()
-        ):
-            target_param.data.copy_(param.data)
-        for target_param, param in zip(
-            self.target_actor.parameters(), self.actor.parameters()
-        ):
+    def _full_copy(self, target, online):
+        for target_param, param in zip(target.parameters(), online.parameters()):
             target_param.data.copy_(param.data)
 
     def _ema_copy(self, target, online):
@@ -168,12 +163,22 @@ class Agent(nn.Module):
                 target_param.data * (1.0 - self.tau) + param.data * self.tau
             )
 
+    def hard_sync_targets(self):
+        """
+        Hard copy online actor/critics to target actor/critics
+        """
+        self._full_copy(self.target_critics, self.critics)
+        self._full_copy(self.target_actor, self.actor)
+        self._full_copy(self.maximized_critics, self.critics)
+
     def soft_sync_targets(self):
         """
         EMA copy online actor/critics to target actor/critics (DDPG-style)
         """
         self._ema_copy(self.target_critics, self.critics)
         self._ema_copy(self.target_actor, self.actor)
+        # full copy duplicate critic
+        self._full_copy(self.maximized_critics, self.critics)
 
     def get_actions(
         self,
@@ -227,6 +232,7 @@ class Agent(nn.Module):
         terms in a minimum number of forward passes with a compact
         sequence format. See comments for detailed explanation.
         """
+        # fmt: off
         self.update_info = {}  # holds wandb stats
 
         ##########################
@@ -240,10 +246,8 @@ class Agent(nn.Module):
         B, L, D_o = o.shape
         # padded actions are `self.pad_val` which will be invalid;
         # clip to valid range now and mask the loss later
-        if self.discrete:
-            a = batch.actions.clamp(0, 1.0)
-        else:
-            a = batch.actions.clamp(-1.0, 1.0)
+        a = batch.actions
+        a = a.clamp(0, 1.0) if self.discrete else a.clamp(-1., 1.)
         _B, _L, D_action = a.shape
         assert _L == L - 1
         G = len(self.gammas)
@@ -255,9 +259,7 @@ class Agent(nn.Module):
         # arrays used by critic update end up in a (B, L, C, G, dim) format
         assert batch.rews.shape == (B, L - 1, 1)
         assert batch.dones.shape == (B, L - 1, 1)
-        r = repeat(
-            (self.reward_multiplier * batch.rews).float(), f"b l r -> b l 1 {G} r"
-        )
+        r = repeat((self.reward_multiplier * batch.rews).float(), f"b l r -> b l 1 {G} r")
         d = repeat(batch.dones.float(), f"b l d -> b l 1 {G} d")
         D_emb = self.traj_encoder.emb_dim
         state_mask = (~((batch.rl2s == self.pad_val).all(-1, keepdim=True))).float()
@@ -268,9 +270,7 @@ class Agent(nn.Module):
         ## Step 2: Sequence Embedding ##
         ################################
         # one trajectory encoder forward pass
-        s_rep, hidden_state = self.traj_encoder(
-            seq=o, time_idxs=batch.time_idxs, hidden_state=None
-        )
+        s_rep, hidden_state = self.traj_encoder(seq=o, time_idxs=batch.time_idxs, hidden_state=None)
         assert s_rep.shape == (B, L, D_emb)
 
         #########################################
@@ -288,12 +288,11 @@ class Agent(nn.Module):
             a_agent = a_dist.sample()
 
         if not self.fake_filter or self.online_coeff > 0:
-            # in practice two critic passes is same speed on forward, faster on backward
             s_a_agent_g = (s_rep.detach(), a_agent)
             # detach() above b/c these grads flow to traj_encoder through the policy
             s_a_g = (s_rep[:, :-1, ...], a_buffer[:, :-1, ...])
             # all the `phi` terms are only here b/c we used to implement DR3
-            q_s_a_agent_g, phi_s_a_agent_g = self.critics(*s_a_agent_g)
+            q_s_a_agent_g, phi_s_a_agent_g = self.maximized_critics(*s_a_agent_g)
             assert q_s_a_agent_g.shape == (B, L, C, G, 1)
             q_s_a_g, phi_s_a_g = self.critics(*s_a_g)
 
@@ -302,9 +301,7 @@ class Agent(nn.Module):
             ########################
             # \mathcal{B}\bar{Q}(s, a, g)
             with torch.no_grad():
-                a_prime_dist = (
-                    self.target_actor(s_rep) if self.use_target_actor else a_dist
-                )
+                a_prime_dist = self.target_actor(s_rep) if self.use_target_actor else a_dist
                 ap = a_prime_dist.probs if self.discrete else a_prime_dist.sample()
                 assert ap.shape == (B, L, G, D_action)
                 sp_ap_gp = (s_rep[:, 1:, ...].detach(), ap[:, 1:, ...].detach())
@@ -391,11 +388,8 @@ class Agent(nn.Module):
             elif self.multibinary:
                 logp_a = a_dist.log_prob(a_buffer).mean(-1, keepdim=True)
             else:
-                # action probs at the [-1, 1] border can be very unstable with some
-                # distribution implementations
-                logp_a = a_dist.log_prob(a_buffer.clamp(-0.995, 0.995)).sum(
-                    -1, keepdim=True
-                )
+                # action probs at the [-1, 1] border can be unstable
+                logp_a = a_dist.log_prob(a_buffer.clamp(-0.995, 0.995)).sum(-1, keepdim=True)
             # clamp for stability and throw away last action that was a duplicate
             logp_a = logp_a[:, :-1, ...].clamp(-1e3, 1e3)
             # filtered nll
@@ -404,6 +398,7 @@ class Agent(nn.Module):
                 filter_stats = self._filter_stats(actor_mask, logp_a, filter_)
                 self.update_info.update(filter_stats)
 
+        # fmt: on
         return critic_loss, actor_loss
 
     def _td_stats(self, mask, raw_q_s_a_g, q_s_a_g, r, td_target) -> dict:
@@ -492,11 +487,11 @@ class Agent(nn.Module):
             * 100.0,
         }
 
-        for i, gamma in enumerate(self.gammas):
-            stats[f"Pct. of Actions Approved by Binary FBC (gamma = {gamma : .3f})"] = (
-                masked_avg(filter_, dim=i) * 100.0
-            )
-
+        if filter_.shape[-2] == len(self.gammas):
+            for i, gamma in enumerate(self.gammas):
+                stats[f"Pct. of Actions Approved by Binary FBC (gamma = {gamma : .3f})"] = (
+                    masked_avg(filter_, dim=i) * 100.0
+                )
         return stats
 
     def _popart_stats(self) -> dict:

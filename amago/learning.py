@@ -541,15 +541,12 @@ class Experiment:
             masked_critic_loss = (
                 critic_state_mask * critic_loss
             ).sum() / critic_state_mask.sum()
-            optimize_critic = True
         else:
             assert critic_loss is None
             masked_critic_loss = 0.0
-            optimize_critic = False
 
         return {
             "critic_loss": masked_critic_loss,
-            "optimize_critic": optimize_critic,
             "actor_loss": masked_actor_loss,
             "mask": state_mask,
         } | update_info
@@ -576,12 +573,8 @@ class Experiment:
         """
         l = self.compute_loss(batch, log_step=log_step)
         self.optimizer.zero_grad()
-        self.grad_scaler.scale(l["actor_loss"]).backward(retain_graph=True)
-        self.policy.critics.zero_grad(set_to_none=True)
-        if l["optimize_critic"]:
-            self.grad_scaler.scale(
-                self.critic_loss_weight * l["critic_loss"]
-            ).backward()
+        loss = l["actor_loss"] + self.critic_loss_weight * l["critic_loss"]
+        self.grad_scaler.scale(loss).backward()
         self.grad_scaler.unscale_(self.optimizer)
         if log_step:
             l.update(self._get_grad_norms())
