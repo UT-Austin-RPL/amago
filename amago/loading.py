@@ -56,6 +56,13 @@ class TrajDset(Dataset):
         else:
             return self.length
 
+    @property
+    def disk_usage(self):
+        bytes = sum(
+            os.path.getsize(os.path.join(self.dset_path, f)) for f in self.filenames
+        )
+        return bytes * 1e-9
+
     def clear(self):
         # remove files on disk
         if os.path.exists(self.dset_path):
@@ -79,7 +86,7 @@ class TrajDset(Dataset):
 
         traj_infos = []
         for traj_filename in self.filenames:
-            env_name, rand_id, unix_time = traj_filename[:-5].split("_")
+            env_name, rand_id, unix_time = os.path.splitext(traj_filename)[0].split("_")
             time, _ = unix_time.split(".")
             traj_infos.append(
                 {

@@ -661,10 +661,15 @@ class Experiment:
                 self.val_dset.clear()
 
             dset_size = self.train_dset.count_trajectories()
+            dset_gb = self.train_dset.disk_usage
             if dset_size > self.dset_max_size:
                 self.train_dset.filter(self.dset_filter_pct)
             self.log(
-                {"Trajectory Files Saved in Replay Buffer": dset_size}, key="buffer"
+                {
+                    "Trajectory Files Saved in Replay Buffer": dset_size,
+                    "Train Buffer Disk Space (GB)": dset_gb,
+                },
+                key="buffer",
             )
 
             # end epoch

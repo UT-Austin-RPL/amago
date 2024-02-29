@@ -1,8 +1,10 @@
 import random
+import os
 import math
 import warnings
 import copy
 import pickle
+import bz2
 from dataclasses import dataclass
 
 import torch
@@ -253,10 +255,16 @@ class Trajectory:
     def __len__(self):
         return len(self.timesteps)
 
-    def save_to_disk(self, path):
+    def save_to_disk(self, path, compress: bool = True):
         self.freeze()
-        with open(path, "wb") as f:
-            pickle.dump(self, f)
+        ext = "ztraj" if compress else "traj"
+        name = f"{path}.{ext}"
+        if compress:
+            with bz2.BZ2File(name, "wb") as f:
+                pickle.dump(self, f)
+        else:
+            with open(name, "wb") as f:
+                pickle.dump(self, f)
 
     def freeze(self):
         self._frozen_obs, self._frozen_goals, self._frozen_rl2s = self.make_sequence()
@@ -264,8 +272,17 @@ class Trajectory:
 
     @staticmethod
     def load_from_disk(path):
-        with open(path, "rb") as f:
-            disk = pickle.load(f)
+        _, ext = os.path.splitext(path)
+        if ext == ".ztraj":
+            with bz2.BZ2File(path, "rb") as f:
+                disk = pickle.load(f)
+        elif ext == ".traj":
+            with open(path, "rb") as f:
+                disk = pickle.load(f)
+        else:
+            raise ValueError(
+                f"Unrecognized trajectory file extension `{ext}` for path `{path}`."
+            )
         traj = Trajectory(max_goals=disk.max_goals, timesteps=disk.timesteps)
         if disk.frozen:
             traj._frozen_obs = disk._frozen_obs
