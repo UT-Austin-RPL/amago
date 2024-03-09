@@ -1,5 +1,4 @@
 import random
-import time
 import os
 import math
 import warnings
@@ -294,7 +293,7 @@ class Trajectory:
             np.savez_compressed(path, **frozen.to_dict())
         else:
             raise ValueError(
-                f"Unrecognized Trajectory `save_to_disk` format `save_as = {save_as}` (options are: 'trajectory', 'npz', 'npz-compressed')"
+                f"Unrecognized Trajectory `save_to_disk` format `save_as = {save_as}` (options are: 'trajectory' (slowest read/write, can relabel), 'npz' (fastest, cannot relabel), 'npz-compressed' (save space, cannot relabel)"
             )
 
     def freeze(self) -> FrozenTraj:

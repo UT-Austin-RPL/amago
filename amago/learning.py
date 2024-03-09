@@ -61,7 +61,7 @@ class Experiment:
     relabel: str = "none"
     goal_importance_sampling: bool = False
     stagger_traj_file_lengths: bool = True
-    save_trajs_as: str = "npz"
+    save_trajs_as: str = "trajectory"
 
     # Learning Schedule
     epochs: int = 1000
