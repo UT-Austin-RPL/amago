@@ -204,6 +204,7 @@ class FrozenTraj:
     def to_dict(self) -> dict[np.ndarray]:
         d = asdict(self)
         for obs_k, obs_v in d["obs"].items():
+            # flatten obs dict but mark w/ special prefix
             d[f"_OBS_KEY_{obs_k}"] = obs_v
         del d["obs"]
         return d
@@ -212,8 +213,9 @@ class FrozenTraj:
     def from_dict(d: dict[np.ndarray]):
         args = {"obs": {}}
         for k, v in d.items():
-            if "_OBS_KEY_" in k:
-                args["obs"][k.replace("_OBS_KEY_", "")] = v
+            if k.startswith("_OBS_KEY_"):
+                # fold the flattened obs dict back to original keys
+                args["obs"][k.replace("_OBS_KEY_", "", 1)] = v
             else:
                 args[k] = v
         return FrozenTraj(**args)
