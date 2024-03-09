@@ -6,7 +6,8 @@ import warnings
 import copy
 import pickle
 import bz2
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
+from enum import Enum
 
 import torch
 import numpy as np
@@ -171,8 +172,6 @@ class Timestep:
         return self.goal_seq == other.goal_seq
 
     def __deepcopy__(self, memo):
-        # (We used to cache Trajectories, which made relabeling them
-        # inplace risky. Not needed anymore.)
         warnings.warn(
             "`Timestep` deepcopies return *shallow* copies of raw data but *deep* copies of goal sequences (for relabeling).",
             category=RelabelWarning,
@@ -195,6 +194,34 @@ class Timestep:
         return new
 
 
+@dataclass
+class FrozenTraj:
+    obs: dict[np.ndarray]
+    goals: np.ndarray
+    rl2s: np.ndarray
+    time_idxs: np.ndarray
+    rews: np.ndarray
+    dones: np.ndarray
+    actions: np.ndarray
+
+    def to_dict(self) -> dict[np.ndarray]:
+        d = asdict(self)
+        for obs_k, obs_v in d["obs"].items():
+            d[f"_OBS_KEY_{obs_k}"] = obs_v
+        del d["obs"]
+        return d
+
+    @staticmethod
+    def from_dict(d: dict[np.ndarray]):
+        args = {"obs": {}}
+        for k, v in d.items():
+            if "_OBS_KEY_" in k:
+                args["obs"][k.replace("_OBS_KEY_", "")] = v
+            else:
+                args[k] = v
+        return FrozenTraj(**args)
+
+
 @gin.configurable(denylist=["max_goals", "timesteps"])
 class Trajectory:
     def __init__(
@@ -208,7 +235,6 @@ class Trajectory:
         self.goal_pad_val = goal_pad_val
         self.goal_completed_val = goal_completed_val
         self.timesteps = timesteps or []
-        self.frozen = False
 
     def add_timestep(self, timestep: Timestep):
         assert isinstance(timestep, Timestep)
@@ -256,72 +282,42 @@ class Trajectory:
     def __len__(self):
         return len(self.timesteps)
 
-    def save_to_disk(self, path, compress: bool, save_without_timesteps: bool):
-        start = time.time()
-        self.freeze()
-        print(f"Freeze: {time.time() - start: .3f}")
-        if save_without_timesteps:
-            del self.timesteps
-            self.timesteps = []
-        ext = "ztraj" if compress else "traj"
-        name = f"{path}.{ext}"
-        start = time.time()
-        ftype = bz2.BZ2File if compress else open
-        with ftype(name, "wb") as f:
-            pickle.dump(self, f)
-        print(f"Save: {time.time() - start : .3f}")
-
-    def freeze(self):
-        self._frozen_obs, self._frozen_goals, self._frozen_rl2s = self.make_sequence()
-        self._frozen_time_idxs = np.array(
-            [t.raw_time_idx for t in self.timesteps], dtype=np.int64
-        )
-        self._frozen_rews = np.array(
-            [t.reward for t in self.timesteps[1:]], dtype=np.float32
-        )[:, np.newaxis]
-        self._frozen_dones = np.array(
-            [t.terminal for t in self.timesteps[1:]], dtype=bool
-        )[:, np.newaxis]
-        self._frozen_actions = np.array(
-            [t.prev_action for t in self.timesteps[1:]], dtype=np.float32
-        )
-        self.frozen = True
-        return (
-            (self._frozen_obs, self._frozen_goals, self._frozen_rl2s),
-            self._frozen_time_idxs,
-            self._frozen_rews,
-            self._frozen_dones,
-            self._frozen_actions,
-        )
-
-    @staticmethod
-    def load_from_disk(path):
-        _, ext = os.path.splitext(path)
-        if ext == ".ztraj":
-            with bz2.BZ2File(path, "rb") as f:
-                disk = pickle.load(f)
-        elif ext == ".traj":
-            with open(path, "rb") as f:
-                disk = pickle.load(f)
+    def save_to_disk(self, path: str, save_as: str):
+        if save_as == "trajectory":
+            with open(f"{path}.traj", "wb") as f:
+                pickle.dump(self, f)
+        elif save_as == "npz":
+            frozen = self.freeze()
+            np.savez(path, **frozen.to_dict())
+        elif save_as == "npz-compressed":
+            frozen = self.freeze()
+            np.savez_compressed(path, **frozen.to_dict())
         else:
             raise ValueError(
-                f"Unrecognized trajectory file extension `{ext}` for path `{path}`."
+                f"Unrecognized Trajectory `save_to_disk` format `save_as = {save_as}` (options are: 'trajectory', 'npz', 'npz-compressed')"
             )
-        traj = Trajectory(max_goals=disk.max_goals, timesteps=disk.timesteps)
-        if disk.frozen:
-            traj._frozen_obs = disk._frozen_obs
-            traj._frozen_goals = disk._frozen_goals
-            traj._frozen_rl2s = disk._frozen_rl2s
-            traj._frozen_time_idxs = disk._frozen_time_idxs
-            traj._frozen_rews = disk._frozen_rews
-            traj._frozen_dones = disk._frozen_dones
-            traj._frozen_actions = disk._frozen_actions
-            traj.frozen = True
-        else:
-            warnings.warn(
-                "Loading unfrozen Trajectory from disk...", category=RuntimeWarning
-            )
-        return traj
+
+    def freeze(self) -> FrozenTraj:
+        obs, goals, rl2s = self.make_sequence()
+        time_idxs = np.array([t.raw_time_idx for t in self.timesteps], dtype=np.int64)
+        rews = np.array([t.reward for t in self.timesteps[1:]], dtype=np.float32)[
+            :, np.newaxis
+        ]
+        dones = np.array([t.terminal for t in self.timesteps[1:]], dtype=bool)[
+            :, np.newaxis
+        ]
+        actions = np.array(
+            [t.prev_action for t in self.timesteps[1:]], dtype=np.float32
+        )
+        return FrozenTraj(
+            obs=obs,
+            goals=goals,
+            rl2s=rl2s,
+            time_idxs=time_idxs,
+            rews=rews,
+            dones=dones,
+            actions=actions,
+        )
 
     def __eq__(self, other):
         if len(other) != len(self):
@@ -423,10 +419,15 @@ class EpisodeCounter(GoalCounter):
         self.total_count = sum(self.counts.values())
 
 
+class RelabelError(Exception):
+    def __init__(self, message):
+        super().__init__(message)
+
+
 class Relabeler:
     def __init__(self, relabel: str = "none", goal_importance_sampling: bool = False):
         if relabel not in ["none", "some", "all", "all_or_nothing"]:
-            raise ValueError(
+            raise RelabelError(
                 f"Invalid `Relabeler.relabel` scheme `{relabel}`. Options are: 'none', 'some', `all_or_nothing`, 'all'"
             )
         self.relabel = relabel
@@ -494,6 +495,11 @@ class Relabeler:
         TODO: recent optimizations in the open-source codebase have turned the relabeling
         process into a data pipeline bottleneck.
         """
+        if not isinstance(traj, Trajectory):
+            raise RelabelError(
+                f"Relabeler received `traj` of type `{traj.__class__.__name__}`, but is only compatible with raw `Trajectory` data."
+            )
+
         ############
         ## Step 0 ##
         ############
@@ -502,13 +508,12 @@ class Relabeler:
             return traj
         if traj[-1].real_reward is not None:
             # `real_rewards` are for the natural env reward, not AMAGO's goal-conditioned system.
-            raise RuntimeError(
+            raise RelabelError(
                 "Do not try to relabel trajs that use natural environment rewards"
             )
 
         og_traj = traj  # save original traj for testing
         traj = copy.deepcopy(traj)  # only deepcopies what we will actually edit (goals)
-        traj.frozen = False
 
         #########################################
         ## Step 1: Update Goal Frequency Stats ##
@@ -629,7 +634,6 @@ class Relabeler:
         traj.timesteps = traj[: end + 2]
         traj.timesteps[-1].terminal = True
 
-        traj.freeze()
         if end < len(traj):
             assert traj.is_success
         if num_syn_goals == 0:

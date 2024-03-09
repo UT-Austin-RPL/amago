@@ -306,8 +306,7 @@ class SequenceWrapper(gym.Wrapper):
         dset_root: str = None,
         dset_name: str = None,
         dset_split: str = None,
-        compress_files: bool = True,
-        save_without_timesteps: bool = True,
+        save_trajs_as: str = "npz",
     ):
         super().__init__(env)
 
@@ -326,8 +325,7 @@ class SequenceWrapper(gym.Wrapper):
         self.dset_split = dset_split
         self.save_every = save_every
         self.since_last_save = 0
-        self.compress_files = compress_files
-        self.save_without_timesteps = save_without_timesteps
+        self.save_trajs_as = save_trajs_as
         self._total_frames = 0
         if isinstance(self.env.action_space, gym.spaces.Discrete):
             action_shape = self.env.action_space.n
@@ -403,8 +401,7 @@ class SequenceWrapper(gym.Wrapper):
         path = os.path.join(self.dset_write_dir, traj_name)
         self.active_traj.save_to_disk(
             path,
-            compress=self.compress_files,
-            save_without_timesteps=self.save_without_timesteps,
+            save_as=self.save_trajs_as,
         )
         self.since_last_save = 0
 
