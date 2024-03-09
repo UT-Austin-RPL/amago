@@ -171,12 +171,6 @@ class ALE(gym.Env):
         return next_state, reward, terminated, truncated, info
 
 
-try:
-    import retro
-except ImportError:
-    pass
-
-
 class RetroAMAGOWrapper(GymEnv):
     def __init__(self, env: gym.Env):
         assert isinstance(env, RetroArcade)
@@ -234,12 +228,12 @@ class RetroArcade(gym.Env):
         if not use_discrete_actions:
             self.action_space = gym.spaces.MultiBinary(12)
         else:
+            self.reset()
             if len(self.game_start_dict.keys()) > 1:
                 warnings.warn(
                     "Discrete action spaces are game/console specific, and this is likely to break when using multiple games",
                     UserWarning,
                 )
-            self.action_space = gym.spaces.Discrete(36)
 
     def render(self, *args, **kwargs):
         return self._env.render(*args, **kwargs)
@@ -265,6 +259,8 @@ class RetroArcade(gym.Env):
             else retro.Actions.FILTERED
         )
         self._env = retro.make(game=game, state=start, use_restricted_actions=actions)
+        if self.use_discrete_actions:
+            self.action_space = self._env.action_space
         self._console = self._env.system
         self._time = 0
         obs, info = self._env.reset()

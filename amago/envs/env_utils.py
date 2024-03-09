@@ -307,6 +307,7 @@ class SequenceWrapper(gym.Wrapper):
         dset_name: str = None,
         dset_split: str = None,
         compress_files: bool = True,
+        save_without_timesteps: bool = True,
     ):
         super().__init__(env)
 
@@ -326,6 +327,7 @@ class SequenceWrapper(gym.Wrapper):
         self.save_every = save_every
         self.since_last_save = 0
         self.compress_files = compress_files
+        self.save_without_timesteps = save_without_timesteps
         self._total_frames = 0
         if isinstance(self.env.action_space, gym.spaces.Discrete):
             action_shape = self.env.action_space.n
@@ -399,7 +401,11 @@ class SequenceWrapper(gym.Wrapper):
     def log_to_disk(self):
         traj_name = f"{self.env.env_name.strip().replace('_', '')}_{uuid4().hex[:8]}_{time.time()}"
         path = os.path.join(self.dset_write_dir, traj_name)
-        self.active_traj.save_to_disk(path, compress=self.compress_files)
+        self.active_traj.save_to_disk(
+            path,
+            compress=self.compress_files,
+            save_without_timesteps=self.save_without_timesteps,
+        )
         self.since_last_save = 0
 
     def sequence(self):

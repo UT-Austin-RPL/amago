@@ -1,4 +1,5 @@
 import random
+import time
 import os
 import math
 import warnings
@@ -255,20 +256,43 @@ class Trajectory:
     def __len__(self):
         return len(self.timesteps)
 
-    def save_to_disk(self, path, compress: bool = True):
+    def save_to_disk(self, path, compress: bool, save_without_timesteps: bool):
+        start = time.time()
         self.freeze()
+        print(f"Freeze: {time.time() - start: .3f}")
+        if save_without_timesteps:
+            del self.timesteps
+            self.timesteps = []
         ext = "ztraj" if compress else "traj"
         name = f"{path}.{ext}"
-        if compress:
-            with bz2.BZ2File(name, "wb") as f:
-                pickle.dump(self, f)
-        else:
-            with open(name, "wb") as f:
-                pickle.dump(self, f)
+        start = time.time()
+        ftype = bz2.BZ2File if compress else open
+        with ftype(name, "wb") as f:
+            pickle.dump(self, f)
+        print(f"Save: {time.time() - start : .3f}")
 
     def freeze(self):
         self._frozen_obs, self._frozen_goals, self._frozen_rl2s = self.make_sequence()
+        self._frozen_time_idxs = np.array(
+            [t.raw_time_idx for t in self.timesteps], dtype=np.int64
+        )
+        self._frozen_rews = np.array(
+            [t.reward for t in self.timesteps[1:]], dtype=np.float32
+        )[:, np.newaxis]
+        self._frozen_dones = np.array(
+            [t.terminal for t in self.timesteps[1:]], dtype=bool
+        )[:, np.newaxis]
+        self._frozen_actions = np.array(
+            [t.prev_action for t in self.timesteps[1:]], dtype=np.float32
+        )
         self.frozen = True
+        return (
+            (self._frozen_obs, self._frozen_goals, self._frozen_rl2s),
+            self._frozen_time_idxs,
+            self._frozen_rews,
+            self._frozen_dones,
+            self._frozen_actions,
+        )
 
     @staticmethod
     def load_from_disk(path):
@@ -288,6 +312,10 @@ class Trajectory:
             traj._frozen_obs = disk._frozen_obs
             traj._frozen_goals = disk._frozen_goals
             traj._frozen_rl2s = disk._frozen_rl2s
+            traj._frozen_time_idxs = disk._frozen_time_idxs
+            traj._frozen_rews = disk._frozen_rews
+            traj._frozen_dones = disk._frozen_dones
+            traj._frozen_actions = disk._frozen_actions
             traj.frozen = True
         else:
             warnings.warn(
