@@ -232,9 +232,10 @@ class Experiment:
     def init_dsets(self):
         if self.save_trajs_as != "trajectory" and self.relabel != "none":
             warnings.warn(
-                "Saving data in efficient ('frozen') format; These trajectories will be skipped by the Relabeler",
+                "Saving data in efficient ('frozen') format... these files will be skipped by the Relabeler",
                 category=RelabelWarning,
             )
+        warnings.filterwarnings("ignore", category=RelabelWarning)
         self.train_dset = TrajDset(
             relabeler=Relabeler(self.relabel, self.goal_importance_sampling),
             dset_root=self.dset_root,

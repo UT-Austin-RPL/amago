@@ -306,7 +306,7 @@ class SequenceWrapper(gym.Wrapper):
         dset_root: str = None,
         dset_name: str = None,
         dset_split: str = None,
-        save_trajs_as: str = "npz",
+        save_trajs_as: str = "trajectory",
     ):
         super().__init__(env)
 

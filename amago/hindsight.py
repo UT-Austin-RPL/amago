@@ -4,9 +4,7 @@ import math
 import warnings
 import copy
 import pickle
-import bz2
 from dataclasses import dataclass, asdict
-from enum import Enum
 
 import torch
 import numpy as np
