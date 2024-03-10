@@ -125,6 +125,12 @@ def add_common_cli(parser: ArgumentParser) -> ArgumentParser:
         type=int,
         default=8,
     )
+    parser.add_argument(
+        "--batch_size",
+        type=int,
+        default=24,
+        help="Training batch size (measured in trajectories, not timesteps).",
+    )
     return parser
 
 
@@ -301,6 +307,7 @@ def create_experiment_from_cli(
         dloader_workers=cli.dloader_workers,
         log_to_wandb=not cli.no_log,
         wandb_group_name=group_name,
+        batch_size=cli.batch_size,
         epochs=cli.epochs,
         parallel_actors=cli.parallel_actors,
         train_timesteps_per_epoch=cli.timesteps_per_epoch,

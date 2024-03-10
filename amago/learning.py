@@ -1,4 +1,5 @@
 import os
+import time
 import warnings
 import contextlib
 from dataclasses import dataclass
@@ -60,6 +61,7 @@ class Experiment:
     relabel: str = "none"
     goal_importance_sampling: bool = False
     stagger_traj_file_lengths: bool = True
+    save_trajs_as: str = "trajectory"
 
     # Learning Schedule
     epochs: int = 1000
@@ -167,6 +169,7 @@ class Experiment:
                 dset_root=self.dset_root,
                 dset_name=self.dset_name,
                 dset_split=split,
+                save_trajs_as=self.save_trajs_as,
             )
             # save gcrl2 space here to make model later
             self.gcrl2_space = env.gcrl2_space
@@ -227,6 +230,11 @@ class Experiment:
         torch.save(state_dict, os.path.join(self.ckpt_dir, ckpt_name))
 
     def init_dsets(self):
+        if self.save_trajs_as != "trajectory" and self.relabel != "none":
+            warnings.warn(
+                "Saving data in efficient ('frozen') format... these files will be skipped by the Relabeler",
+                category=RelabelWarning,
+            )
         warnings.filterwarnings("ignore", category=RelabelWarning)
         self.train_dset = TrajDset(
             relabeler=Relabeler(self.relabel, self.goal_importance_sampling),
@@ -661,10 +669,15 @@ class Experiment:
                 self.val_dset.clear()
 
             dset_size = self.train_dset.count_trajectories()
+            dset_gb = self.train_dset.disk_usage
             if dset_size > self.dset_max_size:
                 self.train_dset.filter(self.dset_filter_pct)
             self.log(
-                {"Trajectory Files Saved in Replay Buffer": dset_size}, key="buffer"
+                {
+                    "Trajectory Files Saved in Replay Buffer": dset_size,
+                    "Train Buffer Disk Space (GB)": dset_gb,
+                },
+                key="buffer",
             )
 
             # end epoch

@@ -1,10 +1,10 @@
 import os
 import random
-import time
 import shutil
+import pickle
 from dataclasses import dataclass
 from operator import itemgetter
-from functools import partial, lru_cache
+from functools import partial
 
 import torch
 import torch.nn.functional as F
@@ -13,13 +13,23 @@ from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import Dataset
 import numpy as np
 
-from .hindsight import Trajectory, Relabeler
+from .hindsight import Trajectory, Relabeler, FrozenTraj
 
 
-# @lru_cache(maxsize=1000)
-def load_traj_from_disk(path: str) -> Trajectory:
-    traj = Trajectory.load_from_disk(path)
-    return traj
+def load_traj_from_disk(path: str) -> Trajectory | FrozenTraj:
+    _, ext = os.path.splitext(path)
+    if ext == ".traj":
+        with open(path, "rb") as f:
+            disk = pickle.load(f)
+        traj = Trajectory(max_goals=disk.max_goals, timesteps=disk.timesteps)
+        return traj
+    elif ext == ".npz":
+        disk = FrozenTraj.from_dict(np.load(path))
+        return disk
+    else:
+        raise ValueError(
+            f"Unrecognized trajectory file extension `{ext}` for path `{path}`."
+        )
 
 
 class TrajDset(Dataset):
@@ -56,6 +66,13 @@ class TrajDset(Dataset):
         else:
             return self.length
 
+    @property
+    def disk_usage(self):
+        bytes = sum(
+            os.path.getsize(os.path.join(self.dset_path, f)) for f in self.filenames
+        )
+        return bytes * 1e-9
+
     def clear(self):
         # remove files on disk
         if os.path.exists(self.dset_path):
@@ -79,7 +96,7 @@ class TrajDset(Dataset):
 
         traj_infos = []
         for traj_filename in self.filenames:
-            env_name, rand_id, unix_time = traj_filename[:-5].split("_")
+            env_name, rand_id, unix_time = os.path.splitext(traj_filename)[0].split("_")
             time, _ = unix_time.split(".")
             traj_infos.append(
                 {
@@ -98,35 +115,26 @@ class TrajDset(Dataset):
     def __getitem__(self, i):
         filename = random.choice(self.filenames)
         traj = load_traj_from_disk(os.path.join(self.dset_path, filename))
-        hseq = self.relabeler(traj)
-        data = RLData(hseq)
+        if isinstance(traj, Trajectory):
+            traj = self.relabeler(traj)
+        data = RLData(traj)
         if self.max_seq_len is not None:
             data = data.random_slice(length=self.max_seq_len)
         return data
 
 
 class RLData:
-    def __init__(self, traj: Trajectory):
-        if traj.frozen:
-            obs = traj._frozen_obs
-            goals = traj._frozen_goals
-            rl2s = traj._frozen_rl2s
-        else:
-            obs, goals, rl2s = traj.make_sequence()
-        # dtype cast needs to happen inside TstepEncoder
-        self.obs = {k: torch.from_numpy(v) for k, v in obs.items()}
-        self.goals = torch.from_numpy(goals).float()
-        self.rl2s = torch.from_numpy(rl2s).float()
-        self.time_idxs = torch.Tensor([t.raw_time_idx for t in traj.timesteps]).long()
-        # rews, dones, and actions are shifted back by one timestep
-        to_torch = lambda x: torch.from_numpy(np.array(x))
-        self.rews = (
-            to_torch([t.reward for t in traj.timesteps[1:]]).float().unsqueeze(-1)
-        )
-        self.dones = (
-            to_torch([t.terminal for t in traj.timesteps[1:]]).bool().unsqueeze(-1)
-        )
-        self.actions = to_torch([t.prev_action for t in traj.timesteps[1:]]).float()
+    def __init__(self, traj: Trajectory | FrozenTraj):
+        if isinstance(traj, Trajectory):
+            traj = traj.freeze()
+        assert isinstance(traj, FrozenTraj)
+        self.obs = {k: torch.from_numpy(v) for k, v in traj.obs.items()}
+        self.goals = torch.from_numpy(traj.goals).float()
+        self.rl2s = torch.from_numpy(traj.rl2s).float()
+        self.time_idxs = torch.from_numpy(traj.time_idxs).long()
+        self.rews = torch.from_numpy(traj.rews).float()
+        self.dones = torch.from_numpy(traj.dones).bool()
+        self.actions = torch.from_numpy(traj.actions).float()
 
     def __len__(self):
         return len(self.actions)

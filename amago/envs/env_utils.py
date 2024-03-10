@@ -306,6 +306,7 @@ class SequenceWrapper(gym.Wrapper):
         dset_root: str = None,
         dset_name: str = None,
         dset_split: str = None,
+        save_trajs_as: str = "trajectory",
     ):
         super().__init__(env)
 
@@ -324,6 +325,7 @@ class SequenceWrapper(gym.Wrapper):
         self.dset_split = dset_split
         self.save_every = save_every
         self.since_last_save = 0
+        self.save_trajs_as = save_trajs_as
         self._total_frames = 0
         if isinstance(self.env.action_space, gym.spaces.Discrete):
             action_shape = self.env.action_space.n
@@ -395,9 +397,12 @@ class SequenceWrapper(gym.Wrapper):
         return timestep.obs, reward, terminated, truncated, info
 
     def log_to_disk(self):
-        traj_name = f"{self.env.env_name.strip().replace('_', '')}_{uuid4().hex[:8]}_{time.time()}.traj"
+        traj_name = f"{self.env.env_name.strip().replace('_', '')}_{uuid4().hex[:8]}_{time.time()}"
         path = os.path.join(self.dset_write_dir, traj_name)
-        self.active_traj.save_to_disk(path)
+        self.active_traj.save_to_disk(
+            path,
+            save_as=self.save_trajs_as,
+        )
         self.since_last_save = 0
 
     def sequence(self):

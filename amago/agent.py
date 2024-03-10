@@ -489,9 +489,9 @@ class Agent(nn.Module):
 
         if filter_.shape[-2] == len(self.gammas):
             for i, gamma in enumerate(self.gammas):
-                stats[f"Pct. of Actions Approved by Binary FBC (gamma = {gamma : .3f})"] = (
-                    masked_avg(filter_, dim=i) * 100.0
-                )
+                stats[
+                    f"Pct. of Actions Approved by Binary FBC (gamma = {gamma : .3f})"
+                ] = (masked_avg(filter_, dim=i) * 100.0)
         return stats
 
     def _popart_stats(self) -> dict:
