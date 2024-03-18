@@ -173,7 +173,6 @@ class ALE(gym.Env):
 
 class RetroAMAGOWrapper(GymEnv):
     def __init__(self, env: gym.Env):
-        assert isinstance(env, RetroArcade)
         super().__init__(
             gym_env=env,
             env_name="Retro",

@@ -72,8 +72,10 @@ class Experiment:
     val_interval: int = 10
     val_timesteps_per_epoch: int = 10_000
     val_checks_per_epoch: int = 50
-    ckpt_interval: int = 20
     log_interval: int = 250
+    ckpt_interval: int = 20
+    save_latest_ckpt: bool = False
+    always_load_latest_ckpt: bool = False
 
     # Optimization
     batch_size: int = 24
@@ -197,25 +199,55 @@ class Experiment:
             os.makedirs(self.ckpt_dir)
         self.epoch = 0
 
-    def load_checkpoint(self, epoch: int = None, loading_best: bool = False):
-        assert epoch is not None or loading_best is True
+    def load_checkpoint(
+        self,
+        epoch: int = None,
+        loading_latest: bool = False,
+        loading_best: bool = False,
+    ):
         if epoch is not None:
-            assert not loading_best
-        if not loading_best:
+            assert not (loading_best or loading_latest)
             ckpt_name = f"{self.run_name}_epoch_{epoch}.pt"
-        else:
-            ckpt_name = f"{self.run_name}_BEST.pt"
 
-        ckpt = torch.load(
-            os.path.join(self.ckpt_dir, ckpt_name), map_location=self.DEVICE
-        )
+        else:
+            assert (
+                loading_best or loading_latest and not (loading_best and loading_latest)
+            )
+            ckpt_name = f"{self.run_name}_{'LATEST' if loading_latest else 'BEST'}.pt"
+
+        ckpt_path = os.path.join(self.ckpt_dir, ckpt_name)
+        if not os.path.exists(ckpt_path):
+            missing_ckpt_msg = "Skipping checkpoint load; file not found"
+            warnings.warn(missing_ckpt_msg, category=Warning)
+            if self.verbose:
+                print(missing_ckpt_msg)
+            return
+
+        tries = 0
+        while tries < 10:
+            try:
+                tries += 1
+                ckpt = torch.load(ckpt_path, map_location=self.DEVICE)
+            except RuntimeError as e:
+                if loading_latest:
+                    time.sleep(1)
+                    warnings.warn("Error loading latest checkpoint. Retrying.")
+                    continue
+                else:
+                    raise e
+            else:
+                break
+        else:
+            breakpoint()
+
         self.policy.load_state_dict(ckpt["model_state"])
         self.optimizer.load_state_dict(ckpt["optimizer_state"])
         self.epoch = ckpt["epoch"]
         self.grad_scaler.load_state_dict(ckpt["grad_scaler"])
         self.best_return = ckpt["best_return"]
 
-    def save_checkpoint(self, saving_best: bool = False):
+    def save_checkpoint(self, saving_latest: bool = False, saving_best: bool = False):
+        assert not (saving_latest and saving_best)
         state_dict = {
             "model_state": self.policy.state_dict(),
             "optimizer_state": self.optimizer.state_dict(),
@@ -223,10 +255,12 @@ class Experiment:
             "grad_scaler": self.grad_scaler.state_dict(),
             "best_return": self.best_return,
         }
-        if not saving_best:
-            ckpt_name = f"{self.run_name}_epoch_{self.epoch}.pt"
-        else:
+        if saving_best:
             ckpt_name = f"{self.run_name}_BEST.pt"
+        elif saving_latest:
+            ckpt_name = f"{self.run_name}_LATEST.pt"
+        else:
+            ckpt_name = f"{self.run_name}_epoch_{self.epoch}.pt"
         torch.save(state_dict, os.path.join(self.ckpt_dir, ckpt_name))
 
     def init_dsets(self):
@@ -625,6 +659,9 @@ class Experiment:
 
         start_epoch = self.epoch
         for epoch in range(start_epoch, self.epochs):
+            if self.always_load_latest_ckpt:
+                self.load_checkpoint(loading_latest=True)
+
             # environment interaction
             self.policy.eval()
             if epoch % self.val_interval == 0:
@@ -641,8 +678,9 @@ class Experiment:
                     category=Warning,
                 )
                 continue
+
+            # training
             elif epoch < self.start_learning_at_epoch:
-                # lets us skip early epochs to prevent overfitting on small datasets
                 continue
             for train_step, batch in make_pbar(self.train_dloader, True, epoch):
                 total_step = (epoch * self.train_grad_updates_per_epoch) + train_step
@@ -650,16 +688,13 @@ class Experiment:
                 loss_dict = self.train_step(batch, log_step=log_step)
                 if log_step:
                     self.log(loss_dict, key="train-update")
-                # lr scheduling done here so we can see epoch/step
                 self.warmup_scheduler.step(total_step)
 
+            # validation
             if (
                 epoch % self.val_interval == 0
                 and self.val_dset.count_trajectories() > 0
             ):
-                # the "training" metrics on validation data could help identify
-                # overfitting or highlight distribution shift between (approx.)
-                # on-policy data and way-off-policy data in the disk buffer.
                 self.policy.eval()
                 for val_step, batch in make_pbar(self.val_dloader, False, epoch):
                     loss_dict = self.val_step(batch)
@@ -668,9 +703,10 @@ class Experiment:
                 self.log(figures, key="val-update")
                 self.val_dset.clear()
 
+            # buffer management
             dset_size = self.train_dset.count_trajectories()
             dset_gb = self.train_dset.disk_usage
-            if dset_size > self.dset_max_size:
+            if dset_size > self.dset_max_size and self.dset_filter_pct is not None:
                 self.train_dset.filter(self.dset_filter_pct)
             self.log(
                 {
@@ -684,3 +720,5 @@ class Experiment:
             self.epoch = epoch
             if epoch % self.ckpt_interval == 0:
                 self.save_checkpoint()
+            if self.save_latest_ckpt:
+                self.save_checkpoint(saving_latest=True)
