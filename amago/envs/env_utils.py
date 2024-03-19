@@ -2,6 +2,7 @@ import os
 import time
 import random
 from uuid import uuid4
+from collections import defaultdict
 
 import gymnasium as gym
 import numpy as np
@@ -327,6 +328,7 @@ class SequenceWrapper(gym.Wrapper):
         self.since_last_save = 0
         self.save_trajs_as = save_trajs_as
         self._total_frames = 0
+        self._total_frames_by_env = defaultdict(int)
         if isinstance(self.env.action_space, gym.spaces.Discrete):
             action_shape = self.env.action_space.n
         else:
@@ -394,6 +396,7 @@ class SequenceWrapper(gym.Wrapper):
             )
         self._current_timestep = self.active_traj.make_sequence(last_only=True)
         self._total_frames += 1
+        self._total_frames_by_env[self.env.env_name] += 1
         return timestep.obs, reward, terminated, truncated, info
 
     def log_to_disk(self):
@@ -412,6 +415,10 @@ class SequenceWrapper(gym.Wrapper):
     @property
     def total_frames(self):
         return self._total_frames
+
+    @property
+    def total_frames_by_env_name(self):
+        return self._total_frames_by_env
 
     def turn_off_exploration(self):
         if isinstance(self.env, ExplorationWrapper):

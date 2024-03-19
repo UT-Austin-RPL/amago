@@ -3,6 +3,7 @@ import time
 import warnings
 import contextlib
 from dataclasses import dataclass
+from collections import defaultdict
 from functools import partial
 from typing import Callable
 
@@ -521,11 +522,20 @@ class Experiment:
 
         self.train_envs.call_async("total_frames")
         total_frames = sum(self.train_envs.call_wait())
+        self.train_envs.call_async("total_frames_by_env_name")
+        frames_by_env_name = self.train_envs.call_wait()
+        total_frames_by_env_name = defaultdict(int)
+        for env_frames in frames_by_env_name:
+            for env_name, frames in env_frames.items():
+                total_frames_by_env_name[f"total_frames-{env_name}"] += frames
+
         if self.log_to_wandb:
-            wandb.log(
+            log_dict = (
                 {f"{key}/{subkey}": val for subkey, val in log_dict.items()}
                 | {"total_frames": total_frames}
+                | dict(total_frames_by_env_name)
             )
+            wandb.log(log_dict)
 
     def make_figures(self, loss_info) -> dict[str, wandb.Image]:
         """
