@@ -10,6 +10,7 @@ import numpy as np
 from einops import rearrange
 
 from amago.nets.utils import activation_switch
+from amago.nets.ff import Normalization
 
 
 def weight_init(m):
@@ -81,15 +82,31 @@ class DrQCNN(CNN):
         return x
 
 
+@gin.configurable(allowlist=["channels", "kernels", "strides"])
 class NatureishCNN(CNN):
-    def __init__(self, img_shape: tuple[int], channels_first: bool, activation):
+    def __init__(
+        self,
+        img_shape: tuple[int],
+        channels_first: bool,
+        activation: str,
+        channels: list[int] = [32, 64, 64],
+        kernels: list[int] = [8, 4, 3],
+        strides: list[int] = [4, 2, 1],
+    ):
+        assert len(channels) == 3 and len(kernels) == 3 and len(strides) == 3
         super().__init__(
             img_shape, channels_first=channels_first, activation=activation
         )
         C = img_shape[0] if self.channels_first else img_shape[-1]
-        self.conv1 = nn.Conv2d(C, 32, kernel_size=8, stride=4)
-        self.conv2 = nn.Conv2d(32, 64, kernel_size=4, stride=2)
-        self.conv3 = nn.Conv2d(64, 64, kernel_size=3, stride=1)
+        self.conv1 = nn.Conv2d(
+            C, channels[0], kernel_size=kernels[0], stride=strides[0]
+        )
+        self.conv2 = nn.Conv2d(
+            channels[0], channels[1], kernel_size=kernels[1], stride=strides[1]
+        )
+        self.conv3 = nn.Conv2d(
+            channels[1], channels[2], kernel_size=kernels[2], stride=strides[2]
+        )
         self.apply(weight_init)
 
     def conv_forward(self, imgs):
@@ -97,3 +114,64 @@ class NatureishCNN(CNN):
         x = self.activation(self.conv2(x))
         x = self.activation(self.conv3(x))
         return x
+
+
+@gin.configurable(allowlist=["cnn_block_depths", "post_group_norm"])
+class IMPALAishCNN(CNN):
+    def __init__(
+        self,
+        img_shape: tuple[int],
+        channels_first: bool,
+        activation: str,
+        cnn_block_depths: list[int] = [16, 32, 32],
+        post_group_norm: bool = True,
+    ):
+        super().__init__(
+            img_shape, channels_first=channels_first, activation=activation
+        )
+
+        class _ResidualBlock(nn.Module):
+            def __init__(self, depth: int):
+                super().__init__()
+                self.conv1 = nn.Conv2d(
+                    depth, depth, kernel_size=3, stride=1, padding="same"
+                )
+                self.conv2 = nn.Conv2d(
+                    depth, depth, kernel_size=3, stride=1, padding="same"
+                )
+                self.activation = activation_switch(activation)
+                self.norm = nn.GroupNorm(4, depth) if post_group_norm else lambda i: i
+
+            def forward(self, x):
+                xp = self.conv1(self.activation(x))
+                xp = self.conv2(self.activation(xp))
+                xp = self.norm(xp)
+                return x + xp
+
+        class _IMPALAConvBlock(nn.Module):
+            def __init__(self, inp_c: int, depth: int):
+                super().__init__()
+                self.conv = nn.Conv2d(
+                    inp_c, depth, kernel_size=3, stride=1, padding="same"
+                )
+                self.pool = nn.MaxPool2d(3, stride=2)
+                self.residual1 = _ResidualBlock(depth)
+                self.residual2 = _ResidualBlock(depth)
+
+            def forward(self, x):
+                x = self.conv(x)
+                x = self.pool(x)
+                x = self.residual1(x)
+                x = self.residual2(x)
+                return x
+
+        channels = [img_shape[0 if channels_first else -1]] + cnn_block_depths
+        blocks = []
+        for inp, out in zip(channels, channels[1:]):
+            blocks.append(_IMPALAConvBlock(inp, out))
+        self.blocks = nn.ModuleList(blocks)
+
+    def conv_forward(self, imgs: torch.Tensor) -> torch.Tensor:
+        for block in self.blocks:
+            imgs = block(imgs)
+        return imgs

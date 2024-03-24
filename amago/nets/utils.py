@@ -1,9 +1,23 @@
+from typing import Optional
+
 import torch
 from torch import nn
 from torch.nn import functional as F
 import gin
 
 from amago.loading import MAGIC_PAD_VAL
+
+
+def add_activation_log(
+    root_key: str, activation: torch.Tensor, log_dict: Optional[dict] = None
+):
+    if log_dict is None:
+        return
+    with torch.no_grad():
+        log_dict[f"activation-{root_key}-max"] = activation.max()
+        log_dict[f"activation-{root_key}-min"] = activation.min()
+        log_dict[f"activation-{root_key}-std"] = activation.std()
+        log_dict[f"activation-{root_key}-mean"] = activation.mean()
 
 
 @gin.configurable

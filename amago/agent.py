@@ -234,11 +234,12 @@ class Agent(nn.Module):
         """
         # fmt: off
         self.update_info = {}  # holds wandb stats
+        active_log_dict = self.update_info if log_step else None
 
         ##########################
         ## Step 0: Timestep Emb ##
         ##########################
-        o = self.tstep_encoder(obs=batch.obs, goals=batch.goals, rl2s=batch.rl2s)
+        o = self.tstep_encoder(obs=batch.obs, goals=batch.goals, rl2s=batch.rl2s, log_dict=active_log_dict)
 
         ###########################
         ## Step 1: Get Organized ##

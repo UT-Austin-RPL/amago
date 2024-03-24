@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Callable
+from typing import Callable, Optional
 import math
 
 import torch
@@ -9,7 +9,7 @@ from einops import rearrange
 import gin
 
 from amago.nets.goal_embedders import FFGoalEmb, TokenGoalEmb
-from amago.nets.utils import InputNorm
+from amago.nets.utils import InputNorm, add_activation_log
 from amago.nets import ff, cnn
 
 
@@ -24,13 +24,13 @@ class TstepEncoder(nn.Module, ABC):
         self.goal_emb = goal_emb_Cls(goal_length=goal_length, goal_dim=goal_dim)
         self.goal_emb_dim = self.goal_emb.goal_emb_dim
 
-    def forward(self, obs, goals, rl2s):
+    def forward(self, obs, goals, rl2s, log_dict: Optional[dict] = None):
         goal_rep = self.goal_emb(goals)
-        out = self.inner_forward(obs, goal_rep, rl2s)
+        out = self.inner_forward(obs, goal_rep, rl2s, log_dict=log_dict)
         return out
 
     @abstractmethod
-    def inner_forward(self, obs, goal_rep, rl2s):
+    def inner_forward(self, obs, goal_rep, rl2s, log_dict: Optional[dict] = None):
         pass
 
     @property
@@ -73,7 +73,7 @@ class FFTstepEncoder(TstepEncoder):
         self._emb_dim = d_output
         self.hide_rl2s = hide_rl2s
 
-    def inner_forward(self, obs, goal_rep, rl2s):
+    def inner_forward(self, obs, goal_rep, rl2s, log_dict: Optional[dict] = None):
         # multi-modal envs that do not use the default `observation` key need their own custom encoders.
         obs = obs["observation"]
         B, L, *_ = obs.shape
@@ -84,7 +84,8 @@ class FFTstepEncoder(TstepEncoder):
         if self.training:
             self.in_norm.update_stats(flat_obs_rl2)
         obs_rl2_goals = torch.cat((flat_obs_rl2, goal_rep), dim=-1)
-        out = self.out_norm(self.base(obs_rl2_goals))
+        prenorm = self.base(obs_rl2_goals)
+        out = self.out_norm(prenorm)
         return out
 
     @property
@@ -133,7 +134,7 @@ class CNNTstepEncoder(TstepEncoder):
         self.hide_rl2s = hide_rl2s
         self._emb_dim = d_output
 
-    def inner_forward(self, obs, goal_rep, rl2s):
+    def inner_forward(self, obs, goal_rep, rl2s, log_dict: Optional[dict] = None):
         # multi-modal envs that do not use the default `observation` key need their own custom encoders.
         obs = obs["observation"]
         img_rep = self.img_features(self.cnn(obs))
