@@ -8,6 +8,14 @@ import gin
 from amago.loading import MAGIC_PAD_VAL
 
 
+def symlog(x):
+    return torch.sign(x) * torch.log(abs(x) + 1)
+
+
+def symexp(x):
+    return torch.sign(x) * (torch.exp(abs(x)) - 1)
+
+
 def add_activation_log(
     root_key: str, activation: torch.Tensor, log_dict: Optional[dict] = None
 ):
