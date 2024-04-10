@@ -62,6 +62,50 @@ class CNN(nn.Module, ABC):
         return features
 
 
+class DrQv2Aug(nn.Module):
+    """
+    https://github.com/facebookresearch/drqv2/blob/main/drqv2.py
+    """
+
+    def __init__(self, pad: int, channels_first: bool):
+        super().__init__()
+        self.pad = pad
+        self.channels_first = channels_first
+
+    def forward(self, x):
+        if self.channels_first:
+            B, L, c, h, w = x.shape
+            x = rearrange(x, "b l c h w -> (b l) c h w")
+        else:
+            B, L, h, w, c = x.shape
+            x = rearrange(x, "b l h w c -> (b l) c h w")
+        b, *_ = x.shape
+        assert h == w
+
+        padding = tuple([self.pad] * 4)
+        x = F.pad(x, padding, "replicate")
+        eps = 1.0 / (h + 2 * self.pad)
+        arange = torch.linspace(
+            -1.0 + eps, 1.0 - eps, h + 2 * self.pad, device=x.device, dtype=x.dtype
+        )[:h]
+        arange = arange.unsqueeze(0).repeat(h, 1).unsqueeze(2)
+        base_grid = torch.cat([arange, arange.transpose(1, 0)], dim=2)
+        base_grid = base_grid.unsqueeze(0).repeat(b, 1, 1, 1)
+        shift = torch.randint(
+            0, 2 * self.pad + 1, size=(b, 1, 1, 2), device=x.device, dtype=x.dtype
+        )
+        shift *= 2.0 / (h + 2 * self.pad)
+        grid = base_grid + shift
+        out = F.grid_sample(x, grid, padding_mode="zeros", align_corners=False)
+
+        if self.channels_first:
+            out = rearrange(out, "(b l) c h w -> b l c h w", b=B, l=L)
+        else:
+            out = rearrange(out, "(b l) c h w -> b l h w c", b=B, l=L)
+
+        return out
+
+
 class DrQCNN(CNN):
     def __init__(self, img_shape: tuple[int], channels_first: bool, activation: str):
         super().__init__(
@@ -145,8 +189,7 @@ class IMPALAishCNN(CNN):
             def forward(self, x):
                 xp = self.conv1(self.activation(x))
                 xp = self.conv2(self.activation(xp))
-                xp = self.norm(xp)
-                return x + xp
+                return self.norm(x + xp)
 
         class _IMPALAConvBlock(nn.Module):
             def __init__(self, inp_c: int, depth: int):
