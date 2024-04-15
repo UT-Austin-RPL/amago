@@ -19,7 +19,7 @@ from amago.envs.builtin.gym_envs import GymEnv
 
 
 class AtariAMAGOWrapper(GymEnv):
-    def __init__(self, env: gym.Env, horizon = math.ceil(108_000 / 4) + 1):
+    def __init__(self, env: gym.Env, horizon = math.ceil(108_000 / 5) + 1):
         assert isinstance(env, AtariGame | ALE)
         super().__init__(
             gym_env=env,
