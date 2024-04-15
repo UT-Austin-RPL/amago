@@ -199,6 +199,7 @@ class Experiment:
         if not os.path.exists(self.ckpt_dir):
             os.makedirs(self.ckpt_dir)
         self.epoch = 0
+        self.grad_steps = 0
 
     def load_checkpoint(
         self,
@@ -225,11 +226,11 @@ class Experiment:
             return
 
         tries = 0
-        while tries < 10:
+        while tries < 20:
             try:
                 tries += 1
                 ckpt = torch.load(ckpt_path, map_location=self.DEVICE)
-            except RuntimeError as e:
+            except:
                 if loading_latest:
                     time.sleep(1)
                     warnings.warn("Error loading latest checkpoint. Retrying.")
@@ -244,6 +245,7 @@ class Experiment:
         self.policy.load_state_dict(ckpt["model_state"])
         self.optimizer.load_state_dict(ckpt["optimizer_state"])
         self.epoch = ckpt["epoch"]
+        self.grad_steps = ckpt["grad_steps"]
         self.grad_scaler.load_state_dict(ckpt["grad_scaler"])
         self.best_return = ckpt["best_return"]
 
@@ -253,6 +255,7 @@ class Experiment:
             "model_state": self.policy.state_dict(),
             "optimizer_state": self.optimizer.state_dict(),
             "epoch": self.epoch,
+            "grad_steps": self.grad_steps,
             "grad_scaler": self.grad_scaler.state_dict(),
             "best_return": self.best_return,
         }
@@ -532,7 +535,11 @@ class Experiment:
         if self.log_to_wandb:
             log_dict = (
                 {f"{key}/{subkey}": val for subkey, val in log_dict.items()}
-                | {"total_frames": total_frames}
+                | {
+                    "total_frames": total_frames,
+                    "grad_steps": self.grad_steps,
+                    "epoch": self.epoch,
+                }
                 | dict(total_frames_by_env_name)
             )
             wandb.log(log_dict)
@@ -639,6 +646,7 @@ class Experiment:
         self.policy.soft_sync_targets()
         if self.half_precision and log_step:
             l["Half-Precision Grad Scaler Scale"] = self.grad_scaler.get_scale()
+        self.grad_steps += 1
         return l
 
     def caster(self):
