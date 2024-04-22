@@ -218,7 +218,7 @@ class Experiment:
             ckpt_name = f"{self.run_name}_{'LATEST' if loading_latest else 'BEST'}.pt"
 
         ckpt_path = os.path.join(self.ckpt_dir, ckpt_name)
-        if not os.path.exists(ckpt_path):
+        if not os.path.exists(ckpt_path) and loading_latest:
             missing_ckpt_msg = "Skipping checkpoint load; file not found"
             warnings.warn(missing_ckpt_msg, category=Warning)
             if self.verbose:
@@ -230,7 +230,7 @@ class Experiment:
             try:
                 tries += 1
                 ckpt = torch.load(ckpt_path, map_location=self.DEVICE)
-            except:
+            except Exception as e:
                 if loading_latest:
                     time.sleep(1)
                     warnings.warn("Error loading latest checkpoint. Retrying.")
@@ -239,8 +239,6 @@ class Experiment:
                     raise e
             else:
                 break
-        else:
-            breakpoint()
 
         self.policy.load_state_dict(ckpt["model_state"])
         self.optimizer.load_state_dict(ckpt["optimizer_state"])
@@ -504,6 +502,7 @@ class Experiment:
         )
         Par = gym.vector.AsyncVectorEnv if self.async_envs else DummyAsyncVectorEnv
         test_envs = Par([make for _ in range(self.parallel_actors)])
+        test_envs.reset()
         *_, returns, successes = self.interact(
             test_envs,
             timesteps,
