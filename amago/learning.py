@@ -76,6 +76,7 @@ class Experiment:
     log_interval: int = 250
     ckpt_interval: int = 20
     save_latest_ckpt: bool = False
+    save_best_ckpt : bool = True
     always_load_latest_ckpt: bool = False
 
     # Optimization
@@ -490,8 +491,9 @@ class Experiment:
             if self.verbose:
                 print(f"Average Return : {cur_return}")
             if cur_return >= self.best_return:
-                self.save_checkpoint(saving_best=True)
                 self.best_return = cur_return
+                if self.save_best_ckpt:
+                    self.save_checkpoint(saving_best=True)
             self.log(logs, key="val")
 
     def evaluate_test(
