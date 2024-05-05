@@ -172,11 +172,11 @@ class ALE(gym.Env):
 
 
 class RetroAMAGOWrapper(GymEnv):
-    def __init__(self, env: gym.Env):
+    def __init__(self, env: gym.Env, horizon : int):
         super().__init__(
             gym_env=env,
             env_name="RetroArcade-placeholder",
-            horizon=env.time_limit + 1,
+            horizon=horizon,
             start=0,
             zero_shot=True,
         )

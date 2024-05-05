@@ -1,10 +1,12 @@
 import os
+import warnings
 import random
 import shutil
 import pickle
 from dataclasses import dataclass
 from operator import itemgetter
 from functools import partial
+from typing import Optional
 
 import torch
 import torch.nn.functional as F
@@ -170,14 +172,46 @@ class Batch:
     actions: torch.Tensor
     time_idxs: torch.Tensor
 
+    @property
+    def batch_dim(self):
+        return self.rews.shape[0]
+
     def to(self, device):
         self.obs = {k: v.to(device) for k, v in self.obs.items()}
+        self._active_obs_keys = list(self.obs.keys())
         self.goals = self.goals.to(device)
         self.rl2s = self.rl2s.to(device)
         self.rews = self.rews.to(device)
         self.dones = self.dones.to(device)
         self.actions = self.actions.to(device)
         self.time_idxs = self.time_idxs.to(device)
+
+    def flatten(self, discard_batch_from_idx : Optional[int] = None) -> dict[str, torch.Tensor]:
+        b = slice(0, discard_batch_from_idx or self.batch_dim)
+        flat = {f"___OBSKEY___{k}" : v[b] for k,v in self.obs.items()}
+        flat.update({
+            "goals" : self.goals[b],
+            "rl2s" : self.rl2s[b],
+            "rews" : self.rews[b],
+            "dones" : self.dones[b],
+            "actions" : self.actions[b],
+            "time_idxs" : self.time_idxs[b],
+            "doing_it_correctly" : True,
+        })
+        return flat
+    
+    @classmethod
+    def from_flat(cls, **kwargs):
+        assert "doing_it_correctly" in kwargs
+        del kwargs["doing_it_correctly"]
+        obs = {}
+        other = {}
+        for key, val in kwargs.items():
+            if key.startswith("___OBSKEY___"):
+                obs[key.replace("___OBSKEY___", "", 1)] = val
+            else:
+                other[key] = val
+        return cls(obs=obs, **other)
 
 
 def RLData_pad_collate(samples: list[RLData]) -> Batch:

@@ -5,7 +5,7 @@ import contextlib
 from dataclasses import dataclass
 from collections import defaultdict
 from functools import partial
-from typing import Callable
+from typing import Callable, Iterable
 
 import torch
 from torch import nn
@@ -41,7 +41,7 @@ class Experiment:
     max_seq_len: int
     traj_save_len: int
     run_name: str
-    gpu: int
+    gpus: Iterable[int]
     async_envs: bool = True
     share_train_val_envs: bool = False
     agent_Cls: Callable = Agent
@@ -95,7 +95,7 @@ class Experiment:
     sample_actions: bool = True
 
     def start(self):
-        self.DEVICE = torch.device(f"cuda:{self.gpu}" if self.gpu >= 0 else "cpu")
+        self.set_devices()
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             self.init_envs()
@@ -107,6 +107,13 @@ class Experiment:
         self.init_logger()
         if self.verbose:
             self.summary()
+
+    def set_devices(self):
+        if isinstance(self.gpus, int):
+            self.gpus = [self.gpus]
+        assert isinstance(self.gpus, Iterable), "Pass `gpus` as an int (or list of int device IDs)"
+        self.ALL_DEVICES = [torch.device(f"cuda:{gpu}" if gpu >= 0 else "cpu") for gpu in self.gpus]
+        self.DEVICE = self.ALL_DEVICES[0]
 
     def summary(self):
         total_params = 0
@@ -355,6 +362,10 @@ class Experiment:
         self.policy = self.agent_Cls(**policy_kwargs)
         assert isinstance(self.policy, Agent)
         self.policy.to(self.DEVICE)
+        if len(self.ALL_DEVICES) > 1:
+            self.dp_policy = nn.DataParallel(self.policy, device_ids=self.ALL_DEVICES, output_device=self.DEVICE)
+        else:
+            self.dp_policy = self.policy
 
     def interact(
         self,
@@ -585,15 +596,23 @@ class Experiment:
     def compute_loss(self, batch: Batch, log_step: bool):
         batch.to(self.DEVICE)
         with self.caster():
-            critic_loss, actor_loss = self.policy(batch, log_step=log_step)
+            # compute loss function in forward pass of the Agent
+            critic_loss, actor_loss = self.dp_policy(**batch.flatten(), log_step=log_step)
+            update_info = {}
+            if log_step:
+                # burn an entire (grad free) forward pass just to avoid dealing
+                # with getting the logging info back through nn.DataParallel...
+                with torch.no_grad():
+                    discard_after = batch.batch_dim // len(self.ALL_DEVICES)
+                    self.policy(**batch.flatten(discard_after), log_step=log_step)
+                    update_info = self.policy.update_info
 
-        update_info = self.policy.update_info
+        # mask padded timesteps in the sequence
         B, L_1, G, _ = actor_loss.shape
         C = len(self.policy.critics)
         state_mask = (~((batch.rl2s == MAGIC_PAD_VAL).all(-1, keepdim=True))).float()
         critic_state_mask = repeat(state_mask[:, 1:, ...], f"B L 1 -> B L {C} {G} 1")
         actor_state_mask = repeat(state_mask[:, :-1, ...], f"B L 1 -> B L {G} 1")
-
         masked_actor_loss = (
             actor_state_mask * actor_loss
         ).sum() / actor_state_mask.sum()
