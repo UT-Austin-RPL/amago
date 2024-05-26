@@ -80,9 +80,9 @@ class FFTstepEncoder(TstepEncoder):
         if self.hide_rl2s:
             rl2s = rl2s * 0
         flat_obs_rl2 = torch.cat((obs.view(B, L, -1).float(), rl2s), dim=-1)
-        flat_obs_rl2 = self.in_norm(flat_obs_rl2)
         if self.training:
             self.in_norm.update_stats(flat_obs_rl2)
+        flat_obs_rl2 = self.in_norm(flat_obs_rl2)
         obs_rl2_goals = torch.cat((flat_obs_rl2, goal_rep), dim=-1)
         prenorm = self.base(obs_rl2_goals)
         out = self.out_norm(prenorm)
