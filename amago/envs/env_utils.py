@@ -202,14 +202,16 @@ class ExplorationWrapper(gym.ActionWrapper):
         self,
         env: gym.Env,
         eps_start_start: float = 1.0,
-        eps_start_end: float = 0.05,
-        eps_end_start: float = 0.8,
-        eps_end_end: float = 0.01,
-        steps_anneal: int = 1_000_000,
+        eps_start_end: float = 1.0,
+        eps_end_start: float = .15,
+        eps_end_end: float = .15,
+        steps_anneal: int = 10_000_000,
     ):
         super().__init__(env)
+        print("settings changed for Atari")
 
         self.eps_start_start = eps_start_start
+        print(self.eps_start_start)
         self.eps_start_end = eps_start_end
         self.eps_end_start = eps_end_start
         self.eps_end_end = eps_end_end
@@ -228,6 +230,7 @@ class ExplorationWrapper(gym.ActionWrapper):
     def reset(self, *args, **kwargs):
         out = super().reset(*args, **kwargs)
         self.global_multiplier = random.random()
+        np.random.seed(random.randint(0, 1_000_00))
         return out
 
     def current_eps(self, local_step: int, horizon: int):

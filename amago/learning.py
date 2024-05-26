@@ -5,7 +5,7 @@ import contextlib
 from dataclasses import dataclass
 from collections import defaultdict
 from functools import partial
-from typing import Callable
+from typing import Callable, Iterable
 
 import torch
 from torch import nn
@@ -35,7 +35,7 @@ from .hindsight import Relabeler, RelabelWarning
 @dataclass
 class Experiment:
     # General
-    make_train_env: Callable
+    make_train_env: Callable | Iterable[Callable]
     make_val_env: Callable
     parallel_actors: int
     max_seq_len: int
@@ -179,15 +179,25 @@ class Experiment:
             return env
 
         Par = gym.vector.AsyncVectorEnv if self.async_envs else DummyAsyncVectorEnv
-        make_train_env = partial(_make_env, self.make_train_env, "train")
-        self.train_envs = Par([make_train_env for _ in range(self.parallel_actors)])
+
+        if isinstance(self.make_train_env, Iterable):
+            assert len(self.make_train_env) == self.parallel_actors
+            train_env_funcs = [
+                partial(_make_env, func_i, "train") for func_i in self.make_train_env
+            ]
+        else:
+            make_train_env = partial(_make_env, self.make_train_env, "train")
+            train_env_funcs = [make_train_env for _ in range(self.parallel_actors)]
+        self.train_envs = Par(train_env_funcs)
         self.train_envs.reset()
+
         if not self.share_train_val_envs:
             make_val_env = partial(_make_env, self.make_val_env, "val")
             self.val_envs = Par([make_val_env for _ in range(self.parallel_actors)])
             self.val_envs.reset()
         else:
             self.val_envs = self.train_envs
+
         # self.train_buffers holds the env state between rollout cycles
         # that are shorter than the horizon length
         self.train_buffers = None
