@@ -1,3 +1,7 @@
+import warnings
+import time
+import os
+
 import numpy as np
 from torch import nn
 
@@ -27,3 +31,25 @@ def get_grad_norm(model):
             total_norm += param_norm.item() ** 2
     total_norm = total_norm ** (1.0 / 2)
     return total_norm
+
+
+def retry_load_checkpoint(ckpt_path, map_location, tries: int = 10):
+    if not os.path.exists(ckpt_path):
+        warnings.warn("Skipping checkpoint load; file not found.", category=Warning)
+        return
+
+    attempts = 0
+    while attempts < tries:
+        attempts += 1
+        try:
+            ckpt = torch.load(ckpt_path, map_location=map_location)
+        except RuntimeError as e:
+            warnings.warn(
+                f"Error loading checkpoint. {'Retrying...' if attempts < tries else 'Failed'}"
+            )
+            time.sleep(1)
+            continue
+        else:
+            break
+
+    return ckpt

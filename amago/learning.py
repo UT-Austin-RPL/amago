@@ -205,7 +205,6 @@ class Experiment:
         if epoch is not None:
             assert not (loading_best or loading_latest)
             ckpt_name = f"{self.run_name}_epoch_{epoch}.pt"
-
         else:
             assert (
                 loading_best or loading_latest and not (loading_best and loading_latest)
@@ -213,30 +212,11 @@ class Experiment:
             ckpt_name = f"{self.run_name}_{'LATEST' if loading_latest else 'BEST'}.pt"
 
         ckpt_path = os.path.join(self.ckpt_dir, ckpt_name)
-        if not os.path.exists(ckpt_path):
-            missing_ckpt_msg = "Skipping checkpoint load; file not found"
-            warnings.warn(missing_ckpt_msg, category=Warning)
-            if self.verbose:
-                print(missing_ckpt_msg)
+        ckpt = utils.retry_load_checkpoint(
+            ckpt_path, map_location=self.DEVICE, tries=10 if loading_latest else 1
+        )
+        if ckpt is None:
             return
-
-        tries = 0
-        while tries < 10:
-            try:
-                tries += 1
-                ckpt = torch.load(ckpt_path, map_location=self.DEVICE)
-            except RuntimeError as e:
-                if loading_latest:
-                    time.sleep(1)
-                    warnings.warn("Error loading latest checkpoint. Retrying.")
-                    continue
-                else:
-                    raise e
-            else:
-                break
-        else:
-            breakpoint()
-
         self.policy.load_state_dict(ckpt["model_state"])
         self.optimizer.load_state_dict(ckpt["optimizer_state"])
         self.epoch = ckpt["epoch"]
