@@ -235,6 +235,59 @@ class Actor(nn.Module):
             )
 
 
+class _EinMixEnsemble(nn.Module):
+    def __init__(
+        self,
+        ensemble_size: int,
+        inp_dim: int,
+        d_hidden: int,
+        n_layers: int,
+        out_dim: int,
+        activation: str,
+        dropout_p: float,
+    ):
+        super().__init__()
+        self.inp_layer = Mix(
+            "b l d_in -> b l c d_out",
+            weight_shape="c d_in d_out",
+            bias_shape="c d_out",
+            c=ensemble_size,
+            d_in=inp_dim,
+            d_out=d_hidden,
+        )
+        self.core_layers = nn.ModuleList(
+            [
+                Mix(
+                    "b l c d_in -> b l c d_out",
+                    weight_shape="c d_in d_out",
+                    bias_shape="c d_out",
+                    c=ensemble_size,
+                    d_in=d_hidden,
+                    d_out=d_hidden,
+                )
+                for _ in range(n_layers - 1)
+            ]
+        )
+
+        self.output_layer = Mix(
+            "b l c d_in -> b l c d_out",
+            weight_shape="c d_in d_out",
+            bias_shape="c d_out",
+            c=ensemble_size,
+            d_in=d_hidden,
+            d_out=out_dim,
+        )
+        self.dropout = nn.Dropout(dropout_p)
+        self.activation = activation_switch(activation)
+
+    def forward(self, inp):
+        phis = self.dropout(self.activation(self.inp_layer(inp)))
+        for layer in self.core_layers:
+            phis = self.dropout(self.activation(layer(phis)))
+        outputs = self.output_layer(phis)
+        return outputs, phis
+
+
 @gin.configurable(denylist=["state_dim", "action_dim", "discrete", "num_critics"])
 class NCritics(nn.Module):
     def __init__(
@@ -260,40 +313,15 @@ class NCritics(nn.Module):
             out_dim = 1
         else:
             out_dim = self.num_gammas * action_dim
-
-        # https://colab.research.google.com/drive/1WKgs2EPUm6UPP0j4aua5kroI18oFZ2a3?usp=sharing
-        self.inp_layer = Mix(
-            "b l d_in -> b l c d_out",
-            weight_shape="c d_in d_out",
-            bias_shape="c d_out",
-            c=num_critics,
-            d_in=inp_dim,
-            d_out=d_hidden,
+        self.net = _EinMixEnsemble(
+            ensemble_size=num_critics,
+            inp_dim=inp_dim,
+            d_hidden=d_hidden,
+            n_layers=n_layers,
+            out_dim=out_dim,
+            dropout_p=dropout_p,
+            activation=activation,
         )
-        self.dropout = nn.Dropout(dropout_p)
-        self.core_layers = nn.ModuleList(
-            [
-                Mix(
-                    "b l c d_in -> b l c d_out",
-                    weight_shape="c d_in d_out",
-                    bias_shape="c d_out",
-                    c=num_critics,
-                    d_in=d_hidden,
-                    d_out=d_hidden,
-                )
-                for _ in range(n_layers - 1)
-            ]
-        )
-
-        self.output_layer = Mix(
-            "b l c d_in -> b l c d_out",
-            weight_shape="c d_in d_out",
-            bias_shape="c d_out",
-            c=num_critics,
-            d_in=d_hidden,
-            d_out=out_dim,
-        )
-        self.activation = activation_switch(activation)
 
     def __len__(self):
         return self.num_critics
@@ -313,10 +341,7 @@ class NCritics(nn.Module):
             # clip to remove DPG incentive to push actions to [-1, 1] border
             clip_action = action.clamp(-0.999, 0.999)
             inp = torch.cat((state, gammas, clip_action), dim=-1)
-        phis = self.dropout(self.activation(self.inp_layer(inp)))
-        for layer in self.core_layers:
-            phis = self.dropout(self.activation(layer(phis)))
-        outputs = self.output_layer(phis)
+        outputs, phis = self.net(inp)
         if self.discrete:
             outputs = rearrange(outputs, "b l c (g o) -> b l c g o", g=self.num_gammas)
             outputs = (outputs * clip_action.unsqueeze(2)).sum(-1, keepdims=True)

@@ -15,6 +15,7 @@ from tqdm import tqdm
 from einops import repeat
 import gymnasium as gym
 import gin
+from accelerate import Accelerator
 
 from . import utils
 from .agent import Agent

@@ -31,7 +31,12 @@ class Normalization(nn.Module):
 
 @gin.configurable(allowlist=["window_size"])
 class FlashAttention(nn.Module):
-    def __init__(self, causal: bool = True, attention_dropout: float = 0.0, window_size : tuple[int, int] = (-1, -1)):
+    def __init__(
+        self,
+        causal: bool = True,
+        attention_dropout: float = 0.0,
+        window_size: tuple[int, int] = (-1, -1),
+    ):
         super().__init__()
         self.dropout = attention_dropout
         self.causal = causal
