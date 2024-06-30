@@ -42,7 +42,6 @@ class Experiment:
     run_name: str
     gpu: int
     async_envs: bool = True
-    share_train_val_envs: bool = False
     agent_Cls: Callable = Agent
 
     # Logging
@@ -181,12 +180,10 @@ class Experiment:
         make_train_env = partial(_make_env, self.make_train_env, "train")
         self.train_envs = Par([make_train_env for _ in range(self.parallel_actors)])
         self.train_envs.reset()
-        if not self.share_train_val_envs:
-            make_val_env = partial(_make_env, self.make_val_env, "val")
-            self.val_envs = Par([make_val_env for _ in range(self.parallel_actors)])
-            self.val_envs.reset()
-        else:
-            self.val_envs = self.train_envs
+        make_val_env = partial(_make_env, self.make_val_env, "val")
+        self.val_envs = Par([make_val_env for _ in range(self.parallel_actors)])
+        self.val_envs.reset()
+
         # self.train_buffers holds the env state between rollout cycles
         # that are shorter than the horizon length
         self.train_buffers = None
@@ -470,19 +467,10 @@ class Experiment:
 
     def evaluate_val(self):
         if self.val_timesteps_per_epoch > 0:
-            if self.share_train_val_envs:
-                self.val_envs.call_async("turn_off_exploration")
-                self.val_envs.call_wait()
             *_, returns, successes = self.interact(
                 self.val_envs,
                 self.val_timesteps_per_epoch,
             )
-            if self.share_train_val_envs:
-                # make sure we reset again in case we're sharing val envs with train envs
-                self.val_envs.call_async("turn_on_exploration")
-                self.val_envs.call_wait()
-                self.val_envs.reset()
-                self.train_buffers, self.hidden_state = None, None
             logs = self.policy_metrics(returns, successes)
             cur_return = logs["Average Total Return (Across All Env Names)"]
             if self.verbose:
