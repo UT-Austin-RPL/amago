@@ -116,9 +116,9 @@ def add_common_cli(parser: ArgumentParser) -> ArgumentParser:
         help="Turn OFF fast-inference mode (key-value caching for Transformer, hidden state caching for RNN)",
     )
     parser.add_argument(
-        "--half_precision",
-        action="store_true",
-        help="Train in bfloat16 half precision",
+        "--mixed_precision",
+        choices=["no", "bf16"],
+        default="no",
     )
     parser.add_argument(
         "--dloader_workers",
@@ -315,7 +315,7 @@ def create_experiment_from_cli(
         start_learning_at_epoch=cli.start_learning_at_epoch,
         val_interval=cli.val_interval,
         ckpt_interval=cli.ckpt_interval,
-        half_precision=cli.half_precision,
+        mixed_precision=cli.mixed_precision,
         fast_inference=not cli.slow_inference,
         async_envs=not cli.no_async,
         **extra_experiment_kwargs,

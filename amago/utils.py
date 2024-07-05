@@ -5,6 +5,7 @@ import os
 import numpy as np
 import torch
 from torch import nn
+import gin
 
 from .loading import MAGIC_PAD_VAL
 
@@ -18,6 +19,14 @@ def stack_list_array_dicts(list_: list[dict[np.ndarray]], axis=0):
             else:
                 out[k] = [v]
     return {k: np.stack(v, axis=axis) for k, v in out.items()}
+
+
+def gin_as_wandb_config() -> dict:
+    config = gin.operative_config_str()
+    lines = config.split("\n")
+    params = [l.split("=") for l in lines if (not l.startswith("#") and "=" in l)]
+    params_dict = {k.strip(): v.strip() for k, v in params}
+    return params_dict
 
 
 def get_grad_norm(model):

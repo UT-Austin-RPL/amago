@@ -11,11 +11,11 @@ from torch import nn
 from torch.utils.data import DataLoader
 import wandb
 import numpy as np
-from tqdm import tqdm
 from einops import repeat
 import gymnasium as gym
 import gin
-from accelerate import Accelerator
+from accelerate import Accelerator, DistributedDataParallelKwargs
+from accelerate.utils import tqdm
 
 from . import utils
 from .agent import Agent
@@ -83,21 +83,26 @@ class Experiment:
     dloader_workers: int = 8
     learning_rate: float = 1e-4
     critic_loss_weight: float = 10.0
-    warmup_epochs: int = 10
     grad_clip: float = 1.0
     l2_coeff: float = 1e-3
-    half_precision: bool = False
     fast_inference: bool = True
+    mixed_precision: str = "no"
 
     # Exploration
     exploration_wrapper_Cls: Callable | None = ExplorationWrapper
     sample_actions: bool = True
 
     def start(self):
-        self.DEVICE = torch.device(f"cuda:{self.gpu}" if self.gpu >= 0 else "cpu")
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            self.init_envs()
+        self.accelerator = Accelerator(
+            gradient_accumulation_steps=1,
+            device_placement=True,
+            log_with="wandb",
+            kwargs_handlers=[
+                DistributedDataParallelKwargs(find_unused_parameters=True)
+            ],
+            mixed_precision=self.mixed_precision,
+        )
+        self.init_envs()
         self.init_dsets()
         self.init_dloaders()
         self.init_model()
@@ -106,6 +111,10 @@ class Experiment:
         self.init_logger()
         if self.verbose:
             self.summary()
+
+    @property
+    def DEVICE(self):
+        return self.accelerator.device
 
     def summary(self):
         total_params = 0
@@ -128,14 +137,14 @@ class Experiment:
                 "Fixed Context with Invalid Relabeling (Approximate Meta-RL / POMDPs)"
             )
 
-        print(
+        self.accelerator.print(
             f"""\n\n \t\t AMAGO
             \t -------------------------
             \t Environment Horizon: {self.horizon}
             \t Policy Max Sequence Length: {self.max_seq_len}
             \t Trajectory File Sequence Length: {self.traj_save_len}
             \t Mode: {mode}
-            \t Half Precision: {self.half_precision}
+            \t Mixed Precision: {self.mixed_precision.upper()}
             \t Fast Inference: {self.fast_inference}
             \t Total Parameters: {total_params:,d} \n\n"""
         )
@@ -175,7 +184,6 @@ class Experiment:
         self.hidden_state = None
 
     def init_checkpoints(self):
-        self.best_return = -float("inf")
         self.ckpt_dir = os.path.join(self.dset_root, self.dset_name, "ckpts")
         if not os.path.exists(self.ckpt_dir):
             os.makedirs(self.ckpt_dir)
@@ -185,40 +193,22 @@ class Experiment:
         self,
         epoch: int = None,
         loading_latest: bool = False,
-        loading_best: bool = False,
     ):
+        breakpoint()
         if epoch is not None:
-            assert not (loading_best or loading_latest)
-            ckpt_name = f"{self.run_name}_epoch_{epoch}.pt"
+            ckpt_name = f"{self.run_name}_epoch_{epoch}"
+            self.epoch = epoch
         else:
-            ckpt_name = f"{self.run_name}_{'LATEST' if loading_latest else 'BEST'}.pt"
+            ckpt_name = f"{self.run_name}_LATEST"
         ckpt_path = os.path.join(self.ckpt_dir, ckpt_name)
-        ckpt = utils.retry_load_checkpoint(
-            ckpt_path, map_location=self.DEVICE, tries=10 if loading_latest else 1
-        )
-        if ckpt is not None:
-            self.policy.load_state_dict(ckpt["model_state"])
-            self.optimizer.load_state_dict(ckpt["optimizer_state"])
-            self.epoch = ckpt["epoch"]
-            self.grad_scaler.load_state_dict(ckpt["grad_scaler"])
-            self.best_return = ckpt["best_return"]
+        self.accelerator.load_state(ckpt_path)
 
-    def save_checkpoint(self, saving_latest: bool = False, saving_best: bool = False):
-        assert not (saving_latest and saving_best)
-        state_dict = {
-            "model_state": self.policy.state_dict(),
-            "optimizer_state": self.optimizer.state_dict(),
-            "epoch": self.epoch,
-            "grad_scaler": self.grad_scaler.state_dict(),
-            "best_return": self.best_return,
-        }
-        if saving_best:
-            ckpt_name = f"{self.run_name}_BEST.pt"
-        elif saving_latest:
-            ckpt_name = f"{self.run_name}_LATEST.pt"
+    def save_checkpoint(self, saving_latest: bool = False):
+        if saving_latest:
+            ckpt_name = f"{self.run_name}_LATEST"
         else:
-            ckpt_name = f"{self.run_name}_epoch_{self.epoch}.pt"
-        torch.save(state_dict, os.path.join(self.ckpt_dir, ckpt_name))
+            ckpt_name = f"{self.run_name}_epoch_{self.epoch}"
+        self.accelerator.save_state(os.path.join(self.ckpt_dir, ckpt_name))
 
     def init_dsets(self):
         if self.save_trajs_as != "trajectory" and self.relabel != "none":
@@ -247,20 +237,22 @@ class Experiment:
     def init_dloaders(self):
         self.train_dset.refresh_files()
         self.val_dset.refresh_files()
-
-        self.train_dloader = DataLoader(
+        train_dloader = DataLoader(
             self.train_dset,
             batch_size=self.batch_size,
             num_workers=self.dloader_workers,
             collate_fn=RLData_pad_collate,
             pin_memory=True,
         )
-        self.val_dloader = DataLoader(
+        val_dloader = DataLoader(
             self.val_dset,
             batch_size=self.batch_size,
             num_workers=self.dloader_workers,
             collate_fn=RLData_pad_collate,
             pin_memory=True,
+        )
+        self.train_dloader, self.val_dloader = self.accelerator.prepare(
+            train_dloader, val_dloader
         )
 
     def init_logger(self):
@@ -269,33 +261,31 @@ class Experiment:
         with open(config_path, "w") as f:
             f.write(gin_config)
         if self.log_to_wandb:
+            gin_as_wandb = utils.gin_as_wandb_config()
             log_dir = self.wandb_log_dir or os.path.join(self.dset_root, "wandb_logs")
             if not os.path.exists(log_dir):
                 os.makedirs(log_dir)
-            wandb.init(
-                project=self.wandb_project,
-                entity=self.wandb_entity,
-                dir=log_dir,
-                name=self.run_name,
-                group=self.wandb_group_name,
+            self.accelerator.init_trackers(
+                project_name=self.wandb_project,
+                config=gin_as_wandb,
+                init_kwargs={
+                    "wandb": dict(
+                        entity=self.wandb_entity,
+                        dir=log_dir,
+                        name=self.run_name,
+                        group=self.wandb_group_name,
+                    )
+                },
             )
             wandb.save(config_path)
 
     def init_optimizer(self):
-        self.optimizer = torch.optim.AdamW(
+        optimizer = torch.optim.AdamW(
             self.policy.trainable_params,
             lr=self.learning_rate,
             weight_decay=self.l2_coeff,
         )
-        self.warmup_scheduler = torch.optim.lr_scheduler.LinearLR(
-            self.optimizer,
-            start_factor=1e-8,
-            end_factor=1.0,
-            total_iters=self.train_grad_updates_per_epoch * self.warmup_epochs,
-        )
-        self.grad_scaler = torch.cuda.amp.GradScaler(
-            enabled=self.half_precision,
-        )
+        self.optimizer = self.accelerator.prepare(optimizer)
 
     def init_model(self):
         policy_kwargs = {
@@ -306,9 +296,9 @@ class Experiment:
             "max_seq_len": self.max_seq_len,
             "horizon": self.horizon,
         }
-        self.policy = self.agent_Cls(**policy_kwargs)
-        assert isinstance(self.policy, Agent)
-        self.policy.to(self.DEVICE)
+        policy = self.agent_Cls(**policy_kwargs)
+        assert isinstance(policy, Agent)
+        self.policy = self.accelerator.prepare(policy)
 
     def interact(
         self,
@@ -434,10 +424,7 @@ class Experiment:
             logs = self.policy_metrics(returns, successes)
             cur_return = logs["Average Total Return (Across All Env Names)"]
             if self.verbose:
-                print(f"Average Return : {cur_return}")
-            if cur_return >= self.best_return:
-                self.save_checkpoint(saving_best=True)
-                self.best_return = cur_return
+                self.accelerator.print(f"Average Return : {cur_return}")
             self.log(logs, key="val")
 
     def evaluate_test(
@@ -470,7 +457,7 @@ class Experiment:
         self.train_envs.call_async("total_frames")
         total_frames = sum(self.train_envs.call_wait())
         if self.log_to_wandb:
-            wandb.log(
+            self.accelerator.log(
                 {f"{key}/{subkey}": val for subkey, val in log_dict.items()}
                 | {"total_frames": total_frames}
             )
@@ -513,10 +500,7 @@ class Experiment:
         return avg_ret_per_env | avg_suc_per_env | avg_return_overall
 
     def compute_loss(self, batch: Batch, log_step: bool):
-        batch.to(self.DEVICE)
-        with self.caster():
-            critic_loss, actor_loss = self.policy(batch, log_step=log_step)
-
+        critic_loss, actor_loss = self.policy(batch, log_step=log_step)
         update_info = self.policy.update_info
         B, L_1, G, _ = actor_loss.shape
         C = len(self.policy.critics)
@@ -553,35 +537,24 @@ class Experiment:
         return grads
 
     def train_step(self, batch: Batch, log_step: bool):
-        """
-        See a simplified example of how this changes the classic
-        actor-critic update to support a shared sequnce model
-        optimized on the actor and critic losses simultaneously
-        without a target model:
-
-        https://colab.research.google.com/drive/1XO8MNd_DNArGyoAbroXoQeGblv7Jb9ND#scrollTo=xQe5yry0b6Hl
-        """
-        l = self.compute_loss(batch, log_step=log_step)
-        self.optimizer.zero_grad()
-        loss = l["actor_loss"] + self.critic_loss_weight * l["critic_loss"]
-        self.grad_scaler.scale(loss).backward()
-        self.grad_scaler.unscale_(self.optimizer)
-        if log_step:
-            l.update(self._get_grad_norms())
-        grad_norm = nn.utils.clip_grad_norm_(
-            self.policy.trainable_params, max_norm=self.grad_clip
-        )
-        l["Global Grad Norm"] = grad_norm
-        self.grad_scaler.step(self.optimizer)
-        self.grad_scaler.update()
-        self.policy.soft_sync_targets()
-        if self.half_precision and log_step:
-            l["Half-Precision Grad Scaler Scale"] = self.grad_scaler.get_scale()
+        with self.accelerator.accumulate(self.policy):
+            self.optimizer.zero_grad()
+            l = self.compute_loss(batch, log_step=log_step)
+            loss = l["actor_loss"] + self.critic_loss_weight * l["critic_loss"]
+            self.accelerator.backward(loss)
+            if self.accelerator.sync_gradients:
+                self.accelerator.clip_grad_norm_(
+                    self.policy.trainable_params, self.grad_clip
+                )
+                self.policy.soft_sync_targets()
+                if log_step:
+                    l.update(self._get_grad_norms())
+            self.optimizer.step()
         return l
 
     def caster(self):
-        if self.half_precision:
-            return torch.autocast(device_type="cuda", dtype=torch.bfloat16)
+        if self.mixed_precision != "no":
+            return torch.autocast(device_type="cuda")
         else:
             return contextlib.suppress()
 
@@ -636,8 +609,8 @@ class Experiment:
                 loss_dict = self.train_step(batch, log_step=log_step)
                 if log_step:
                     self.log(loss_dict, key="train-update")
-                self.warmup_scheduler.step(total_step)
 
+            """
             # validation
             if (
                 epoch % self.val_interval == 0
@@ -650,6 +623,7 @@ class Experiment:
                 figures = self.make_figures(loss_dict)
                 self.log(figures, key="val-update")
                 self.val_dset.clear()
+            """
 
             # buffer management
             dset_size = self.train_dset.count_trajectories()
@@ -670,3 +644,4 @@ class Experiment:
                 self.save_checkpoint()
             if self.save_latest_ckpt:
                 self.save_checkpoint(saving_latest=True)
+            self.accelerator.free_memory(self.train_dloader, self.val_dloader)

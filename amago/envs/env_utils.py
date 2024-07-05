@@ -442,7 +442,6 @@ class MakeEnvSaveToDisk:
     exploration_wrapper_Cls: Type[ExplorationWrapper]
 
     def __post_init__(self):
-        print("here")
         if self.max_seq_len < self.traj_save_len and self.stagger_traj_file_lengths:
             self.save_every_low = self.traj_save_len - self.max_seq_len
             self.save_every_high = self.traj_save_len + self.max_seq_len

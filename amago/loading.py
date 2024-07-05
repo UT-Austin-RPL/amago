@@ -178,6 +178,7 @@ class Batch:
         self.dones = self.dones.to(device)
         self.actions = self.actions.to(device)
         self.time_idxs = self.time_idxs.to(device)
+        return self
 
 
 def RLData_pad_collate(samples: list[RLData]) -> Batch:
