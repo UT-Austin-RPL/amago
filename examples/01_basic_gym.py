@@ -61,6 +61,7 @@ if __name__ == "__main__":
             run_name=run_name,
             group_name=group_name,
             val_timesteps_per_epoch=args.horizon * 5,
+            save_trajs_as="npz",
         )
 
         experiment.start()
