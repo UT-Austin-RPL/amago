@@ -26,6 +26,7 @@ from amago.envs.env_utils import (
     SequenceWrapper,
     GPUSequenceBuffer,
     DummyAsyncVectorEnv,
+    MakeEnvSaveToDisk,
 )
 from .loading import Batch, TrajDset, RLData_pad_collate, MAGIC_PAD_VAL
 from .hindsight import Relabeler, RelabelWarning
@@ -129,64 +130,47 @@ class Experiment:
 
         print(
             f"""\n\n \t\t AMAGO
-        \t -------------------------
-        \t Environment Horizon: {self.horizon}
-        \t Policy Max Sequence Length: {self.max_seq_len}
-        \t Trajectory File Sequence Length: {self.traj_save_len}
-        \t Mode: {mode}
-        \t Half Precision: {self.half_precision}
-        \t Fast Inference: {self.fast_inference}
-        \t Total Parameters: {total_params:,d} \n\n"""
+            \t -------------------------
+            \t Environment Horizon: {self.horizon}
+            \t Policy Max Sequence Length: {self.max_seq_len}
+            \t Trajectory File Sequence Length: {self.traj_save_len}
+            \t Mode: {mode}
+            \t Half Precision: {self.half_precision}
+            \t Fast Inference: {self.fast_inference}
+            \t Total Parameters: {total_params:,d} \n\n"""
         )
 
     def init_envs(self):
         assert self.traj_save_len >= self.max_seq_len
-        if self.max_seq_len < self.traj_save_len and self.stagger_traj_file_lengths:
-            # staggered traj file lengths fix a potential bug where, for example,
-            # a policy with a max_seq_len of 10 trained on trajectory files
-            # of length 100 has never seen the sequence of [t=95,...,t=105]
-            # during training.
-            save_every_low = self.traj_save_len - self.max_seq_len
-            save_every_high = self.traj_save_len + self.max_seq_len
-            if self.verbose:
-                print(
-                    f"Note: Partial Context Mode. Randomizing trajectory file lengths in [{save_every_low}, {save_every_high}]"
-                )
-        else:
-            save_every_low = save_every_high = self.traj_save_len
-
-        self.horizon = -float("inf")
-
-        def _make_env(fn, split):
-            env = fn()
-            self.horizon = max(self.horizon, env.horizon)
-            if split == "train" and self.exploration_wrapper_Cls:
-                # exploration is handled by a wrapper
-                env = self.exploration_wrapper_Cls(env)
-            # SequenceWrapper handles all the disk writing
-            env = SequenceWrapper(
-                env,
-                save_every=(save_every_low, save_every_high),
-                make_dset=True,
-                dset_root=self.dset_root,
-                dset_name=self.dset_name,
-                dset_split=split,
-                save_trajs_as=self.save_trajs_as,
-            )
-            # save gcrl2 space here to make model later
-            self.gcrl2_space = env.gcrl2_space
-            return env
-
+        shared_env_kwargs = dict(
+            dset_root=self.dset_root,
+            dset_name=self.dset_name,
+            save_trajs_as=self.save_trajs_as,
+            traj_save_len=self.traj_save_len,
+            max_seq_len=self.max_seq_len,
+            stagger_traj_file_lengths=self.stagger_traj_file_lengths,
+        )
+        make_train = MakeEnvSaveToDisk(
+            make_env=self.make_train_env,
+            dset_split="train",
+            exploration_wrapper_Cls=self.exploration_wrapper_Cls,
+            **shared_env_kwargs,
+        )
+        make_val = MakeEnvSaveToDisk(
+            make_env=self.make_val_env,
+            dset_split="val",
+            exploration_wrapper_Cls=None,
+            **shared_env_kwargs,
+        )
         Par = gym.vector.AsyncVectorEnv if self.async_envs else DummyAsyncVectorEnv
-        make_train_env = partial(_make_env, self.make_train_env, "train")
-        self.train_envs = Par([make_train_env for _ in range(self.parallel_actors)])
-        self.train_envs.reset()
-        make_val_env = partial(_make_env, self.make_val_env, "val")
-        self.val_envs = Par([make_val_env for _ in range(self.parallel_actors)])
-        self.val_envs.reset()
-
+        self.train_envs = Par([make_train for _ in range(self.parallel_actors)])
+        self.val_envs = Par([make_val for _ in range(self.parallel_actors)])
+        self.gcrl2_space = make_train.gcrl2_space
+        self.horizon = make_train.horizon
         # self.train_buffers holds the env state between rollout cycles
         # that are shorter than the horizon length
+        self.train_envs.reset()
+        self.val_envs.reset()
         self.train_buffers = None
         self.hidden_state = None
 
@@ -207,22 +191,17 @@ class Experiment:
             assert not (loading_best or loading_latest)
             ckpt_name = f"{self.run_name}_epoch_{epoch}.pt"
         else:
-            assert (
-                loading_best or loading_latest and not (loading_best and loading_latest)
-            )
             ckpt_name = f"{self.run_name}_{'LATEST' if loading_latest else 'BEST'}.pt"
-
         ckpt_path = os.path.join(self.ckpt_dir, ckpt_name)
         ckpt = utils.retry_load_checkpoint(
             ckpt_path, map_location=self.DEVICE, tries=10 if loading_latest else 1
         )
-        if ckpt is None:
-            return
-        self.policy.load_state_dict(ckpt["model_state"])
-        self.optimizer.load_state_dict(ckpt["optimizer_state"])
-        self.epoch = ckpt["epoch"]
-        self.grad_scaler.load_state_dict(ckpt["grad_scaler"])
-        self.best_return = ckpt["best_return"]
+        if ckpt is not None:
+            self.policy.load_state_dict(ckpt["model_state"])
+            self.optimizer.load_state_dict(ckpt["optimizer_state"])
+            self.epoch = ckpt["epoch"]
+            self.grad_scaler.load_state_dict(ckpt["grad_scaler"])
+            self.best_return = ckpt["best_return"]
 
     def save_checkpoint(self, saving_latest: bool = False, saving_best: bool = False):
         assert not (saving_latest and saving_best)

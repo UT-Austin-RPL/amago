@@ -1,7 +1,10 @@
 import os
 import time
 import random
+import warnings
 from uuid import uuid4
+from dataclasses import dataclass
+from typing import Optional, Type, Callable
 
 import gymnasium as gym
 import numpy as np
@@ -424,3 +427,46 @@ class SequenceWrapper(gym.Wrapper):
     @property
     def current_timestep(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         return self._current_timestep
+
+
+@dataclass
+class MakeEnvSaveToDisk:
+    make_env: Callable
+    dset_root: str
+    dset_name: str
+    dset_split: str
+    save_trajs_as: str
+    traj_save_len: int
+    max_seq_len: int
+    stagger_traj_file_lengths: bool
+    exploration_wrapper_Cls: Type[ExplorationWrapper]
+
+    def __post_init__(self):
+        print("here")
+        if self.max_seq_len < self.traj_save_len and self.stagger_traj_file_lengths:
+            self.save_every_low = self.traj_save_len - self.max_seq_len
+            self.save_every_high = self.traj_save_len + self.max_seq_len
+            warnings.warn(
+                f"Note: Partial Context Mode. Randomizing trajectory file lengths in [{self.save_every_low}, {self.save_every_high}]"
+            )
+        else:
+            self.save_every_low = self.save_every_high = self.traj_save_len
+        self.horizon = -float("inf")
+        self.gcrl2_space = None
+
+    def __call__(self):
+        env = self.make_env()
+        self.horizon = max(self.horizon, env.horizon)
+        if self.exploration_wrapper_Cls is not None:
+            env = self.exploration_wrapper_Cls(env)
+        env = SequenceWrapper(
+            env,
+            save_every=(self.save_every_low, self.save_every_high),
+            make_dset=True,
+            dset_root=self.dset_root,
+            dset_name=self.dset_name,
+            dset_split=self.dset_split,
+            save_trajs_as=self.save_trajs_as,
+        )
+        self.gcrl2_space = env.gcrl2_space
+        return env
