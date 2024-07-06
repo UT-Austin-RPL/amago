@@ -590,6 +590,8 @@ class Experiment:
             if epoch >= self.start_collecting_at_epoch:
                 self.collect_new_training_data()
 
+            self.accelerator.wait_for_everyone()
+
             # make dataloaders aware of new .traj files
             self.init_dloaders()
             self.policy.train()
@@ -610,7 +612,8 @@ class Experiment:
                 if log_step:
                     self.log(loss_dict, key="train-update")
 
-            """
+            self.accelerator.wait_for_everyone()
+
             # validation
             if (
                 epoch % self.val_interval == 0
@@ -623,12 +626,14 @@ class Experiment:
                 figures = self.make_figures(loss_dict)
                 self.log(figures, key="val-update")
                 self.val_dset.clear()
-            """
 
             # buffer management
             dset_size = self.train_dset.count_trajectories()
             dset_gb = self.train_dset.disk_usage
-            if dset_size > self.dset_max_size and self.dset_filter_pct is not None:
+            needs_filter = (
+                dset_size > self.dset_max_size and self.dset_filter_pct is not None
+            )
+            if needs_filter and self.accelerator.is_main_process:
                 self.train_dset.filter(self.dset_filter_pct)
             self.log(
                 {
@@ -637,6 +642,8 @@ class Experiment:
                 },
                 key="buffer",
             )
+
+            self.accelerator.wait_for_everyone()
 
             # end epoch
             self.epoch = epoch
