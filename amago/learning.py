@@ -1,4 +1,5 @@
 import os
+import random
 import time
 import warnings
 import contextlib
@@ -80,7 +81,8 @@ class Experiment:
 
     # Optimization
     batch_size: int = 24
-    dloader_workers: int = 8
+    batches_per_update: int = 1
+    dloader_workers: int = 6
     learning_rate: float = 1e-4
     critic_loss_weight: float = 10.0
     grad_clip: float = 1.0
@@ -94,7 +96,7 @@ class Experiment:
 
     def start(self):
         self.accelerator = Accelerator(
-            gradient_accumulation_steps=1,
+            gradient_accumulation_steps=self.batches_per_update,
             device_placement=True,
             log_with="wandb",
             kwargs_handlers=[
@@ -106,7 +108,6 @@ class Experiment:
         self.init_dsets()
         self.init_dloaders()
         self.init_model()
-        self.init_optimizer()
         self.init_checkpoints()
         self.init_logger()
         if self.verbose:
@@ -117,12 +118,7 @@ class Experiment:
         return self.accelerator.device
 
     def summary(self):
-        total_params = 0
-        for name, parameter in self.policy.named_parameters():
-            if not parameter.requires_grad:
-                continue
-            params = parameter.numel()
-            total_params += params
+        total_params = utils.count_params(self.policy)
 
         assert (
             self.traj_save_len >= self.max_seq_len
@@ -138,7 +134,7 @@ class Experiment:
             )
 
         self.accelerator.print(
-            f"""\n\n \t\t AMAGO
+            f"""\n\n \t\t AMAGO (v2)
             \t -------------------------
             \t Environment Horizon: {self.horizon}
             \t Policy Max Sequence Length: {self.max_seq_len}
@@ -198,7 +194,7 @@ class Experiment:
         if epoch is not None:
             ckpt_name = f"{self.run_name}_epoch_{epoch}"
             self.epoch = epoch
-        else:
+        elif loading_latest:
             ckpt_name = f"{self.run_name}_LATEST"
         ckpt_path = os.path.join(self.ckpt_dir, ckpt_name)
         self.accelerator.load_state(ckpt_path)
@@ -277,15 +273,6 @@ class Experiment:
                     )
                 },
             )
-            wandb.save(config_path)
-
-    def init_optimizer(self):
-        optimizer = torch.optim.AdamW(
-            self.policy.trainable_params,
-            lr=self.learning_rate,
-            weight_decay=self.l2_coeff,
-        )
-        self.optimizer = self.accelerator.prepare(optimizer)
 
     def init_model(self):
         policy_kwargs = {
@@ -298,7 +285,16 @@ class Experiment:
         }
         policy = self.agent_Cls(**policy_kwargs)
         assert isinstance(policy, Agent)
-        self.policy = self.accelerator.prepare(policy)
+        optimizer = torch.optim.AdamW(
+            policy.trainable_params,
+            lr=self.learning_rate,
+            weight_decay=self.l2_coeff,
+        )
+        self.policy_aclr, self.optimizer = self.accelerator.prepare(policy, optimizer)
+
+    @property
+    def policy(self):
+        return self.accelerator.unwrap_model(self.policy_aclr)
 
     def interact(
         self,
@@ -311,8 +307,8 @@ class Experiment:
         """
         Main policy loop for interacting with the environment.
         """
-
-        self.policy.eval()
+        policy = self.policy
+        policy.eval()
 
         if self.verbose:
             iter_ = tqdm(
@@ -327,8 +323,7 @@ class Experiment:
 
         # clear results statistics
         # (can make train-time stats useless depending on horizon vs. `timesteps`)
-        envs.call_async("reset_stats")
-        envs.call_wait()
+        utils.call_async_env(envs, "reset_stats")
 
         if buffers is None:
             # start of training or new eval cycle
@@ -345,13 +340,12 @@ class Experiment:
 
         if hidden_state is None:
             # init new hidden state
-            hidden_state = self.policy.traj_encoder.init_hidden_state(
+            hidden_state = policy.traj_encoder.init_hidden_state(
                 self.parallel_actors, self.DEVICE
             )
 
         def get_t(_dones=None):
-            envs.call_async("current_timestep")
-            par_obs_goal_rl2 = envs.call_wait()
+            par_obs_goal_rl2 = utils.call_async_env(envs, "current_timestep")
             _obs = utils.stack_list_array_dicts(
                 [obs_goal_rl2[0] for obs_goal_rl2 in par_obs_goal_rl2], axis=0
             )
@@ -368,7 +362,7 @@ class Experiment:
         if buffers is None:
             get_t()
 
-        for step in iter_:
+        for _ in iter_:
             obs_tc_t = obs_seqs.sequences
             goals_tc_t = goal_seqs.sequences["_"]
             rl2_tc_t = rl2_seqs.sequences["_"]
@@ -377,7 +371,7 @@ class Experiment:
 
             with torch.no_grad():
                 with self.caster():
-                    actions, hidden_state = self.policy.get_actions(
+                    actions, hidden_state = policy.get_actions(
                         obs=obs_tc_t,
                         goals=goals_tc_t,
                         rl2s=rl2_tc_t,
@@ -386,20 +380,16 @@ class Experiment:
                         sample=self.sample_actions,
                         hidden_state=hidden_state if self.fast_inference else None,
                     )
-            _, ext_rew, terminated, truncated, info = envs.step(actions)
+            *_, terminated, truncated, _ = envs.step(actions)
             done = terminated | truncated
             get_t(done)
-            hidden_state = self.policy.traj_encoder.reset_hidden_state(
-                hidden_state, done
-            )
+            hidden_state = policy.traj_encoder.reset_hidden_state(hidden_state, done)
 
             if render:
                 envs.render()
 
-        envs.call_async("return_history")
-        return_history = envs.call_wait()
-        envs.call_async("success_history")
-        success_history = envs.call_wait()
+        return_history = utils.call_async_env(envs, "return_history")
+        success_history = utils.call_async_env(envs, "success_history")
         return (
             (obs_seqs, goal_seqs, rl2_seqs),
             hidden_state,
@@ -454,8 +444,7 @@ class Experiment:
             else:
                 log_dict[k] = v
 
-        self.train_envs.call_async("total_frames")
-        total_frames = sum(self.train_envs.call_wait())
+        total_frames = utils.call_async_env(self.train_envs, "total_frames")
         if self.log_to_wandb:
             self.accelerator.log(
                 {f"{key}/{subkey}": val for subkey, val in log_dict.items()}
@@ -500,7 +489,7 @@ class Experiment:
         return avg_ret_per_env | avg_suc_per_env | avg_return_overall
 
     def compute_loss(self, batch: Batch, log_step: bool):
-        critic_loss, actor_loss = self.policy(batch, log_step=log_step)
+        critic_loss, actor_loss = self.policy_aclr(batch, log_step=log_step)
         update_info = self.policy.update_info
         B, L_1, G, _ = actor_loss.shape
         C = len(self.policy.critics)
@@ -508,13 +497,9 @@ class Experiment:
         critic_state_mask = repeat(state_mask[:, 1:, ...], f"B L 1 -> B L {C} {G} 1")
         actor_state_mask = repeat(state_mask[:, :-1, ...], f"B L 1 -> B L {G} 1")
 
-        masked_actor_loss = (
-            actor_state_mask * actor_loss
-        ).sum() / actor_state_mask.sum()
+        masked_actor_loss = utils.masked_avg(actor_loss, actor_state_mask)
         if isinstance(critic_loss, torch.Tensor):
-            masked_critic_loss = (
-                critic_state_mask * critic_loss
-            ).sum() / critic_state_mask.sum()
+            masked_critic_loss = utils.masked_avg(critic_loss, critic_state_mask)
         else:
             assert critic_loss is None
             masked_critic_loss = 0.0
@@ -527,24 +512,25 @@ class Experiment:
 
     def _get_grad_norms(self):
         ggn = utils.get_grad_norm
+        pi = self.policy
         grads = {
-            "Actor Grad Norm": ggn(self.policy.actor),
-            "Critic Grad Norm": ggn(self.policy.critics),
-            "TrajEncoder Grad Norm": ggn(self.policy.traj_encoder),
-            "TstepEncoder Grad Norm": ggn(self.policy.tstep_encoder),
-            "TstepEncoder Goal Emb. Grad Norm": ggn(self.policy.tstep_encoder.goal_emb),
+            "Actor Grad Norm": ggn(pi.actor),
+            "Critic Grad Norm": ggn(pi.critics),
+            "TrajEncoder Grad Norm": ggn(pi.traj_encoder),
+            "TstepEncoder Grad Norm": ggn(pi.tstep_encoder),
+            "TstepEncoder Goal Emb. Grad Norm": ggn(pi.tstep_encoder.goal_emb),
         }
         return grads
 
     def train_step(self, batch: Batch, log_step: bool):
-        with self.accelerator.accumulate(self.policy):
+        with self.accelerator.accumulate(self.policy_aclr):
             self.optimizer.zero_grad()
             l = self.compute_loss(batch, log_step=log_step)
             loss = l["actor_loss"] + self.critic_loss_weight * l["critic_loss"]
             self.accelerator.backward(loss)
             if self.accelerator.sync_gradients:
                 self.accelerator.clip_grad_norm_(
-                    self.policy.trainable_params, self.grad_clip
+                    self.policy_aclr.parameters(), self.grad_clip
                 )
                 self.policy.soft_sync_targets()
                 if log_step:
@@ -584,17 +570,16 @@ class Experiment:
                 self.load_checkpoint(loading_latest=True)
 
             # environment interaction
-            self.policy.eval()
+            self.policy_aclr.eval()
             if epoch % self.val_interval == 0:
                 self.evaluate_val()
             if epoch >= self.start_collecting_at_epoch:
                 self.collect_new_training_data()
 
             self.accelerator.wait_for_everyone()
-
             # make dataloaders aware of new .traj files
             self.init_dloaders()
-            self.policy.train()
+            self.policy_aclr.train()
             if self.train_dset.count_trajectories() == 0:
                 warnings.warn(
                     f"Skipping epoch {epoch} because no training trajectories have been saved yet...",
@@ -611,7 +596,6 @@ class Experiment:
                 loss_dict = self.train_step(batch, log_step=log_step)
                 if log_step:
                     self.log(loss_dict, key="train-update")
-
             self.accelerator.wait_for_everyone()
 
             # validation
@@ -619,13 +603,15 @@ class Experiment:
                 epoch % self.val_interval == 0
                 and self.val_dset.count_trajectories() > 0
             ):
-                self.policy.eval()
-                for val_step, batch in make_pbar(self.val_dloader, False, epoch):
+                self.policy_aclr.eval()
+                for _, batch in make_pbar(self.val_dloader, False, epoch):
                     loss_dict = self.val_step(batch)
                     self.log(loss_dict, key="val-update")
                 figures = self.make_figures(loss_dict)
                 self.log(figures, key="val-update")
-                self.val_dset.clear()
+                self.accelerator.wait_for_everyone()
+                if self.accelerator.is_main_process:
+                    self.val_dset.clear()
 
             # buffer management
             dset_size = self.train_dset.count_trajectories()
@@ -633,6 +619,7 @@ class Experiment:
             needs_filter = (
                 dset_size > self.dset_max_size and self.dset_filter_pct is not None
             )
+            self.accelerator.wait_for_everyone()
             if needs_filter and self.accelerator.is_main_process:
                 self.train_dset.filter(self.dset_filter_pct)
             self.log(
@@ -642,7 +629,6 @@ class Experiment:
                 },
                 key="buffer",
             )
-
             self.accelerator.wait_for_everyone()
 
             # end epoch

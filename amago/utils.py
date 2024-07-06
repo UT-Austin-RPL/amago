@@ -1,13 +1,17 @@
 import warnings
 import time
 import os
+from functools import partial
 
 import numpy as np
 import torch
 from torch import nn
+from torch.optim.lr_scheduler import LambdaLR
+import gymnasium as gym
 import gin
 
 from .loading import MAGIC_PAD_VAL
+from accelerate import Accelerator
 
 
 def stack_list_array_dicts(list_: list[dict[np.ndarray]], axis=0):
@@ -19,6 +23,44 @@ def stack_list_array_dicts(list_: list[dict[np.ndarray]], axis=0):
             else:
                 out[k] = [v]
     return {k: np.stack(v, axis=axis) for k, v in out.items()}
+
+
+def avg_over_accelerate(accelerator: Accelerator, data: dict[str, int | float]):
+    merged_stats = accelerator.gather(
+        {k: torch.Tensor([v]).to(accelerator.device) for k, v in data.items()}
+    )
+    avg_stats = {k: v.mean().item() for k, v in merged_stats.items()}
+    return avg_stats
+
+
+def masked_avg(tensor: torch.Tensor, mask: torch.Tensor):
+    return (tensor * mask).sum() / (mask.sum() + 1e-5)
+
+
+def _get_constant_schedule_with_warmup_lr_lambda(
+    current_step: int, *, num_warmup_steps: int
+):
+    if current_step < num_warmup_steps:
+        return float(current_step) / float(max(1.0, num_warmup_steps))
+    return 1.0
+
+
+def get_constant_schedule_with_warmup(
+    optimizer: torch.optim.Optimizer, num_warmup_steps: int, last_epoch: int = -1
+):
+    lr_lambda = partial(
+        _get_constant_schedule_with_warmup_lr_lambda, num_warmup_steps=num_warmup_steps
+    )
+    return LambdaLR(optimizer, lr_lambda, last_epoch=last_epoch)
+
+
+def call_async_env(env: gym.vector.VectorEnv, method_name: str, *args, **kwargs):
+    env.call_async(method_name, *args, **kwargs)
+    return env.call_wait()
+
+
+def count_params(model: nn.Module):
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 
 def gin_as_wandb_config() -> dict:
