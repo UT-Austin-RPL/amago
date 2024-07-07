@@ -1,22 +1,20 @@
 import os
-import random
-import time
 import warnings
 import contextlib
 from dataclasses import dataclass
 from functools import partial
 from typing import Callable
 
+import gin
+import wandb
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
-import wandb
 import numpy as np
 from einops import repeat
 import gymnasium as gym
-import gin
 from accelerate import Accelerator, DistributedDataParallelKwargs
-from accelerate.utils import tqdm
+from accelerate.utils import tqdm, release_memory
 
 from . import utils
 from .agent import Agent
@@ -43,16 +41,14 @@ class Experiment:
     max_seq_len: int
     traj_save_len: int
     run_name: str
-    gpu: int
-    async_envs: bool = True
     agent_Cls: Callable = Agent
+    async_envs: bool = True
 
     # Logging
     log_to_wandb: bool = False
     wandb_project: str = os.environ.get("AMAGO_WANDB_PROJECT")
     wandb_entity: str = os.environ.get("AMAGO_WANDB_ENTITY")
     wandb_group_name: str = None
-    wandb_log_dir: str = None
     verbose: bool = True
 
     # Replay
@@ -181,8 +177,7 @@ class Experiment:
 
     def init_checkpoints(self):
         self.ckpt_dir = os.path.join(self.dset_root, self.dset_name, "ckpts")
-        if not os.path.exists(self.ckpt_dir):
-            os.makedirs(self.ckpt_dir)
+        os.makedirs(self.ckpt_dir, exist_ok=True)
         self.epoch = 0
 
     def load_checkpoint(
@@ -190,7 +185,6 @@ class Experiment:
         epoch: int = None,
         loading_latest: bool = False,
     ):
-        breakpoint()
         if epoch is not None:
             ckpt_name = f"{self.run_name}_epoch_{epoch}"
             self.epoch = epoch
@@ -247,6 +241,8 @@ class Experiment:
             collate_fn=RLData_pad_collate,
             pin_memory=True,
         )
+        # accelerator.free_memory clears everything.
+        # https://github.com/huggingface/accelerate/blob/2471eacdd648446f2f63eccb9b18a7731304f401/src/accelerate/accelerator.py#L3189
         self.train_dloader, self.val_dloader = self.accelerator.prepare(
             train_dloader, val_dloader
         )
@@ -258,9 +254,8 @@ class Experiment:
             f.write(gin_config)
         if self.log_to_wandb:
             gin_as_wandb = utils.gin_as_wandb_config()
-            log_dir = self.wandb_log_dir or os.path.join(self.dset_root, "wandb_logs")
-            if not os.path.exists(log_dir):
-                os.makedirs(log_dir)
+            log_dir = os.path.join(self.dset_root, "wandb_logs")
+            os.makedirs(log_dir, exist_ok=True)
             self.accelerator.init_trackers(
                 project_name=self.wandb_project,
                 config=gin_as_wandb,
@@ -444,7 +439,7 @@ class Experiment:
             else:
                 log_dict[k] = v
 
-        total_frames = utils.call_async_env(self.train_envs, "total_frames")
+        total_frames = sum(utils.call_async_env(self.train_envs, "total_frames"))
         if self.log_to_wandb:
             self.accelerator.log(
                 {f"{key}/{subkey}": val for subkey, val in log_dict.items()}
@@ -486,6 +481,7 @@ class Experiment:
                 list(avg_ret_per_env.values())
             ).mean()
         }
+        print(avg_return_overall)
         return avg_ret_per_env | avg_suc_per_env | avg_return_overall
 
     def compute_loss(self, batch: Batch, log_step: bool):
@@ -579,7 +575,6 @@ class Experiment:
             self.accelerator.wait_for_everyone()
             # make dataloaders aware of new .traj files
             self.init_dloaders()
-            self.policy_aclr.train()
             if self.train_dset.count_trajectories() == 0:
                 warnings.warn(
                     f"Skipping epoch {epoch} because no training trajectories have been saved yet...",
@@ -590,6 +585,7 @@ class Experiment:
             # training
             elif epoch < self.start_learning_at_epoch:
                 continue
+            self.policy_aclr.train()
             for train_step, batch in make_pbar(self.train_dloader, True, epoch):
                 total_step = (epoch * self.train_grad_updates_per_epoch) + train_step
                 log_step = total_step % self.log_interval == 0
@@ -637,4 +633,3 @@ class Experiment:
                 self.save_checkpoint()
             if self.save_latest_ckpt:
                 self.save_checkpoint(saving_latest=True)
-            self.accelerator.free_memory(self.train_dloader, self.val_dloader)

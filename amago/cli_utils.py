@@ -18,9 +18,6 @@ def add_common_cli(parser: ArgumentParser) -> ArgumentParser:
     # basics
     parser.add_argument("--trials", type=int, default=1)
     parser.add_argument(
-        "--gpu", type=int, default=0, help="GPU Device ID. Use -1 for CPU"
-    )
-    parser.add_argument(
         "--no_async",
         action="store_true",
         help="Run the 'parallel' actors in one thread",
@@ -302,7 +299,6 @@ def create_experiment_from_cli(
         dset_max_size=cli.dset_max_size,
         run_name=run_name,
         dset_name=run_name,
-        gpu=cli.gpu,
         dset_root=cli.buffer_dir,
         dloader_workers=cli.dloader_workers,
         log_to_wandb=not cli.no_log,
