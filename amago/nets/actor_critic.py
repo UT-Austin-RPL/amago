@@ -126,8 +126,8 @@ def ContinuousActionDist(
     kind: str,
     log_std_low: float = -5.0,
     log_std_high: float = 2.0,
-    d_action: int | None = None,
-    gmm_modes: int | None = None,
+    d_action: Optional[int] = None,
+    gmm_modes: Optional[int] = None,
 ):
     assert kind in ["normal", "gmm", "multibinary"]
 
@@ -405,7 +405,9 @@ class NCriticsTwoHot(nn.Module):
         out_dim = output_bins
         self.num_bins = output_bins
         if min_return is None or max_return is None:
-            amago_warning("amago.nets.actor_critic.NCriticsTwoHot.min_return/max_return have not been set manually, and default to extreme values.")
+            amago_warning(
+                "amago.nets.actor_critic.NCriticsTwoHot.min_return/max_return have not been set manually, and default to extreme values."
+            )
         min_return = min_return or -100_000
         max_return = max_return or 100_000
         assert min_return < max_return

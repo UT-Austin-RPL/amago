@@ -231,6 +231,7 @@ class ExplorationWrapper(gym.ActionWrapper):
     def reset(self, *args, **kwargs):
         out = super().reset(*args, **kwargs)
         self.global_multiplier = random.random()
+        np.random.seed(random.randint(0, 1e6))
         return out
 
     def current_eps(self, local_step: int, horizon: int):
