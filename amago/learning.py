@@ -2,6 +2,7 @@ import os
 import warnings
 import contextlib
 from dataclasses import dataclass
+from collections import defaultdict
 from functools import partial
 from typing import Callable
 
@@ -440,10 +441,22 @@ class Experiment:
                 log_dict[k] = v
 
         total_frames = sum(utils.call_async_env(self.train_envs, "total_frames"))
+        frames_by_env_name = utils.call_async_env(
+            self.train_envs, "total_frames_by_env_name"
+        )
+        total_frames_by_env_name = defaultdict(int)
+        for env_frames in frames_by_env_name:
+            for env_name, frames in env_frames.items():
+                total_frames_by_env_name[f"total_frames-{env_name}"] += frames
         if self.log_to_wandb:
+            progress = {
+                "epoch": self.epoch,
+                "total_frames": total_frames,
+            }
             self.accelerator.log(
                 {f"{key}/{subkey}": val for subkey, val in log_dict.items()}
-                | {"total_frames": total_frames}
+                | progress
+                | dict(total_frames_by_env_name)
             )
 
     def make_figures(self, loss_info) -> dict[str, wandb.Image]:
@@ -481,7 +494,6 @@ class Experiment:
                 list(avg_ret_per_env.values())
             ).mean()
         }
-        print(avg_return_overall)
         return avg_ret_per_env | avg_suc_per_env | avg_return_overall
 
     def compute_loss(self, batch: Batch, log_step: bool):
