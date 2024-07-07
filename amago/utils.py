@@ -90,7 +90,7 @@ def retry_load_checkpoint(ckpt_path, map_location, tries: int = 10):
         warnings.warn("Skipping checkpoint load; file not found.", category=Warning)
         return
 
-    attempts = 0
+    ckpt, attempts = None, 0
     while attempts < tries:
         attempts += 1
         try:

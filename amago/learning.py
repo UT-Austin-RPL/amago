@@ -72,8 +72,6 @@ class Experiment:
     val_checks_per_epoch: int = 50
     log_interval: int = 250
     ckpt_interval: int = 20
-    save_latest_ckpt: bool = False
-    always_load_latest_ckpt: bool = False
 
     # Optimization
     batch_size: int = 24
@@ -180,25 +178,27 @@ class Experiment:
         os.makedirs(self.ckpt_dir, exist_ok=True)
         self.epoch = 0
 
-    def load_checkpoint(
-        self,
-        epoch: int = None,
-        loading_latest: bool = False,
-    ):
-        if epoch is not None:
-            ckpt_name = f"{self.run_name}_epoch_{epoch}"
-            self.epoch = epoch
-        elif loading_latest:
-            ckpt_name = f"{self.run_name}_LATEST"
+    def load_checkpoint(self, epoch: int):
+        ckpt_name = f"{self.run_name}_epoch_{epoch}"
         ckpt_path = os.path.join(self.ckpt_dir, ckpt_name)
         self.accelerator.load_state(ckpt_path)
+        self.epoch = epoch
 
-    def save_checkpoint(self, saving_latest: bool = False):
-        if saving_latest:
-            ckpt_name = f"{self.run_name}_LATEST"
-        else:
-            ckpt_name = f"{self.run_name}_epoch_{self.epoch}"
+    def save_checkpoint(self):
+        ckpt_name = f"{self.run_name}_epoch_{self.epoch}"
         self.accelerator.save_state(os.path.join(self.ckpt_dir, ckpt_name))
+
+    def write_latest_policy(self):
+        ckpt_name = os.path.join(self.dset_root, self.dset_name, "policy.pt")
+        torch.save(self.policy_aclr.state_dict(), ckpt_name)
+
+    def read_latest_policy(self):
+        ckpt_name = os.path.join(self.dset_root, self.dset_name, "policy.pt")
+        ckpt = utils.retry_load_checkpoint(ckpt_name, map_location=self.DEVICE)
+        if ckpt is not None:
+            self.policy_aclr.load_state_dict(ckpt)
+        else:
+            warnings.warn("Latest policy checkpoint was not loaded.")
 
     def init_dsets(self):
         if self.save_trajs_as != "trajectory" and self.relabel != "none":
@@ -562,9 +562,6 @@ class Experiment:
 
         start_epoch = self.epoch
         for epoch in range(start_epoch, self.epochs):
-            if self.always_load_latest_ckpt:
-                self.load_checkpoint(loading_latest=True)
-
             # environment interaction
             self.policy_aclr.eval()
             if epoch % self.val_interval == 0:
@@ -631,5 +628,3 @@ class Experiment:
             self.epoch = epoch
             if epoch % self.ckpt_interval == 0:
                 self.save_checkpoint()
-            if self.save_latest_ckpt:
-                self.save_checkpoint(saving_latest=True)
