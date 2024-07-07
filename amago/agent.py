@@ -239,7 +239,7 @@ class Agent(nn.Module):
         ##########################
         ## Step 0: Timestep Emb ##
         ##########################
-        o = self.tstep_encoder(obs=batch.obs, goals=batch.goals, rl2s=batch.rl2s)
+        o = self.tstep_encoder(obs=batch.obs, goals=batch.goals, rl2s=batch.rl2s, log_dict=self.update_info)
 
         ###########################
         ## Step 1: Get Organized ##
