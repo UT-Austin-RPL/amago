@@ -99,7 +99,9 @@ class Experiment:
             ],
             mixed_precision=self.mixed_precision,
         )
-        self.init_envs()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            self.init_envs()
         self.init_dsets()
         self.init_dloaders()
         self.init_model()
