@@ -1,4 +1,5 @@
 import math
+from typing import Optional
 
 import torch
 from torch import nn
@@ -11,6 +12,7 @@ import gin
 
 from .ff import FFBlock, MLP
 from .utils import activation_switch, symlog, symexp
+from amago.utils import amago_warning
 
 
 class _TanhWrappedDistribution(pyd.Distribution):
@@ -389,9 +391,10 @@ class NCriticsTwoHot(nn.Module):
         d_hidden: int = 256,
         n_layers: int = 2,
         dropout_p: float = 0.0,
-        output_bins: int = 128,
-        bin_power: float = 1.0,
         activation: str = "leaky_relu",
+        min_return: Optional[float] = None,
+        max_return: Optional[float] = None,
+        output_bins: int = 128,
     ):
         super().__init__()
         self.num_critics = num_critics
@@ -401,14 +404,13 @@ class NCriticsTwoHot(nn.Module):
         inp_dim = state_dim + action_dim + 1
         out_dim = output_bins
         self.num_bins = output_bins
-        output_bins = (output_bins // 2) * 2
-        pos_bin_vals = torch.linspace(0.0, 12.0**bin_power, output_bins // 2) ** (
-            1.0 / bin_power
-        )
-        pos_bin_vals += pos_bin_vals[1:].min() / 2.0
-        neg_bin_vals = -pos_bin_vals
-        self.bin_vals = torch.cat((reversed(neg_bin_vals), pos_bin_vals)).view(
-            1, 1, 1, 1, -1
+        if min_return is None or max_return is None:
+            amago_warning("amago.nets.actor_critic.NCriticsTwoHot.min_return/max_return have not been set manually, and default to extreme values.")
+        min_return = min_return or -100_000
+        max_return = max_return or 100_000
+        assert min_return < max_return
+        self.bin_vals = torch.linspace(
+            symlog(min_return), symlog(max_return), output_bins
         )
         self.net = _EinMixEnsemble(
             ensemble_size=num_critics,

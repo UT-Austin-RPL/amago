@@ -2,6 +2,7 @@ import warnings
 import time
 import os
 from functools import partial
+from termcolor import colored
 
 import numpy as np
 import torch
@@ -23,6 +24,10 @@ def stack_list_array_dicts(list_: list[dict[np.ndarray]], axis=0):
             else:
                 out[k] = [v]
     return {k: np.stack(v, axis=axis) for k, v in out.items()}
+
+
+def amago_warning(msg: str, category=None):
+    warnings.warn(colored(f"{msg}", "green"), category=category)
 
 
 def avg_over_accelerate(accelerator: Accelerator, data: dict[str, int | float]):
@@ -87,7 +92,7 @@ def get_grad_norm(model):
 
 def retry_load_checkpoint(ckpt_path, map_location, tries: int = 10):
     if not os.path.exists(ckpt_path):
-        warnings.warn("Skipping checkpoint load; file not found.", category=Warning)
+        amago_warning("Skipping checkpoint load; file not found.")
         return
 
     ckpt, attempts = None, 0
@@ -96,7 +101,7 @@ def retry_load_checkpoint(ckpt_path, map_location, tries: int = 10):
         try:
             ckpt = torch.load(ckpt_path, map_location=map_location)
         except RuntimeError as e:
-            warnings.warn(
+            amago_warning(
                 f"Error loading checkpoint. {'Retrying...' if attempts < tries else 'Failed'}"
             )
             time.sleep(1)

@@ -5,11 +5,9 @@ import gin
 import torch
 from torch import nn
 import torch.nn.functional as F
-import numpy as np
 from einops import rearrange
 
 from amago.nets.utils import activation_switch
-from amago.nets.ff import Normalization
 
 
 def weight_init(m):

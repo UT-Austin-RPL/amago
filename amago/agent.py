@@ -509,6 +509,13 @@ class Agent(nn.Module):
 
 @gin.configurable
 def binary_filter(adv, threshold: float = 0.0):
+    """
+    Many results in the second paper use a `threshold` of -1e-4 (instead of 0),
+    which sometimes helps stability in sparse reward envs, but defaulting
+    to it was a version control mistake. This would never matter when
+    using scalar output critics but *does* matter when using classification
+    two-hot critics with many bins where advantages are often close to zero.
+    """
     return adv > threshold
 
 

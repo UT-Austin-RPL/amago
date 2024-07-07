@@ -202,11 +202,11 @@ class Experiment:
         if ckpt is not None:
             self.policy_aclr.load_state_dict(ckpt)
         else:
-            warnings.warn("Latest policy checkpoint was not loaded.")
+            utils.amago_warning("Latest policy checkpoint was not loaded.")
 
     def init_dsets(self):
         if self.save_trajs_as != "trajectory" and self.relabel != "none":
-            warnings.warn(
+            utils.amago_warning(
                 "Saving data in efficient ('frozen') format... these files will be skipped by the Relabeler",
                 category=RelabelWarning,
             )
@@ -595,9 +595,8 @@ class Experiment:
             # make dataloaders aware of new .traj files
             self.init_dloaders()
             if self.train_dset.count_trajectories() == 0:
-                warnings.warn(
-                    f"Skipping epoch {epoch} because no training trajectories have been saved yet...",
-                    category=Warning,
+                utils.amago_warning(
+                    f"Skipping epoch {epoch} because no training trajectories have been saved yet..."
                 )
                 continue
 
