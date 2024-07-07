@@ -10,7 +10,7 @@ import numpy as np
 import gin
 
 from .ff import FFBlock, MLP
-from .utils import activation_switch
+from .utils import activation_switch, symlog, symexp
 
 
 class _TanhWrappedDistribution(pyd.Distribution):
@@ -154,6 +154,32 @@ def ContinuousActionDist(
 class _Categorical(pyd.Categorical):
     def sample(self, *args, **kwargs):
         return super().sample(*args, **kwargs).unsqueeze(-1)
+
+
+class _DiscreteLikeContinuous:
+    def __init__(self, categorical: _Categorical):
+        self.dist = categorical
+
+    @property
+    def probs(self):
+        return self.dist.probs
+
+    @property
+    def logits(self):
+        return self.dist.logits
+
+    def entropy(self):
+        return self.dist.entropy()
+
+    def log_prob(self, action):
+        return self.dist.log_prob(action.argmax(-1)).unsqueeze(-1)
+
+    def sample(self, *args, **kwargs):
+        samples = self.dist.sample(*args, **kwargs)
+        action = (
+            F.one_hot(samples, num_classes=self.probs.shape[-1]).squeeze(-2).float()
+        )
+        return action
 
 
 def DiscreteActionDist(vec):
@@ -348,6 +374,116 @@ class NCritics(nn.Module):
         else:
             outputs = rearrange(outputs, "(b g) l c o -> b l c g o", g=self.num_gammas)
         return outputs, phis
+
+
+@gin.configurable(denylist=["verbose"])
+class NCriticsTwoHot(nn.Module):
+    def __init__(
+        self,
+        state_dim: int,
+        action_dim: int,
+        max_seq_len: int,
+        gammas: torch.Tensor,
+        num_critics: int = 4,
+        d_hidden: int = 256,
+        n_layers: int = 2,
+        dropout_p: float = 0.0,
+        output_bins: int = 128,
+        bin_power: float = 1.0,
+        activation: str = "leaky_relu",
+        verbose: bool = False,
+    ):
+        super().__init__()
+        self.num_critics = num_critics
+        self.num_gammas = len(gammas)
+        self.action_dim = action_dim
+        self.gammas = gammas
+        inp_dim = state_dim + action_dim + 1
+        out_dim = output_bins
+        self.num_bins = output_bins
+        output_bins = (output_bins // 2) * 2
+        pos_bin_vals = torch.linspace(0.0, 12.0**bin_power, output_bins // 2) ** (
+            1.0 / bin_power
+        )
+        pos_bin_vals += pos_bin_vals[1:].min() / 2.0
+        neg_bin_vals = -pos_bin_vals
+        self.bin_vals = torch.cat((reversed(neg_bin_vals), pos_bin_vals)).view(
+            1, 1, 1, 1, -1
+        )
+
+        if verbose:
+            print(f"\t\tInitializing `NCriticsTwoHot`")
+            print(f"\t\t\tN = {num_critics}")
+
+        self.base = _EinMixEnsemble(
+            ensemble_size=num_critics,
+            inp_dim=inp_dim,
+            d_hidden=d_hidden,
+            n_layers=n_layers,
+            out_dim=out_dim,
+            activation=activation,
+            dropout_p=dropout_p,
+        )
+
+    def __len__(self):
+        return self.num_critics
+
+    def forward(self, state: torch.Tensor, action: torch.Tensor):
+        assert action.dim() == 4
+        B, L, G, D = action.shape
+        assert G == self.num_gammas
+
+        state = repeat(state, "b l d -> (b g) l d", g=self.num_gammas)
+        action = rearrange(action.clamp(-0.995, 0.995), "b l g d -> (b g) l d")
+        gammas = (
+            torch.arange(self.num_gammas, dtype=action.dtype, device=action.device)
+            / self.num_gammas
+        )
+        gammas = repeat(gammas, "g -> (b g) l 1", b=B, l=L)
+        inp = torch.cat((state, gammas, action), dim=-1)
+        outputs, phis = self.base(inp)
+        outputs = rearrange(outputs, "(b g) l c o -> b l c g o", g=self.num_gammas)
+        val_dist = pyd.Categorical(logits=outputs)
+        clip_probs = val_dist.probs.clamp(1e-6, 0.999)
+        safe_probs = clip_probs / clip_probs.sum(-1, keepdims=True).detach()
+        safe_dist = pyd.Categorical(probs=safe_probs)
+        return safe_dist, phis
+
+    def bin_dist_to_raw_vals(self, bin_dist: pyd.Categorical):
+        assert isinstance(bin_dist, pyd.Categorical)
+        probs = bin_dist.probs
+        bin_vals = self.bin_vals.to(probs.device, dtype=probs.dtype)
+        exp_val = (probs * bin_vals).sum(-1, keepdims=True)
+        return symexp(exp_val)
+
+    def raw_vals_to_labels(self, raw_td_target):
+        # raw scalar --> symlog --> two hot encoding
+        # (github: danijar/dreamerv3/jaxutils.py)
+        symlog_td_target = symlog(raw_td_target)
+        bin_vals = self.bin_vals.to(symlog_td_target.device)
+        # below and above are indices of the bins directly above and below the scaled value
+        below = ((bin_vals <= symlog_td_target).sum(-1) - 1).clamp(0, self.num_bins - 1)
+        above = (self.num_bins - (bin_vals > symlog_td_target).sum(-1)).clamp(
+            0, self.num_bins - 1
+        )
+        equal = (below == above).unsqueeze(-1)
+        bin_vals = bin_vals.view(-1)
+        # represent distance of scaled value to above and below as a % of the total gap between bins
+        dist_to_below = torch.where(
+            equal, 1, abs(bin_vals[below].unsqueeze(-1) - symlog_td_target)
+        )
+        dist_to_above = torch.where(
+            equal, 1, abs(bin_vals[above].unsqueeze(-1) - symlog_td_target)
+        )
+        total = dist_to_below + dist_to_above
+        weight_below = dist_to_above / total
+        weight_above = dist_to_below / total
+        # create two hot encoded target where the labels are two consecutive bins with values that sum to 1
+        target = (
+            F.one_hot(below, num_classes=self.num_bins) * weight_below
+            + F.one_hot(above, num_classes=self.num_bins) * weight_above
+        )
+        return target
 
 
 @gin.configurable(denylist=["enabled"])

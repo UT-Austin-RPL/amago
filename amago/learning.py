@@ -139,6 +139,7 @@ class Experiment:
             \t Mode: {mode}
             \t Mixed Precision: {self.mixed_precision.upper()}
             \t Fast Inference: {self.fast_inference}
+            \t Agent Type: {self.policy.__class__.__name__}
             \t Total Parameters: {total_params:,d} \n\n"""
         )
 
