@@ -17,6 +17,7 @@ def add_common_cli(parser: ArgumentParser) -> ArgumentParser:
     )
     # basics
     parser.add_argument("--trials", type=int, default=1)
+    parser.add_argument("--agent_type", type=str, default="v1", choices=["v1", "v2"])
     parser.add_argument(
         "--no_async",
         action="store_true",
@@ -292,6 +293,7 @@ def create_experiment_from_cli(
     cli = command_line_args
 
     experiment = experiment_Cls(
+        agent_type=amago.agent.Agent if cli.agent_type == "v1" else amago.agent.AgentV2,
         make_train_env=make_train_env,
         make_val_env=make_val_env,
         max_seq_len=max_seq_len,

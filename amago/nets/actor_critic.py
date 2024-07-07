@@ -81,7 +81,7 @@ class _TanhTransform(pyd.transforms.Transform):
         return 0.5 * (x.log1p() - (-x).log1p())
 
     def __eq__(self, other):
-        return isinstance(other, TanhTransform)
+        return isinstance(other, _TanhTransform)
 
     def _call(self, x):
         return x.tanh()
@@ -156,7 +156,7 @@ class _Categorical(pyd.Categorical):
         return super().sample(*args, **kwargs).unsqueeze(-1)
 
 
-class _DiscreteLikeContinuous:
+class DiscreteLikeContinuous:
     def __init__(self, categorical: _Categorical):
         self.dist = categorical
 
@@ -314,7 +314,9 @@ class _EinMixEnsemble(nn.Module):
         return outputs, phis
 
 
-@gin.configurable(denylist=["state_dim", "action_dim", "discrete", "num_critics"])
+@gin.configurable(
+    denylist=["state_dim", "action_dim", "discrete", "gammas", "num_critics"]
+)
 class NCritics(nn.Module):
     def __init__(
         self,
@@ -376,13 +378,12 @@ class NCritics(nn.Module):
         return outputs, phis
 
 
-@gin.configurable(denylist=["verbose"])
+@gin.configurable(denylist=["state_dim", "action_dim", "gammas", "num_critics"])
 class NCriticsTwoHot(nn.Module):
     def __init__(
         self,
         state_dim: int,
         action_dim: int,
-        max_seq_len: int,
         gammas: torch.Tensor,
         num_critics: int = 4,
         d_hidden: int = 256,
@@ -391,7 +392,6 @@ class NCriticsTwoHot(nn.Module):
         output_bins: int = 128,
         bin_power: float = 1.0,
         activation: str = "leaky_relu",
-        verbose: bool = False,
     ):
         super().__init__()
         self.num_critics = num_critics
@@ -410,12 +410,7 @@ class NCriticsTwoHot(nn.Module):
         self.bin_vals = torch.cat((reversed(neg_bin_vals), pos_bin_vals)).view(
             1, 1, 1, 1, -1
         )
-
-        if verbose:
-            print(f"\t\tInitializing `NCriticsTwoHot`")
-            print(f"\t\t\tN = {num_critics}")
-
-        self.base = _EinMixEnsemble(
+        self.net = _EinMixEnsemble(
             ensemble_size=num_critics,
             inp_dim=inp_dim,
             d_hidden=d_hidden,
@@ -441,7 +436,7 @@ class NCriticsTwoHot(nn.Module):
         )
         gammas = repeat(gammas, "g -> (b g) l 1", b=B, l=L)
         inp = torch.cat((state, gammas, action), dim=-1)
-        outputs, phis = self.base(inp)
+        outputs, phis = self.net(inp)
         outputs = rearrange(outputs, "(b g) l c o -> b l c g o", g=self.num_gammas)
         val_dist = pyd.Categorical(logits=outputs)
         clip_probs = val_dist.probs.clamp(1e-6, 0.999)
@@ -502,7 +497,6 @@ class PopArtLayer(nn.Module):
         self.w = nn.Parameter(torch.ones((gammas, 1)), requires_grad=False)
         self.b = nn.Parameter(torch.zeros((gammas, 1)), requires_grad=False)
         self._t = nn.Parameter(torch.ones((gammas, 1)), requires_grad=False)
-        self._stable = False
         self.enabled = enabled
 
     @property
