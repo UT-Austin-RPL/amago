@@ -12,6 +12,7 @@ from amago.loading import Batch, MAGIC_PAD_VAL
 from amago.nets.tstep_encoders import *
 from amago.nets.traj_encoders import *
 from amago.nets import actor_critic
+from amago import utils
 
 
 @gin.configurable
@@ -480,10 +481,9 @@ class Agent(nn.Module):
         stats = {
             "Minimum Action Logprob": logp_a.min(),
             "Maximum Action Logprob": logp_a.max(),
-            "Pct. of Actions Approved by Binary FBC Filter (All Gammas)": (
-                mask * filter_
-            ).sum()
-            / mask.sum()
+            "Pct. of Actions Approved by Binary FBC Filter (All Gammas)": utils.masked_avg(
+                filter_, mask
+            )
             * 100.0,
         }
 
