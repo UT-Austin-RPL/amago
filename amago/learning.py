@@ -83,6 +83,7 @@ class Experiment:
     dloader_workers: int = 6
     learning_rate: float = 1e-4
     critic_loss_weight: float = 10.0
+    lr_warmup_steps: int = 500
     grad_clip: float = 1.0
     l2_coeff: float = 1e-3
     fast_inference: bool = True
@@ -288,7 +289,13 @@ class Experiment:
             lr=self.learning_rate,
             weight_decay=self.l2_coeff,
         )
-        self.policy_aclr, self.optimizer = self.accelerator.prepare(policy, optimizer)
+        lr_schedule = utils.get_constant_schedule_with_warmup(
+            optimizer=optimizer, num_warmup_steps=self.lr_warmup_steps
+        )
+        self.policy_aclr, self.optimizer, self.lr_schedule = self.accelerator.prepare(
+            policy, optimizer, lr_schedule
+        )
+        self.accelerator.register_for_checkpointing(self.lr_schedule)
 
     @property
     def policy(self):
@@ -546,6 +553,7 @@ class Experiment:
                 if log_step:
                     l.update(self._get_grad_norms())
             self.optimizer.step()
+            self.lr_schedule.step()
         return l
 
     def caster(self):
