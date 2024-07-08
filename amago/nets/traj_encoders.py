@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 
 import torch
-import torch.nn.functional as F
 from torch import nn
 import gin
 

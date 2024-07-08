@@ -4,12 +4,11 @@ import contextlib
 from dataclasses import dataclass
 from collections import defaultdict
 from functools import partial
-from typing import Callable
+from typing import Optional
 
 import gin
 import wandb
 import torch
-from torch import nn
 from torch.utils.data import DataLoader
 import numpy as np
 from einops import repeat
@@ -36,14 +35,18 @@ from .hindsight import Relabeler, RelabelWarning
 @dataclass
 class Experiment:
     # General
-    make_train_env: Callable
-    make_val_env: Callable
-    parallel_actors: int
+    run_name: str
     max_seq_len: int
     traj_save_len: int
-    run_name: str
-    agent_Cls: Callable = Agent
+    agent_type: type[Agent]
+
+    # Environment
+    make_train_env: callable
+    make_val_env: callable
+    parallel_actors: int = 10
     async_envs: bool = True
+    exploration_wrapper_Cls: Optional[type[ExplorationWrapper]] = ExplorationWrapper
+    sample_actions: bool = True
 
     # Logging
     log_to_wandb: bool = False
@@ -60,7 +63,7 @@ class Experiment:
     relabel: str = "none"
     goal_importance_sampling: bool = False
     stagger_traj_file_lengths: bool = True
-    save_trajs_as: str = "trajectory"
+    save_trajs_as: str = "npz"
 
     # Learning Schedule
     epochs: int = 1000
@@ -80,14 +83,11 @@ class Experiment:
     dloader_workers: int = 6
     learning_rate: float = 1e-4
     critic_loss_weight: float = 10.0
+    lr_warmup_steps: int = 500
     grad_clip: float = 1.0
     l2_coeff: float = 1e-3
     fast_inference: bool = True
     mixed_precision: str = "no"
-
-    # Exploration
-    exploration_wrapper_Cls: Callable | None = ExplorationWrapper
-    sample_actions: bool = True
 
     def start(self):
         self.accelerator = Accelerator(
@@ -133,6 +133,7 @@ class Experiment:
         self.accelerator.print(
             f"""\n\n \t\t AMAGO (v2)
             \t -------------------------
+            \t Agent Type: {self.policy.__class__.__name__}
             \t Environment Horizon: {self.horizon}
             \t Policy Max Sequence Length: {self.max_seq_len}
             \t Trajectory File Sequence Length: {self.traj_save_len}
@@ -201,11 +202,11 @@ class Experiment:
         if ckpt is not None:
             self.policy_aclr.load_state_dict(ckpt)
         else:
-            warnings.warn("Latest policy checkpoint was not loaded.")
+            utils.amago_warning("Latest policy checkpoint was not loaded.")
 
     def init_dsets(self):
         if self.save_trajs_as != "trajectory" and self.relabel != "none":
-            warnings.warn(
+            utils.amago_warning(
                 "Saving data in efficient ('frozen') format... these files will be skipped by the Relabeler",
                 category=RelabelWarning,
             )
@@ -281,14 +282,20 @@ class Experiment:
             "max_seq_len": self.max_seq_len,
             "horizon": self.horizon,
         }
-        policy = self.agent_Cls(**policy_kwargs)
+        policy = self.agent_type(**policy_kwargs)
         assert isinstance(policy, Agent)
         optimizer = torch.optim.AdamW(
             policy.trainable_params,
             lr=self.learning_rate,
             weight_decay=self.l2_coeff,
         )
-        self.policy_aclr, self.optimizer = self.accelerator.prepare(policy, optimizer)
+        lr_schedule = utils.get_constant_schedule_with_warmup(
+            optimizer=optimizer, num_warmup_steps=self.lr_warmup_steps
+        )
+        self.policy_aclr, self.optimizer, self.lr_schedule = self.accelerator.prepare(
+            policy, optimizer, lr_schedule
+        )
+        self.accelerator.register_for_checkpointing(self.lr_schedule)
 
     @property
     def policy(self):
@@ -546,6 +553,7 @@ class Experiment:
                 if log_step:
                     l.update(self._get_grad_norms())
             self.optimizer.step()
+            self.lr_schedule.step()
         return l
 
     def caster(self):
@@ -587,9 +595,8 @@ class Experiment:
             # make dataloaders aware of new .traj files
             self.init_dloaders()
             if self.train_dset.count_trajectories() == 0:
-                warnings.warn(
-                    f"Skipping epoch {epoch} because no training trajectories have been saved yet...",
-                    category=Warning,
+                utils.amago_warning(
+                    f"Skipping epoch {epoch} because no training trajectories have been saved yet..."
                 )
                 continue
 

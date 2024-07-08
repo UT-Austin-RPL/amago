@@ -1,9 +1,45 @@
+from typing import Optional
+
 import torch
 from torch import nn
 from torch.nn import functional as F
 import gin
 
 from amago.loading import MAGIC_PAD_VAL
+
+
+def symlog(x: torch.Tensor | float) -> torch.Tensor | float:
+    not_torch = not isinstance(x, torch.Tensor)
+    if not_torch:
+        assert isinstance(x, int | float)
+        x = torch.Tensor([x])
+    out = torch.sign(x) * torch.log(abs(x) + 1)
+    if not_torch:
+        out = out.item()
+    return out
+
+
+def symexp(x: torch.Tensor | float) -> torch.Tensor | float:
+    not_torch = not isinstance(x, torch.Tensor)
+    if not_torch:
+        assert isinstance(x, int | float)
+        x = torch.Tensor([x])
+    out = torch.sign(x) * (torch.exp(abs(x)) - 1)
+    if not_torch:
+        out = out.item()
+    return out
+
+
+def add_activation_log(
+    root_key: str, activation: torch.Tensor, log_dict: Optional[dict] = None
+):
+    if log_dict is None:
+        return
+    with torch.no_grad():
+        log_dict[f"activation-{root_key}-max"] = activation.max()
+        log_dict[f"activation-{root_key}-min"] = activation.min()
+        log_dict[f"activation-{root_key}-std"] = activation.std()
+        log_dict[f"activation-{root_key}-mean"] = activation.mean()
 
 
 @gin.configurable

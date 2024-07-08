@@ -169,7 +169,7 @@ class Timestep:
         return self.goal_seq == other.goal_seq
 
     def __deepcopy__(self, memo):
-        warnings.warn(
+        utils.amago_warning(
             "`Timestep` deepcopies return *shallow* copies of raw data but *deep* copies of goal sequences (for relabeling).",
             category=RelabelWarning,
         )

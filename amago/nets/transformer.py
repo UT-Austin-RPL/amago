@@ -1,4 +1,3 @@
-import warnings
 import math
 
 import torch
@@ -8,11 +7,12 @@ from einops import repeat, rearrange, einsum
 import gin
 
 from .utils import activation_switch
+from amago.utils import amago_warning
 
 try:
     import flash_attn
 except ImportError:
-    warnings.warn("Missing FlashAttention (2.0) Install", category=Warning)
+    amago_warning("Missing FlashAttention (2.0) Install")
 
 
 class Normalization(nn.Module):

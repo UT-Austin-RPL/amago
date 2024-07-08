@@ -1,6 +1,4 @@
-from functools import partial
 from argparse import ArgumentParser
-from typing import Callable
 
 import gin
 
@@ -17,6 +15,7 @@ def add_common_cli(parser: ArgumentParser) -> ArgumentParser:
     )
     # basics
     parser.add_argument("--trials", type=int, default=1)
+    parser.add_argument("--agent_type", type=str, default="v1", choices=["v1", "v2"])
     parser.add_argument(
         "--no_async",
         action="store_true",
@@ -280,8 +279,8 @@ def use_config(
 
 def create_experiment_from_cli(
     command_line_args,
-    make_train_env: Callable,
-    make_val_env: Callable,
+    make_train_env: callable,
+    make_val_env: callable,
     max_seq_len: int,
     traj_save_len: int,
     group_name: str,
@@ -292,6 +291,7 @@ def create_experiment_from_cli(
     cli = command_line_args
 
     experiment = experiment_Cls(
+        agent_type=amago.agent.Agent if cli.agent_type == "v1" else amago.agent.AgentV2,
         make_train_env=make_train_env,
         make_val_env=make_val_env,
         max_seq_len=max_seq_len,
