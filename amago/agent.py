@@ -1,8 +1,8 @@
 from itertools import chain
-from dataclasses import dataclass
 
 import torch
 from torch import nn
+import torch.nn.functional as F
 from einops import repeat, rearrange
 import numpy as np
 import wandb

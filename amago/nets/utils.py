@@ -8,7 +8,7 @@ import gin
 from amago.loading import MAGIC_PAD_VAL
 
 
-def symlog(x : torch.Tensor | float) -> torch.Tensor | float:
+def symlog(x: torch.Tensor | float) -> torch.Tensor | float:
     not_torch = not isinstance(x, torch.Tensor)
     if not_torch:
         assert isinstance(x, int | float)
@@ -18,7 +18,8 @@ def symlog(x : torch.Tensor | float) -> torch.Tensor | float:
         out = out.item()
     return out
 
-def symexp(x : torch.Tensor | float) -> torch.Tensor | float:
+
+def symexp(x: torch.Tensor | float) -> torch.Tensor | float:
     not_torch = not isinstance(x, torch.Tensor)
     if not_torch:
         assert isinstance(x, int | float)

@@ -11,7 +11,6 @@ from torch.optim.lr_scheduler import LambdaLR
 import gymnasium as gym
 import gin
 
-from .loading import MAGIC_PAD_VAL
 from accelerate import Accelerator
 
 

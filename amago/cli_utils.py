@@ -1,6 +1,4 @@
-from functools import partial
 from argparse import ArgumentParser
-from typing import Callable
 
 import gin
 
@@ -281,8 +279,8 @@ def use_config(
 
 def create_experiment_from_cli(
     command_line_args,
-    make_train_env: Callable,
-    make_val_env: Callable,
+    make_train_env: callable,
+    make_val_env: callable,
     max_seq_len: int,
     traj_save_len: int,
     group_name: str,

@@ -4,8 +4,6 @@ import math
 
 import torch
 from torch import nn
-import torch.nn.functional as F
-from einops import rearrange
 import gin
 
 from amago.nets.goal_embedders import FFGoalEmb, TokenGoalEmb

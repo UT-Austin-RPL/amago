@@ -7,7 +7,6 @@ import torch.nn.functional as F
 from torch import distributions as pyd
 from einops import repeat, rearrange
 from einops.layers.torch import EinMix as Mix
-import numpy as np
 import gin
 
 from .ff import FFBlock, MLP

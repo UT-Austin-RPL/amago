@@ -7,8 +7,6 @@ from operator import itemgetter
 from functools import partial
 
 import torch
-import torch.nn.functional as F
-from torch import nn
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import Dataset
 import numpy as np
