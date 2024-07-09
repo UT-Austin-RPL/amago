@@ -14,7 +14,11 @@ from torch.utils.data import DataLoader
 import numpy as np
 from einops import repeat
 import gymnasium as gym
-from accelerate import Accelerator, DistributedDataParallelKwargs
+from accelerate import (
+    Accelerator,
+    DistributedDataParallelKwargs,
+    InitProcessGroupKwargs,
+)
 from accelerate.utils import tqdm, release_memory
 
 from . import utils
@@ -97,7 +101,9 @@ class Experiment:
             device_placement=True,
             log_with="wandb",
             kwargs_handlers=[
-                DistributedDataParallelKwargs(find_unused_parameters=True)
+                DistributedDataParallelKwargs(
+                    find_unused_parameters=True, check_reduction=False
+                ),
             ],
             mixed_precision=self.mixed_precision,
         )
