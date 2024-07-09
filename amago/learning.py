@@ -1,4 +1,5 @@
 import os
+import time
 import warnings
 import contextlib
 from dataclasses import dataclass
@@ -67,6 +68,7 @@ class Experiment:
 
     # Learning Schedule
     epochs: int = 1000
+    actor_only_gpus: Optional[int] = 1
     start_learning_at_epoch: int = 0
     start_collecting_at_epoch: int = 0
     train_timesteps_per_epoch: int = 1000
@@ -99,6 +101,16 @@ class Experiment:
             ],
             mixed_precision=self.mixed_precision,
         )
+        if (
+            self.actor_only_gpus is not None
+            and self.accelerator.num_processes <= self.actor_only_gpus
+        ):
+            raise ValueError(
+                "Not enough processes to support actor_only_gpus. Launch with `accelerate launch`"
+            )
+        if self.accelerator.is_main_process:
+            assert self.is_learner_process
+
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             self.init_envs()
@@ -109,6 +121,24 @@ class Experiment:
         self.init_logger()
         if self.verbose:
             self.summary()
+
+    @property
+    def is_learner_process(self):
+        total = self.accelerator.num_processes
+        idx = self.accelerator.process_index
+        if self.actor_only_gpus is None or total == 1:
+            return True
+        learner_cutoff = total - self.actor_only_gpus
+        return idx < learner_cutoff
+
+    @property
+    def is_actor_process(self):
+        total = self.accelerator.num_processes
+        idx = self.accelerator.process_index
+        if self.actor_only_gpus is None or total == 1:
+            return True
+        actor_cutoff = total - self.actor_only_gpus
+        return idx >= actor_cutoff
 
     @property
     def DEVICE(self):
@@ -194,13 +224,13 @@ class Experiment:
 
     def write_latest_policy(self):
         ckpt_name = os.path.join(self.dset_root, self.dset_name, "policy.pt")
-        torch.save(self.policy_aclr.state_dict(), ckpt_name)
+        torch.save(self.policy.state_dict(), ckpt_name)
 
     def read_latest_policy(self):
         ckpt_name = os.path.join(self.dset_root, self.dset_name, "policy.pt")
         ckpt = utils.retry_load_checkpoint(ckpt_name, map_location=self.DEVICE)
         if ckpt is not None:
-            self.policy_aclr.load_state_dict(ckpt)
+            self.policy.load_state_dict(ckpt)
         else:
             utils.amago_warning("Latest policy checkpoint was not loaded.")
 
@@ -292,9 +322,11 @@ class Experiment:
         lr_schedule = utils.get_constant_schedule_with_warmup(
             optimizer=optimizer, num_warmup_steps=self.lr_warmup_steps
         )
-        self.policy_aclr, self.optimizer, self.lr_schedule = self.accelerator.prepare(
-            policy, optimizer, lr_schedule
-        )
+        (
+            self.policy_aclr,
+            self.optimizer,
+            self.lr_schedule,
+        ) = self.accelerator.prepare(policy, optimizer, lr_schedule)
         self.accelerator.register_for_checkpointing(self.lr_schedule)
 
     @property
@@ -578,74 +610,79 @@ class Experiment:
                 c = "red"
 
             if self.verbose:
-                return tqdm(enumerate(loader), desc=desc, total=steps, colour=c)
+                return tqdm(
+                    enumerate(loader),
+                    desc=desc,
+                    total=steps,
+                    colour=c,
+                    main_process_only=False,
+                )
             else:
                 return enumerate(loader)
 
         start_epoch = self.epoch
         for epoch in range(start_epoch, self.epochs):
-            # environment interaction
-            self.policy_aclr.eval()
-            if epoch % self.val_interval == 0:
-                self.evaluate_val()
-            if epoch >= self.start_collecting_at_epoch:
-                self.collect_new_training_data()
+            if not self.is_learner_process:
+                self.read_latest_policy()
 
-            self.accelerator.wait_for_everyone()
-            # make dataloaders aware of new .traj files
-            self.init_dloaders()
-            if self.train_dset.count_trajectories() == 0:
-                utils.amago_warning(
-                    f"Skipping epoch {epoch} because no training trajectories have been saved yet..."
-                )
-                continue
-
-            # training
-            elif epoch < self.start_learning_at_epoch:
-                continue
-            self.policy_aclr.train()
-            for train_step, batch in make_pbar(self.train_dloader, True, epoch):
-                total_step = (epoch * self.train_grad_updates_per_epoch) + train_step
-                log_step = total_step % self.log_interval == 0
-                loss_dict = self.train_step(batch, log_step=log_step)
-                if log_step:
-                    self.log(loss_dict, key="train-update")
-            self.accelerator.wait_for_everyone()
-
-            # validation
-            if (
-                epoch % self.val_interval == 0
-                and self.val_dset.count_trajectories() > 0
-            ):
+            if self.is_actor_process:
+                print(f"ACTING idx {self.accelerator.process_index}")
+                # environment interaction
                 self.policy_aclr.eval()
-                for _, batch in make_pbar(self.val_dloader, False, epoch):
-                    loss_dict = self.val_step(batch)
-                    self.log(loss_dict, key="val-update")
-                figures = self.make_figures(loss_dict)
-                self.log(figures, key="val-update")
-                self.accelerator.wait_for_everyone()
-                if self.accelerator.is_main_process:
-                    self.val_dset.clear()
+                if epoch % self.val_interval == 0:
+                    self.evaluate_val()
+                if epoch >= self.start_collecting_at_epoch:
+                    self.collect_new_training_data()
 
-            # buffer management
-            dset_size = self.train_dset.count_trajectories()
-            dset_gb = self.train_dset.disk_usage
-            needs_filter = (
-                dset_size > self.dset_max_size and self.dset_filter_pct is not None
-            )
+            if self.is_learner_process and epoch >= self.start_learning_at_epoch:
+                print(f"training idx {self.accelerator.process_index}")
+                # training
+                self.init_dloaders()
+                if self.train_dset.count_trajectories() > 0:
+                    for train_step, batch in make_pbar(self.train_dloader, True, epoch):
+                        total_step = (
+                            epoch * self.train_grad_updates_per_epoch
+                        ) + train_step
+                        log_step = total_step % self.log_interval == 0
+                        loss_dict = self.train_step(batch, log_step=log_step)
+                        if log_step:
+                            self.log(loss_dict, key="train-update")
+
+                # validation
+                if (
+                    epoch % self.val_interval == 0
+                    and self.val_dset.count_trajectories() > 0
+                ):
+                    self.policy_aclr.eval()
+                    for _, batch in make_pbar(self.val_dloader, False, epoch):
+                        loss_dict = self.val_step(batch)
+                        self.log(loss_dict, key="val-update")
+                    figures = self.make_figures(loss_dict)
+                    self.log(figures, key="val-update")
+
+            print(f"waiting idx {self.accelerator.process_index}")
             self.accelerator.wait_for_everyone()
-            if needs_filter and self.accelerator.is_main_process:
-                self.train_dset.filter(self.dset_filter_pct)
-            self.log(
-                {
-                    "Trajectory Files Saved in Replay Buffer": dset_size,
-                    "Train Buffer Disk Space (GB)": dset_gb,
-                },
-                key="buffer",
-            )
-            self.accelerator.wait_for_everyone()
+
+            if self.accelerator.is_main_process:
+                self.val_dset.clear()
+                # buffer management
+                dset_size = self.train_dset.count_trajectories()
+                dset_gb = self.train_dset.disk_usage
+                if dset_size > self.dset_max_size and self.dset_filter_pct is not None:
+                    self.train_dset.filter(self.dset_filter_pct)
+                self.log(
+                    {
+                        "Trajectory Files Saved in Replay Buffer": dset_size,
+                        "Train Buffer Disk Space (GB)": dset_gb,
+                    },
+                    key="buffer",
+                )
 
             # end epoch
+            self.accelerator.wait_for_everyone()
             self.epoch = epoch
             if epoch % self.ckpt_interval == 0:
                 self.save_checkpoint()
+            if self.accelerator.is_main_process:
+                self.write_latest_policy()
+            self.accelerator.wait_for_everyone()
