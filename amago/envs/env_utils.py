@@ -202,16 +202,13 @@ class ExplorationWrapper(gym.ActionWrapper):
         self,
         env: gym.Env,
         eps_start_start: float = 1.0,
-        eps_start_end: float = 1.0,
+        eps_start_end: float = 0.8,
         eps_end_start: float = .15,
-        eps_end_end: float = .15,
-        steps_anneal: int = 10_000_000,
+        eps_end_end: float = .1,
+        steps_anneal: int = 75_000,
     ):
         super().__init__(env)
-        print("settings changed for Atari")
-
         self.eps_start_start = eps_start_start
-        print(self.eps_start_start)
         self.eps_start_end = eps_start_end
         self.eps_end_start = eps_end_start
         self.eps_end_end = eps_end_end
@@ -364,7 +361,7 @@ class SequenceWrapper(gym.Wrapper):
         self.success_history = SuccessHistory(self.env_name)
 
     def reset(self, seed=None) -> Timestep:
-        timestep = self.env.reset(seed=seed)
+        timestep, info = self.env.reset(seed=seed)
         self.active_traj = Trajectory(
             max_goals=self.env.max_goal_seq_length, timesteps=[timestep]
         )
@@ -374,7 +371,7 @@ class SequenceWrapper(gym.Wrapper):
         )
         self.total_return = 0.0
         self._current_timestep = self.active_traj.make_sequence(last_only=True)
-        return timestep.obs, {}
+        return timestep.obs, info
 
     def step(self, action):
         timestep, reward, terminated, truncated, info = self.env.step(action)
@@ -388,6 +385,7 @@ class SequenceWrapper(gym.Wrapper):
                 if "success" not in info
                 else info["success"]
             )
+            print(f"Adding success history with name: {self.env.env_name}, success : {success}")
             self.success_history.add_score(self.env.env_name, success)
         save = (
             self.save_every is not None and self.since_last_save > self.save_this_time

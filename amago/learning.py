@@ -1,4 +1,5 @@
 import os
+import copy
 import time
 import warnings
 import contextlib
@@ -114,6 +115,7 @@ class Experiment:
                 continue
             params = parameter.numel()
             total_params += params
+        breakpoint()
 
         assert (
             self.traj_save_len >= self.max_seq_len
@@ -139,6 +141,14 @@ class Experiment:
         \t Fast Inference: {self.fast_inference}
         \t Total Parameters: {total_params:,d} \n\n"""
         )
+
+    def _build_train_envs(self):
+        if self.train_envs is not None:
+            self.train_envs.close()
+        del self.train_envs
+        Par = gym.vector.AsyncVectorEnv if self.async_envs else DummyAsyncVectorEnv
+        self.train_envs = Par(self.train_env_funcs)
+
 
     def init_envs(self):
         assert self.traj_save_len >= self.max_seq_len
@@ -188,13 +198,19 @@ class Experiment:
         else:
             make_train_env = partial(_make_env, self.make_train_env, "train")
             train_env_funcs = [make_train_env for _ in range(self.parallel_actors)]
-        self.train_envs = Par(train_env_funcs)
-        self.train_envs.reset()
+
+        self.train_envs = None
+        self.train_env_funcs = train_env_funcs
+        self._build_train_envs()
 
         if not self.share_train_val_envs:
-            make_val_env = partial(_make_env, self.make_val_env, "val")
-            self.val_envs = Par([make_val_env for _ in range(self.parallel_actors)])
-            self.val_envs.reset()
+            #self.make_val_env = [partial(_make_env, self.make_val_env, "val") for _ in range(self.parallel_actors)]
+            #make_val_env = [partial(_make_env, self.make_val_env, "val") for _ in range(self.parallel_actors)]
+            make_val_env = [self.make_val_env for _ in range(self.parallel_actors)]
+            #self.val_envs = None
+            #self.val_envs = Par([make_val_env for _ in range(self.parallel_actors)])
+            self.val_envs = Par(make_val_env)
+            #self.val_envs.reset()
         else:
             self.val_envs = self.train_envs
 
@@ -248,6 +264,7 @@ class Experiment:
                 else:
                     raise e
             else:
+                print("Checkpoint loaded.")
                 break
 
         self.policy.load_state_dict(ckpt["model_state"])
@@ -482,6 +499,11 @@ class Experiment:
 
     def evaluate_val(self):
         if self.val_timesteps_per_epoch > 0:
+            """
+            if self.val_envs is None:
+                Par = gym.vector.AsyncVectorEnv if self.async_envs else DummyAsyncVectorEnv
+                self.val_envs = Par([self.make_val_env for _ in range(self.parallel_actors)])
+            """
             if self.share_train_val_envs:
                 self.val_envs.call_async("turn_off_exploration")
                 self.val_envs.call_wait()
@@ -520,6 +542,8 @@ class Experiment:
         )
         logs = self.policy_metrics(returns, successes)
         self.log(logs, key="test")
+        if self.verbose:
+            print(f"Average Return : {logs['Average Total Return (Across All Env Names)']}")
         test_envs.close()
         return logs
 
@@ -686,6 +710,7 @@ class Experiment:
 
         start_epoch = self.epoch
         for epoch in range(start_epoch, self.epochs):
+
             if self.always_load_latest_ckpt:
                 self.load_checkpoint(loading_latest=True)
 
@@ -745,7 +770,7 @@ class Experiment:
 
             # end epoch
             self.epoch = epoch
-            if epoch % self.ckpt_interval == 0:
+            if epoch % self.ckpt_interval == 0 or epoch == 0:
                 self.save_checkpoint()
             if self.save_latest_ckpt:
                 self.save_checkpoint(saving_latest=True)

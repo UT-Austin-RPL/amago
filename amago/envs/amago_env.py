@@ -96,7 +96,7 @@ class AMAGOEnv(gym.Wrapper, ABC):
 
     def reset(self, seed=None, options=None) -> Timestep:
         self.step_count = 0
-        obs, _ = self.inner_reset(seed=seed, options=options)
+        obs, info = self.inner_reset(seed=seed, options=options)
         if not isinstance(obs, dict):
             obs = {"observation": obs}
         timestep = Timestep(
@@ -110,7 +110,7 @@ class AMAGOEnv(gym.Wrapper, ABC):
             terminal=False,
             raw_time_idx=0,
         )
-        return timestep
+        return timestep, info
 
     def inner_step(self, action):
         return self.env.step(action)
