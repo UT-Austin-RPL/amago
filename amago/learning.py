@@ -59,7 +59,7 @@ class Experiment:
     dset_root: str = None
     dset_name: str = None
     dset_max_size: int = 15_000
-    dset_filter_pct: float = 0.1
+    dset_filter_pct: Optional[float] = 0.1
     relabel: str = "none"
     goal_importance_sampling: bool = False
     stagger_traj_file_lengths: bool = True
@@ -222,7 +222,7 @@ class Experiment:
         self.accelerator.save_state(os.path.join(self.ckpt_dir, ckpt_name))
 
     def write_latest_policy(self):
-        print("Saving latest policy...")
+        self.accelerator.print("Saving latest policy...")
         ckpt_name = os.path.join(self.dset_root, self.dset_name, "policy.pt")
         torch.save(self.policy_aclr.state_dict(), ckpt_name)
 
@@ -230,7 +230,7 @@ class Experiment:
         ckpt_name = os.path.join(self.dset_root, self.dset_name, "policy.pt")
         ckpt = utils.retry_load_checkpoint(ckpt_name, map_location=self.DEVICE)
         if ckpt is not None:
-            print("Loading latest policy....")
+            self.accelerator.print("Loading latest policy....")
             self.policy_aclr.load_state_dict(ckpt)
         else:
             utils.amago_warning("Latest policy checkpoint was not loaded.")

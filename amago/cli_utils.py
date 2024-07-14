@@ -348,6 +348,9 @@ def make_experiment_collect_only(experiment: amago.Experiment) -> amago.Experime
     experiment.ckpt_interval = None
     experiment.always_save_latest = False
     experiment.always_load_latest = True
+    # run "forever"; terminate manually (when learning process is done)
+    experiment.epochs = 10_000_000
+    experiment.dset_filter_pct = None
     return experiment
 
 

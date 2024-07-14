@@ -15,7 +15,7 @@ def add_cli(parser):
         help="`name-v2` for ML1, or `ml10`/`ml45`",
     )
     parser.add_argument("--k", type=int, default=3, help="K-Shots")
-    parser.add_argument("--max_seq_len", type=int, default=2000)
+    parser.add_argument("--max_seq_len", type=int, default=256)
     parser.add_argument(
         "--hide_rl2s",
         action="store_true",
@@ -33,6 +33,12 @@ if __name__ == "__main__":
     config = {
         "amago.envs.env_utils.ExplorationWrapper.steps_anneal": 2_000_000,
         "amago.nets.tstep_encoders.FFTstepEncoder.hide_rl2s": args.hide_rl2s,
+        "amago.agent.Agent.reward_multiplier": 1.0,
+        # delete the next three lines to use the paper settings, which were
+        # intentionally left wide open to avoid reward-specific tuning.
+        "amago.nets.actor_critic.NCriticsTwoHot.min_return": -100.0,
+        "amago.nets.actor_critic.NCriticsTwoHot.max_return": 5000 * args.k,
+        "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 96,
     }
     turn_off_goal_conditioning(config)
     switch_traj_encoder(
@@ -59,7 +65,9 @@ if __name__ == "__main__":
             traj_save_len=min(500 * args.k + 1, args.max_seq_len * 4),
             group_name=group_name,
             run_name=run_name,
-            val_timesteps_per_epoch=2 * args.k * 500 + 1,
+            val_timesteps_per_epoch=10 * args.k * 500 + 1,
+            learning_rate=5e-4,
+            grad_clip=2.0,
         )
 
         experiment = switch_mode_load_ckpt(experiment, args)
