@@ -222,7 +222,6 @@ class Experiment:
         self.accelerator.save_state(os.path.join(self.ckpt_dir, ckpt_name))
 
     def write_latest_policy(self):
-        self.accelerator.print("Saving latest policy...")
         ckpt_name = os.path.join(self.dset_root, self.dset_name, "policy.pt")
         torch.save(self.policy_aclr.state_dict(), ckpt_name)
 
