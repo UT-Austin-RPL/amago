@@ -4,7 +4,7 @@ import contextlib
 from dataclasses import dataclass
 from collections import defaultdict
 from functools import partial
-from typing import Optional
+from typing import Optional, Iterable
 
 import gin
 import wandb
@@ -41,8 +41,8 @@ class Experiment:
     agent_type: type[Agent]
 
     # Environment
-    make_train_env: callable
-    make_val_env: callable
+    make_train_env: callable | Iterable[callable]
+    make_val_env: callable | Iterable[callable]
     parallel_actors: int = 10
     async_envs: bool = True
     exploration_wrapper_Cls: Optional[type[ExplorationWrapper]] = ExplorationWrapper
@@ -147,6 +147,21 @@ class Experiment:
 
     def init_envs(self):
         assert self.traj_save_len >= self.max_seq_len
+        make_val_envs = (
+            [self.make_val_env] * self.parallel_actors
+            if not isinstance(self.make_val_env, Iterable)
+            else self.make_val_env
+        )
+        make_train_envs = (
+            [self.make_train_env] * self.parallel_actors
+            if not isinstance(self.make_train_env, Iterable)
+            else self.make_train_env
+        )
+        env_len_err = "`make_train_env` and `make_val_env` should be a callable or a list of callables of length `parallel_actors`"
+        assert len(make_train_envs) == self.parallel_actors, env_len_err
+        assert len(make_val_envs) == self.parallel_actors, env_len_err
+
+        # wrap environments to save trajectories to replay buffer
         shared_env_kwargs = dict(
             dset_root=self.dset_root,
             dset_name=self.dset_name,
@@ -155,25 +170,37 @@ class Experiment:
             max_seq_len=self.max_seq_len,
             stagger_traj_file_lengths=self.stagger_traj_file_lengths,
         )
-        make_train = MakeEnvSaveToDisk(
-            make_env=self.make_train_env,
-            dset_split="train",
-            exploration_wrapper_Cls=self.exploration_wrapper_Cls,
-            **shared_env_kwargs,
-        )
-        make_val = MakeEnvSaveToDisk(
-            make_env=self.make_val_env,
-            dset_split="val",
-            exploration_wrapper_Cls=None,
-            **shared_env_kwargs,
-        )
+        make_train = [
+            MakeEnvSaveToDisk(
+                make_env=env_func,
+                dset_split="train",
+                # adds exploration noise
+                exploration_wrapper_Cls=self.exploration_wrapper_Cls,
+                **shared_env_kwargs,
+            )
+            for env_func in make_train_envs
+        ]
+        make_val = [
+            MakeEnvSaveToDisk(
+                make_env=env_func,
+                dset_split="val",
+                # no exploration noise
+                exploration_wrapper_Cls=None,
+                **shared_env_kwargs,
+            )
+            for env_func in make_val_envs
+        ]
+
+        # make parallel envs
         Par = gym.vector.AsyncVectorEnv if self.async_envs else DummyAsyncVectorEnv
-        self.train_envs = Par([make_train for _ in range(self.parallel_actors)])
-        self.val_envs = Par([make_val for _ in range(self.parallel_actors)])
-        self.gcrl2_space = make_train.gcrl2_space
-        self.horizon = make_train.horizon
+        self.train_envs = Par(make_train)
         self.train_envs.reset()
+        self.val_envs = Par(make_val)
         self.val_envs.reset()
+
+        # save info we need to initialize the agent nets
+        self.gcrl2_space = make_train[0].gcrl2_space
+        self.horizon = make_train[0].horizon
         # self.train_buffers holds the env state between rollout cycles
         # that are shorter than the horizon length
         self.train_buffers = None
