@@ -1,4 +1,5 @@
 from argparse import ArgumentParser
+from typing import Optional
 
 import gin
 
@@ -126,6 +127,13 @@ def add_common_cli(parser: ArgumentParser) -> ArgumentParser:
         type=int,
         default=24,
         help="Training batch size (measured in trajectories, not timesteps).",
+    )
+    parser.add_argument(
+        "--mode",
+        type=str,
+        default="both",
+        choices=["learn", "collect", "both"],
+        help="Simple max-throughput async mode. Start the same command with (1+) `--mode collect` flags, and one `--mode learner` flag. Defaults to alternating collect/train steps.",
     )
     return parser
 
@@ -317,4 +325,42 @@ def create_experiment_from_cli(
         **extra_experiment_kwargs,
     )
 
+    return experiment
+
+
+def make_experiment_learn_only(experiment: amago.Experiment) -> amago.Experiment:
+    experiment.start_collecting_at_epoch = float("inf")
+    experiment.train_timesteps_per_epoch = 0
+    experiment.val_interval = None
+    experiment.val_timesteps_per_epoch = 0
+    experiment.val_checks_per_epoch = 0
+    experiment.parallel_actors = 2
+    experiment.async_envs = False
+    experiment.always_save_latest = True
+    return experiment
+
+
+def make_experiment_collect_only(experiment: amago.Experiment) -> amago.Experiment:
+    experiment.start_collecting_at_epoch = 0
+    experiment.start_learning_at_epoch = float("inf")
+    experiment.train_grad_updates_per_epoch = 0
+    experiment.val_checks_per_epoch = 0
+    experiment.ckpt_interval = None
+    experiment.always_save_latest = False
+    experiment.always_load_latest = True
+    return experiment
+
+
+def switch_mode_load_ckpt(
+    experiment: amago.Experiment, command_line_args
+) -> amago.Experiment:
+    cli = command_line_args
+    if cli.mode == "collect":
+        assert cli.trials == 1, "Async Mode breaks `trials` loop. Set `--trials = 1`"
+        experiment = make_experiment_collect_only(experiment)
+    elif cli.mode == "learn":
+        assert cli.trials == 1, "Async Mode breaks `trials` loop. Set `--trials = 1`"
+        experiment = make_experiment_learn_only(experiment)
+        if cli.ckpt is not None:
+            experiment.load_checkpoint(cli.ckpt)
     return experiment

@@ -178,9 +178,7 @@ if __name__ == "__main__":
             ## Test ##
             ##########
             # (including manual tasks used in Figures and Appendix tables)
-
-            if args.ckpt is None:
-                experiment.load_checkpoint(loading_best=True)
+            assert args.ckpt
 
             # full task distribution
             experiment.evaluate_test(make_env, timesteps=20_000, render=False)

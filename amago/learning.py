@@ -14,7 +14,7 @@ import numpy as np
 from einops import repeat
 import gymnasium as gym
 from accelerate import Accelerator, DistributedDataParallelKwargs
-from accelerate.utils import tqdm, release_memory
+from accelerate.utils import tqdm
 
 from . import utils
 from .agent import Agent
@@ -71,11 +71,13 @@ class Experiment:
     start_collecting_at_epoch: int = 0
     train_timesteps_per_epoch: int = 1000
     train_grad_updates_per_epoch: int = 1000
-    val_interval: int = 10
+    val_interval: Optional[int] = 10
     val_timesteps_per_epoch: int = 10_000
     val_checks_per_epoch: int = 50
     log_interval: int = 250
-    ckpt_interval: int = 20
+    ckpt_interval: Optional[int] = 20
+    always_save_latest: bool = True
+    always_load_latest: bool = False
 
     # Optimization
     batch_size: int = 24
@@ -170,10 +172,10 @@ class Experiment:
         self.val_envs = Par([make_val for _ in range(self.parallel_actors)])
         self.gcrl2_space = make_train.gcrl2_space
         self.horizon = make_train.horizon
-        # self.train_buffers holds the env state between rollout cycles
-        # that are shorter than the horizon length
         self.train_envs.reset()
         self.val_envs.reset()
+        # self.train_buffers holds the env state between rollout cycles
+        # that are shorter than the horizon length
         self.train_buffers = None
         self.hidden_state = None
 
@@ -193,6 +195,7 @@ class Experiment:
         self.accelerator.save_state(os.path.join(self.ckpt_dir, ckpt_name))
 
     def write_latest_policy(self):
+        print("Saving latest policy...")
         ckpt_name = os.path.join(self.dset_root, self.dset_name, "policy.pt")
         torch.save(self.policy_aclr.state_dict(), ckpt_name)
 
@@ -200,6 +203,7 @@ class Experiment:
         ckpt_name = os.path.join(self.dset_root, self.dset_name, "policy.pt")
         ckpt = utils.retry_load_checkpoint(ckpt_name, map_location=self.DEVICE)
         if ckpt is not None:
+            print("Loading latest policy....")
             self.policy_aclr.load_state_dict(ckpt)
         else:
             utils.amago_warning("Latest policy checkpoint was not loaded.")
@@ -584,9 +588,12 @@ class Experiment:
 
         start_epoch = self.epoch
         for epoch in range(start_epoch, self.epochs):
+            if self.always_load_latest:
+                self.read_latest_policy()
+
             # environment interaction
             self.policy_aclr.eval()
-            if epoch % self.val_interval == 0:
+            if self.val_interval and epoch % self.val_interval == 0:
                 self.evaluate_val()
             if epoch >= self.start_collecting_at_epoch:
                 self.collect_new_training_data()
@@ -614,7 +621,8 @@ class Experiment:
 
             # validation
             if (
-                epoch % self.val_interval == 0
+                self.val_interval is not None
+                and epoch % self.val_interval == 0
                 and self.val_dset.count_trajectories() > 0
             ):
                 self.policy_aclr.eval()
@@ -647,5 +655,7 @@ class Experiment:
 
             # end epoch
             self.epoch = epoch
-            if epoch % self.ckpt_interval == 0:
+            if self.ckpt_interval and epoch % self.ckpt_interval == 0:
                 self.save_checkpoint()
+            if self.always_save_latest:
+                self.write_latest_policy()

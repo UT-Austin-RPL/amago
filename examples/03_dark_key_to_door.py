@@ -79,6 +79,5 @@ if __name__ == "__main__":
         if args.ckpt is not None:
             experiment.load_checkpoint(args.ckpt)
         experiment.learn()
-        experiment.load_checkpoint(loading_best=True)
         experiment.evaluate_test(make_train_env, timesteps=20_000, render=False)
         wandb.finish()

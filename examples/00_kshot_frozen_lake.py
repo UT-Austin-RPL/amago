@@ -109,8 +109,5 @@ if __name__ == "__main__":
         experiment.start()
         # run training
         experiment.learn()
-        # load the best checkpoint (highest validation env return)
-        experiment.load_checkpoint(loading_best=True)
-        # evaluate best policy
         experiment.evaluate_test(make_env, timesteps=10_000)
         wandb.finish()
