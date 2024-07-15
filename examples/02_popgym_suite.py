@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 import wandb
 
 import amago
-from amago.envs.builtin.popgym_envs import POPGymEnv
+from amago.envs.builtin.popgym_envs import POPGymAMAGO, MultiDomainPOPGymAMAGO
 from amago.cli_utils import *
 
 
@@ -11,6 +11,11 @@ def add_cli(parser):
     parser.add_argument("--env", type=str, default="AutoencodeEasy")
     parser.add_argument("--max_seq_len", type=int, default=2000)
     parser.add_argument("--traj_save_len", type=int, default=2000)
+    parser.add_argument(
+        "--multidomain",
+        action="store_true",
+        help="Activate 'MultiDomain' POPGym, where agents play 27 POPGym games at the same time in 1-shot format (2 episodes, second one counts).",
+    )
     parser.add_argument("--naive", action="store_true")
     return parser
 
@@ -47,7 +52,12 @@ if __name__ == "__main__":
     group_name = f"{args.run_name}_{args.env}"
     for trial in range(args.trials):
         run_name = group_name + f"_trial_{trial}"
-        make_train_env = lambda: POPGymEnv(f"popgym-{args.env}-v0")
+
+        if args.multidomain:
+            make_train_env = lambda: MultiDomainPOPGymAMAGO()
+        else:
+            make_train_env = lambda: POPGymAMAGO(f"popgym-{args.env}-v0")
+
         experiment = create_experiment_from_cli(
             args,
             make_train_env=make_train_env,
