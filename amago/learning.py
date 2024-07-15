@@ -446,11 +446,12 @@ class Experiment:
                 self.val_envs,
                 self.val_timesteps_per_epoch,
             )
-            logs = self.policy_metrics(returns, successes)
-            cur_return = logs["Average Total Return (Across All Env Names)"]
+            logs_per_process = self.policy_metrics(returns, successes)
+            cur_return = logs_per_process["Average Total Return (Across All Env Names)"]
             if self.verbose:
                 self.accelerator.print(f"Average Return : {cur_return}")
-            self.log(logs, key="val")
+            logs_global = utils.avg_over_accelerate(self.accelerator, logs_per_process)
+            self.log(logs_global, key="val")
 
     def evaluate_test(
         self, make_test_env: callable, timesteps: int, render: bool = False

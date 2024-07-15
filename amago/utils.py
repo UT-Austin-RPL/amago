@@ -33,7 +33,7 @@ def avg_over_accelerate(accelerator: Accelerator, data: dict[str, int | float]):
     merged_stats = accelerator.gather(
         {k: torch.Tensor([v]).to(accelerator.device) for k, v in data.items()}
     )
-    avg_stats = {k: v.mean().item() for k, v in merged_stats.items()}
+    avg_stats = {k: v.mean().cpu().item() for k, v in merged_stats.items()}
     return avg_stats
 
 
