@@ -22,11 +22,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     config = {
-        # no need to risk numerical instability when returns are this bounded
-        "amago.agent.Agent.reward_multiplier": 100.0,
-        "amago.nets.actor_critic.NCriticsTwoHot.min_return": -200.0,
-        "amago.nets.actor_critic.NCriticsTwoHot.max_return": 200.0,
-        "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 32,
+        # bins are hard to tune in this environment.
+        "amago.agent.Agent.reward_multiplier": 1.0 if args.agent == "v2"else 100.0,  # paper: always 100
+        "amago.nets.actor_critic.NCriticsTwoHot.min_return": -1.0,  # paper: None
+        "amago.nets.actor_critic.NCriticsTwoHot.max_return": 1.0,  # paper: None
+        "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 32,  # paper: 64 : 
     }
     turn_off_goal_conditioning(config)
     switch_traj_encoder(
