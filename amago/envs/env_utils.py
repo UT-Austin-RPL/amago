@@ -5,7 +5,7 @@ import warnings
 from uuid import uuid4
 from dataclasses import dataclass
 from collections import defaultdict
-from typing import Optional, Type, Callable
+from typing import Optional, Type, Callable, Iterable
 
 import gymnasium as gym
 import numpy as np
@@ -15,6 +15,7 @@ from einops import rearrange
 
 from amago.loading import MAGIC_PAD_VAL
 from amago.hindsight import Timestep, Trajectory, GoalSeq
+from amago.utils import amago_warning
 
 
 class DummyAsyncVectorEnv(gym.Env):

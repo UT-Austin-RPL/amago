@@ -99,7 +99,7 @@ def retry_load_checkpoint(ckpt_path, map_location, tries: int = 10):
         attempts += 1
         try:
             ckpt = torch.load(ckpt_path, map_location=map_location)
-        except RuntimeError as e:
+        except Exception as e:
             amago_warning(
                 f"Error loading checkpoint. {'Retrying...' if attempts < tries else 'Failed'}"
             )

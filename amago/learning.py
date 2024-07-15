@@ -4,7 +4,7 @@ import contextlib
 from dataclasses import dataclass
 from collections import defaultdict
 from functools import partial
-from typing import Optional
+from typing import Optional, Iterable
 
 import gin
 import wandb
@@ -14,7 +14,7 @@ import numpy as np
 from einops import repeat
 import gymnasium as gym
 from accelerate import Accelerator, DistributedDataParallelKwargs
-from accelerate.utils import tqdm, release_memory
+from accelerate.utils import tqdm
 
 from . import utils
 from .agent import Agent
@@ -41,8 +41,8 @@ class Experiment:
     agent_type: type[Agent]
 
     # Environment
-    make_train_env: callable
-    make_val_env: callable
+    make_train_env: callable | Iterable[callable]
+    make_val_env: callable | Iterable[callable]
     parallel_actors: int = 10
     async_envs: bool = True
     exploration_wrapper_Cls: Optional[type[ExplorationWrapper]] = ExplorationWrapper
@@ -59,7 +59,7 @@ class Experiment:
     dset_root: str = None
     dset_name: str = None
     dset_max_size: int = 15_000
-    dset_filter_pct: float = 0.1
+    dset_filter_pct: Optional[float] = 0.1
     relabel: str = "none"
     goal_importance_sampling: bool = False
     stagger_traj_file_lengths: bool = True
@@ -71,11 +71,13 @@ class Experiment:
     start_collecting_at_epoch: int = 0
     train_timesteps_per_epoch: int = 1000
     train_grad_updates_per_epoch: int = 1000
-    val_interval: int = 10
+    val_interval: Optional[int] = 10
     val_timesteps_per_epoch: int = 10_000
     val_checks_per_epoch: int = 50
     log_interval: int = 250
-    ckpt_interval: int = 20
+    ckpt_interval: Optional[int] = 20
+    always_save_latest: bool = True
+    always_load_latest: bool = False
 
     # Optimization
     batch_size: int = 24
@@ -145,6 +147,21 @@ class Experiment:
 
     def init_envs(self):
         assert self.traj_save_len >= self.max_seq_len
+        make_val_envs = (
+            [self.make_val_env] * self.parallel_actors
+            if not isinstance(self.make_val_env, Iterable)
+            else self.make_val_env
+        )
+        make_train_envs = (
+            [self.make_train_env] * self.parallel_actors
+            if not isinstance(self.make_train_env, Iterable)
+            else self.make_train_env
+        )
+        env_len_err = "`make_train_env` and `make_val_env` should be a callable or a list of callables of length `parallel_actors`"
+        assert len(make_train_envs) == self.parallel_actors, env_len_err
+        assert len(make_val_envs) == self.parallel_actors, env_len_err
+
+        # wrap environments to save trajectories to replay buffer
         shared_env_kwargs = dict(
             dset_root=self.dset_root,
             dset_name=self.dset_name,
@@ -153,27 +170,39 @@ class Experiment:
             max_seq_len=self.max_seq_len,
             stagger_traj_file_lengths=self.stagger_traj_file_lengths,
         )
-        make_train = MakeEnvSaveToDisk(
-            make_env=self.make_train_env,
-            dset_split="train",
-            exploration_wrapper_Cls=self.exploration_wrapper_Cls,
-            **shared_env_kwargs,
-        )
-        make_val = MakeEnvSaveToDisk(
-            make_env=self.make_val_env,
-            dset_split="val",
-            exploration_wrapper_Cls=None,
-            **shared_env_kwargs,
-        )
+        make_train = [
+            MakeEnvSaveToDisk(
+                make_env=env_func,
+                dset_split="train",
+                # adds exploration noise
+                exploration_wrapper_Cls=self.exploration_wrapper_Cls,
+                **shared_env_kwargs,
+            )
+            for env_func in make_train_envs
+        ]
+        make_val = [
+            MakeEnvSaveToDisk(
+                make_env=env_func,
+                dset_split="val",
+                # no exploration noise
+                exploration_wrapper_Cls=None,
+                **shared_env_kwargs,
+            )
+            for env_func in make_val_envs
+        ]
+
+        # make parallel envs
         Par = gym.vector.AsyncVectorEnv if self.async_envs else DummyAsyncVectorEnv
-        self.train_envs = Par([make_train for _ in range(self.parallel_actors)])
-        self.val_envs = Par([make_val for _ in range(self.parallel_actors)])
-        self.gcrl2_space = make_train.gcrl2_space
-        self.horizon = make_train.horizon
+        self.train_envs = Par(make_train)
+        self.train_envs.reset()
+        self.val_envs = Par(make_val)
+        self.val_envs.reset()
+
+        # save info we need to initialize the agent nets
+        self.gcrl2_space = make_train[0].gcrl2_space
+        self.horizon = make_train[0].horizon
         # self.train_buffers holds the env state between rollout cycles
         # that are shorter than the horizon length
-        self.train_envs.reset()
-        self.val_envs.reset()
         self.train_buffers = None
         self.hidden_state = None
 
@@ -200,6 +229,7 @@ class Experiment:
         ckpt_name = os.path.join(self.dset_root, self.dset_name, "policy.pt")
         ckpt = utils.retry_load_checkpoint(ckpt_name, map_location=self.DEVICE)
         if ckpt is not None:
+            self.accelerator.print("Loading latest policy....")
             self.policy_aclr.load_state_dict(ckpt)
         else:
             utils.amago_warning("Latest policy checkpoint was not loaded.")
@@ -584,9 +614,12 @@ class Experiment:
 
         start_epoch = self.epoch
         for epoch in range(start_epoch, self.epochs):
+            if self.always_load_latest:
+                self.read_latest_policy()
+
             # environment interaction
             self.policy_aclr.eval()
-            if epoch % self.val_interval == 0:
+            if self.val_interval and epoch % self.val_interval == 0:
                 self.evaluate_val()
             if epoch >= self.start_collecting_at_epoch:
                 self.collect_new_training_data()
@@ -614,7 +647,8 @@ class Experiment:
 
             # validation
             if (
-                epoch % self.val_interval == 0
+                self.val_interval is not None
+                and epoch % self.val_interval == 0
                 and self.val_dset.count_trajectories() > 0
             ):
                 self.policy_aclr.eval()
@@ -647,5 +681,7 @@ class Experiment:
 
             # end epoch
             self.epoch = epoch
-            if epoch % self.ckpt_interval == 0:
+            if self.ckpt_interval and epoch % self.ckpt_interval == 0:
                 self.save_checkpoint()
+            if self.always_save_latest:
+                self.write_latest_policy()

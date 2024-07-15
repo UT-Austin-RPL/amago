@@ -14,8 +14,8 @@ def add_cli(parser):
         default="reach-v2",
         help="`name-v2` for ML1, or `ml10`/`ml45`",
     )
-    parser.add_argument("--k", type=int, default=5, help="K-Shots")
-    parser.add_argument("--max_seq_len", type=int, default=2000)
+    parser.add_argument("--k", type=int, default=3, help="K-Shots")
+    parser.add_argument("--max_seq_len", type=int, default=256)
     parser.add_argument(
         "--hide_rl2s",
         action="store_true",
@@ -33,6 +33,12 @@ if __name__ == "__main__":
     config = {
         "amago.envs.env_utils.ExplorationWrapper.steps_anneal": 2_000_000,
         "amago.nets.tstep_encoders.FFTstepEncoder.hide_rl2s": args.hide_rl2s,
+        "amago.agent.Agent.reward_multiplier": 1.0,
+        # delete the next three lines to use the paper settings, which were
+        # intentionally left wide open to avoid reward-specific tuning.
+        "amago.nets.actor_critic.NCriticsTwoHot.min_return": -100.0,
+        "amago.nets.actor_critic.NCriticsTwoHot.max_return": 5000 * args.k,
+        "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 96,
     }
     turn_off_goal_conditioning(config)
     switch_traj_encoder(
@@ -42,19 +48,6 @@ if __name__ == "__main__":
         layers=args.memory_layers,
     )
     use_config(config, args.configs)
-
-    """
-    The easiest way to do k-shot meta-learning (where the end of meta-testing is
-    defined by a fixed number of episodes, rather than a fixed number of timesteps)
-    is to handle that logic in an environment wrapper. 
-    See `amago.envs.builtin.metaworld_ml.KShotMetaworld`. The environment auto-resets
-    k times, which lets amago treat it as if it was zero-shot. The only trick is to add
-    the resets to the observation space.
-
-    Metaworld actually always has `500 * args.k` timesteps - so it could use the AMAGOEnv
-    `soft_reset_kwargs` (see dark_key_to_door example) - but we do it this way as an
-    example.
-    """
 
     make_train_env = lambda: Metaworld(args.benchmark, "train", k_shots=args.k)
     make_test_env = lambda: Metaworld(args.benchmark, "test", k_shots=args.k)
@@ -72,13 +65,13 @@ if __name__ == "__main__":
             traj_save_len=min(500 * args.k + 1, args.max_seq_len * 4),
             group_name=group_name,
             run_name=run_name,
-            val_timesteps_per_epoch=2 * args.k * 500 + 1,
+            val_timesteps_per_epoch=10 * args.k * 500 + 1,
+            learning_rate=5e-4,
+            grad_clip=2.0,
         )
 
+        experiment = switch_mode_load_ckpt(experiment, args)
         experiment.start()
-        if args.ckpt is not None:
-            experiment.load_checkpoint(args.ckpt)
         experiment.learn()
-        experiment.load_checkpoint(loading_best=True)
         experiment.evaluate_test(make_test_env, timesteps=20_000, render=False)
         wandb.finish()

@@ -19,12 +19,12 @@ from amago.envs.builtin.gym_envs import GymEnv
 
 
 class AtariAMAGOWrapper(GymEnv):
-    def __init__(self, env: gym.Env):
+    def __init__(self, env: gym.Env, horizon=math.ceil(108_000 / 5) + 1):
         assert isinstance(env, AtariGame | ALE)
         super().__init__(
             gym_env=env,
             env_name="Atari",
-            horizon=math.ceil(108_000 / 4) + 1,
+            horizon=horizon,
             start=0,
             zero_shot=True,
         )
@@ -175,8 +175,8 @@ class RetroAMAGOWrapper(GymEnv):
     def __init__(self, env: gym.Env):
         super().__init__(
             gym_env=env,
-            env_name="Retro",
-            horizon=math.ceil(108_000 / 4) + 1,
+            env_name="RetroArcade-placeholder",
+            horizon=env.time_limit + 1,
             start=0,
             zero_shot=True,
         )
