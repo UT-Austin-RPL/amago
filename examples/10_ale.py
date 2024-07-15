@@ -91,7 +91,7 @@ if __name__ == "__main__":
             group_name=group_name,
             val_timesteps_per_epoch=ATARI_TIME_LIMIT,
         )
-        experiment = switch_mode_load_ckpt(experiment, args)
+        switch_mode_load_ckpt(experiment, args)
         experiment.start()
         experiment.learn()
         experiment.evaluate_test(

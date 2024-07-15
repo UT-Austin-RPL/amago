@@ -21,10 +21,7 @@ if __name__ == "__main__":
     add_cli(parser)
     args = parser.parse_args()
 
-    config = {
-        # no need to risk numerical instability when returns are this bounded
-        "amago.agent.Agent.reward_multiplier": 100.0,
-    }
+    config = {"amago.agent.Agent.reward_multiplier": 100.0}
 
     turn_off_goal_conditioning(config)
     switch_tstep_encoder(config, arch="ff", n_layers=2, d_hidden=128, d_output=64)

@@ -520,7 +520,7 @@ def binary_filter(adv, threshold: float = 0.0):
 
 
 @gin.configurable
-class AgentV2(Agent):
+class MultiTaskAgent(Agent):
     def __init__(
         self,
         obs_space: gym.spaces.Dict,

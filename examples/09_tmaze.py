@@ -101,11 +101,8 @@ if __name__ == "__main__":
             exploration_wrapper_Cls=TMazeExploration,
             batch_size=18 if args.horizon > 5000 else 24,
         )
+        switch_mode_load_ckpt(experiment, args)
         experiment.start()
-        if args.ckpt is not None:
-            experiment.load_checkpoint(args.ckpt)
         experiment.learn()
-        experiment.evaluate_test(
-            make_train_env, timesteps=args.horizon * 5, render=False
-        )
+        experiment.evaluate_test(make_env, timesteps=args.horizon * 5, render=False)
         wandb.finish()
