@@ -2,6 +2,8 @@ import random
 
 import gymnasium as gym
 import numpy as np
+import popgym
+from popgym.wrappers import Flatten, DiscreteAction
 
 from amago.envs.builtin.gym_envs import GymEnv
 
@@ -40,14 +42,6 @@ class _DiscreteToBox(gym.ObservationWrapper):
 
 class POPGymAMAGO(GymEnv):
     def __init__(self, env_name: str):
-        try:
-            import popgym
-            from popgym.wrappers import Flatten, DiscreteAction
-        except ImportError:
-            msg = "Missing POPGym Install: `pip install amago[envs]` or `pip install popgym`"
-            print(msg)
-            exit()
-
         str_to_cls = {v["id"]: k for k, v in popgym.envs.ALL.items()}
         env = str_to_cls[env_name]()
         env = Flatten(env)
@@ -95,14 +89,6 @@ class MultiDomainPOPGym(gym.Env):
     ]
 
     def __init__(self, warmup_episodes: int = 1):
-        try:
-            import popgym
-            from popgym.wrappers import Flatten, DiscreteAction
-        except ImportError:
-            msg = "Missing POPGym Install: `pip install amago[envs]` or `pip install popgym`"
-            print(msg)
-            exit()
-
         self.warmup_episodes = warmup_episodes
 
         str_to_cls = {v["id"]: k for k, v in popgym.envs.ALL.items()}
