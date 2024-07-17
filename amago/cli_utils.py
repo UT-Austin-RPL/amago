@@ -26,7 +26,7 @@ def add_common_cli(parser: ArgumentParser) -> ArgumentParser:
     parser.add_argument(
         "--no_async",
         action="store_true",
-        help="Run the 'parallel' actors in one thread",
+        help="Run the 'parallel' actors in one thread. Saves resources when environments are already fast.",
     )
     parser.add_argument(
         "--no_log",
@@ -57,6 +57,7 @@ def add_common_cli(parser: ArgumentParser) -> ArgumentParser:
         "--traj_encoder",
         choices=["ff", "transformer", "rnn", "mamba"],
         default="transformer",
+        help="Quick switch between seq2seq models. (ff == feedforward (memory-free))",
     )
     parser.add_argument(
         "--memory_size",
@@ -81,7 +82,7 @@ def add_common_cli(parser: ArgumentParser) -> ArgumentParser:
         "--timesteps_per_epoch",
         type=int,
         default=1000,
-        help="Timesteps of environment interaction per epoch. The update:data ratio is defined by `grads_per_epoch / (timesteps_per_epoch * parallel_actors)`.",
+        help="Timesteps of environment interaction per epoch *per actor*. The update:data ratio is defined by `grads_per_epoch / (timesteps_per_epoch * parallel_actors)`.",
     )
     parser.add_argument(
         "--val_interval",
@@ -122,11 +123,13 @@ def add_common_cli(parser: ArgumentParser) -> ArgumentParser:
         "--mixed_precision",
         choices=["no", "bf16"],
         default="no",
+        help="Train in bf16 mixed precision (requires a compatible GPU). Make sure to select this option during `accelerate config`.",
     )
     parser.add_argument(
         "--dloader_workers",
         type=int,
         default=8,
+        help="Pytorch dataloader workers for loading trajectories from disk.",
     )
     parser.add_argument(
         "--batch_size",
@@ -139,7 +142,7 @@ def add_common_cli(parser: ArgumentParser) -> ArgumentParser:
         type=str,
         default="both",
         choices=["learn", "collect", "both"],
-        help="Simple max-throughput async mode. Start the same command with (1+) `--mode collect` flags, and one `--mode learner` flag. Defaults to alternating collect/train steps.",
+        help="Simple max-throughput async mode. Start the command with `--mode collect` 1+ times, and then start the same command with `--mode learner` in another terminal. Defaults to alternating collect/train steps.",
     )
     return parser
 

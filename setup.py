@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="amago",
-    version="0.0.1",
+    version="2.0.0",
     author="Jake Grigsby",
     author_email="grigsby@cs.utexas.edu",
     license="MIT",
@@ -30,6 +30,7 @@ setup(
             # deepmind alchemy
             "dm_env",
             "dm_alchemy @ git+https://github.com/deepmind/dm_alchemy.git",
+            "procgen",
         ],
         "flash": ["ninja", "packaging", "flash-attn"],
         "mamba": ["causal-conv1d>=1.1.0", "mamba-ssm"],
