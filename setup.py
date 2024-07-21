@@ -17,6 +17,8 @@ setup(
         "einops",
         "tqdm",
         "gym",
+        "accelerate",
+        "huggingface_hub",
     ],
     extras_require={
         "envs": [

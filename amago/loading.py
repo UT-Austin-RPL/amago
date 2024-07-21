@@ -91,6 +91,7 @@ class TrajDset(Dataset):
         Imitates fixed-size replay buffers by clearing .traj files on disk.
         """
         assert delete_pct <= 1.0 and delete_pct >= 0.0
+        print(delete_pct)
 
         traj_infos = []
         for traj_filename in self.filenames:

@@ -439,8 +439,9 @@ class SequenceWrapper(gym.Wrapper):
 
 
 @dataclass
-class MakeEnvSaveToDisk:
+class EnvCreator:
     make_env: Callable
+    make_dset: bool
     dset_root: str
     dset_name: str
     dset_split: str
@@ -470,7 +471,7 @@ class MakeEnvSaveToDisk:
         env = SequenceWrapper(
             env,
             save_every=(self.save_every_low, self.save_every_high),
-            make_dset=True,
+            make_dset=self.make_dset,
             dset_root=self.dset_root,
             dset_name=self.dset_name,
             dset_split=self.dset_split,
