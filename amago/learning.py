@@ -7,6 +7,7 @@ from functools import partial
 from typing import Optional, Iterable
 
 import gin
+from termcolor import colored
 import wandb
 import torch
 from torch.utils.data import DataLoader
@@ -25,7 +26,7 @@ from amago.envs.env_utils import (
     SequenceWrapper,
     GPUSequenceBuffer,
     DummyAsyncVectorEnv,
-    MakeEnvSaveToDisk,
+    EnvCreator,
 )
 from .loading import Batch, TrajDset, RLData_pad_collate, MAGIC_PAD_VAL
 from .hindsight import Relabeler, RelabelWarning
@@ -73,7 +74,6 @@ class Experiment:
     train_grad_updates_per_epoch: int = 1000
     val_interval: Optional[int] = 10
     val_timesteps_per_epoch: int = 10_000
-    val_checks_per_epoch: int = 50
     log_interval: int = 250
     ckpt_interval: Optional[int] = 20
     always_save_latest: bool = True
@@ -133,7 +133,7 @@ class Experiment:
             )
 
         self.accelerator.print(
-            f"""\n\n \t\t AMAGO (v2)
+            f"""\n\n \t\t {colored('AMAGO v2', 'green')}
             \t -------------------------
             \t Agent Type: {self.policy.__class__.__name__}
             \t Environment Horizon: {self.horizon}
@@ -157,9 +157,14 @@ class Experiment:
             if not isinstance(self.make_train_env, Iterable)
             else self.make_train_env
         )
-        env_len_err = "`make_train_env` and `make_val_env` should be a callable or a list of callables of length `parallel_actors`"
-        assert len(make_train_envs) == self.parallel_actors, env_len_err
-        assert len(make_val_envs) == self.parallel_actors, env_len_err
+        if not len(make_train_envs) == self.parallel_actors:
+            utils.amago_warning(
+                f"`Experiment.parallel_actors` is {self.parallel_actors} but `make_train_env` is a list of length {len(make_train_envs)}"
+            )
+        if not len(make_val_envs) == self.parallel_actors:
+            utils.amago_warning(
+                f"`Experiment.parallel_actors` is {self.parallel_actors} but `make_val_env` is a list of length {len(make_train_envs)}"
+            )
 
         # wrap environments to save trajectories to replay buffer
         shared_env_kwargs = dict(
@@ -171,8 +176,9 @@ class Experiment:
             stagger_traj_file_lengths=self.stagger_traj_file_lengths,
         )
         make_train = [
-            MakeEnvSaveToDisk(
+            EnvCreator(
                 make_env=env_func,
+                make_dset=True,
                 dset_split="train",
                 # adds exploration noise
                 exploration_wrapper_Cls=self.exploration_wrapper_Cls,
@@ -181,10 +187,11 @@ class Experiment:
             for env_func in make_train_envs
         ]
         make_val = [
-            MakeEnvSaveToDisk(
+            EnvCreator(
                 make_env=env_func,
+                # v2: no longer saves trajectories
+                make_dset=False,
                 dset_split="val",
-                # no exploration noise
                 exploration_wrapper_Cls=None,
                 **shared_env_kwargs,
             )
@@ -199,6 +206,7 @@ class Experiment:
         self.val_envs.reset()
 
         # save info we need to initialize the agent nets
+        # (we assume each environment has the same observation and action spaces)
         self.gcrl2_space = make_train[0].gcrl2_space
         self.horizon = make_train[0].horizon
         # self.train_buffers holds the env state between rollout cycles
@@ -249,18 +257,9 @@ class Experiment:
             items_per_epoch=self.train_grad_updates_per_epoch * self.batch_size,
             max_seq_len=self.max_seq_len,
         )
-        self.val_dset = TrajDset(
-            relabeler=Relabeler(self.relabel, self.goal_importance_sampling),
-            dset_root=self.dset_root,
-            dset_name=self.dset_name,
-            dset_split="val",
-            items_per_epoch=self.val_checks_per_epoch * self.batch_size,
-            max_seq_len=self.max_seq_len,
-        )
 
     def init_dloaders(self):
         self.train_dset.refresh_files()
-        self.val_dset.refresh_files()
         train_dloader = DataLoader(
             self.train_dset,
             batch_size=self.batch_size,
@@ -268,18 +267,9 @@ class Experiment:
             collate_fn=RLData_pad_collate,
             pin_memory=True,
         )
-        val_dloader = DataLoader(
-            self.val_dset,
-            batch_size=self.batch_size,
-            num_workers=self.dloader_workers,
-            collate_fn=RLData_pad_collate,
-            pin_memory=True,
-        )
         # accelerator.free_memory clears everything.
         # https://github.com/huggingface/accelerate/blob/2471eacdd648446f2f63eccb9b18a7731304f401/src/accelerate/accelerator.py#L3189
-        self.train_dloader, self.val_dloader = self.accelerator.prepare(
-            train_dloader, val_dloader
-        )
+        self.train_dloader = self.accelerator.prepare(train_dloader)
 
     def init_logger(self):
         gin_config = gin.operative_config_str()
@@ -593,23 +583,15 @@ class Experiment:
         else:
             return contextlib.suppress()
 
-    def val_step(self, batch):
-        with torch.no_grad():
-            return self.compute_loss(batch, log_step=True)
-
     def learn(self):
-        def make_pbar(loader, training, epoch):
-            if training:
-                desc = f"{self.run_name} Epoch {epoch} Train"
-                steps = self.train_grad_updates_per_epoch
-                c = "green"
-            else:
-                desc = f"{self.run_name} Epoch {epoch} Val"
-                steps = self.val_checks_per_epoch
-                c = "red"
-
+        def make_pbar(loader, epoch_num):
             if self.verbose:
-                return tqdm(enumerate(loader), desc=desc, total=steps, colour=c)
+                return tqdm(
+                    enumerate(loader),
+                    desc=f"{self.run_name} Epoch {epoch_num} Train",
+                    total=self.train_grad_updates_per_epoch,
+                    colour="green",
+                )
             else:
                 return enumerate(loader)
 
@@ -624,9 +606,7 @@ class Experiment:
                 self.evaluate_val()
             if epoch >= self.start_collecting_at_epoch:
                 self.collect_new_training_data()
-
             self.accelerator.wait_for_everyone()
-            # make dataloaders aware of new .traj files
             self.init_dloaders()
             if self.train_dset.count_trajectories() == 0:
                 utils.amago_warning(
@@ -638,29 +618,13 @@ class Experiment:
             elif epoch < self.start_learning_at_epoch:
                 continue
             self.policy_aclr.train()
-            for train_step, batch in make_pbar(self.train_dloader, True, epoch):
+            for train_step, batch in make_pbar(self.train_dloader, epoch):
                 total_step = (epoch * self.train_grad_updates_per_epoch) + train_step
                 log_step = total_step % self.log_interval == 0
                 loss_dict = self.train_step(batch, log_step=log_step)
                 if log_step:
                     self.log(loss_dict, key="train-update")
             self.accelerator.wait_for_everyone()
-
-            # validation
-            if (
-                self.val_interval is not None
-                and epoch % self.val_interval == 0
-                and self.val_dset.count_trajectories() > 0
-            ):
-                self.policy_aclr.eval()
-                for _, batch in make_pbar(self.val_dloader, False, epoch):
-                    loss_dict = self.val_step(batch)
-                    self.log(loss_dict, key="val-update")
-                figures = self.make_figures(loss_dict)
-                self.log(figures, key="val-update")
-                self.accelerator.wait_for_everyone()
-                if self.accelerator.is_main_process:
-                    self.val_dset.clear()
 
             # buffer management
             dset_size = self.train_dset.count_trajectories()
@@ -670,7 +634,10 @@ class Experiment:
             )
             self.accelerator.wait_for_everyone()
             if needs_filter and self.accelerator.is_main_process:
-                self.train_dset.filter(self.dset_filter_pct)
+                pct_to_filter = max(
+                    self.dset_filter_pct, (dset_size - self.dset_max_size) / dset_size
+                )
+                self.train_dset.filter(pct_to_filter)
             self.log(
                 {
                     "Trajectory Files Saved in Replay Buffer": dset_size,

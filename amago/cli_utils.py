@@ -342,7 +342,7 @@ def create_experiment_from_cli(
 def make_experiment_learn_only(experiment: amago.Experiment) -> amago.Experiment:
     experiment.start_collecting_at_epoch = float("inf")
     experiment.train_timesteps_per_epoch = 0
-    experiment.val_interval = None
+    experiment.val_interval = 10
     experiment.val_timesteps_per_epoch = 0
     experiment.val_checks_per_epoch = 0
     experiment.parallel_actors = 2
