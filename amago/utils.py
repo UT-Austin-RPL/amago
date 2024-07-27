@@ -3,6 +3,7 @@ import time
 import os
 from functools import partial
 from termcolor import colored
+from typing import Iterable
 
 import numpy as np
 import torch
@@ -12,6 +13,7 @@ import gymnasium as gym
 import gin
 
 from accelerate import Accelerator
+from accelerate.utils import gather_object
 
 
 def stack_list_array_dicts(list_: list[dict[np.ndarray]], axis=0):
@@ -29,12 +31,19 @@ def amago_warning(msg: str, category=None):
     warnings.warn(colored(f"{msg}", "green"), category=category)
 
 
-def avg_over_accelerate(accelerator: Accelerator, data: dict[str, int | float]):
-    merged_stats = accelerator.gather(
-        {k: torch.Tensor([v]).to(accelerator.device) for k, v in data.items()}
-    )
-    avg_stats = {k: v.mean().cpu().item() for k, v in merged_stats.items()}
-    return avg_stats
+def avg_over_accelerate(data: dict[str, int | float]):
+    merged_stats = gather_object([data])
+    output = {}
+    for device in merged_stats:
+        for k, v in device.items():
+            if k not in output:
+                output[k] = []
+            if isinstance(v, Iterable):
+                output[k].extend(v)
+            else:
+                output[k].append(v)
+    output = {k: np.array(v).mean() for k, v in output.items()}
+    return output
 
 
 def masked_avg(tensor: torch.Tensor, mask: torch.Tensor):
