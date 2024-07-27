@@ -221,13 +221,16 @@ Switch from the base update (`amago.agent.Agent`) to the "multi-task" update (`a
 
 **Metaworld ML45**
 
-Learn all 45 Metaworld tasks at the same time. Records metrics for each task separately. 
+Learn all 45 [Metaworld](https://meta-world.github.io/) tasks at the same time. Records metrics for each task separately. 
 
 ```bash
 python 05_kshot_metaworld.py --run_name <str> --benchmark ml45 --buffer_dir <path> --parallel_actors 30 --memory_size 320 --timesteps_per_epoch 1501 --agent_type multitask
 ```
 
 **Multi-Game Atari**
+
+Play multiple Atari games simultaneously with short-term memory and a larger [IMPALA](https://arxiv.org/abs/1802.01561) vision encoder.
+
 ```bash
 python 09_ale.py --run_name <str> --buffer_dir <path> --agent_type multitask --parallel_actors 30 --max_seq_len 32 --val_interval 100 --cnn impala --dset_max_size 60_000 --epochs 10_000 --games Pong Boxing Breakout Gopher MsPacman ChopperCommand CrazyClimber BattleZone Qbert Seaquest
 ```
