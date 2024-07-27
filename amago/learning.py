@@ -440,7 +440,7 @@ class Experiment:
             cur_return = logs_per_process["Average Total Return (Across All Env Names)"]
             if self.verbose:
                 self.accelerator.print(f"Average Return : {cur_return}")
-            logs_global = utils.avg_over_accelerate(self.accelerator, logs_per_process)
+            logs_global = utils.avg_over_accelerate(logs_per_process)
             self.log(logs_global, key="val")
 
     def evaluate_test(
