@@ -61,6 +61,8 @@ Applying AMAGO to any new environment requires 5 basic choices. The `examples/` 
 <img src="media/context_length_diagram.png" alt="contextlength" width="850"/>
 </p>
 
+<br>
+
 ## Basic Examples
 
 To follow most of the examples you'll need to install the benchmark environments with `pip install amago[envs]`.
