@@ -7,6 +7,7 @@ from functools import partial
 from typing import Optional, Iterable
 
 import gin
+from termcolor import colored
 import wandb
 import torch
 from torch.utils.data import DataLoader
@@ -132,7 +133,7 @@ class Experiment:
             )
 
         self.accelerator.print(
-            f"""\n\n \t\t AMAGO (v2)
+            f"""\n\n \t\t {colored('AMAGO v2', 'green')}
             \t -------------------------
             \t Agent Type: {self.policy.__class__.__name__}
             \t Environment Horizon: {self.horizon}
@@ -156,9 +157,14 @@ class Experiment:
             if not isinstance(self.make_train_env, Iterable)
             else self.make_train_env
         )
-        env_len_err = "`make_train_env` and `make_val_env` should be a callable or a list of callables of length `parallel_actors`"
-        # assert len(make_train_envs) == self.parallel_actors, env_len_err
-        # assert len(make_val_envs) == self.parallel_actors, env_len_err
+        if not len(make_train_envs) == self.parallel_actors:
+            utils.amago_warning(
+                f"`Experiment.parallel_actors` is {self.parallel_actors} but `make_train_env` is a list of length {len(make_train_envs)}"
+            )
+        if not len(make_val_envs) == self.parallel_actors:
+            utils.amago_warning(
+                f"`Experiment.parallel_actors` is {self.parallel_actors} but `make_val_env` is a list of length {len(make_train_envs)}"
+            )
 
         # wrap environments to save trajectories to replay buffer
         shared_env_kwargs = dict(
@@ -183,6 +189,7 @@ class Experiment:
         make_val = [
             EnvCreator(
                 make_env=env_func,
+                # v2: no longer saves trajectories
                 make_dset=False,
                 dset_split="val",
                 exploration_wrapper_Cls=None,
@@ -199,6 +206,7 @@ class Experiment:
         self.val_envs.reset()
 
         # save info we need to initialize the agent nets
+        # (we assume each environment has the same observation and action spaces)
         self.gcrl2_space = make_train[0].gcrl2_space
         self.horizon = make_train[0].horizon
         # self.train_buffers holds the env state between rollout cycles
