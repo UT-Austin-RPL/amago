@@ -188,7 +188,7 @@ This command with `--horizon 10000 --timesteps_per_epoch 10000` will also train 
 <br>
 <br>
 
-## Multi-GPU, Async Learning/Training, Multi-Task Training
+## Multi-GPU, Async Rollouts, Multi-Task Training
 
 <img src="media/amago_big_logo.png" alt="amagologo" width="200" align="right"/>
 
