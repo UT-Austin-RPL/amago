@@ -3,19 +3,24 @@
 
 <img src="media/amago_logo_2.png" alt="amagologo" width="150" align="right"/>
 
+<br>
+
 ### A simple and scalable agent for sequence-based Reinforcement Learning
 
 AMAGO is a POMDP solver with an emphasis on long sequences, sparse rewards, and large networks. It is:
-- **Broadly Applicable**. Environments are converted to a universal sequence format for memory-enabled policies. Classic benchmarks, goal-conditioning, long-term memory, meta-learning, and generalization are all special cases of its POMDP format. Supports discrete and continuous actions.
-- **Scalable**. AMAGO is powered by an efficient learning update that looks more like supervised sequence modeling than RL. It is specifically designed for training large policies (like Transformers) on long sequences (500+ timesteps). Large replay buffers are stored on disk.
+- **Broadly Applicable**. Classic benchmarks, goal-conditioning, long-term memory, meta-learning, and generalization are all special cases of its POMDP format. Supports discrete and continuous actions.
+- **Scalable**. Designed for training large policies (like Transformers) on long sequences (500+ timesteps). AMAGO supports multi-GPU training with parallel actors, asynchronous learning/rollouts, and large replay buffers (stored on disk).
 - **Sample Efficient**. AMAGO is off-policy and can continuously reuse (and hindsight relabel) large datasets of past trajectories.
-- **Easy to Use**. Technical details can be easily customized but are designed to require little hyperparamter tuning.
+- **Easy to Use**. Technical details can be easily customized but are designed to require little hyperparamter tuning. See examples below.
 
+<br>
 
 ## Background
 AMAGO treats multi-task RL, meta-RL, RL generalization, and long-term memory as variations of the same POMDP problem that can be solved with sequence learning. This core framework goes by many different names including [implicit partial observability](https://arxiv.org/abs/2107.06277), [context-based meta-learning](https://arxiv.org/abs/2301.08028), or [contextual MDPs](https://arxiv.org/abs/2111.09794).
 
 AMAGO learns from off-policy or offline data, which improves sample efficiency and enables hindsight experience replay for goal-conditioned environments. We find a stable and high-performance way to train off-policy actor-critic agents on top of the representations from a shared sequence model, and all of the low-level details have been redesigned from scratch to be scalable enough to train long-context Transformers. Please refer to our [paper](https://arxiv.org/abs/2310.09971) for a detailed explanation.
+
+<br>
 
 ## Installation 
 
@@ -32,6 +37,8 @@ pip install -e .
 pip install -e .[envs]
 ```
 The default Transformer policy (`nets.traj_encoders.TformerTrajEncoder`) has an option for [FlashAttention 2.0](https://github.com/Dao-AILab/flash-attention). FlashAttention leads to significant speedups on long sequences if your GPU is compatible. We try to install this for you with: `pip install -e .[flash]`, but please refer to the [official installation instructions](https://github.com/Dao-AILab/flash-attention) if you run into issues.
+
+<br>
 
 ## Getting Started
 Applying AMAGO to any new environment requires 5 basic choices. The `examples/` folder includes helpful starting points for common cases.
@@ -54,46 +61,58 @@ Applying AMAGO to any new environment requires 5 basic choices. The `examples/` 
 <img src="media/context_length_diagram.png" alt="contextlength" width="850"/>
 </p>
 
-## A Tour of AMAGO in 9 Examples
+<br>
+
+## Basic Examples
 
 To follow most of the examples you'll need to install the benchmark environments with `pip install amago[envs]`.
-AMAGO logs to [`wandb`](https://docs.wandb.ai). You can configure the project and account with environment variables:
+
+You can configure the project and account with environment variables:
 
 ```bash
 export AMAGO_WANDB_PROJECT="wandb project name"
 export AMAGO_WANDB_ENTITY="wandb username"
 ```
+For basic single-GPU agents, use the `CUDA_VISIBLE_DEVICES` environment variable to assign learning to a specific GPU index (`CUDA_VISIBLE_DEVICES=7 python train.py ...`).
+
+Environment setup is the main step in applying our agent to a new problem. The example environments are usually *not* included in the scripts themselves but can be found in `amago/envs/builtin/`.
 
 ### 1. **Regular MDPs (Classic Gym)**
    
-Many popular benchmarks are MDPs and can be treated as a simple special case of the full agent. Toggling *off* memory, goal-conditioning/relabeling, and multi-episodic resets reduces AMAGO to a regular off-policy actor-critic like you've seen before. This is mainly meant to be an ablation to test the impact of memory. However, AMAGO is a stable variant of [REDQ](https://arxiv.org/abs/2101.05982)/[CRR](https://arxiv.org/abs/2006.15134) with improvements like "multi-gamma" training that are especially useful in sparse reward environments. See `examples/01_basic_gym.py` for an example.
+Many popular benchmarks are MDPs and can be treated as a simple special case of the full agent. By turning *off* most of AMAGO's features, we can create a regular off-policy actor-critic like you've seen before. See `examples/01_basic_gym.py` for an example.
 
 <details>
 <summary> <b>Example Training Commands</b> </summary>
 <br>
 
+ Try `python 01_basic_gym.py --help` for an explanation of hyperparameters and other command line args that are used in most of the examples below.
+
 Train a memory-free policy on built-in gymnasium benchmarks:
 
 ```bash
-python 01_basic_gym.py --env LunarLander-v2 --horizon 500 --traj_encoder ff --max_seq_len 32 --memory_layers 2 --no_async --gpu <int> --run_name <str> --buffer_dir <path>
+python 01_basic_gym.py --env LunarLander-v2 --horizon 500 --traj_encoder ff --max_seq_len 32 --memory_layers 2 --no_async --run_name <str> --buffer_dir <path>
 ```
 This examples uses a `TrajEncoder` that is just a feedforward network. Training still depends on sequences of `--max_seq_len` timesteps, which is effectively increasing the training batch size.
 
 </details>
  
+<br>
+
 ### 2. **POMDPs and Long-Term Memory (POPGym)**
    
-Using a memory-equipped `TrajEncoder`, but toggling *off* goals and multi-episodic resets creates an effective POMDP solver. AMAGO is efficient enough to use *entire* trajectories as context, and the `TformerTrajEncoder` is a strong default Transformer tuned specifically for stability in RL. See `examples/02_popgym_suite.py` where the same hyperparameters can lead to state-of-the-art performance across the [POPGym](https://arxiv.org/abs/2303.01859) suite.
+Using a memory-equipped `TrajEncoder` creates an effective POMDP solver. AMAGO is efficient enough to use *entire* trajectories as context, and the `TformerTrajEncoder` is a strong default Transformer tuned specifically for stability in RL. See `examples/02_popgym_suite.py` where the same hyperparameters can lead to state-of-the-art performance across the [POPGym](https://arxiv.org/abs/2303.01859) suite.
 
 <details>
 <summary> <b>Example Training Commands</b> </summary>
 <br>
 
 ```bash
-python 02_popgym_suite.py --env AutoencodeMedium --parallel_actors 24 --trials 3 --epochs 650 --dset_max_size 80_000 --memory_layers 3 --memory_size 256 --gpu <int> --run_name <str> --buffer_dir <path>
+python 02_popgym_suite.py --env AutoencodeMedium --parallel_actors 24 --trials 3 --epochs 650 --dset_max_size 80_000 --memory_layers 3 --memory_size 256 --run_name <str> --buffer_dir <path>
 ```
 </details>
  
+<br>
+
 ### 3. **Fixed-Horizon Meta-RL (Dark-Key-To-Door)**
 
 Meta-RL problems are just POMDPs that automatically reset the task up until a fixed time limit. `TrajEncoder` sequence models let us remember and improve upon past attempts. `examples/03_dark_key_to_door.py` walks through a toy example from the [Algorithm Distillation](https://arxiv.org/abs/2210.14215) paper.
@@ -103,13 +122,17 @@ Meta-RL problems are just POMDPs that automatically reset the task up until a fi
 <br>
 
 ```bash
-python 03_dark_key_to_door.py --memory_layers 3 --memory_size 256 --epochs 650 --room_size 9 --episode_length 50 --meta_horizon 500 --gpu <int> --run_name <str> --buffer_dir <path>
+python 03_dark_key_to_door.py --memory_layers 3 --memory_size 256 --epochs 650 --room_size 9 --episode_length 50 --meta_horizon 500 --run_name <str> --buffer_dir <path>
 ```
 </details>
  
+<br>
+
 ### 4. **Zero-Shot Adaptation to Goal-Conditioned Environments (Mazerunner)**
 
 `examples/04_mazerunner.py` uses the hindsight instruction relabeling technique from the AMAGO paper on our MazeRunner navigation domain. The ability to relabel rewards in hindsight is a key advantage of off-policy adaptive agents.
+
+<br>
 
 ### 5. and 6. **K-Shot Meta-RL (Metaworld and Alchemy)**
 
@@ -121,10 +144,12 @@ python 03_dark_key_to_door.py --memory_layers 3 --memory_size 256 --epochs 650 -
 
 Train a transformer policy with a context length of 128 timesteps on 2-shot (`--k 2`) Reach-v2:
 ```bash
-python 05_kshot_metaworld.py --k 2 --benchmark reach-v2 --max_seq_len 128 --epochs 700 --timesteps_per_epoch 1500 --grads_per_epoch 700 --gpu <int> --run_name <str> --buffer_dir <path>
+python 05_kshot_metaworld.py --k 2 --benchmark reach-v2 --max_seq_len 128 --epochs 700 --timesteps_per_epoch 1500 --grads_per_epoch 700 --run_name <str> --buffer_dir <path>
 ```
 </details>
  
+<br>
+
 ### 7. **Goal-Conditioned Open-Worlds (Crafter)**
 
 AMAGO can adapt to procedurally generated environments while completing multi-step instructions. `examples/07_crafter_with_instructions.py` shows how we turn [Crafter](https://danijar.com/project/crafter/) into an instruction-conditioned environment, and then use AMAGO's hindsight relabeling to explore sparse rewards.
@@ -136,21 +161,17 @@ AMAGO can adapt to procedurally generated environments while completing multi-st
 Memory-conservative settings with pixel-based observations:
 
 ```bash
-python 07_crafter_with_instructions.py --max_seq_len 512 --obs_kind crop --start_learning_at_epoch 5 --memory_size 256 --memory_layers 3 --relabel some --epochs 5000 --timesteps_per_epoch 2000 --gpu <int> --run_name <str> --buffer_dir <path>
+python 07_crafter_with_instructions.py --max_seq_len 512 --obs_kind crop --start_learning_at_epoch 5 --memory_size 256 --memory_layers 3 --relabel some --epochs 5000 --timesteps_per_epoch 2000 --batch_size 18 --run_name <str> --buffer_dir <path>
 ```
 
 The command above is a close replication of the pixel-based version (Appendix C5 Table 2). You can watch gameplay of a pretrained checkpoint on user-specified tasks with the `examples/crafter_pixels_demo.ipynb` notebook.
-
-After training you can run the same command with an added `--eval_mode` argument to evaluate the full random task distribution in addition to a hardcoded list of specified tasks (including individual goals). The "best" checkpoint is loaded by default (highest average return on train distribution) but you can specify an epoch checkpoint number with `--ckpt`.
 </details>
   
-### 8. **Multi-Task Learning from Pixels (Retro Games)**
+<br>
 
-Meta-learning and multi-task learning without task labels are essentially the same problem. We can use short sequences to train an agent on multiple levels of the same video game (or multiple games). `examples/08_multitask_mario.py` provides an example on levels from Super Mario using [stable-retro](https://stable-retro.farama.org). Note that this script requires some extra installation beyond `pip install amago[envs]`. 
+### 8. **Super Long-Term Memory (Passive T-Maze)**
 
-### 9. **Super Long-Term Memory (Passive T-Maze)**
-
-AMAGO provides a stable way to train long-sequence Transformers with RL, which can turn traditionally hard memory-based environments into simple problems. `examples/09_tmaze.py` adds a few exploration changes to the TMaze environment from [Ni et al., 2023](https://arxiv.org/abs/2307.03864), which lets us recall information for thousands of timesteps.
+AMAGO provides a stable way to train long-sequence Transformers with RL, which can turn traditionally hard memory-based environments into simple problems. `examples/08_tmaze.py` adds a few exploration changes to the TMaze environment from [Ni et al., 2023](https://arxiv.org/abs/2307.03864), which lets us recall information for thousands of timesteps.
 
 <details>
 <summary> <b>Example Training Commands</b> </summary>
@@ -158,14 +179,75 @@ AMAGO provides a stable way to train long-sequence Transformers with RL, which c
 
 Example on a horizon of 400 timesteps:
 ```bash
-python 09_tmaze.py --no_async --memory_size 128 --memory_layers 2 --parallel_actors 36 --horizon 400 --timesteps_per_epoch 800  --grads_per_epoch 600 --dset_max_size 5000 --gpu <int> --run_name <str> --buffer_dir <path>
+python 09_tmaze.py --no_async --memory_size 128 --memory_layers 2 --parallel_actors 36 --horizon 400 --timesteps_per_epoch 800  --batch_size 18 --grads_per_epoch 600 --dset_max_size 5000 --run_name <str> --buffer_dir <path>
 ```
 This command with `--horizon 10000 --timesteps_per_epoch 10000` will also train the extreme 10k sequence length mentioned in the paper, although this takes several days to converge due to the inference cost of generating each trajectory.
 </details>
- 
+
+<br>
+
+### 9. **Multi-Task Learning (Atari, MetaWorld ML45)**
+Switch from the base update (`amago.agent.Agent`) to the "multi-task" update (`amago.agent.MultiTaskAgent`) using `--agent_type multitask`.  `MultiTaskAgent` is better in situations where you are optimizing multiple reward functions. The multitask agent removes actor/critic loss terms that depend on the scale of returns (Q(s, a)) in favor of classification losses that do not. More details in v2 paper coming soon.
+
+**Multi-Game Atari**
+
+Play multiple Atari games simultaneously with short-term memory and a larger [IMPALA](https://arxiv.org/abs/1802.01561) vision encoder.
+
+<details>
+<summary> <b>Example Training Commands</b> </summary>
+
+```bash
+python 09_ale.py --run_name <str> --buffer_dir <path> --agent_type multitask --parallel_actors 30 --max_seq_len 32 --val_interval 100 --cnn impala --dset_max_size 60_000 --epochs 10_000 --games Pong Boxing Breakout Gopher MsPacman ChopperCommand CrazyClimber BattleZone Qbert Seaquest
+```
+
+</details>
+
+**Metaworld ML45**
+
+Learn all 45 [Metaworld](https://meta-world.github.io/) tasks at the same time. Records metrics for each task separately. 
+
+<details>
+<summary> <b>Example Training Commands</b> </summary>
+
+```bash
+python 05_kshot_metaworld.py --run_name <str> --benchmark ml45 --buffer_dir <path> --parallel_actors 30 --memory_size 320 --timesteps_per_epoch 1501 --agent_type multitask
+```
+
+</details>
+
+<br>
+<br>
+
+## Multi-GPU Training and Async Rollouts
+
+<img src="media/amago_big_logo.png" alt="amagologo" width="200" align="right"/>
+
+<br>
+
+
+### Multi-GPU DistributedDataParallel
+AMAGO can replicate the same (rollout --> learn) loop of the basic examples on multiple GPUs in `DistributedDataParallel` (DDP) mode. This can improve environment throughput but is mainly intended for distributing the batch dimension of large policies during training. We simplify DDP setup with [`huggingface/accelerate`](https://huggingface.co/docs/accelerate/en/index), which is a popular library for distributed LLM training. To use accelerate, run `accelerate config` and answer the questions. For our purposes, if the answer isn't obvious (e.g. "Do you use Megatron-LLM?"), the answer is always "NO".
+
+Then, run any of the above commands on the GPUs you requested during `accelerate config` by replacing `python <filename> --args` with `accelerate launch <filename> --args`.
+
+> *NOTE*: Validation metrics (average return, success rate) are the only metrics that sync across processes. Everything else is logged only from the main process (the lowest GPU index). This decreases the sample size of training metrics (loss, Q(s, a), etc.), and shows an environment step count (`total_frames`) that is too low.
+
+<br>
+
+### Asynchronous Training/Rollouts
+Each `epoch` alternates between rollouts --> gradient updates. AMAGO saves environment data and checkpoints to disk, so changing some `amago.learning.Experiment` kwargs would let these two steps be completely separate. The `examples/` demonstrate a super simple way to run one or more processes of (vectorized parallel) environment interaction alongside training. All you need to do is run the usual command with `--mode collect`. This process only interacts with the environment (including evals), writes trajectories to disk, and reads new parameters from disk. Once that process has finished an epoch or two, run the same command in another terminal (or [`screen`](https://linuxize.com/post/how-to-use-linux-screen/)) with `--mode learn`. This process only loads data from disk and saves fresh checkpoints.
+
+We have used a combination of async updates and multi-gpu training to unlock large-scale RL training (50M+ parameters, 500+ timestep *image* sequences, 1B+ frames) without relying on GPU-accelerated environments.
+
+<br>
+
 ## Advanced Configuration
 
 AMAGO is built around [gin-config](https://github.com/google/gin-config), which makes it easy to customize experiments. `gin` makes hyperparameters a default value for an object's `kwargs`, and lets you set their value without editing the source code. You can read more about gin [here](https://github.com/google/gin-config/blob/master/docs/index.md). The `examples/` avoid any `.gin` config files and let you switch between the most important settings without worrying about any of this.
+
+
+
+<br>
 
 
 ## Reference and Acknowledgements

@@ -86,7 +86,7 @@ class CrafterTstepEncoder(amago.nets.tstep_encoders.TstepEncoder):
         # TstepEncoders need an emb_dim for AMAGO to build the rest of the architecture from here
         return self._emb_dim
 
-    def inner_forward(self, obs, goal_rep, rl2s):
+    def inner_forward(self, obs, goal_rep, rl2s, log_dict=None):
         rl2s = self.rl2_norm(rl2s)
         if self.training:
             self.rl2_norm.update_stats(rl2s)
@@ -157,11 +157,11 @@ if __name__ == "__main__":
             stagger_traj_file_lengths=False,
             run_name=run_name,
             group_name=group_name,
-            batch_size=18,
             val_timesteps_per_epoch=5000,
             # Hindsight Relabeling!
             relabel=args.relabel,
             goal_importance_sampling=True,
+            save_trajs_as="trajectory",
         )
         experiment.start()
         if args.ckpt is not None:
@@ -178,9 +178,7 @@ if __name__ == "__main__":
             ## Test ##
             ##########
             # (including manual tasks used in Figures and Appendix tables)
-
-            if args.ckpt is None:
-                experiment.load_checkpoint(loading_best=True)
+            assert args.ckpt
 
             # full task distribution
             experiment.evaluate_test(make_env, timesteps=20_000, render=False)

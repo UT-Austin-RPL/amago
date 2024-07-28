@@ -7,8 +7,6 @@ from operator import itemgetter
 from functools import partial
 
 import torch
-import torch.nn.functional as F
-from torch import nn
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import Dataset
 import numpy as np
@@ -93,6 +91,7 @@ class TrajDset(Dataset):
         Imitates fixed-size replay buffers by clearing .traj files on disk.
         """
         assert delete_pct <= 1.0 and delete_pct >= 0.0
+        print(delete_pct)
 
         traj_infos = []
         for traj_filename in self.filenames:
@@ -178,6 +177,7 @@ class Batch:
         self.dones = self.dones.to(device)
         self.actions = self.actions.to(device)
         self.time_idxs = self.time_idxs.to(device)
+        return self
 
 
 def RLData_pad_collate(samples: list[RLData]) -> Batch:

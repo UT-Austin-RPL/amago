@@ -1,6 +1,5 @@
-from functools import partial
 from argparse import ArgumentParser
-from typing import Callable
+from typing import Optional
 
 import gin
 
@@ -18,12 +17,16 @@ def add_common_cli(parser: ArgumentParser) -> ArgumentParser:
     # basics
     parser.add_argument("--trials", type=int, default=1)
     parser.add_argument(
-        "--gpu", type=int, default=0, help="GPU Device ID. Use -1 for CPU"
+        "--agent_type",
+        type=str,
+        default="agent",
+        choices=["agent", "multitask"],
+        help="Quick switch between default `agent.Agent` and `agent.MultiTaskAgent`. MultiTaskAgent is useful when training on mixed environments with multiple rewards functions.",
     )
     parser.add_argument(
         "--no_async",
         action="store_true",
-        help="Run the 'parallel' actors in one thread",
+        help="Run the 'parallel' actors in one thread. Saves resources when environments are already fast.",
     )
     parser.add_argument(
         "--no_log",
@@ -54,6 +57,7 @@ def add_common_cli(parser: ArgumentParser) -> ArgumentParser:
         "--traj_encoder",
         choices=["ff", "transformer", "rnn", "mamba"],
         default="transformer",
+        help="Quick switch between seq2seq models. (ff == feedforward (memory-free))",
     )
     parser.add_argument(
         "--memory_size",
@@ -78,7 +82,7 @@ def add_common_cli(parser: ArgumentParser) -> ArgumentParser:
         "--timesteps_per_epoch",
         type=int,
         default=1000,
-        help="Timesteps of environment interaction per epoch. The update:data ratio is defined by `grads_per_epoch / (timesteps_per_epoch * parallel_actors)`.",
+        help="Timesteps of environment interaction per epoch *per actor*. The update:data ratio is defined by `grads_per_epoch / (timesteps_per_epoch * parallel_actors)`.",
     )
     parser.add_argument(
         "--val_interval",
@@ -116,20 +120,29 @@ def add_common_cli(parser: ArgumentParser) -> ArgumentParser:
         help="Turn OFF fast-inference mode (key-value caching for Transformer, hidden state caching for RNN)",
     )
     parser.add_argument(
-        "--half_precision",
-        action="store_true",
-        help="Train in bfloat16 half precision",
+        "--mixed_precision",
+        choices=["no", "bf16"],
+        default="no",
+        help="Train in bf16 mixed precision (requires a compatible GPU). Make sure to select this option during `accelerate config`.",
     )
     parser.add_argument(
         "--dloader_workers",
         type=int,
         default=8,
+        help="Pytorch dataloader workers for loading trajectories from disk.",
     )
     parser.add_argument(
         "--batch_size",
         type=int,
         default=24,
         help="Training batch size (measured in trajectories, not timesteps).",
+    )
+    parser.add_argument(
+        "--mode",
+        type=str,
+        default="both",
+        choices=["learn", "collect", "both"],
+        help="Simple max-throughput async mode. Start the command with `--mode collect` 1+ times, and then start the same command with `--mode learner` in another terminal. Defaults to alternating collect/train steps.",
     )
     return parser
 
@@ -283,8 +296,8 @@ def use_config(
 
 def create_experiment_from_cli(
     command_line_args,
-    make_train_env: Callable,
-    make_val_env: Callable,
+    make_train_env: callable,
+    make_val_env: callable,
     max_seq_len: int,
     traj_save_len: int,
     group_name: str,
@@ -295,6 +308,9 @@ def create_experiment_from_cli(
     cli = command_line_args
 
     experiment = experiment_Cls(
+        agent_type=amago.agent.Agent
+        if cli.agent_type == "agent"
+        else amago.agent.MultiTaskAgent,
         make_train_env=make_train_env,
         make_val_env=make_val_env,
         max_seq_len=max_seq_len,
@@ -302,7 +318,6 @@ def create_experiment_from_cli(
         dset_max_size=cli.dset_max_size,
         run_name=run_name,
         dset_name=run_name,
-        gpu=cli.gpu,
         dset_root=cli.buffer_dir,
         dloader_workers=cli.dloader_workers,
         log_to_wandb=not cli.no_log,
@@ -315,10 +330,51 @@ def create_experiment_from_cli(
         start_learning_at_epoch=cli.start_learning_at_epoch,
         val_interval=cli.val_interval,
         ckpt_interval=cli.ckpt_interval,
-        half_precision=cli.half_precision,
+        mixed_precision=cli.mixed_precision,
         fast_inference=not cli.slow_inference,
         async_envs=not cli.no_async,
         **extra_experiment_kwargs,
     )
 
+    return experiment
+
+
+def make_experiment_learn_only(experiment: amago.Experiment) -> amago.Experiment:
+    experiment.start_collecting_at_epoch = float("inf")
+    experiment.train_timesteps_per_epoch = 0
+    experiment.val_interval = 10
+    experiment.val_timesteps_per_epoch = 0
+    experiment.val_checks_per_epoch = 0
+    experiment.parallel_actors = 2
+    experiment.async_envs = False
+    experiment.always_save_latest = True
+    return experiment
+
+
+def make_experiment_collect_only(experiment: amago.Experiment) -> amago.Experiment:
+    experiment.start_collecting_at_epoch = 0
+    experiment.start_learning_at_epoch = float("inf")
+    experiment.train_grad_updates_per_epoch = 0
+    experiment.val_checks_per_epoch = 0
+    experiment.ckpt_interval = None
+    experiment.always_save_latest = False
+    experiment.always_load_latest = True
+    # run "forever"; terminate manually (when learning process is done)
+    experiment.epochs = 10_000_000
+    experiment.dset_filter_pct = None
+    return experiment
+
+
+def switch_mode_load_ckpt(
+    experiment: amago.Experiment, command_line_args
+) -> amago.Experiment:
+    cli = command_line_args
+    if cli.mode == "collect":
+        assert cli.trials == 1, "Async Mode breaks `trials` loop. Set `--trials = 1`"
+        experiment = make_experiment_collect_only(experiment)
+    elif cli.mode == "learn":
+        assert cli.trials == 1, "Async Mode breaks `trials` loop. Set `--trials = 1`"
+        experiment = make_experiment_learn_only(experiment)
+        if cli.ckpt is not None:
+            experiment.load_checkpoint(cli.ckpt)
     return experiment

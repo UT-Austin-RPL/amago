@@ -1,20 +1,21 @@
 import os
-import time
 import warnings
 import contextlib
 from dataclasses import dataclass
+from collections import defaultdict
 from functools import partial
-from typing import Callable
+from typing import Optional, Iterable
 
-import torch
-from torch import nn
-from torch.utils.data import DataLoader
+import gin
+from termcolor import colored
 import wandb
+import torch
+from torch.utils.data import DataLoader
 import numpy as np
-from tqdm import tqdm
 from einops import repeat
 import gymnasium as gym
-import gin
+from accelerate import Accelerator, DistributedDataParallelKwargs
+from accelerate.utils import tqdm
 
 from . import utils
 from .agent import Agent
@@ -25,6 +26,7 @@ from amago.envs.env_utils import (
     SequenceWrapper,
     GPUSequenceBuffer,
     DummyAsyncVectorEnv,
+    EnvCreator,
 )
 from .loading import Batch, TrajDset, RLData_pad_collate, MAGIC_PAD_VAL
 from .hindsight import Relabeler, RelabelWarning
@@ -34,34 +36,35 @@ from .hindsight import Relabeler, RelabelWarning
 @dataclass
 class Experiment:
     # General
-    make_train_env: Callable
-    make_val_env: Callable
-    parallel_actors: int
+    run_name: str
     max_seq_len: int
     traj_save_len: int
-    run_name: str
-    gpu: int
+    agent_type: type[Agent]
+
+    # Environment
+    make_train_env: callable | Iterable[callable]
+    make_val_env: callable | Iterable[callable]
+    parallel_actors: int = 10
     async_envs: bool = True
-    share_train_val_envs: bool = False
-    agent_Cls: Callable = Agent
+    exploration_wrapper_Cls: Optional[type[ExplorationWrapper]] = ExplorationWrapper
+    sample_actions: bool = True
 
     # Logging
     log_to_wandb: bool = False
     wandb_project: str = os.environ.get("AMAGO_WANDB_PROJECT")
     wandb_entity: str = os.environ.get("AMAGO_WANDB_ENTITY")
     wandb_group_name: str = None
-    wandb_log_dir: str = None
     verbose: bool = True
 
     # Replay
     dset_root: str = None
     dset_name: str = None
     dset_max_size: int = 15_000
-    dset_filter_pct: float = 0.1
+    dset_filter_pct: Optional[float] = 0.1
     relabel: str = "none"
     goal_importance_sampling: bool = False
     stagger_traj_file_lengths: bool = True
-    save_trajs_as: str = "trajectory"
+    save_trajs_as: str = "npz"
 
     # Learning Schedule
     epochs: int = 1000
@@ -69,48 +72,52 @@ class Experiment:
     start_collecting_at_epoch: int = 0
     train_timesteps_per_epoch: int = 1000
     train_grad_updates_per_epoch: int = 1000
-    val_interval: int = 10
+    val_interval: Optional[int] = 10
     val_timesteps_per_epoch: int = 10_000
-    val_checks_per_epoch: int = 50
-    ckpt_interval: int = 20
     log_interval: int = 250
+    ckpt_interval: Optional[int] = 20
+    always_save_latest: bool = True
+    always_load_latest: bool = False
 
     # Optimization
     batch_size: int = 24
-    dloader_workers: int = 8
+    batches_per_update: int = 1
+    dloader_workers: int = 6
     learning_rate: float = 1e-4
     critic_loss_weight: float = 10.0
-    warmup_epochs: int = 10
+    lr_warmup_steps: int = 500
     grad_clip: float = 1.0
     l2_coeff: float = 1e-3
-    half_precision: bool = False
     fast_inference: bool = True
-
-    # Exploration
-    exploration_wrapper_Cls: Callable | None = ExplorationWrapper
-    sample_actions: bool = True
+    mixed_precision: str = "no"
 
     def start(self):
-        self.DEVICE = torch.device(f"cuda:{self.gpu}" if self.gpu >= 0 else "cpu")
+        self.accelerator = Accelerator(
+            gradient_accumulation_steps=self.batches_per_update,
+            device_placement=True,
+            log_with="wandb",
+            kwargs_handlers=[
+                DistributedDataParallelKwargs(find_unused_parameters=True)
+            ],
+            mixed_precision=self.mixed_precision,
+        )
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             self.init_envs()
         self.init_dsets()
         self.init_dloaders()
         self.init_model()
-        self.init_optimizer()
         self.init_checkpoints()
         self.init_logger()
         if self.verbose:
             self.summary()
 
+    @property
+    def DEVICE(self):
+        return self.accelerator.device
+
     def summary(self):
-        total_params = 0
-        for name, parameter in self.policy.named_parameters():
-            if not parameter.requires_grad:
-                continue
-            params = parameter.numel()
-            total_params += params
+        total_params = utils.count_params(self.policy)
 
         assert (
             self.traj_save_len >= self.max_seq_len
@@ -125,113 +132,119 @@ class Experiment:
                 "Fixed Context with Invalid Relabeling (Approximate Meta-RL / POMDPs)"
             )
 
-        print(
-            f"""\n\n \t\t AMAGO
-        \t -------------------------
-        \t Environment Horizon: {self.horizon}
-        \t Policy Max Sequence Length: {self.max_seq_len}
-        \t Trajectory File Sequence Length: {self.traj_save_len}
-        \t Mode: {mode}
-        \t Half Precision: {self.half_precision}
-        \t Fast Inference: {self.fast_inference}
-        \t Total Parameters: {total_params:,d} \n\n"""
+        self.accelerator.print(
+            f"""\n\n \t\t {colored('AMAGO v2', 'green')}
+            \t -------------------------
+            \t Agent Type: {self.policy.__class__.__name__}
+            \t Environment Horizon: {self.horizon}
+            \t Policy Max Sequence Length: {self.max_seq_len}
+            \t Trajectory File Sequence Length: {self.traj_save_len}
+            \t Mode: {mode}
+            \t Mixed Precision: {self.mixed_precision.upper()}
+            \t Fast Inference: {self.fast_inference}
+            \t Total Parameters: {total_params:,d} \n\n"""
         )
 
     def init_envs(self):
         assert self.traj_save_len >= self.max_seq_len
-        if self.max_seq_len < self.traj_save_len and self.stagger_traj_file_lengths:
-            # staggered traj file lengths fix a potential bug where, for example,
-            # a policy with a max_seq_len of 10 trained on trajectory files
-            # of length 100 has never seen the sequence of [t=95,...,t=105]
-            # during training.
-            save_every_low = self.traj_save_len - self.max_seq_len
-            save_every_high = self.traj_save_len + self.max_seq_len
-            if self.verbose:
-                print(
-                    f"Note: Partial Context Mode. Randomizing trajectory file lengths in [{save_every_low}, {save_every_high}]"
-                )
-        else:
-            save_every_low = save_every_high = self.traj_save_len
-
-        self.horizon = -float("inf")
-
-        def _make_env(fn, split):
-            env = fn()
-            self.horizon = max(self.horizon, env.horizon)
-            if split == "train" and self.exploration_wrapper_Cls:
-                # exploration is handled by a wrapper
-                env = self.exploration_wrapper_Cls(env)
-            # SequenceWrapper handles all the disk writing
-            env = SequenceWrapper(
-                env,
-                save_every=(save_every_low, save_every_high),
-                make_dset=True,
-                dset_root=self.dset_root,
-                dset_name=self.dset_name,
-                dset_split=split,
-                save_trajs_as=self.save_trajs_as,
+        make_val_envs = (
+            [self.make_val_env] * self.parallel_actors
+            if not isinstance(self.make_val_env, Iterable)
+            else self.make_val_env
+        )
+        make_train_envs = (
+            [self.make_train_env] * self.parallel_actors
+            if not isinstance(self.make_train_env, Iterable)
+            else self.make_train_env
+        )
+        if not len(make_train_envs) == self.parallel_actors:
+            utils.amago_warning(
+                f"`Experiment.parallel_actors` is {self.parallel_actors} but `make_train_env` is a list of length {len(make_train_envs)}"
             )
-            # save gcrl2 space here to make model later
-            self.gcrl2_space = env.gcrl2_space
-            return env
+        if not len(make_val_envs) == self.parallel_actors:
+            utils.amago_warning(
+                f"`Experiment.parallel_actors` is {self.parallel_actors} but `make_val_env` is a list of length {len(make_train_envs)}"
+            )
 
+        # wrap environments to save trajectories to replay buffer
+        shared_env_kwargs = dict(
+            dset_root=self.dset_root,
+            dset_name=self.dset_name,
+            save_trajs_as=self.save_trajs_as,
+            traj_save_len=self.traj_save_len,
+            max_seq_len=self.max_seq_len,
+            stagger_traj_file_lengths=self.stagger_traj_file_lengths,
+        )
+        make_train = [
+            EnvCreator(
+                make_env=env_func,
+                make_dset=True,
+                dset_split="train",
+                # adds exploration noise
+                exploration_wrapper_Cls=self.exploration_wrapper_Cls,
+                **shared_env_kwargs,
+            )
+            for env_func in make_train_envs
+        ]
+        make_val = [
+            EnvCreator(
+                make_env=env_func,
+                # v2: no longer saves trajectories
+                make_dset=False,
+                dset_split="val",
+                exploration_wrapper_Cls=None,
+                **shared_env_kwargs,
+            )
+            for env_func in make_val_envs
+        ]
+
+        # make parallel envs
         Par = gym.vector.AsyncVectorEnv if self.async_envs else DummyAsyncVectorEnv
-        make_train_env = partial(_make_env, self.make_train_env, "train")
-        self.train_envs = Par([make_train_env for _ in range(self.parallel_actors)])
+        self.train_envs = Par(make_train)
         self.train_envs.reset()
-        if not self.share_train_val_envs:
-            make_val_env = partial(_make_env, self.make_val_env, "val")
-            self.val_envs = Par([make_val_env for _ in range(self.parallel_actors)])
-            self.val_envs.reset()
-        else:
-            self.val_envs = self.train_envs
+        self.val_envs = Par(make_val)
+        self.val_envs.reset()
+
+        # save info we need to initialize the agent nets
+        # (we assume each environment has the same observation and action spaces)
+        self.gcrl2_space = make_train[0].gcrl2_space
+        self.horizon = make_train[0].horizon
         # self.train_buffers holds the env state between rollout cycles
         # that are shorter than the horizon length
         self.train_buffers = None
         self.hidden_state = None
 
     def init_checkpoints(self):
-        self.best_return = -float("inf")
         self.ckpt_dir = os.path.join(self.dset_root, self.dset_name, "ckpts")
-        if not os.path.exists(self.ckpt_dir):
-            os.makedirs(self.ckpt_dir)
+        os.makedirs(self.ckpt_dir, exist_ok=True)
         self.epoch = 0
 
-    def load_checkpoint(self, epoch: int = None, loading_best: bool = False):
-        assert epoch is not None or loading_best is True
-        if epoch is not None:
-            assert not loading_best
-        if not loading_best:
-            ckpt_name = f"{self.run_name}_epoch_{epoch}.pt"
-        else:
-            ckpt_name = f"{self.run_name}_BEST.pt"
+    def load_checkpoint(self, epoch: int):
+        ckpt_name = f"{self.run_name}_epoch_{epoch}"
+        ckpt_path = os.path.join(self.ckpt_dir, ckpt_name)
+        self.accelerator.load_state(ckpt_path)
+        self.epoch = epoch
 
-        ckpt = torch.load(
-            os.path.join(self.ckpt_dir, ckpt_name), map_location=self.DEVICE
-        )
-        self.policy.load_state_dict(ckpt["model_state"])
-        self.optimizer.load_state_dict(ckpt["optimizer_state"])
-        self.epoch = ckpt["epoch"]
-        self.grad_scaler.load_state_dict(ckpt["grad_scaler"])
-        self.best_return = ckpt["best_return"]
+    def save_checkpoint(self):
+        ckpt_name = f"{self.run_name}_epoch_{self.epoch}"
+        self.accelerator.save_state(os.path.join(self.ckpt_dir, ckpt_name))
 
-    def save_checkpoint(self, saving_best: bool = False):
-        state_dict = {
-            "model_state": self.policy.state_dict(),
-            "optimizer_state": self.optimizer.state_dict(),
-            "epoch": self.epoch,
-            "grad_scaler": self.grad_scaler.state_dict(),
-            "best_return": self.best_return,
-        }
-        if not saving_best:
-            ckpt_name = f"{self.run_name}_epoch_{self.epoch}.pt"
+    def write_latest_policy(self):
+        ckpt_name = os.path.join(self.dset_root, self.dset_name, "policy.pt")
+        torch.save(self.policy_aclr.state_dict(), ckpt_name)
+
+    def read_latest_policy(self):
+        ckpt_name = os.path.join(self.dset_root, self.dset_name, "policy.pt")
+        ckpt = utils.retry_load_checkpoint(ckpt_name, map_location=self.DEVICE)
+        if ckpt is not None:
+            self.accelerator.print("Loading latest policy....")
+            self.policy_aclr.load_state_dict(ckpt)
         else:
-            ckpt_name = f"{self.run_name}_BEST.pt"
-        torch.save(state_dict, os.path.join(self.ckpt_dir, ckpt_name))
+            utils.amago_warning("Latest policy checkpoint was not loaded.")
 
     def init_dsets(self):
         if self.save_trajs_as != "trajectory" and self.relabel != "none":
-            warnings.warn(
+            utils.amago_warning(
                 "Saving data in efficient ('frozen') format... these files will be skipped by the Relabeler",
                 category=RelabelWarning,
             )
@@ -244,33 +257,19 @@ class Experiment:
             items_per_epoch=self.train_grad_updates_per_epoch * self.batch_size,
             max_seq_len=self.max_seq_len,
         )
-        self.val_dset = TrajDset(
-            relabeler=Relabeler(self.relabel, self.goal_importance_sampling),
-            dset_root=self.dset_root,
-            dset_name=self.dset_name,
-            dset_split="val",
-            items_per_epoch=self.val_checks_per_epoch * self.batch_size,
-            max_seq_len=self.max_seq_len,
-        )
 
     def init_dloaders(self):
         self.train_dset.refresh_files()
-        self.val_dset.refresh_files()
-
-        self.train_dloader = DataLoader(
+        train_dloader = DataLoader(
             self.train_dset,
             batch_size=self.batch_size,
             num_workers=self.dloader_workers,
             collate_fn=RLData_pad_collate,
             pin_memory=True,
         )
-        self.val_dloader = DataLoader(
-            self.val_dset,
-            batch_size=self.batch_size,
-            num_workers=self.dloader_workers,
-            collate_fn=RLData_pad_collate,
-            pin_memory=True,
-        )
+        # accelerator.free_memory clears everything.
+        # https://github.com/huggingface/accelerate/blob/2471eacdd648446f2f63eccb9b18a7731304f401/src/accelerate/accelerator.py#L3189
+        self.train_dloader = self.accelerator.prepare(train_dloader)
 
     def init_logger(self):
         gin_config = gin.operative_config_str()
@@ -278,33 +277,21 @@ class Experiment:
         with open(config_path, "w") as f:
             f.write(gin_config)
         if self.log_to_wandb:
-            log_dir = self.wandb_log_dir or os.path.join(self.dset_root, "wandb_logs")
-            if not os.path.exists(log_dir):
-                os.makedirs(log_dir)
-            wandb.init(
-                project=self.wandb_project,
-                entity=self.wandb_entity,
-                dir=log_dir,
-                name=self.run_name,
-                group=self.wandb_group_name,
+            gin_as_wandb = utils.gin_as_wandb_config()
+            log_dir = os.path.join(self.dset_root, "wandb_logs")
+            os.makedirs(log_dir, exist_ok=True)
+            self.accelerator.init_trackers(
+                project_name=self.wandb_project,
+                config=gin_as_wandb,
+                init_kwargs={
+                    "wandb": dict(
+                        entity=self.wandb_entity,
+                        dir=log_dir,
+                        name=self.run_name,
+                        group=self.wandb_group_name,
+                    )
+                },
             )
-            wandb.save(config_path)
-
-    def init_optimizer(self):
-        self.optimizer = torch.optim.AdamW(
-            self.policy.trainable_params,
-            lr=self.learning_rate,
-            weight_decay=self.l2_coeff,
-        )
-        self.warmup_scheduler = torch.optim.lr_scheduler.LinearLR(
-            self.optimizer,
-            start_factor=1e-8,
-            end_factor=1.0,
-            total_iters=self.train_grad_updates_per_epoch * self.warmup_epochs,
-        )
-        self.grad_scaler = torch.cuda.amp.GradScaler(
-            enabled=self.half_precision,
-        )
 
     def init_model(self):
         policy_kwargs = {
@@ -315,9 +302,24 @@ class Experiment:
             "max_seq_len": self.max_seq_len,
             "horizon": self.horizon,
         }
-        self.policy = self.agent_Cls(**policy_kwargs)
-        assert isinstance(self.policy, Agent)
-        self.policy.to(self.DEVICE)
+        policy = self.agent_type(**policy_kwargs)
+        assert isinstance(policy, Agent)
+        optimizer = torch.optim.AdamW(
+            policy.trainable_params,
+            lr=self.learning_rate,
+            weight_decay=self.l2_coeff,
+        )
+        lr_schedule = utils.get_constant_schedule_with_warmup(
+            optimizer=optimizer, num_warmup_steps=self.lr_warmup_steps
+        )
+        self.policy_aclr, self.optimizer, self.lr_schedule = self.accelerator.prepare(
+            policy, optimizer, lr_schedule
+        )
+        self.accelerator.register_for_checkpointing(self.lr_schedule)
+
+    @property
+    def policy(self):
+        return self.accelerator.unwrap_model(self.policy_aclr)
 
     def interact(
         self,
@@ -330,8 +332,8 @@ class Experiment:
         """
         Main policy loop for interacting with the environment.
         """
-
-        self.policy.eval()
+        policy = self.policy
+        policy.eval()
 
         if self.verbose:
             iter_ = tqdm(
@@ -346,8 +348,7 @@ class Experiment:
 
         # clear results statistics
         # (can make train-time stats useless depending on horizon vs. `timesteps`)
-        envs.call_async("reset_stats")
-        envs.call_wait()
+        utils.call_async_env(envs, "reset_stats")
 
         if buffers is None:
             # start of training or new eval cycle
@@ -364,13 +365,12 @@ class Experiment:
 
         if hidden_state is None:
             # init new hidden state
-            hidden_state = self.policy.traj_encoder.init_hidden_state(
+            hidden_state = policy.traj_encoder.init_hidden_state(
                 self.parallel_actors, self.DEVICE
             )
 
         def get_t(_dones=None):
-            envs.call_async("current_timestep")
-            par_obs_goal_rl2 = envs.call_wait()
+            par_obs_goal_rl2 = utils.call_async_env(envs, "current_timestep")
             _obs = utils.stack_list_array_dicts(
                 [obs_goal_rl2[0] for obs_goal_rl2 in par_obs_goal_rl2], axis=0
             )
@@ -387,7 +387,7 @@ class Experiment:
         if buffers is None:
             get_t()
 
-        for step in iter_:
+        for _ in iter_:
             obs_tc_t = obs_seqs.sequences
             goals_tc_t = goal_seqs.sequences["_"]
             rl2_tc_t = rl2_seqs.sequences["_"]
@@ -396,7 +396,7 @@ class Experiment:
 
             with torch.no_grad():
                 with self.caster():
-                    actions, hidden_state = self.policy.get_actions(
+                    actions, hidden_state = policy.get_actions(
                         obs=obs_tc_t,
                         goals=goals_tc_t,
                         rl2s=rl2_tc_t,
@@ -405,20 +405,16 @@ class Experiment:
                         sample=self.sample_actions,
                         hidden_state=hidden_state if self.fast_inference else None,
                     )
-            _, ext_rew, terminated, truncated, info = envs.step(actions)
+            *_, terminated, truncated, _ = envs.step(actions)
             done = terminated | truncated
             get_t(done)
-            hidden_state = self.policy.traj_encoder.reset_hidden_state(
-                hidden_state, done
-            )
+            hidden_state = policy.traj_encoder.reset_hidden_state(hidden_state, done)
 
             if render:
                 envs.render()
 
-        envs.call_async("return_history")
-        return_history = envs.call_wait()
-        envs.call_async("success_history")
-        success_history = envs.call_wait()
+        return_history = utils.call_async_env(envs, "return_history")
+        success_history = utils.call_async_env(envs, "success_history")
         return (
             (obs_seqs, goal_seqs, rl2_seqs),
             hidden_state,
@@ -436,27 +432,16 @@ class Experiment:
 
     def evaluate_val(self):
         if self.val_timesteps_per_epoch > 0:
-            if self.share_train_val_envs:
-                self.val_envs.call_async("turn_off_exploration")
-                self.val_envs.call_wait()
             *_, returns, successes = self.interact(
                 self.val_envs,
                 self.val_timesteps_per_epoch,
             )
-            if self.share_train_val_envs:
-                # make sure we reset again in case we're sharing val envs with train envs
-                self.val_envs.call_async("turn_on_exploration")
-                self.val_envs.call_wait()
-                self.val_envs.reset()
-                self.train_buffers, self.hidden_state = None, None
-            logs = self.policy_metrics(returns, successes)
-            cur_return = logs["Average Total Return (Across All Env Names)"]
+            logs_per_process = self.policy_metrics(returns, successes)
+            cur_return = logs_per_process["Average Total Return (Across All Env Names)"]
             if self.verbose:
-                print(f"Average Return : {cur_return}")
-            if cur_return >= self.best_return:
-                self.save_checkpoint(saving_best=True)
-                self.best_return = cur_return
-            self.log(logs, key="val")
+                self.accelerator.print(f"Average Return : {cur_return}")
+            logs_global = utils.avg_over_accelerate(logs_per_process)
+            self.log(logs_global, key="val")
 
     def evaluate_test(
         self, make_test_env: callable, timesteps: int, render: bool = False
@@ -485,12 +470,23 @@ class Experiment:
             else:
                 log_dict[k] = v
 
-        self.train_envs.call_async("total_frames")
-        total_frames = sum(self.train_envs.call_wait())
+        total_frames = sum(utils.call_async_env(self.train_envs, "total_frames"))
+        frames_by_env_name = utils.call_async_env(
+            self.train_envs, "total_frames_by_env_name"
+        )
+        total_frames_by_env_name = defaultdict(int)
+        for env_frames in frames_by_env_name:
+            for env_name, frames in env_frames.items():
+                total_frames_by_env_name[f"total_frames-{env_name}"] += frames
         if self.log_to_wandb:
-            wandb.log(
+            progress = {
+                "epoch": self.epoch,
+                "total_frames": total_frames,
+            }
+            self.accelerator.log(
                 {f"{key}/{subkey}": val for subkey, val in log_dict.items()}
-                | {"total_frames": total_frames}
+                | progress
+                | dict(total_frames_by_env_name)
             )
 
     def make_figures(self, loss_info) -> dict[str, wandb.Image]:
@@ -531,10 +527,7 @@ class Experiment:
         return avg_ret_per_env | avg_suc_per_env | avg_return_overall
 
     def compute_loss(self, batch: Batch, log_step: bool):
-        batch.to(self.DEVICE)
-        with self.caster():
-            critic_loss, actor_loss = self.policy(batch, log_step=log_step)
-
+        critic_loss, actor_loss = self.policy_aclr(batch, log_step=log_step)
         update_info = self.policy.update_info
         B, L_1, G, _ = actor_loss.shape
         C = len(self.policy.critics)
@@ -542,13 +535,9 @@ class Experiment:
         critic_state_mask = repeat(state_mask[:, 1:, ...], f"B L 1 -> B L {C} {G} 1")
         actor_state_mask = repeat(state_mask[:, :-1, ...], f"B L 1 -> B L {G} 1")
 
-        masked_actor_loss = (
-            actor_state_mask * actor_loss
-        ).sum() / actor_state_mask.sum()
+        masked_actor_loss = utils.masked_avg(actor_loss, actor_state_mask)
         if isinstance(critic_loss, torch.Tensor):
-            masked_critic_loss = (
-                critic_state_mask * critic_loss
-            ).sum() / critic_state_mask.sum()
+            masked_critic_loss = utils.masked_avg(critic_loss, critic_state_mask)
         else:
             assert critic_loss is None
             masked_critic_loss = 0.0
@@ -561,117 +550,94 @@ class Experiment:
 
     def _get_grad_norms(self):
         ggn = utils.get_grad_norm
+        pi = self.policy
         grads = {
-            "Actor Grad Norm": ggn(self.policy.actor),
-            "Critic Grad Norm": ggn(self.policy.critics),
-            "TrajEncoder Grad Norm": ggn(self.policy.traj_encoder),
-            "TstepEncoder Grad Norm": ggn(self.policy.tstep_encoder),
-            "TstepEncoder Goal Emb. Grad Norm": ggn(self.policy.tstep_encoder.goal_emb),
+            "Actor Grad Norm": ggn(pi.actor),
+            "Critic Grad Norm": ggn(pi.critics),
+            "TrajEncoder Grad Norm": ggn(pi.traj_encoder),
+            "TstepEncoder Grad Norm": ggn(pi.tstep_encoder),
+            "TstepEncoder Goal Emb. Grad Norm": ggn(pi.tstep_encoder.goal_emb),
         }
         return grads
 
     def train_step(self, batch: Batch, log_step: bool):
-        """
-        See a simplified example of how this changes the classic
-        actor-critic update to support a shared sequnce model
-        optimized on the actor and critic losses simultaneously
-        without a target model:
-
-        https://colab.research.google.com/drive/1XO8MNd_DNArGyoAbroXoQeGblv7Jb9ND#scrollTo=xQe5yry0b6Hl
-        """
-        l = self.compute_loss(batch, log_step=log_step)
-        self.optimizer.zero_grad()
-        loss = l["actor_loss"] + self.critic_loss_weight * l["critic_loss"]
-        self.grad_scaler.scale(loss).backward()
-        self.grad_scaler.unscale_(self.optimizer)
-        if log_step:
-            l.update(self._get_grad_norms())
-        grad_norm = nn.utils.clip_grad_norm_(
-            self.policy.trainable_params, max_norm=self.grad_clip
-        )
-        l["Global Grad Norm"] = grad_norm
-        self.grad_scaler.step(self.optimizer)
-        self.grad_scaler.update()
-        self.policy.soft_sync_targets()
-        if self.half_precision and log_step:
-            l["Half-Precision Grad Scaler Scale"] = self.grad_scaler.get_scale()
+        with self.accelerator.accumulate(self.policy_aclr):
+            self.optimizer.zero_grad()
+            l = self.compute_loss(batch, log_step=log_step)
+            loss = l["actor_loss"] + self.critic_loss_weight * l["critic_loss"]
+            self.accelerator.backward(loss)
+            if self.accelerator.sync_gradients:
+                self.accelerator.clip_grad_norm_(
+                    self.policy_aclr.parameters(), self.grad_clip
+                )
+                self.policy.soft_sync_targets()
+                if log_step:
+                    l.update(self._get_grad_norms())
+            self.optimizer.step()
+            self.lr_schedule.step()
         return l
 
     def caster(self):
-        if self.half_precision:
-            return torch.autocast(device_type="cuda", dtype=torch.bfloat16)
+        if self.mixed_precision != "no":
+            return torch.autocast(device_type="cuda")
         else:
             return contextlib.suppress()
 
-    def val_step(self, batch):
-        with torch.no_grad():
-            return self.compute_loss(batch, log_step=True)
-
     def learn(self):
-        def make_pbar(loader, training, epoch):
-            if training:
-                desc = f"{self.run_name} Epoch {epoch} Train"
-                steps = self.train_grad_updates_per_epoch
-                c = "green"
-            else:
-                desc = f"{self.run_name} Epoch {epoch} Val"
-                steps = self.val_checks_per_epoch
-                c = "red"
-
+        def make_pbar(loader, epoch_num):
             if self.verbose:
-                return tqdm(enumerate(loader), desc=desc, total=steps, colour=c)
+                return tqdm(
+                    enumerate(loader),
+                    desc=f"{self.run_name} Epoch {epoch_num} Train",
+                    total=self.train_grad_updates_per_epoch,
+                    colour="green",
+                )
             else:
                 return enumerate(loader)
 
         start_epoch = self.epoch
         for epoch in range(start_epoch, self.epochs):
+            if self.always_load_latest:
+                self.read_latest_policy()
+
             # environment interaction
-            self.policy.eval()
-            if epoch % self.val_interval == 0:
+            self.policy_aclr.eval()
+            if self.val_interval and epoch % self.val_interval == 0:
                 self.evaluate_val()
             if epoch >= self.start_collecting_at_epoch:
                 self.collect_new_training_data()
-
-            # make dataloaders aware of new .traj files
+            self.accelerator.wait_for_everyone()
             self.init_dloaders()
-            self.policy.train()
             if self.train_dset.count_trajectories() == 0:
-                warnings.warn(
-                    f"Skipping epoch {epoch} because no training trajectories have been saved yet...",
-                    category=Warning,
+                utils.amago_warning(
+                    f"Skipping epoch {epoch} because no training trajectories have been saved yet..."
                 )
                 continue
+
+            # training
             elif epoch < self.start_learning_at_epoch:
-                # lets us skip early epochs to prevent overfitting on small datasets
                 continue
-            for train_step, batch in make_pbar(self.train_dloader, True, epoch):
+            self.policy_aclr.train()
+            for train_step, batch in make_pbar(self.train_dloader, epoch):
                 total_step = (epoch * self.train_grad_updates_per_epoch) + train_step
                 log_step = total_step % self.log_interval == 0
                 loss_dict = self.train_step(batch, log_step=log_step)
                 if log_step:
                     self.log(loss_dict, key="train-update")
-                # lr scheduling done here so we can see epoch/step
-                self.warmup_scheduler.step(total_step)
+            self.accelerator.wait_for_everyone()
 
-            if (
-                epoch % self.val_interval == 0
-                and self.val_dset.count_trajectories() > 0
-            ):
-                # the "training" metrics on validation data could help identify
-                # overfitting or highlight distribution shift between (approx.)
-                # on-policy data and way-off-policy data in the disk buffer.
-                self.policy.eval()
-                for val_step, batch in make_pbar(self.val_dloader, False, epoch):
-                    loss_dict = self.val_step(batch)
-                    self.log(loss_dict, key="val-update")
-                figures = self.make_figures(loss_dict)
-                self.log(figures, key="val-update")
-                self.val_dset.clear()
-
+            # buffer management
             dset_size = self.train_dset.count_trajectories()
             dset_gb = self.train_dset.disk_usage
-            if dset_size > self.dset_max_size:
-                self.train_dset.filter(self.dset_filter_pct)
+            needs_filter = (
+                dset_size > self.dset_max_size and self.dset_filter_pct is not None
+            )
+            self.accelerator.wait_for_everyone()
+            if needs_filter and self.accelerator.is_main_process:
+                pct_to_filter = max(
+                    self.dset_filter_pct, (dset_size - self.dset_max_size) / dset_size
+                )
+                self.train_dset.filter(pct_to_filter)
             self.log(
                 {
                     "Trajectory Files Saved in Replay Buffer": dset_size,
@@ -679,8 +645,11 @@ class Experiment:
                 },
                 key="buffer",
             )
+            self.accelerator.wait_for_everyone()
 
             # end epoch
             self.epoch = epoch
-            if epoch % self.ckpt_interval == 0:
+            if self.ckpt_interval and epoch % self.ckpt_interval == 0:
                 self.save_checkpoint()
+            if self.always_save_latest:
+                self.write_latest_policy()

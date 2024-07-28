@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 import wandb
 
 import amago
-from amago.envs.builtin.gym_envs import POPGymEnv
+from amago.envs.builtin.popgym_envs import POPGymAMAGO, MultiDomainPOPGymAMAGO
 from amago.cli_utils import *
 
 
@@ -11,6 +11,11 @@ def add_cli(parser):
     parser.add_argument("--env", type=str, default="AutoencodeEasy")
     parser.add_argument("--max_seq_len", type=int, default=2000)
     parser.add_argument("--traj_save_len", type=int, default=2000)
+    parser.add_argument(
+        "--multidomain",
+        action="store_true",
+        help="Activate 'MultiDomain' POPGym, where agents play 27 POPGym games at the same time in 1-shot format (2 episodes, second one counts).",
+    )
     parser.add_argument("--naive", action="store_true")
     return parser
 
@@ -22,8 +27,13 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     config = {
-        # no need to risk numerical instability when returns are this bounded
-        "amago.agent.Agent.reward_multiplier": 100.0,
+        # bins are hard to tune in this environment.
+        "amago.agent.Agent.reward_multiplier": 1.0
+        if args.agent_type == "multitask"
+        else 100.0,  # paper: always 100
+        "amago.nets.actor_critic.NCriticsTwoHot.min_return": -1.0,  # paper: None
+        "amago.nets.actor_critic.NCriticsTwoHot.max_return": 1.0,  # paper: None
+        "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 32,  # paper: 64
     }
     turn_off_goal_conditioning(config)
     switch_traj_encoder(
@@ -42,7 +52,12 @@ if __name__ == "__main__":
     group_name = f"{args.run_name}_{args.env}"
     for trial in range(args.trials):
         run_name = group_name + f"_trial_{trial}"
-        make_train_env = lambda: POPGymEnv(f"popgym-{args.env}-v0")
+
+        if args.multidomain:
+            make_train_env = lambda: MultiDomainPOPGymAMAGO()
+        else:
+            make_train_env = lambda: POPGymAMAGO(f"popgym-{args.env}-v0")
+
         experiment = create_experiment_from_cli(
             args,
             make_train_env=make_train_env,
@@ -55,10 +70,8 @@ if __name__ == "__main__":
             run_name=run_name,
             val_timesteps_per_epoch=2000,
         )
+        experiment = switch_mode_load_ckpt(experiment, args)
         experiment.start()
-        if args.ckpt is not None:
-            experiment.load_checkpoint(args.ckpt)
         experiment.learn()
-        experiment.load_checkpoint(loading_best=True)
         experiment.evaluate_test(make_train_env, timesteps=20_000, render=False)
         wandb.finish()

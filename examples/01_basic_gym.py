@@ -51,7 +51,6 @@ if __name__ == "__main__":
             horizon=args.horizon,
             zero_shot=True,
         )
-
         experiment = create_experiment_from_cli(
             args,
             make_train_env=make_train_env,
@@ -62,11 +61,8 @@ if __name__ == "__main__":
             group_name=group_name,
             val_timesteps_per_epoch=args.horizon * 5,
         )
-
+        experiment = switch_mode_load_ckpt(experiment, args)
         experiment.start()
-        if args.ckpt is not None:
-            experiment.load_checkpoint(args.ckpt)
         experiment.learn()
-        experiment.load_checkpoint(loading_best=True)
         experiment.evaluate_test(make_train_env, timesteps=10_000, render=False)
         wandb.finish()

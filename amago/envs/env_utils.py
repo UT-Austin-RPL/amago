@@ -1,7 +1,11 @@
 import os
 import time
 import random
+import warnings
 from uuid import uuid4
+from dataclasses import dataclass
+from collections import defaultdict
+from typing import Optional, Type, Callable, Iterable
 
 import gymnasium as gym
 import numpy as np
@@ -11,6 +15,7 @@ from einops import rearrange
 
 from amago.loading import MAGIC_PAD_VAL
 from amago.hindsight import Timestep, Trajectory, GoalSeq
+from amago.utils import amago_warning
 
 
 class DummyAsyncVectorEnv(gym.Env):
@@ -227,6 +232,7 @@ class ExplorationWrapper(gym.ActionWrapper):
     def reset(self, *args, **kwargs):
         out = super().reset(*args, **kwargs)
         self.global_multiplier = random.random()
+        np.random.seed(random.randint(0, 1e6))
         return out
 
     def current_eps(self, local_step: int, horizon: int):
@@ -327,6 +333,7 @@ class SequenceWrapper(gym.Wrapper):
         self.since_last_save = 0
         self.save_trajs_as = save_trajs_as
         self._total_frames = 0
+        self._total_frames_by_env_name = defaultdict(int)
         if isinstance(self.env.action_space, gym.spaces.Discrete):
             action_shape = self.env.action_space.n
         else:
@@ -394,6 +401,7 @@ class SequenceWrapper(gym.Wrapper):
             )
         self._current_timestep = self.active_traj.make_sequence(last_only=True)
         self._total_frames += 1
+        self._total_frames_by_env_name[self.env.env_name] += 1
         return timestep.obs, reward, terminated, truncated, info
 
     def log_to_disk(self):
@@ -410,8 +418,12 @@ class SequenceWrapper(gym.Wrapper):
         return seq
 
     @property
-    def total_frames(self):
+    def total_frames(self) -> int:
         return self._total_frames
+
+    @property
+    def total_frames_by_env_name(self) -> dict[str, int]:
+        return self._total_frames_by_env_name
 
     def turn_off_exploration(self):
         if isinstance(self.env, ExplorationWrapper):
@@ -424,3 +436,46 @@ class SequenceWrapper(gym.Wrapper):
     @property
     def current_timestep(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         return self._current_timestep
+
+
+@dataclass
+class EnvCreator:
+    make_env: Callable
+    make_dset: bool
+    dset_root: str
+    dset_name: str
+    dset_split: str
+    save_trajs_as: str
+    traj_save_len: int
+    max_seq_len: int
+    stagger_traj_file_lengths: bool
+    exploration_wrapper_Cls: Type[ExplorationWrapper]
+
+    def __post_init__(self):
+        if self.max_seq_len < self.traj_save_len and self.stagger_traj_file_lengths:
+            self.save_every_low = self.traj_save_len - self.max_seq_len
+            self.save_every_high = self.traj_save_len + self.max_seq_len
+            warnings.warn(
+                f"Note: Partial Context Mode. Randomizing trajectory file lengths in [{self.save_every_low}, {self.save_every_high}]"
+            )
+        else:
+            self.save_every_low = self.save_every_high = self.traj_save_len
+        self.horizon = -float("inf")
+        self.gcrl2_space = None
+
+    def __call__(self):
+        env = self.make_env()
+        self.horizon = max(self.horizon, env.horizon)
+        if self.exploration_wrapper_Cls is not None:
+            env = self.exploration_wrapper_Cls(env)
+        env = SequenceWrapper(
+            env,
+            save_every=(self.save_every_low, self.save_every_high),
+            make_dset=self.make_dset,
+            dset_root=self.dset_root,
+            dset_name=self.dset_name,
+            dset_split=self.dset_split,
+            save_trajs_as=self.save_trajs_as,
+        )
+        self.gcrl2_space = env.gcrl2_space
+        return env

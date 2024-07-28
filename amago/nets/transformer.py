@@ -1,4 +1,3 @@
-import warnings
 import math
 
 import torch
@@ -8,11 +7,12 @@ from einops import repeat, rearrange, einsum
 import gin
 
 from .utils import activation_switch
+from amago.utils import amago_warning
 
 try:
     import flash_attn
 except ImportError:
-    warnings.warn("Missing FlashAttention (2.0) Install", category=Warning)
+    amago_warning("Missing FlashAttention (2.0) Install")
 
 
 class Normalization(nn.Module):
@@ -29,11 +29,18 @@ class Normalization(nn.Module):
         return self.norm(x)
 
 
+@gin.configurable(allowlist=["window_size"])
 class FlashAttention(nn.Module):
-    def __init__(self, causal: bool = True, attention_dropout: float = 0.0):
+    def __init__(
+        self,
+        causal: bool = True,
+        attention_dropout: float = 0.0,
+        window_size: tuple[int, int] = (-1, -1),
+    ):
         super().__init__()
         self.dropout = attention_dropout
         self.causal = causal
+        self.window_size = window_size
 
     def forward(self, qkv, key_cache=None, val_cache=None, cache_seqlens=None):
         qkv = qkv.to(torch.bfloat16)
@@ -42,6 +49,7 @@ class FlashAttention(nn.Module):
                 qkv,
                 dropout_p=self.dropout if self.training else 0.0,
                 causal=self.causal,
+                window_size=self.window_size,
             )
         else:
             assert not self.training
@@ -54,6 +62,7 @@ class FlashAttention(nn.Module):
                 k=k,
                 v=v,
                 causal=self.causal,
+                window_size=self.window_size,
             )
         return out
 

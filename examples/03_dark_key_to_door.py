@@ -21,10 +21,7 @@ if __name__ == "__main__":
     add_cli(parser)
     args = parser.parse_args()
 
-    config = {
-        # no need to risk numerical instability when returns are this bounded
-        "amago.agent.Agent.reward_multiplier": 100.0,
-    }
+    config = {"amago.agent.Agent.reward_multiplier": 100.0}
 
     turn_off_goal_conditioning(config)
     switch_tstep_encoder(config, arch="ff", n_layers=2, d_hidden=128, d_output=64)
@@ -63,7 +60,6 @@ if __name__ == "__main__":
             # (same task).
             soft_reset_kwargs={"new_task": False},
         )
-
         experiment = create_experiment_from_cli(
             args,
             make_train_env=make_train_env,
@@ -72,13 +68,10 @@ if __name__ == "__main__":
             traj_save_len=args.meta_horizon,
             group_name=group_name,
             run_name=run_name,
-            val_timesteps_per_epoch=2000,
+            val_timesteps_per_epoch=args.meta_horizon * 4,
         )
-
+        switch_mode_load_ckpt(experiment, args)
         experiment.start()
-        if args.ckpt is not None:
-            experiment.load_checkpoint(args.ckpt)
         experiment.learn()
-        experiment.load_checkpoint(loading_best=True)
         experiment.evaluate_test(make_train_env, timesteps=20_000, render=False)
         wandb.finish()
