@@ -122,6 +122,9 @@ if __name__ == "__main__":
         "amago.agent.Agent.tstep_encoder_Cls": partial(
             BabyTstepEncoder, obs_kind=args.obs_kind
         ),
+        "amago.nets.actor_critic.NCriticsTwoHot.min_return" : -12.,
+        "amago.nets.actor_critic.NCriticsTwoHot.max_return" : 12.,
+        "amago.nets.actor_critic.NCriticsTwoHot.output_bins" : 32,
     }
     switch_traj_encoder(
         config,
@@ -166,7 +169,7 @@ if __name__ == "__main__":
             stagger_traj_file_lengths=True,
             run_name=run_name,
             group_name=group_name,
-            val_timesteps_per_epoch=1200,
+            val_timesteps_per_epoch=3000,
             save_trajs_as="npz",
         )
         experiment.start()
