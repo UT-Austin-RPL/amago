@@ -218,7 +218,7 @@ python 05_kshot_metaworld.py --run_name <str> --benchmark ml45 --buffer_dir <pat
 <br>
 <br>
 
-## Multi-GPU, Async Rollouts, Multi-Task Training
+## Multi-GPU Training and Async Rollouts
 
 <img src="media/amago_big_logo.png" alt="amagologo" width="200" align="right"/>
 
