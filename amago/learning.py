@@ -163,7 +163,7 @@ class Experiment:
             )
         if not len(make_val_envs) == self.parallel_actors:
             utils.amago_warning(
-                f"`Experiment.parallel_actors` is {self.parallel_actors} but `make_val_env` is a list of length {len(make_train_envs)}"
+                f"`Experiment.parallel_actors` is {self.parallel_actors} but `make_val_env` is a list of length {len(make_val_envs)}"
             )
 
         # wrap environments to save trajectories to replay buffer
