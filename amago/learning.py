@@ -142,6 +142,8 @@ class Experiment:
             \t Mode: {mode}
             \t Mixed Precision: {self.mixed_precision.upper()}
             \t Fast Inference: {self.fast_inference}
+            \t Offline Loss Weight: {self.policy.offline_coeff}
+            \t Online Loss Weight: {self.policy.online_coeff}
             \t Total Parameters: {total_params:,d} \n\n"""
         )
 
@@ -227,7 +229,7 @@ class Experiment:
 
     def save_checkpoint(self):
         ckpt_name = f"{self.run_name}_epoch_{self.epoch}"
-        self.accelerator.save_state(os.path.join(self.ckpt_dir, ckpt_name))
+        self.accelerator.save_state(os.path.join(self.ckpt_dir, ckpt_name), safe_serialization=True)
 
     def write_latest_policy(self):
         ckpt_name = os.path.join(self.dset_root, self.dset_name, "policy.pt")

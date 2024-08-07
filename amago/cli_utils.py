@@ -346,7 +346,6 @@ def make_experiment_learn_only(experiment: amago.Experiment) -> amago.Experiment
     experiment.val_timesteps_per_epoch = 0
     experiment.val_checks_per_epoch = 0
     experiment.parallel_actors = 2
-    experiment.async_envs = False
     experiment.always_save_latest = True
     return experiment
 

@@ -48,7 +48,10 @@ if __name__ == "__main__":
     add_common_cli(parser)
     args = parser.parse_args()
 
-    config = {"amago.agent.Agent.reward_multiplier": 0.25}
+    config = {
+        "amago.agent.Agent.reward_multiplier": 0.25,
+        "amago.nets.traj_encoders.TformerTrajEncoder.pos_emb": "fixed",
+    }
     turn_off_goal_conditioning(config)
     switch_traj_encoder(
         config,
