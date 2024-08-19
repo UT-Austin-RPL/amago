@@ -374,6 +374,4 @@ def switch_mode_load_ckpt(
     elif cli.mode == "learn":
         assert cli.trials == 1, "Async Mode breaks `trials` loop. Set `--trials = 1`"
         experiment = make_experiment_learn_only(experiment)
-        if cli.ckpt is not None:
-            experiment.load_checkpoint(cli.ckpt)
     return experiment

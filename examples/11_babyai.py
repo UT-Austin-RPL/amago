@@ -172,13 +172,13 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     config = {
-        "amago.agent.Agent.reward_multiplier": 10.0,
+        "amago.agent.Agent.reward_multiplier": 100.0,
         "amago.agent.Agent.tstep_encoder_Cls": partial(
             BabyTstepEncoder, obs_kind=args.obs_kind
         ),
-        "amago.nets.actor_critic.NCriticsTwoHot.min_return": -12.0,
-        "amago.nets.actor_critic.NCriticsTwoHot.max_return": 12.0,
-        "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 48,
+        "amago.nets.actor_critic.NCriticsTwoHot.min_return": -150.0,
+        "amago.nets.actor_critic.NCriticsTwoHot.max_return": 150.0,
+        "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 32,
         "amago.agent.Agent.offline_coeff": 1.0
         if args.agent_type == "multitask"
         else 0.0,
