@@ -364,7 +364,7 @@ def make_experiment_collect_only(experiment: amago.Experiment) -> amago.Experime
     return experiment
 
 
-def switch_mode_load_ckpt(
+def switch_async_mode(
     experiment: amago.Experiment, command_line_args
 ) -> amago.Experiment:
     cli = command_line_args
