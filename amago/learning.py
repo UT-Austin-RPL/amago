@@ -23,6 +23,7 @@ from amago.envs.env_utils import (
     ReturnHistory,
     SuccessHistory,
     ExplorationWrapper,
+    EpsilonGreedy,
     SequenceWrapper,
     GPUSequenceBuffer,
     DummyAsyncVectorEnv,
@@ -46,7 +47,7 @@ class Experiment:
     make_val_env: callable | Iterable[callable]
     parallel_actors: int = 10
     async_envs: bool = True
-    exploration_wrapper_Cls: Optional[type[ExplorationWrapper]] = ExplorationWrapper
+    exploration_wrapper_Cls: Optional[type[ExplorationWrapper]] = EpsilonGreedy
     sample_actions: bool = True
 
     # Logging
@@ -167,6 +168,12 @@ class Experiment:
             utils.amago_warning(
                 f"`Experiment.parallel_actors` is {self.parallel_actors} but `make_val_env` is a list of length {len(make_val_envs)}"
             )
+        if self.exploration_wrapper_Cls is not None and not issubclass(
+            self.exploration_wrapper_Cls, ExplorationWrapper
+        ):
+            utils.amago_warning(
+                f"Implement exploration strategies by subclassing `ExplorationWrapper` and setting the `Experiment.exploration_wrapper_Cls`"
+            )
 
         # wrap environments to save trajectories to replay buffer
         shared_env_kwargs = dict(
@@ -229,7 +236,9 @@ class Experiment:
 
     def save_checkpoint(self):
         ckpt_name = f"{self.run_name}_epoch_{self.epoch}"
-        self.accelerator.save_state(os.path.join(self.ckpt_dir, ckpt_name), safe_serialization=True)
+        self.accelerator.save_state(
+            os.path.join(self.ckpt_dir, ckpt_name), safe_serialization=True
+        )
 
     def write_latest_policy(self):
         ckpt_name = os.path.join(self.dset_root, self.dset_name, "policy.pt")
