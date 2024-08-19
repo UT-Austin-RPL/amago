@@ -29,10 +29,6 @@ def add_cli(parser):
     return parser
 
 
-"""
-python 12_mario.py --parallel_actors 48 --timesteps_per_epoch 1000 --grads_per_epoch 500 --val_interval 100 --epochs 10000 --memory_size 384 --ckpt_interval 400 --dset_max_size 25_000
-"""
-
 # fmt: off
 MARIO_TRAIN = {
 "SuperMarioBros-Nes": ["Level1-1", "Level2-1-clouds-easy", "Level4-1", "Level5-1", "Level7-1", "Level8-1"],
@@ -214,7 +210,7 @@ if __name__ == "__main__":
             learning_rate=3e-4,
             grad_clip=2.0,
         )
-        switch_mode_load_ckpt(experiment, args)
+        switch_async_mode(experiment, args)
         experiment.start()
         if args.ckpt is not None:
             experiment.load_checkpoint(args.ckpt)

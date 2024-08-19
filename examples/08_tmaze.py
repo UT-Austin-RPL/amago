@@ -100,8 +100,10 @@ if __name__ == "__main__":
             sample_actions=False,  # even softmax prob .999 isn't good enough for this env...
             exploration_wrapper_Cls=TMazeExploration,
         )
-        switch_mode_load_ckpt(experiment, args)
+        switch_async_mode(experiment, args)
         experiment.start()
+        if args.ckpt is not None:
+            experiment.load_checkpoint(args.ckpt)
         experiment.learn()
         experiment.evaluate_test(make_env, timesteps=args.horizon * 5, render=False)
         wandb.finish()

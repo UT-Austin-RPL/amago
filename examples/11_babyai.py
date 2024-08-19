@@ -230,6 +230,7 @@ if __name__ == "__main__":
             val_timesteps_per_epoch=6000,
             save_trajs_as="npz",
         )
+        switch_async_mode(experiment, args)
         experiment.start()
         if args.ckpt is not None:
             experiment.load_checkpoint(args.ckpt)

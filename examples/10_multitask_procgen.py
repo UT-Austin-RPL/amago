@@ -86,8 +86,10 @@ if __name__ == "__main__":
             group_name=group_name,
             val_timesteps_per_epoch=5 * horizon + 1,
         )
-        switch_mode_load_ckpt(experiment, args)
+        switch_async_mode(experiment, args)
         experiment.start()
+        if args.ckpt is not None:
+            experiment.load_checkpoint(args.ckpt)
         experiment.learn()
         experiment.evaluate_test(make_test_env, timesteps=horizon * 20, render=False)
         wandb.finish()
