@@ -19,11 +19,65 @@ def add_cli(parser):
         choices=["partial-grid", "full-grid", "partial-image", "full-image"],
         default="partial-grid",
     )
-    parser.add_argument("--k_episodes", type=int, default=1)
-    parser.add_argument("--tasks", type=str, nargs="+", default=None)
+    parser.add_argument("--k_episodes", type=int, default=2)
     parser.add_argument("--train_seeds", type=int, default=5_000)
-    parser.add_argument("--max_seq_len", type=int, default=256)
+    parser.add_argument("--max_seq_len", type=int, default=512)
     return parser
+
+
+TRAIN_TASKS = [
+    "BabyAI-GoToLocalS7N5-v0",
+    "BabyAI-GoToObjMaze-v0",
+    "BabyAI-KeyCorridor-v0",
+    "BabyAI-KeyCorridorS3R3-v0",
+    "BabyAI-GoToRedBall-v0",
+    "BabyAI-KeyCorridorS3R2-v0",
+    "BabyAI-KeyCorridorS3R1-v0",
+    "BabyAI-Unlock-v0",
+    "BabyAI-GoToLocalS8N4-v0",
+    "BabyAI-GoToObjMazeOpen-v0",
+    "BabyAI-KeyCorridorS4R3-v0",
+    "BabyAI-UnlockLocal-v0",
+    "BabyAI-GoToObjMazeS5-v0",
+    "BabyAI-GoToObjMazeS4R2-v0",
+    "BabyAI-GoToLocal-v0",
+    "BabyAI-PickupLoc-v0",
+    "BabyAI-UnlockPickup-v0",
+    "BabyAI-GoTo-v0",
+    "BabyAI-FindObjS6-v0",
+    "BabyAI-BlockedUnlockPickup-v0",
+    "BabyAI-KeyCorridorS5R3-v0",
+    "BabyAI-GoToObjS6-v0",
+    "BabyAI-KeyInBox-v0",
+    "BabyAI-Open-v0",
+    "BabyAI-GoToOpen-v0",
+    "BabyAI-GoToDoor-v0",
+    "BabyAI-FindObjS7-v0",
+    "BabyAI-OpenRedDoor-v0",
+    "BabyAI-PickupDist-v0",
+    "BabyAI-GoToImpUnlock-v0",
+    "BabyAI-UnblockPickup-v0",
+    "BabyAI-OpenDoor-v0",
+    "BabyAI-GoToObjMazeS4-v0",
+    "BabyAI-OneRoomS12-v0",
+    "BabyAI-GoToObjMazeS6-v0",
+    "BabyAI-GoToRedBallNoDists-v0",
+    "BabyAI-OpenDoorDebug-v0",
+    "BabyAI-GoToLocalS8N5-v0",
+    "BabyAI-OneRoomS20-v0",
+    "BabyAI-Pickup-v0",
+    "BabyAI-GoToRedBlueBall-v0",
+    "BabyAI-OpenDoorColor-v0",
+    "BabyAI-PickupAbove-v0",
+    "BabyAI-GoToObjDoor-v0",
+    "BabyAI-OpenRedBlueDoors-v0",
+    "BabyAI-UnlockToUnlock-v0",
+    "BabyAI-OneRoomS16-v0",
+    "BabyAI-GoToLocalS8N6-v0",
+    "BabyAI-OneRoomS8-v0",
+    "BabyAI-PickupDistDebug-v0",
+]
+TEST_TASKS = ALL_BABYAI_TASKS
 
 
 class BabyAIAMAGOEnv(GymEnv):
@@ -81,7 +135,7 @@ class BabyTstepEncoder(amago.nets.tstep_encoders.TstepEncoder):
             max_token=high_token,
             goal_emb_dim=mission_dim,
             embedding_dim=16,
-            hidden_size=64,
+            hidden_size=80,
         )
         self.extras_processor = nn.Sequential(
             nn.Linear(obs_space["extra"].shape[-1] + rl2_space.shape[-1], 32),
@@ -118,13 +172,17 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     config = {
-        "amago.agent.Agent.reward_multiplier": 10.0,
+        "amago.agent.Agent.reward_multiplier": 100.0,
         "amago.agent.Agent.tstep_encoder_Cls": partial(
             BabyTstepEncoder, obs_kind=args.obs_kind
         ),
-        "amago.nets.actor_critic.NCriticsTwoHot.min_return" : -12.,
-        "amago.nets.actor_critic.NCriticsTwoHot.max_return" : 12.,
-        "amago.nets.actor_critic.NCriticsTwoHot.output_bins" : 32,
+        "amago.nets.actor_critic.NCriticsTwoHot.min_return": -150.0,
+        "amago.nets.actor_critic.NCriticsTwoHot.max_return": 150.0,
+        "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 32,
+        "amago.agent.Agent.offline_coeff": 1.0
+        if args.agent_type == "multitask"
+        else 0.0,
+        "amago.nets.traj_encoders.TformerTrajEncoder.pos_emb": "fixed",
     }
     switch_traj_encoder(
         config,
@@ -141,7 +199,7 @@ if __name__ == "__main__":
 
     make_train_env = lambda: BabyAIAMAGOEnv(
         MultitaskMetaBabyAI(
-            task_names=args.tasks or ALL_BABYAI_TASKS,
+            task_names=TRAIN_TASKS,
             seed_range=(0, args.train_seeds),
             k_episodes=args.k_episodes,
             observation_type=args.obs_kind,
@@ -150,7 +208,7 @@ if __name__ == "__main__":
 
     make_val_env = lambda: BabyAIAMAGOEnv(
         MultitaskMetaBabyAI(
-            task_names=args.tasks or ALL_BABYAI_TASKS,
+            task_names=TEST_TASKS,
             seed_range=(args.train_seeds + 1, 1_000_000),
             k_episodes=args.k_episodes,
             observation_type=args.obs_kind,
@@ -169,9 +227,10 @@ if __name__ == "__main__":
             stagger_traj_file_lengths=True,
             run_name=run_name,
             group_name=group_name,
-            val_timesteps_per_epoch=3000,
+            val_timesteps_per_epoch=6000,
             save_trajs_as="npz",
         )
+        switch_async_mode(experiment, args)
         experiment.start()
         if args.ckpt is not None:
             experiment.load_checkpoint(args.ckpt)

@@ -128,9 +128,9 @@ class GridworldCNN(CNN):
             img_shape, channels_first=channels_first, activation=activation
         )
         C = img_shape[0] if self.channels_first else img_shape[-1]
-        self.conv1 = nn.Conv2d(C, 18, kernel_size=3, stride=1)
-        self.conv2 = nn.Conv2d(18, 32, kernel_size=2, stride=1)
-        self.conv3 = nn.Conv2d(32, 64, kernel_size=2, stride=1)
+        self.conv1 = nn.Conv2d(C, 16, kernel_size=2, stride=1)
+        self.conv2 = nn.Conv2d(16, 32, kernel_size=2, stride=1)
+        self.conv3 = nn.Conv2d(32, 48, kernel_size=2, stride=1)
     
     def conv_forward(self, imgs):
         x = self.activation(self.conv1(imgs))

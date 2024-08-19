@@ -201,19 +201,33 @@ class RetroArcade(gym.Env):
         "Atari2600": [219, 157, 147],
     }
 
+    discrete_action_n = {
+        "Nes": 36,
+        "Snes": 468,
+        "GameBoy": 72,
+        "Genesis": 126,
+        "Sms": 36,
+        "Atari2600": 18,
+        "Gb": 72,
+    }
+
     def __init__(
         self,
         game_start_dict: dict[str, list[str]],
-        resolution: tuple[int, int] = (84, 96),
-        time_limit: int = 100_000,
+        resolution: tuple[int, int] = (84, 84),
+        time_limit_minutes: int = 20,
         frame_skip: int = 8,
         channels_last: bool = False,
         use_discrete_actions: bool = False,
     ):
         super().__init__()
         self.game_start_dict = game_start_dict
+        self.game_start_flat = []
+        for game, levels in self.game_start_dict.items():
+            for level in levels:
+                self.game_start_flat.append((game, level))
         self.resolution = resolution
-        self.time_limit = time_limit
+        self.time_limit = math.ceil(time_limit_minutes * 60.0 * 60 / frame_skip)
         self.frame_skip = frame_skip
         self._env = None
         self.channels_last = channels_last
@@ -227,12 +241,12 @@ class RetroArcade(gym.Env):
         if not use_discrete_actions:
             self.action_space = gym.spaces.MultiBinary(12)
         else:
-            self.reset()
-            if len(self.game_start_dict.keys()) > 1:
-                warnings.warn(
-                    "Discrete action spaces are game/console specific, and this is likely to break when using multiple games",
-                    UserWarning,
-                )
+            warnings.warn(
+                "MultiBinary actions reccomended! Discrete spaces are too large and will break when using multiple consoles",
+                UserWarning,
+            )
+            console = self.game_start_flat[0][0].split("-")[-1]
+            self.action_space = gym.spaces.Discrete(self.discrete_action_n[console])
 
     def render(self, *args, **kwargs):
         return self._env.render(*args, **kwargs)
@@ -246,9 +260,12 @@ class RetroArcade(gym.Env):
             obs = rearrange(obs, "h w c -> c h w")
         return obs
 
+    def close(self):
+        if self._env is not None:
+            self._env.close()
+
     def reset(self, *args, **kwargs):
-        game = random.choice([g for g in self.game_start_dict.keys()])
-        start = random.choice(self.game_start_dict[game])
+        game, start = random.choice(self.game_start_flat)
         self.rom_name = f"{game}_{start.replace('.state', '')}"
         if self._env is not None:
             self._env.close()
@@ -258,8 +275,6 @@ class RetroArcade(gym.Env):
             else retro.Actions.FILTERED
         )
         self._env = retro.make(game=game, state=start, use_restricted_actions=actions)
-        if self.use_discrete_actions:
-            self.action_space = self._env.action_space
         self._console = self._env.system
         self._time = 0
         obs, info = self._env.reset()

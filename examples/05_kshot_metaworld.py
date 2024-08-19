@@ -70,8 +70,10 @@ if __name__ == "__main__":
             grad_clip=2.0,
         )
 
-        experiment = switch_mode_load_ckpt(experiment, args)
+        experiment = switch_async_mode(experiment, args)
         experiment.start()
+        if args.ckpt is not None:
+            experiment.load_checkpoint(args.ckpt)
         experiment.learn()
         experiment.evaluate_test(make_test_env, timesteps=20_000, render=False)
         wandb.finish()

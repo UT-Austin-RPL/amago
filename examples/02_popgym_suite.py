@@ -27,7 +27,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     config = {
-        # bins are hard to tune in this environment.
+        # bins are hard to tune in POPGym. The paper left the settings wide open, but it's actually
+        # better to tighten the return limits and set a lower bin count because these envs have rapid
+        # swings in Q vals. We don't think it really matters whether you do e.g. rewards x100, returns in [-100, 100] or
+        # rewards x1, returns in [-1, 1], but the symlog mapping technically makes these different.
         "amago.agent.Agent.reward_multiplier": 1.0
         if args.agent_type == "multitask"
         else 100.0,  # paper: always 100
@@ -70,8 +73,10 @@ if __name__ == "__main__":
             run_name=run_name,
             val_timesteps_per_epoch=2000,
         )
-        experiment = switch_mode_load_ckpt(experiment, args)
+        experiment = switch_async_mode(experiment, args)
         experiment.start()
+        if args.ckpt is not None:
+            experiment.load_checkpoint(args.ckpt)
         experiment.learn()
         experiment.evaluate_test(make_train_env, timesteps=20_000, render=False)
         wandb.finish()

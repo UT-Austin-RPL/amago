@@ -48,7 +48,10 @@ if __name__ == "__main__":
     add_common_cli(parser)
     args = parser.parse_args()
 
-    config = {"amago.agent.Agent.reward_multiplier": 0.25}
+    config = {
+        "amago.agent.Agent.reward_multiplier": 0.25,
+        "amago.nets.traj_encoders.TformerTrajEncoder.pos_emb": "fixed",
+    }
     turn_off_goal_conditioning(config)
     switch_traj_encoder(
         config,
@@ -92,8 +95,10 @@ if __name__ == "__main__":
             val_timesteps_per_epoch=ATARI_TIME_LIMIT,
             save_trajs_as="npz-compressed",
         )
-        switch_mode_load_ckpt(experiment, args)
+        switch_async_mode(experiment, args)
         experiment.start()
+        if args.ckpt is not None:
+            experiment.load_checkpoint(args.ckpt)
         experiment.learn()
         experiment.evaluate_test(
             env_funcs, timesteps=ATARI_TIME_LIMIT * 5, render=False

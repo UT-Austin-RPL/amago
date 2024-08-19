@@ -346,7 +346,6 @@ def make_experiment_learn_only(experiment: amago.Experiment) -> amago.Experiment
     experiment.val_timesteps_per_epoch = 0
     experiment.val_checks_per_epoch = 0
     experiment.parallel_actors = 2
-    experiment.async_envs = False
     experiment.always_save_latest = True
     return experiment
 
@@ -375,6 +374,4 @@ def switch_mode_load_ckpt(
     elif cli.mode == "learn":
         assert cli.trials == 1, "Async Mode breaks `trials` loop. Set `--trials = 1`"
         experiment = make_experiment_learn_only(experiment)
-        if cli.ckpt is not None:
-            experiment.load_checkpoint(cli.ckpt)
     return experiment
