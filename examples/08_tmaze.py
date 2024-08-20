@@ -6,7 +6,7 @@ import wandb
 import amago
 from amago.envs.builtin.gym_envs import GymEnv
 from amago.envs.builtin.tmaze import TMazeAltPassive
-from amago.envs.env_utils import ExplorationWrapper
+from amago.envs.env_utils import EpsilonGreedy
 from amago.cli_utils import *
 
 
@@ -16,7 +16,7 @@ def add_cli(parser):
 
 
 @gin.configurable
-class TMazeExploration(ExplorationWrapper):
+class TMazeExploration(EpsilonGreedy):
     """
     The Tmaze environment is meant to evaluate recall over long context lengths without
     testing exploration, but it does this by requiring horizon - 1 deterministic actions
@@ -41,10 +41,8 @@ class TMazeExploration(ExplorationWrapper):
         self.end_window = end_window
         super().__init__(
             env,
-            eps_start_start=eps_start,
-            eps_start_end=eps_start,
-            eps_end_start=eps_end,
-            eps_end_end=eps_end,
+            eps_start=eps_start,
+            eps_end=eps_end,
             steps_anneal=steps_anneal,
         )
 

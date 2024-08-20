@@ -253,6 +253,7 @@ class BilevelEpsilonGreedy(ExplorationWrapper):
         self.end_global_slope = (eps_end_start - eps_end_end) / steps_anneal
         self.discrete = isinstance(self.env.action_space, gym.spaces.Discrete)
         self.global_step = 0
+        self.global_multiplier = 1.0
 
     def current_eps(self, local_step: int, horizon: int):
         ep_start = max(

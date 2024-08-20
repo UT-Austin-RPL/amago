@@ -31,9 +31,9 @@ if __name__ == "__main__":
         # better to tighten the return limits and set a lower bin count because these envs have rapid
         # swings in Q vals. We don't think it really matters whether you do e.g. rewards x100, returns in [-100, 100] or
         # rewards x1, returns in [-1, 1], but the symlog mapping technically makes these different.
-        "amago.agent.Agent.reward_multiplier": 1.0
-        if args.agent_type == "multitask"
-        else 100.0,  # paper: always 100
+        "amago.agent.Agent.reward_multiplier": (
+            1.0 if args.agent_type == "multitask" else 100.0
+        ),  # paper: always 100
         "amago.nets.actor_critic.NCriticsTwoHot.min_return": -1.0,  # paper: None
         "amago.nets.actor_critic.NCriticsTwoHot.max_return": 1.0,  # paper: None
         "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 32,  # paper: 64
