@@ -47,10 +47,10 @@ class InputNorm(nn.Module):
     def __init__(self, dim, beta=1e-4, init_nu=1.0, skip: bool = False):
         super().__init__()
         self.skip = skip
-        self.mu = nn.Parameter(torch.zeros(dim), requires_grad=False)
-        self.nu = nn.Parameter(torch.ones(dim) * init_nu, requires_grad=False)
+        self.register_buffer("mu", torch.zeros(dim))
+        self.register_buffer("nu", torch.ones(dim) * init_nu)
+        self.register_buffer("_t", torch.ones((1,)))
         self.beta = beta
-        self._t = nn.Parameter(torch.ones((1,)), requires_grad=False)
         self.pad_val = MAGIC_PAD_VAL
 
     @property
