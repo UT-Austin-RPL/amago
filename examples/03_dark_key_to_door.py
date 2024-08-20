@@ -5,6 +5,7 @@ import wandb
 import amago
 from amago.envs.builtin.gym_envs import GymEnv
 from amago.envs.builtin.room_key_door import RoomKeyDoor
+from amago.envs.env_utils import BilevelEpsilonGreedy
 from amago.cli_utils import *
 
 
@@ -69,6 +70,10 @@ if __name__ == "__main__":
             group_name=group_name,
             run_name=run_name,
             val_timesteps_per_epoch=args.meta_horizon * 4,
+            # the fancier exploration schedule mentioned in the appendix can help
+            # when the domain is a true meta-RL problem and the "horizon" time limit
+            # (above) is actually relevant for resetting the task.
+            exploration_wrapper_Cls=BilevelEpsilonGreedy,
         )
         switch_async_mode(experiment, args)
         experiment.start()

@@ -2,6 +2,7 @@ import os
 import time
 import random
 import warnings
+from abc import ABC, abstractmethod
 from uuid import uuid4
 from dataclasses import dataclass
 from collections import defaultdict
@@ -200,85 +201,14 @@ class GPUSequenceBuffer:
         return torch.Tensor(self.cur_idxs).to(self.device).view(-1, 1, 1).long()
 
 
-@gin.configurable
-class ExplorationWrapper(gym.ActionWrapper):
-    def __init__(
-        self,
-        env: gym.Env,
-        eps_start_start: float = 1.0,
-        eps_start_end: float = 0.05,
-        eps_end_start: float = 0.8,
-        eps_end_end: float = 0.01,
-        steps_anneal: int = 1_000_000,
-    ):
-        super().__init__(env)
+class ExplorationWrapper(ABC, gym.ActionWrapper):
 
-        self.eps_start_start = eps_start_start
-        self.eps_start_end = eps_start_end
-        self.eps_end_start = eps_end_start
-        self.eps_end_end = eps_end_end
-        self.global_slope = (eps_start_start - eps_start_end) / steps_anneal
-        self.discrete = isinstance(self.env.action_space, gym.spaces.Discrete)
-        self.multibinary = isinstance(self.env.action_space, gym.spaces.MultiBinary)
-        self.global_step = 0
-        self.disabled = False
+    @abstractmethod
+    def add_exploration_noise(self, action: np.ndarray, local_step: int, horizon: int):
+        raise NotImplementedError
 
-    def turn_off_exploration(self):
-        self.disabled = True
-
-    def turn_on_exploration(self):
-        self.disabled = False
-
-    def reset(self, *args, **kwargs):
-        out = super().reset(*args, **kwargs)
-        self.global_multiplier = random.random()
-        np.random.seed(random.randint(0, 1e6))
-        return out
-
-    def current_eps(self, local_step: int, horizon: int):
-        ep_start = max(
-            self.eps_start_start - self.global_slope * self.global_step,
-            self.eps_start_end,
-        )
-        ep_end = max(
-            self.eps_start_end - self.global_slope * self.global_step, self.eps_end_end
-        )
-        local_progress = float(local_step) / horizon
-        current = self.global_multiplier * (
-            ep_start - ((ep_start - ep_end) * local_progress)
-        )
-        return current
-
-    def action(self, a):
-        noise = (
-            self.current_eps(self.env.step_count, self.env.horizon)
-            if not self.disabled
-            else 0.0
-        )
-        if self.discrete:
-            # epsilon greedy (DQN-style)
-            num_actions = self.env.action_space.n
-            random_action = random.randrange(0, num_actions)
-            use_random = random.random() <= noise
-            if use_random:
-                expl_action = np.full_like(a, random_action)
-            else:
-                expl_action = a
-            assert expl_action.dtype == np.uint8
-        elif self.multibinary:
-            random_actions = np.random.randn(*a.shape) < 0.0
-            use_random = np.random.random(*a.shape) <= noise
-            expl_action = (1 - use_random) * a + use_random * random_actions
-            expl_action = expl_action.astype(np.int8)
-        else:
-            # random noise (TD3-style)
-            expl_action = a + noise * np.random.randn(*a.shape)
-            expl_action = np.clip(expl_action, -1.0, 1.0).astype(np.float32)
-            assert expl_action.dtype == np.float32
-
-        if not self.disabled:
-            self.global_step += 1
-        return expl_action
+    def action(self, a: np.ndarray):
+        return self.add_exploration_noise(a, self.env.step_count, self.env.horizon)
 
     @property
     def return_history(self):
@@ -287,6 +217,100 @@ class ExplorationWrapper(gym.ActionWrapper):
     @property
     def success_history(self):
         return self.env.success_history
+
+    def reset(self, *args, **kwargs):
+        out = super().reset(*args, **kwargs)
+        self.global_multiplier = random.random()
+        np.random.seed(random.randint(0, 1e6))
+        return out
+
+
+@gin.configurable
+class BilevelEpsilonGreedy(ExplorationWrapper):
+    """
+    Implements the bi-level epsilon greedy exploration strategy visualized in Figure 13
+    of the AMAGO paper. Exploration noise decays both over the course of training and
+    throughout each rollout. This more closely resembles the online exploration/exploitation
+    strategy of a meta-RL agent in a new environment.
+    """
+
+    def __init__(
+        self,
+        env: gym.Env,
+        eps_start_start: float = 1.0,  # start of training, start of rollout
+        eps_start_end: float = 0.05,  # end of training, start of rollout
+        eps_end_start: float = 0.8,  # start of training, end of rollout
+        eps_end_end: float = 0.01,  # end of training, end of rollout
+        steps_anneal: int = 1_000_000,
+    ):
+        super().__init__(env)
+        self.eps_start_start = eps_start_start
+        self.eps_start_end = eps_start_end
+        self.eps_end_start = eps_end_start
+        self.eps_end_end = eps_end_end
+
+        self.start_global_slope = (eps_start_start - eps_start_end) / steps_anneal
+        self.end_global_slope = (eps_end_start - eps_end_end) / steps_anneal
+        self.discrete = isinstance(self.env.action_space, gym.spaces.Discrete)
+        self.global_step = 0
+        self.global_multiplier = 1.0
+
+    def current_eps(self, local_step: int, horizon: int):
+        ep_start = max(
+            self.eps_start_start - self.start_global_slope * self.global_step,
+            self.eps_start_end,
+        )
+        ep_end = max(
+            self.eps_end_start - self.end_global_slope * self.global_step,
+            self.eps_end_end,
+        )
+        local_progress = float(local_step) / horizon
+        current = self.global_multiplier * (
+            ep_start - ((ep_start - ep_end) * local_progress)
+        )
+        return current
+
+    def add_exploration_noise(self, action, local_step, horizon):
+        noise = self.current_eps(local_step, horizon)
+        if self.discrete:
+            # epsilon greedy (DQN-style)
+            num_actions = self.env.action_space.n
+            random_action = random.randrange(0, num_actions)
+            use_random = random.random() <= noise
+            if use_random:
+                expl_action = np.full_like(action, random_action)
+            else:
+                expl_action = action
+            assert expl_action.dtype == np.uint8
+        else:
+            # random noise (TD3-style)
+            expl_action = action + noise * np.random.randn(*action.shape)
+            expl_action = np.clip(expl_action, -1.0, 1.0).astype(np.float32)
+            assert expl_action.dtype == np.float32
+        self.global_step += 1
+        return expl_action
+
+
+class EpsilonGreedy(BilevelEpsilonGreedy):
+    """
+    Sets the parameters of the BilevelEpsilonGreedy wrapper to be equivalent to standard epsilon-greedy.
+    """
+
+    def __init__(
+        self,
+        env: gym.Env,
+        eps_start: float = 1.0,
+        eps_end: float = 0.05,
+        steps_anneal: int = 1_000_000,
+    ):
+        super().__init__(
+            env,
+            eps_start_start=eps_start,
+            eps_start_end=eps_end,
+            eps_end_start=eps_start,
+            eps_end_end=eps_end,
+            steps_anneal=steps_anneal,
+        )
 
 
 class ReturnHistory:

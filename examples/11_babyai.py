@@ -179,9 +179,9 @@ if __name__ == "__main__":
         "amago.nets.actor_critic.NCriticsTwoHot.min_return": -150.0,
         "amago.nets.actor_critic.NCriticsTwoHot.max_return": 150.0,
         "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 32,
-        "amago.agent.Agent.offline_coeff": 1.0
-        if args.agent_type == "multitask"
-        else 0.0,
+        "amago.agent.Agent.offline_coeff": (
+            1.0 if args.agent_type == "multitask" else 0.0
+        ),
         "amago.nets.traj_encoders.TformerTrajEncoder.pos_emb": "fixed",
     }
     switch_traj_encoder(

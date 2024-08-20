@@ -9,7 +9,7 @@ import numpy as np
 
 import amago
 from amago.envs.builtin.ale_retro import RetroAMAGOWrapper, RetroArcade
-from amago.envs.env_utils import ExplorationWrapper
+from amago.envs.env_utils import EpsilonGreedy, ExplorationWrapper
 from amago.nets.cnn import NatureishCNN, IMPALAishCNN
 from amago.cli_utils import *
 
@@ -48,11 +48,7 @@ MARIO_TEST = {
 
 
 @gin.configurable
-class MultiBinaryExplorationWrapper(gym.ActionWrapper):
-    """
-    TODO clean up inheritance
-    """
-
+class MultiBinaryExploration(ExplorationWrapper):
     def __init__(
         self,
         env: gym.Env,
@@ -69,46 +65,23 @@ class MultiBinaryExplorationWrapper(gym.ActionWrapper):
         self.multibinary = isinstance(self.env.action_space, gym.spaces.MultiBinary)
         assert self.multibinary
         self.global_step = 0
-        self.disabled = False
-
-    def turn_off_exploration(self):
-        assert False
-        self.disabled = True
-
-    def turn_on_exploration(self):
-        assert False  # shouldn't be needed anymore
-        self.disabled = False
-
-    def reset(self, *args, **kwargs):
-        out = super().reset(*args, **kwargs)
-        self.global_multiplier = random.random()
-        np.random.seed(random.randint(0, 100000))
-        return out
 
     def current_eps(self, local_step: int, horizon: int):
         eps = max(self.eps_start - self.eps_slope * self.global_step, self.eps_end)
         current = self.global_multiplier * eps
         return current
 
-    def action(self, a):
-        noise = (
-            self.current_eps(self.env.step_count, self.env.horizon)
-            if not self.disabled
-            else 0.0
-        )
+    def add_exploration_noise(self, action: np.ndarray, local_step: int, horizon: int):
+        noise = self.current_eps(local_step, horizon)
         use_random = random.random() <= noise
-        should_flip = np.random.random(*a.shape) <= self.flip
-        expl_action = (1 - should_flip) * a + should_flip * np.invert(a.astype(bool))
-        use_action = ((1 - use_random) * a + use_random * expl_action).astype(np.uint8)
+        should_flip = np.random.random(*action.shape) <= self.flip
+        expl_action = (1 - should_flip) * action + should_flip * np.invert(
+            action.astype(bool)
+        )
+        use_action = ((1 - use_random) * action + use_random * expl_action).astype(
+            np.uint8
+        )
         return use_action
-
-    @property
-    def return_history(self):
-        return self.env.return_history
-
-    @property
-    def success_history(self):
-        return self.env.success_history
 
 
 FRAME_SKIP = 8
@@ -154,9 +127,9 @@ if __name__ == "__main__":
         "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 96,
         "amago.agent.Agent.online_coeff": 0.0,
         "amago.agent.Agent.offline_coeff": 1.0,
-        "amago.learning.Experiment.exploration_wrapper_Cls": ExplorationWrapper
-        if args.use_discrete_actions
-        else MultiBinaryExplorationWrapper,
+        "amago.learning.Experiment.exploration_wrapper_Cls": (
+            EpsilonGreedy if args.use_discrete_actions else MultiBinaryExploration
+        ),
         "amago.nets.traj_encoders.TformerTrajEncoder.pos_emb": "fixed",
     }
     turn_off_goal_conditioning(config)

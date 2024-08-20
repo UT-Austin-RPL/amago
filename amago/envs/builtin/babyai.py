@@ -3,7 +3,6 @@ import copy
 import random
 from typing import Iterable, Tuple, List
 
-import minigrid
 import numpy as np
 import gymnasium as gym
 import cv2
