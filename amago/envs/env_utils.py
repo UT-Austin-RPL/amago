@@ -218,12 +218,6 @@ class ExplorationWrapper(ABC, gym.ActionWrapper):
     def success_history(self):
         return self.env.success_history
 
-    def reset(self, *args, **kwargs):
-        out = super().reset(*args, **kwargs)
-        self.global_multiplier = random.random()
-        np.random.seed(random.randint(0, 1e6))
-        return out
-
 
 @gin.configurable
 class BilevelEpsilonGreedy(ExplorationWrapper):
@@ -254,6 +248,12 @@ class BilevelEpsilonGreedy(ExplorationWrapper):
         self.discrete = isinstance(self.env.action_space, gym.spaces.Discrete)
         self.global_step = 0
         self.global_multiplier = 1.0
+
+    def reset(self, *args, **kwargs):
+        out = super().reset(*args, **kwargs)
+        self.global_multiplier = random.random()
+        np.random.seed(random.randint(0, 1e6))
+        return out
 
     def current_eps(self, local_step: int, horizon: int):
         ep_start = max(
