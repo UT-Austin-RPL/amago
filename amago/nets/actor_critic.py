@@ -494,12 +494,12 @@ class PopArtLayer(nn.Module):
         enabled: bool = True,
     ):
         super().__init__()
-        self.mu = nn.Parameter(torch.zeros(gammas, 1), requires_grad=False)
-        self.nu = nn.Parameter(torch.ones(gammas, 1) * init_nu, requires_grad=False)
+        self.register_buffer("mu", torch.zeros(gammas, 1))
+        self.register_buffer("nu", torch.ones(gammas, 1) * init_nu)
+        self.register_buffer("w", torch.ones((gammas, 1)))
+        self.register_buffer("b", torch.zeros((gammas, 1)))
+        self.register_buffer("_t", torch.ones((gammas, 1)))
         self.beta = beta
-        self.w = nn.Parameter(torch.ones((gammas, 1)), requires_grad=False)
-        self.b = nn.Parameter(torch.zeros((gammas, 1)), requires_grad=False)
-        self._t = nn.Parameter(torch.ones((gammas, 1)), requires_grad=False)
         self.enabled = enabled
 
     @property
