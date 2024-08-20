@@ -68,7 +68,7 @@ class FlashAttention(nn.Module):
 
 
 class SigmaReparam(nn.Module):
-    """ "
+    """
     https://arxiv.org/pdf/2303.06296.pdf Appendix C
     """
 
@@ -77,9 +77,9 @@ class SigmaReparam(nn.Module):
         self.W = nn.Parameter(torch.randn(d_out, d_in), requires_grad=True)
         self.b = nn.Parameter(torch.zeros(d_out), requires_grad=True) if bias else None
         u = torch.randn(d_out)
-        self.u = nn.Parameter(u / u.norm(dim=0), requires_grad=False)
+        self.register_buffer("u", u / u.norm(dim=0))
         v = torch.randn(d_in)
-        self.v = nn.Parameter(v / v.norm(dim=0), requires_grad=False)
+        self.register_buffer("v", v / v.norm(dim=0))
         self.gamma = nn.Parameter(torch.ones(1), requires_grad=True)
         self.reset_parameters()
 
