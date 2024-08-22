@@ -6,6 +6,7 @@ from typing import Iterable, Tuple, List
 import numpy as np
 import gymnasium as gym
 import cv2
+import minigrid
 
 from amago.envs import AMAGOEnv
 from amago.hindsight import GoalSeq
