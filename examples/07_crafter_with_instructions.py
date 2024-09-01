@@ -237,4 +237,5 @@ if __name__ == "__main__":
 
                 experiment.evaluate_test(_make_env, timesteps=5 * 2501)
 
+        experiment.delete_buffer_from_disk()
         wandb.finish()

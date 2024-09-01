@@ -106,7 +106,7 @@ class BabyTstepEncoder(amago.nets.tstep_encoders.TstepEncoder):
         goal_space,
         rl2_space,
         extras_dim: int = 16,
-        mission_dim: int = 32,
+        mission_dim: int = 48,
         emb_dim: int = 300,
     ):
         super().__init__(
@@ -134,8 +134,8 @@ class BabyTstepEncoder(amago.nets.tstep_encoders.TstepEncoder):
             min_token=low_token,
             max_token=high_token,
             goal_emb_dim=mission_dim,
-            embedding_dim=16,
-            hidden_size=80,
+            embedding_dim=18,
+            hidden_size=96,
         )
         self.extras_processor = nn.Sequential(
             nn.Linear(obs_space["extra"].shape[-1] + rl2_space.shape[-1], 32),
@@ -172,13 +172,13 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     config = {
-        "amago.agent.Agent.reward_multiplier": 100.0,
+        "amago.agent.Agent.reward_multiplier": 1000.0,
         "amago.agent.Agent.tstep_encoder_Cls": partial(
             BabyTstepEncoder, obs_kind=args.obs_kind
         ),
-        "amago.nets.actor_critic.NCriticsTwoHot.min_return": -150.0,
-        "amago.nets.actor_critic.NCriticsTwoHot.max_return": 150.0,
-        "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 32,
+        "amago.nets.actor_critic.NCriticsTwoHot.min_return": None,
+        "amago.nets.actor_critic.NCriticsTwoHot.max_return": None,
+        "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 64,
         "amago.agent.Agent.offline_coeff": (
             1.0 if args.agent_type == "multitask" else 0.0
         ),
@@ -236,4 +236,5 @@ if __name__ == "__main__":
             experiment.load_checkpoint(args.ckpt)
         experiment.learn()
         experiment.evaluate_test(make_val_env, timesteps=20_000, render=False)
+        experiment.delete_buffer_from_disk()
         wandb.finish()

@@ -110,4 +110,5 @@ if __name__ == "__main__":
         # run training
         experiment.learn()
         experiment.evaluate_test(make_env, timesteps=10_000)
+        experiment.delete_buffer_from_disk()
         wandb.finish()

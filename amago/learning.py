@@ -1,4 +1,5 @@
 import os
+import shutil
 import warnings
 import contextlib
 from dataclasses import dataclass
@@ -252,6 +253,11 @@ class Experiment:
             self.policy_aclr.load_state_dict(ckpt)
         else:
             utils.amago_warning("Latest policy checkpoint was not loaded.")
+
+    def delete_buffer_from_disk(self):
+        buffer_dir = os.path.join(self.dset_root, self.dset_name, "train")
+        if os.path.exists(buffer_dir):
+            shutil.rmtree(buffer_dir)
 
     def init_dsets(self):
         if self.save_trajs_as != "trajectory" and self.relabel != "none":
