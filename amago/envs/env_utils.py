@@ -202,7 +202,6 @@ class GPUSequenceBuffer:
 
 
 class ExplorationWrapper(ABC, gym.ActionWrapper):
-
     @abstractmethod
     def add_exploration_noise(self, action: np.ndarray, local_step: int, horizon: int):
         raise NotImplementedError
@@ -390,7 +389,7 @@ class SequenceWrapper(gym.Wrapper):
         self.success_history = SuccessHistory(self.env_name)
 
     def reset(self, seed=None) -> Timestep:
-        timestep = self.env.reset(seed=seed)
+        timestep, info = self.env.reset(seed=seed)
         self.active_traj = Trajectory(
             max_goals=self.env.max_goal_seq_length, timesteps=[timestep]
         )
@@ -400,7 +399,7 @@ class SequenceWrapper(gym.Wrapper):
         )
         self.total_return = 0.0
         self._current_timestep = self.active_traj.make_sequence(last_only=True)
-        return timestep.obs, {}
+        return timestep.obs, info
 
     def step(self, action):
         timestep, reward, terminated, truncated, info = self.env.step(action)
