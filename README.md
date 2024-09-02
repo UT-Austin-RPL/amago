@@ -96,17 +96,17 @@ This examples uses a `TrajEncoder` that is just a feedforward network. Training 
 </details>
 
 #### AMAGO Output Directories
-Aside from the `wandb` logging metrics, AMAGO outputs data in the following format (listed according to the arguments of the main `learning.Experiment` trainer):
+Aside from the `wandb` logging metrics, AMAGO outputs data in the following format (listed according to the arguments of the main `learning.Experiment` trainer or the command line args of the examples):
 
 ```bash
-{Experiment.dset_root}/
-    - {Experiment.dset_name}/
+{Experiment.dset_root} or {--buffer_dir}/
+    - {Experiment.dset_name} or {--run_name}/
         - train/
             # replay buffer of sequence data stored on disk as `*.traj` files
             {environment_name}_{random_id}_{unix_time}.traj
             {environment_name}_{another_random_id}_{later_unix_time}.traj
             ...
-        - {Experiment.run_name}/
+        - {Experiment.run_name} or {--run_name}/
             - ckpts/
                 # full checkpoints that allow training to resume; saved at regular intervals
                 - {Experiment.run_name}_epoch_0
