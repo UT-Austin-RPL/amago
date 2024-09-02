@@ -63,7 +63,7 @@ Applying AMAGO to any new environment requires 5 basic choices. The `examples/` 
 
 <br>
 
-## Basic Examples
+## Tutorial
 
 To follow most of the examples you'll need to install the benchmark environments with `pip install amago[envs]`.
 
@@ -81,11 +81,11 @@ Environment setup is the main step in applying our agent to a new problem. The e
    
 Many popular benchmarks are MDPs and can be treated as a simple special case of the full agent. By turning *off* most of AMAGO's features, we can create a regular off-policy actor-critic like you've seen before. See `examples/01_basic_gym.py` for an example.
 
+ Try `python 01_basic_gym.py --help` for an explanation of hyperparameters and other command line args that are used in most of the examples below.
+
 <details>
 <summary> <b>Example Training Commands</b> </summary>
 <br>
-
- Try `python 01_basic_gym.py --help` for an explanation of hyperparameters and other command line args that are used in most of the examples below.
 
 Train a memory-free policy on built-in gymnasium benchmarks:
 
@@ -93,8 +93,28 @@ Train a memory-free policy on built-in gymnasium benchmarks:
 python 01_basic_gym.py --env LunarLander-v2 --horizon 500 --traj_encoder ff --max_seq_len 32 --memory_layers 2 --no_async --run_name <str> --buffer_dir <path>
 ```
 This examples uses a `TrajEncoder` that is just a feedforward network. Training still depends on sequences of `--max_seq_len` timesteps, which is effectively increasing the training batch size.
-
 </details>
+
+#### AMAGO Output Directories
+Aside from the `wandb` logging metrics, AMAGO outputs data in the following format (listed according to the arguments of the main `learning.Experiment` trainer):
+
+```bash
+{Experiment.dset_root}/
+    - {Experiment.dset_name}/
+        - train/
+            # replay buffer of sequence data stored on disk as `*.traj` files
+            {environment_name}_{random_id}_{unix_time}.traj
+            {environment_name}_{another_random_id}_{later_unix_time}.traj
+            ...
+        - {Experiment.run_name}/
+            - ckpts/
+                # full checkpoints that allow training to resume; saved at regular intervals
+                - {Experiment.run_name}_epoch_0
+                - {Experiment.run_name}_epoch_k
+                ...
+            - policy.pt # the current model weights - used to communicate between actor/learner processes
+            - config.txt # stores gin configuration details for reproducibility (see below)
+```
  
 <br>
 

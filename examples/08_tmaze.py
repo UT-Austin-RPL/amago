@@ -104,4 +104,5 @@ if __name__ == "__main__":
             experiment.load_checkpoint(args.ckpt)
         experiment.learn()
         experiment.evaluate_test(make_env, timesteps=args.horizon * 5, render=False)
+        experiment.delete_buffer_from_disk()
         wandb.finish()

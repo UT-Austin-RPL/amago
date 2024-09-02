@@ -193,4 +193,5 @@ if __name__ == "__main__":
             timesteps=mins_to_steps(TIME_LIMIT_MINUTES) * 5,
             render=False,
         )
+        experiment.delete_buffer_from_disk()
         wandb.finish()

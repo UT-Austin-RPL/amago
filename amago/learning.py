@@ -1,4 +1,5 @@
 import os
+import shutil
 import warnings
 import contextlib
 from dataclasses import dataclass
@@ -224,7 +225,9 @@ class Experiment:
         self.hidden_state = None
 
     def init_checkpoints(self):
-        self.ckpt_dir = os.path.join(self.dset_root, self.dset_name, "ckpts")
+        self.ckpt_dir = os.path.join(
+            self.dset_root, self.dset_name, self.run_name, "ckpts"
+        )
         os.makedirs(self.ckpt_dir, exist_ok=True)
         self.epoch = 0
 
@@ -241,17 +244,26 @@ class Experiment:
         )
 
     def write_latest_policy(self):
-        ckpt_name = os.path.join(self.dset_root, self.dset_name, "policy.pt")
+        ckpt_name = os.path.join(
+            self.dset_root, self.dset_name, self.run_name, "policy.pt"
+        )
         torch.save(self.policy_aclr.state_dict(), ckpt_name)
 
     def read_latest_policy(self):
-        ckpt_name = os.path.join(self.dset_root, self.dset_name, "policy.pt")
+        ckpt_name = os.path.join(
+            self.dset_root, self.dset_name, self.run_name, "policy.pt"
+        )
         ckpt = utils.retry_load_checkpoint(ckpt_name, map_location=self.DEVICE)
         if ckpt is not None:
             self.accelerator.print("Loading latest policy....")
             self.policy_aclr.load_state_dict(ckpt)
         else:
             utils.amago_warning("Latest policy checkpoint was not loaded.")
+
+    def delete_buffer_from_disk(self):
+        buffer_dir = os.path.join(self.dset_root, self.dset_name, "train")
+        if os.path.exists(buffer_dir):
+            shutil.rmtree(buffer_dir)
 
     def init_dsets(self):
         if self.save_trajs_as != "trajectory" and self.relabel != "none":
@@ -284,7 +296,9 @@ class Experiment:
 
     def init_logger(self):
         gin_config = gin.operative_config_str()
-        config_path = os.path.join(self.dset_root, self.dset_name, "config.txt")
+        config_path = os.path.join(
+            self.dset_root, self.dset_name, self.run_name, "config.txt"
+        )
         with open(config_path, "w") as f:
             f.write(gin_config)
         if self.log_to_wandb:

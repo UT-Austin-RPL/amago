@@ -103,4 +103,5 @@ if __name__ == "__main__":
         experiment.evaluate_test(
             env_funcs, timesteps=ATARI_TIME_LIMIT * 5, render=False
         )
+        experiment.delete_buffer_from_disk()
         wandb.finish()
