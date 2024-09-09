@@ -290,6 +290,7 @@ class BilevelEpsilonGreedy(ExplorationWrapper):
         return expl_action
 
 
+@gin.configurable
 class EpsilonGreedy(BilevelEpsilonGreedy):
     """
     Sets the parameters of the BilevelEpsilonGreedy wrapper to be equivalent to standard epsilon-greedy.

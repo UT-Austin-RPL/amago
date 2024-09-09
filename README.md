@@ -108,10 +108,16 @@ Aside from the `wandb` logging metrics, AMAGO outputs data in the following form
             ...
         - {Experiment.run_name} or {--run_name}/
             - ckpts/
-                # full checkpoints that allow training to resume; saved at regular intervals
+                # full checkpoints *that allow training to resume unchanged* in the same `accelerate` environment.
+                # (Includes optimizer, grad scaler, rng state, etc.)
                 - {Experiment.run_name}_epoch_0
-                - {Experiment.run_name}_epoch_k
+                - {Experiment.run_name}_epoch_{Experiment.ckpt_interval}
                 ...
+                # pure weight files saved at same interval. These are
+                # backups that avoid `accelerate` state version control
+                # and are more portable for inference.
+                - policy_epoch_0.pt
+                - policy_epoch_{Experiment.ckpt_interval}.pt
             - policy.pt # the current model weights - used to communicate between actor/learner processes
             - config.txt # stores gin configuration details for reproducibility (see below)
 ```
