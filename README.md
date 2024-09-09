@@ -101,12 +101,13 @@ Aside from the `wandb` logging metrics, AMAGO outputs data in the following form
 ```bash
 {Experiment.dset_root} or {--buffer_dir}/
     |-- {Experiment.dset_name} or {--run_name}/
+    # Organized by dataset name. Runs that share the same dataset (offline RL) are grouped together.
         |-- train/
         |    # replay buffer of sequence data stored on disk as `*.traj` files.
         |    {environment_name}_{random_id}_{unix_time}.traj
         |    {environment_name}_{another_random_id}_{later_unix_time}.traj
         |    ...
-        |-- {Experiment.run_name} or {--run_name}/
+        |-- {Experiment.run_name} or {--run_name}/ # directory of an individual training run.
             |-- config.txt # stores gin configuration details for reproducibility (see below)
             |-- policy.pt # the current model weights - used to communicate between actor/learner processes
             |-- ckpts/
@@ -122,7 +123,7 @@ Aside from the `wandb` logging metrics, AMAGO outputs data in the following form
                         |-- policy_epoch_0.pt
                         |-- policy_epoch_{Experiment.ckpt_interval}.pt
                         |-- ...
-        -- # any other runs that share this replay buffer would be listed here
+        -- # other runs that share this replay buffer would be listed here
 ```
  
 <br>
