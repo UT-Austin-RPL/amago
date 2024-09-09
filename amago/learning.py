@@ -229,13 +229,17 @@ class Experiment:
             self.dset_root, self.dset_name, self.run_name, "ckpts"
         )
         os.makedirs(self.ckpt_dir, exist_ok=True)
+        os.makedirs(os.path.join(self.ckpt_dir, "training_states"), exist_ok=True)
+        os.makedirs(os.path.join(self.ckpt_dir, "policy_weights"), exist_ok=True)
         self.epoch = 0
 
     def load_checkpoint(self, epoch: int, resume_training_state: bool = True):
         if not resume_training_state:
             # load the weights without worrrying about resuming the accelerate state
             ckpt = utils.retry_load_checkpoint(
-                os.path.join(self.ckpt_dir, f"policy_epoch_{epoch}.pt"),
+                os.path.join(
+                    self.ckpt_dir, "policy_weights", f"policy_epoch_{epoch}.pt"
+                ),
                 map_location=self.DEVICE,
             )
             self.policy_aclr.load_state_dict(ckpt)
@@ -243,20 +247,23 @@ class Experiment:
             # loads weights and will set the epoch but otherwise resets training
             # (optimizer, grad scaler, etc.)
             ckpt_name = f"{self.run_name}_epoch_{epoch}"
-            ckpt_path = os.path.join(self.ckpt_dir, ckpt_name)
+            ckpt_path = os.path.join(self.ckpt_dir, "training_states", ckpt_name)
             self.accelerator.load_state(ckpt_path)
         self.epoch = epoch
 
     def save_checkpoint(self):
         ckpt_name = f"{self.run_name}_epoch_{self.epoch}"
         self.accelerator.save_state(
-            os.path.join(self.ckpt_dir, ckpt_name), safe_serialization=True
+            os.path.join(self.ckpt_dir, "training_states", ckpt_name),
+            safe_serialization=True,
         )
         if self.accelerator.is_main_process:
             # create backup of raw weights unrelated to the more complex process of resuming an accelerate state
             weights_only = torch.save(
                 self.policy_aclr.state_dict(),
-                os.path.join(self.ckpt_dir, f"policy_epoch_{self.epoch}.pt"),
+                os.path.join(
+                    self.ckpt_dir, "policy_weights", f"policy_epoch_{self.epoch}.pt"
+                ),
             )
 
     def write_latest_policy(self):

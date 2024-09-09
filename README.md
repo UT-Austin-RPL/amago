@@ -100,26 +100,29 @@ Aside from the `wandb` logging metrics, AMAGO outputs data in the following form
 
 ```bash
 {Experiment.dset_root} or {--buffer_dir}/
-    - {Experiment.dset_name} or {--run_name}/
-        - train/
-            # replay buffer of sequence data stored on disk as `*.traj` files
-            {environment_name}_{random_id}_{unix_time}.traj
-            {environment_name}_{another_random_id}_{later_unix_time}.traj
-            ...
-        - {Experiment.run_name} or {--run_name}/
-            - ckpts/
-                # full checkpoints *that allow training to resume unchanged* in the same `accelerate` environment.
-                # (Includes optimizer, grad scaler, rng state, etc.)
-                - {Experiment.run_name}_epoch_0
-                - {Experiment.run_name}_epoch_{Experiment.ckpt_interval}
-                ...
-                # pure weight files saved at same interval. These are
-                # backups that avoid `accelerate` state version control
-                # and are more portable for inference.
-                - policy_epoch_0.pt
-                - policy_epoch_{Experiment.ckpt_interval}.pt
-            - policy.pt # the current model weights - used to communicate between actor/learner processes
-            - config.txt # stores gin configuration details for reproducibility (see below)
+    |-- {Experiment.dset_name} or {--run_name}/
+        |-- train/
+        |    # replay buffer of sequence data stored on disk as `*.traj` files.
+        |    {environment_name}_{random_id}_{unix_time}.traj
+        |    {environment_name}_{another_random_id}_{later_unix_time}.traj
+        |    ...
+        |-- {Experiment.run_name} or {--run_name}/
+            |-- config.txt # stores gin configuration details for reproducibility (see below)
+            |-- policy.pt # the current model weights - used to communicate between actor/learner processes
+            |-- ckpts/
+                    |-- training_states/
+                    |    | # full checkpoints that restore the entire training setup in the same `accelerate` environment.
+                    |    | # (Including the optimizer, grad scaler, rng state, etc.)
+                    |    |-- {Experiment.run_name}_epoch_0/
+                    |        - # `accelerate` files you probably don't need
+                    |    |-- {Experiment.run_name}_epoch_{Experiment.ckpt_interval}/
+                    |    |-- ...
+                    |-- policy_weights/
+                        | # pure weight files that avoid `accelerate` state version control and are more portable for inference.
+                        |-- policy_epoch_0.pt
+                        |-- policy_epoch_{Experiment.ckpt_interval}.pt
+                        |-- ...
+        -- # any other runs that share this replay buffer would be listed here
 ```
  
 <br>
