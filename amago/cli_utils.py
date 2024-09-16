@@ -73,7 +73,7 @@ def add_common_cli(parser: ArgumentParser) -> ArgumentParser:
     )
     # main learning schedule
     parser.add_argument(
-        "--grads_per_epoch",
+        "--batches_per_epoch",
         type=int,
         default=1000,
         help="Gradient updates per training epoch.",
@@ -82,7 +82,7 @@ def add_common_cli(parser: ArgumentParser) -> ArgumentParser:
         "--timesteps_per_epoch",
         type=int,
         default=1000,
-        help="Timesteps of environment interaction per epoch *per actor*. The update:data ratio is defined by `grads_per_epoch / (timesteps_per_epoch * parallel_actors)`.",
+        help="Timesteps of environment interaction per epoch *per actor*. The update:data ratio is defined by `batches_per_epoch / (timesteps_per_epoch * parallel_actors)`.",
     )
     parser.add_argument(
         "--val_interval",
@@ -326,7 +326,7 @@ def create_experiment_from_cli(
         epochs=cli.epochs,
         parallel_actors=cli.parallel_actors,
         train_timesteps_per_epoch=cli.timesteps_per_epoch,
-        train_grad_updates_per_epoch=cli.grads_per_epoch,
+        train_batches_per_epoch=cli.batches_per_epoch,
         start_learning_at_epoch=cli.start_learning_at_epoch,
         val_interval=cli.val_interval,
         ckpt_interval=cli.ckpt_interval,
@@ -353,7 +353,7 @@ def make_experiment_learn_only(experiment: amago.Experiment) -> amago.Experiment
 def make_experiment_collect_only(experiment: amago.Experiment) -> amago.Experiment:
     experiment.start_collecting_at_epoch = 0
     experiment.start_learning_at_epoch = float("inf")
-    experiment.train_grad_updates_per_epoch = 0
+    experiment.train_batches_per_epoch = 0
     experiment.val_checks_per_epoch = 0
     experiment.ckpt_interval = None
     experiment.always_save_latest = False

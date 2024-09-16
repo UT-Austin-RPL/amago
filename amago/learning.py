@@ -73,7 +73,7 @@ class Experiment:
     start_learning_at_epoch: int = 0
     start_collecting_at_epoch: int = 0
     train_timesteps_per_epoch: int = 1000
-    train_grad_updates_per_epoch: int = 1000
+    train_batches_per_epoch: int = 1000
     val_interval: Optional[int] = 10
     val_timesteps_per_epoch: int = 10_000
     log_interval: int = 250
@@ -300,7 +300,9 @@ class Experiment:
             dset_root=self.dset_root,
             dset_name=self.dset_name,
             dset_split="train",
-            items_per_epoch=self.train_grad_updates_per_epoch * self.batch_size,
+            items_per_epoch=self.train_batches_per_epoch
+            * self.batch_size
+            * self.accelerator.num_processes,
             max_seq_len=self.max_seq_len,
         )
 
@@ -637,7 +639,7 @@ class Experiment:
                 return tqdm(
                     enumerate(loader),
                     desc=f"{self.run_name} Epoch {epoch_num} Train",
-                    total=self.train_grad_updates_per_epoch,
+                    total=self.train_batches_per_epoch,
                     colour="green",
                 )
             else:
@@ -667,7 +669,7 @@ class Experiment:
                 continue
             self.policy_aclr.train()
             for train_step, batch in make_pbar(self.train_dloader, epoch):
-                total_step = (epoch * self.train_grad_updates_per_epoch) + train_step
+                total_step = (epoch * self.train_batches_per_epoch) + train_step
                 log_step = total_step % self.log_interval == 0
                 loss_dict = self.train_step(batch, log_step=log_step)
                 if log_step:
