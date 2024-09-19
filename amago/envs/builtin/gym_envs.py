@@ -6,7 +6,7 @@ import gymnasium as gym
 import numpy as np
 
 from amago.envs import AMAGOEnv
-from amago.envs.env_utils import SpecialMetricHistory
+from amago.envs.env_utils import AMAGO_ENV_LOG_PREFIX
 from amago.hindsight import GoalSeq
 
 
@@ -190,9 +190,7 @@ class MetaFrozenLake(gym.Env):
         if soft_reset:
             next_state, info = self.soft_reset()
             success = on == "G"
-            info[
-                f"{SpecialMetricHistory.log_prefix}Episode {self.current_k} Success"
-            ] = success
+            info[f"{AMAGO_ENV_LOG_PREFIX}Episode {self.current_k} Success"] = success
             self.current_k += 1
         else:
             next_state, info = self.make_obs(False), {}

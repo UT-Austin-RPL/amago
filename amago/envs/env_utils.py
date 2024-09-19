@@ -344,6 +344,9 @@ class SpecialMetricHistory:
             self.data[env_name][key].append(value)
 
 
+AMAGO_ENV_LOG_PREFIX = SpecialMetricHistory.log_prefix
+
+
 class SequenceWrapper(gym.Wrapper):
     def __init__(
         self,
