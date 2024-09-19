@@ -170,8 +170,6 @@ class MetaFrozenLake(gym.Env):
             self.active_map[self.x][self.y] = "H"
 
         on = self.active_map[next_x][next_y]
-
-        episode_end = False
         if on == "G":
             reward = 1.0
             soft_reset = True

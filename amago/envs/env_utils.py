@@ -348,6 +348,15 @@ AMAGO_ENV_LOG_PREFIX = SpecialMetricHistory.log_prefix
 
 
 class SequenceWrapper(gym.Wrapper):
+    """
+    A wrapper that handles automatic resets, saving trajectory files to disk,
+    and rollout metrics. Automatically logs total return in all envs.
+    When using the goal-conditioned / relabeling system, this will
+    log meaningful total success rates. We also log any metric from the
+    gym env's `info` dict that begins with "AMAGO_LOG_METRIC"
+    (`amago.envs.env_utils.AMAGO_ENV_LOG_PREFIX`).
+    """
+
     def __init__(
         self,
         env,
