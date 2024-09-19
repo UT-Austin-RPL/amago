@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from uuid import uuid4
 from dataclasses import dataclass
 from collections import defaultdict
-from typing import Optional, Type, Callable, Iterable
+from typing import Optional, Type, Callable, Iterable, Any
 
 import gymnasium as gym
 import numpy as np
@@ -327,6 +327,23 @@ class ReturnHistory:
 SuccessHistory = ReturnHistory
 
 
+class SpecialMetricHistory:
+    log_prefix = "AMAGO_LOG_METRIC"
+
+    def __init__(self, env_name):
+        self.data = {}
+
+    def add_score(self, env_name: str, key: str, value: Any):
+        if key.startswith(self.log_prefix):
+            key = key[len(self.log_prefix) :].strip()
+        if env_name not in self.data:
+            self.data[env_name] = {}
+        if key not in self.data[env_name]:
+            self.data[env_name][key] = [value]
+        else:
+            self.data[env_name][key].append(value)
+
+
 class SequenceWrapper(gym.Wrapper):
     def __init__(
         self,
@@ -388,6 +405,7 @@ class SequenceWrapper(gym.Wrapper):
         # stores all of the success/return histories
         self.return_history = ReturnHistory(self.env_name)
         self.success_history = SuccessHistory(self.env_name)
+        self.special_history = SpecialMetricHistory(self.env_name)
 
     def reset(self, seed=None) -> Timestep:
         timestep, info = self.env.reset(seed=seed)
@@ -407,6 +425,10 @@ class SequenceWrapper(gym.Wrapper):
         self.total_return += reward
         self.active_traj.add_timestep(timestep)
         self.since_last_save += 1
+        for info_key, info_val in info.items():
+            if info_key.startswith(self.special_history.log_prefix):
+                self.special_history.add_score(self.env.env_name, info_key, info_val)
+
         if timestep.terminal:
             self.return_history.add_score(self.env.env_name, self.total_return)
             success = (
@@ -415,6 +437,7 @@ class SequenceWrapper(gym.Wrapper):
                 else info["success"]
             )
             self.success_history.add_score(self.env.env_name, success)
+
         save = (
             self.save_every is not None and self.since_last_save > self.save_this_time
         )

@@ -23,6 +23,7 @@ from .agent import Agent
 from amago.envs.env_utils import (
     ReturnHistory,
     SuccessHistory,
+    SpecialMetricHistory,
     ExplorationWrapper,
     EpsilonGreedy,
     SequenceWrapper,
@@ -465,16 +466,24 @@ class Experiment:
 
         return_history = utils.call_async_env(envs, "return_history")
         success_history = utils.call_async_env(envs, "success_history")
+        special_history = utils.call_async_env(envs, "special_history")
         return (
             (obs_seqs, goal_seqs, rl2_seqs),
             hidden_state,
             return_history,
             success_history,
+            special_history,
         )
 
     def collect_new_training_data(self):
         if self.train_timesteps_per_epoch > 0:
-            self.train_buffers, self.hidden_state, returns, successes = self.interact(
+            (
+                self.train_buffers,
+                self.hidden_state,
+                returns,
+                successes,
+                specials,
+            ) = self.interact(
                 self.train_envs,
                 self.train_timesteps_per_epoch,
                 buffers=self.train_buffers,
@@ -482,11 +491,13 @@ class Experiment:
 
     def evaluate_val(self):
         if self.val_timesteps_per_epoch > 0:
-            *_, returns, successes = self.interact(
+            *_, returns, successes, specials = self.interact(
                 self.val_envs,
                 self.val_timesteps_per_epoch,
             )
-            logs_per_process = self.policy_metrics(returns, successes)
+            logs_per_process = self.policy_metrics(
+                returns, successes, specials=specials
+            )
             cur_return = logs_per_process["Average Total Return (Across All Env Names)"]
             if self.verbose:
                 self.accelerator.print(f"Average Return : {cur_return}")
@@ -501,12 +512,12 @@ class Experiment:
         )
         Par = gym.vector.AsyncVectorEnv if self.async_envs else DummyAsyncVectorEnv
         test_envs = Par([make for _ in range(self.parallel_actors)])
-        *_, returns, successes = self.interact(
+        *_, returns, successes, specials = self.interact(
             test_envs,
             timesteps,
             render=render,
         )
-        logs = self.policy_metrics(returns, successes)
+        logs = self.policy_metrics(returns, successes, specials)
         self.log(logs, key="test")
         test_envs.close()
         return logs
@@ -546,10 +557,16 @@ class Experiment:
         """
         return {}
 
-    def policy_metrics(self, returns: ReturnHistory, successes: SuccessHistory):
+    def policy_metrics(
+        self,
+        returns: ReturnHistory,
+        successes: SuccessHistory,
+        specials: SpecialMetricHistory,
+    ) -> dict:
         return_by_env_name = {}
         success_by_env_name = {}
-        for ret, suc in zip(returns, successes):
+        specials_by_env_name = {}
+        for ret, suc, spe in zip(returns, successes, specials):
             for env_name, scores in ret.data.items():
                 if env_name in return_by_env_name:
                     return_by_env_name[env_name] += scores
@@ -560,7 +577,14 @@ class Experiment:
                     success_by_env_name[env_name] += scores
                 else:
                     success_by_env_name[env_name] = scores
-
+            for env_name, specials_dict in spe.data.items():
+                for special_key, special_val in specials_dict.items():
+                    if env_name not in specials_by_env_name:
+                        specials_by_env_name[env_name] = {}
+                    if special_key not in specials_by_env_name[env_name]:
+                        specials_by_env_name[env_name][special_key] = special_val
+                    else:
+                        specials_by_env_name[env_name][special_key] += special_val
         avg_ret_per_env = {
             f"Average Total Return in {name}": np.array(scores).mean()
             for name, scores in return_by_env_name.items()
@@ -569,12 +593,19 @@ class Experiment:
             f"Average Success Rate in {name}": np.array(scores).mean()
             for name, scores in success_by_env_name.items()
         }
+        avg_special_per_env = {
+            f"Average {special_key} in {name}": np.array(special_vals).mean()
+            for name, specials_dict in specials_by_env_name.items()
+            for special_key, special_vals in specials_dict.items()
+        }
         avg_return_overall = {
             "Average Total Return (Across All Env Names)": np.array(
                 list(avg_ret_per_env.values())
             ).mean()
         }
-        return avg_ret_per_env | avg_suc_per_env | avg_return_overall
+        return (
+            avg_ret_per_env | avg_suc_per_env | avg_return_overall | avg_special_per_env
+        )
 
     def compute_loss(self, batch: Batch, log_step: bool):
         critic_loss, actor_loss = self.policy_aclr(batch, log_step=log_step)
