@@ -563,31 +563,22 @@ class Experiment:
         successes: SuccessHistory,
         specials: SpecialMetricHistory,
     ) -> dict:
-        return_by_env_name = {}
-        success_by_env_name = {}
-        specials_by_env_name = {}
+        returns_by_env_name = defaultdict(list)
+        success_by_env_name = defaultdict(list)
+        specials_by_env_name = defaultdict(lambda: defaultdict(list))
+
         for ret, suc, spe in zip(returns, successes, specials):
             for env_name, scores in ret.data.items():
-                if env_name in return_by_env_name:
-                    return_by_env_name[env_name] += scores
-                else:
-                    return_by_env_name[env_name] = scores
+                returns_by_env_name[env_name].extend(scores)
             for env_name, scores in suc.data.items():
-                if env_name in success_by_env_name:
-                    success_by_env_name[env_name] += scores
-                else:
-                    success_by_env_name[env_name] = scores
+                success_by_env_name[env_name].extend(scores)
             for env_name, specials_dict in spe.data.items():
                 for special_key, special_val in specials_dict.items():
-                    if env_name not in specials_by_env_name:
-                        specials_by_env_name[env_name] = {}
-                    if special_key not in specials_by_env_name[env_name]:
-                        specials_by_env_name[env_name][special_key] = special_val
-                    else:
-                        specials_by_env_name[env_name][special_key] += special_val
+                    specials_by_env_name[env_name][special_key].extend(special_val)
+
         avg_ret_per_env = {
             f"Average Total Return in {name}": np.array(scores).mean()
-            for name, scores in return_by_env_name.items()
+            for name, scores in returns_by_env_name.items()
         }
         avg_suc_per_env = {
             f"Average Success Rate in {name}": np.array(scores).mean()

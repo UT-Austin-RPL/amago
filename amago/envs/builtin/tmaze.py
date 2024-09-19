@@ -58,9 +58,9 @@ class TMazeBase(gym.Env):
         )
         self.bias_x, self.bias_y = 1, 2
         self.tmaze_map[self.bias_y, self.bias_x : -self.bias_x] = True  # corridor
-        self.tmaze_map[[self.bias_y - 1, self.bias_y + 1], -self.bias_x - 1] = (
-            True  # goal candidates
-        )
+        self.tmaze_map[
+            [self.bias_y - 1, self.bias_y + 1], -self.bias_x - 1
+        ] = True  # goal candidates
 
         obs_dim = 2 if self.ambiguous_position else 3
         if self.expose_goal:  # test Markov policies
