@@ -8,17 +8,19 @@ import numpy as np
 
 try:
     import jax
-    import jax.numpy as jnp
     import xminigrid
 except ImportError:
     jax = None
     xminigrid = None
 else:
-    from xminigrid.wrappers import DirectionObservationWrapper, DmEnvAutoResetWrapper
+    import jax.numpy as jnp
+    from xminigrid.wrappers import (
+        DirectionObservationWrapper,
+        DmEnvAutoResetWrapper,
+        RulesAndGoalsObservationWrapper,
+    )
 
 from amago.envs.env_utils import AMAGO_ENV_LOG_PREFIX
-
-# TODO: RulesAndGoalObservationWrapper
 
 
 class XLandMiniGridEnv(gym.Env):
@@ -52,23 +54,31 @@ class XLandMiniGridEnv(gym.Env):
         env, self.env_params = xminigrid.make(
             f"XLand-MiniGrid-R{rooms}-{grid_size}x{grid_size}"
         )
-        self.env = DirectionObservationWrapper(DmEnvAutoResetWrapper(env))
+        self.x_env = RulesAndGoalsObservationWrapper(
+            DirectionObservationWrapper(DmEnvAutoResetWrapper(env))
+        )
         key = jax.random.key(random.randint(0, 1_000_000))
         reset_key, ruleset_key = jax.random.split(key)
         self.reset_keys = jax.random.split(reset_key, num=parallel_envs)
         self.ruleset_keys = jax.random.split(ruleset_key, num=parallel_envs)
 
         self.x_sample = jax.vmap(jax.jit(self.benchmark.sample_ruleset))
-        self.x_reset = jax.vmap(jax.jit(self.env.reset), in_axes=(0, 0))
-        self.x_step = jax.vmap(jax.jit(self.env.step), in_axes=(0, 0, 0))
+        self.x_reset = jax.vmap(jax.jit(self.x_env.reset), in_axes=(0, 0))
+        self.x_step = jax.vmap(jax.jit(self.x_env.step), in_axes=(0, 0, 0))
 
+        obs_shapes = self.x_env.observation_shape(self.env_params)
         self.max_steps_per_episode = self.env_params.max_steps
-        self.action_space = gym.spaces.Discrete(self.env.num_actions(self.env_params))
+        self.action_space = gym.spaces.Discrete(self.x_env.num_actions(self.env_params))
         self.observation_space = gym.spaces.Dict(
             {
-                "grid": gym.spaces.Box(low=0, high=14, shape=(5, 5, 2), dtype=np.uint8),
+                "grid": gym.spaces.Box(
+                    low=0, high=14, shape=obs_shapes["img"], dtype=np.uint8
+                ),
                 "direction_done": gym.spaces.Box(
                     low=0, high=1, shape=(5,), dtype=np.uint8
+                ),
+                "goal": gym.spaces.Box(
+                    low=0, high=14, shape=obs_shapes["goal_encoding"], dtype=np.uint8
                 ),
             }
         )
@@ -83,10 +93,11 @@ class XLandMiniGridEnv(gym.Env):
         done = self.x_timestep.last()
         direction_done = np.concatenate(
             (obs["direction"], done[:, np.newaxis]), axis=-1
-        ).astype(np.uint8)
+        )
         return {
             "grid": np.array(obs["img"], dtype=np.uint8),
             "direction_done": direction_done,
+            "goal": np.array(obs["goal_encoding"], dtype=np.uint8),
         }
 
     def reset(self, *args, **kwargs):
