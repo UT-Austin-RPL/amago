@@ -18,13 +18,13 @@ def add_cli(parser):
     parser.add_argument(
         "--benchmark",
         type=str,
-        default="small-1m",
+        default="trivial-1m",
         choices=["trivial-1m", "small-1m", "medium-1m", "high-1m", "high-3m"],
     )
     parser.add_argument("--k_shots", type=int, default=25)
     parser.add_argument("--rooms", type=int, default=4)
     parser.add_argument("--grid_size", type=int, default=13)
-    parser.add_argument("--max_seq_len", type=int, default=512)
+    parser.add_argument("--max_seq_len", type=int, default=2048)
     return parser
 
 
@@ -127,6 +127,7 @@ if __name__ == "__main__":
     traj_len = make_train_env().suggested_max_seq_len
 
     group_name = f"{args.run_name}_xlandmg_{args.benchmark}_R{args.rooms}_{args.grid_size}x{args.grid_size}"
+    args.start_learning_at_epoch = traj_len // args.timesteps_per_epoch
     for trial in range(args.trials):
         run_name = group_name + f"_trial_{trial}"
         experiment = create_experiment_from_cli(

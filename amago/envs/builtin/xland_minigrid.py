@@ -50,7 +50,6 @@ class XLandMiniGridEnv(gym.Env):
         key = jax.random.key(random.randint(0, 1_000_000))
         self.reset_key, self.ruleset_key = jax.random.split(key)
 
-        print("before jit")
         self.x_sample = jax.jit(self.benchmark.sample_ruleset)
         self.x_reset = jax.jit(self.env.reset)
         self.x_step = jax.jit(self.env.step)
