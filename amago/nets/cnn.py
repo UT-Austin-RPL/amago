@@ -121,17 +121,24 @@ class DrQCNN(CNN):
         x = self.activation(self.conv3(x))
         x = self.activation(self.conv4(x))
         return x
-    
+
+
 class GridworldCNN(CNN):
-    def __init__(self, img_shape: tuple[int], channels_first: bool, activation: str):
+    def __init__(
+        self,
+        img_shape: tuple[int],
+        channels_first: bool,
+        activation: str,
+        channels=[16, 32, 48],
+    ):
         super().__init__(
             img_shape, channels_first=channels_first, activation=activation
         )
         C = img_shape[0] if self.channels_first else img_shape[-1]
-        self.conv1 = nn.Conv2d(C, 16, kernel_size=2, stride=1)
-        self.conv2 = nn.Conv2d(16, 32, kernel_size=2, stride=1)
-        self.conv3 = nn.Conv2d(32, 48, kernel_size=2, stride=1)
-    
+        self.conv1 = nn.Conv2d(C, channels[0], kernel_size=2, stride=1)
+        self.conv2 = nn.Conv2d(channels[0], channels[1], kernel_size=2, stride=1)
+        self.conv3 = nn.Conv2d(channels[1], channels[2], kernel_size=2, stride=1)
+
     def conv_forward(self, imgs):
         x = self.activation(self.conv1(imgs))
         x = self.activation(self.conv2(x))

@@ -34,6 +34,7 @@ class XLandMiniGridEnv(gym.Env):
         self.rooms = rooms
         self.grid_size = grid_size
         self.k_shots = k_shots
+        self.ruleset_benchmark = ruleset_benchmark
 
         benchmark = xminigrid.load_benchmark(name=ruleset_benchmark)
         train, test = benchmark.shuffle(key=jax.random.key(train_test_split_key)).split(
@@ -49,6 +50,7 @@ class XLandMiniGridEnv(gym.Env):
         key = jax.random.key(random.randint(0, 1_000_000))
         self.reset_key, self.ruleset_key = jax.random.split(key)
 
+        print("before jit")
         self.x_sample = jax.jit(self.benchmark.sample_ruleset)
         self.x_reset = jax.jit(self.env.reset)
         self.x_step = jax.jit(self.env.step)
@@ -58,8 +60,9 @@ class XLandMiniGridEnv(gym.Env):
         self.observation_space = gym.spaces.Dict(
             {
                 "grid": gym.spaces.Box(low=0, high=14, shape=(5, 5, 2), dtype=np.uint8),
-                "direction": gym.spaces.Discrete(4),
-                "done": gym.spaces.Discrete(2),
+                "direction_done": gym.spaces.Box(
+                    low=0, high=1, shape=(5,), dtype=np.uint8
+                ),
             }
         )
         self.reset()
@@ -70,10 +73,12 @@ class XLandMiniGridEnv(gym.Env):
 
     def tstep_to_obs(self, tstep):
         obs = tstep.observation
+        direction_done = np.zeros(5, dtype=np.uint8)
+        direction_done[obs["direction"].argmax().item()] = 1
+        direction_done[-1] = int(tstep.last())
         return {
             "grid": np.array(obs["img"], dtype=np.uint8),
-            "direction": obs["direction"].argmax().item(),
-            "done": int(tstep.last()),
+            "direction_done": direction_done,
         }
 
     def reset(self, *args, **kwargs):

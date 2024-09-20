@@ -19,7 +19,6 @@ from accelerate import Accelerator, DistributedDataParallelKwargs
 from accelerate.utils import tqdm
 
 from . import utils
-from .agent import Agent
 from amago.envs.env_utils import (
     ReturnHistory,
     SuccessHistory,
@@ -33,6 +32,7 @@ from amago.envs.env_utils import (
 )
 from .loading import Batch, TrajDset, RLData_pad_collate, MAGIC_PAD_VAL
 from .hindsight import Relabeler, RelabelWarning
+from .agent import Agent
 
 
 @gin.configurable
