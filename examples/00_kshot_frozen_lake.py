@@ -15,7 +15,7 @@ def add_cli(parser):
     parser.add_argument("--run_name", type=str, required=True)
     parser.add_argument("--buffer_dir", type=str, required=True)
     parser.add_argument("--log", action="store_true")
-    parser.add_argument("--trials", type=int, default=3)
+    parser.add_argument("--trials", type=int, default=1)
     parser.add_argument("--lake_size", type=int, default=5)
     parser.add_argument("--k_shots", type=int, default=15)
     parser.add_argument("--hard_mode", action="store_true")
@@ -87,17 +87,17 @@ if __name__ == "__main__":
             max_seq_len=args.max_rollout_length,
             traj_save_len=args.max_rollout_length,
             agent_type=amago.agent.Agent,
-            dset_max_size=10_000,
+            dset_max_size=12_500,
             run_name=run_name,
             dset_name=run_name,
             dset_root=args.buffer_dir,
             dloader_workers=10,
             log_to_wandb=args.log,
             wandb_group_name=group_name,
-            epochs=500 if not args.hard_mode else 900,
+            epochs=700 if not args.hard_mode else 900,
             parallel_actors=24,
             train_timesteps_per_epoch=350,
-            train_batches_per_epoch=700,
+            train_batches_per_epoch=800,
             val_interval=20,
             val_timesteps_per_epoch=args.max_rollout_length * 2,
             ckpt_interval=50,
