@@ -507,6 +507,7 @@ class EnvCreator:
     save_trajs_as: str
     traj_save_len: int
     max_seq_len: int
+    already_vectorized: bool
     stagger_traj_file_lengths: bool
     exploration_wrapper_Cls: Type[ExplorationWrapper]
 

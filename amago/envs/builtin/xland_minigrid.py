@@ -30,7 +30,7 @@ class XLandMiniGridEnv(gym.Env):
         k_shots: int = 25,
         rooms: int = 4,
         grid_size: int = 13,
-        ruleset_benchmark: str = "trivial-1m",
+        ruleset_benchmark: str = "small-1m",
         train_test_split: str = "train",
         train_test_split_key: int = 0,
         train_test_split_pct: float = 0.8,

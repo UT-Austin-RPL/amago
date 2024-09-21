@@ -27,7 +27,12 @@ def stack_list_array_dicts(list_: list[dict[np.ndarray]], axis=0):
     return {k: np.stack(v, axis=axis) for k, v in out.items()}
 
 
-def amago_warning(msg: str, category=None):
+class AmagoWarning(Warning):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+def amago_warning(msg: str, category=AmagoWarning):
     warnings.warn(colored(f"{msg}", "green"), category=category)
 
 

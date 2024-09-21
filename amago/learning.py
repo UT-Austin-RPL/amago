@@ -48,7 +48,7 @@ class Experiment:
     make_train_env: callable | Iterable[callable]
     make_val_env: callable | Iterable[callable]
     parallel_actors: int = 10
-    async_envs: bool = True
+    env_mode: str = "async"
     exploration_wrapper_Cls: Optional[type[ExplorationWrapper]] = EpsilonGreedy
     sample_actions: bool = True
 
@@ -106,6 +106,7 @@ class Experiment:
         )
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
+            warnings.filterwarnings("always", category=utils.AmagoWarning)
             self.init_envs()
         self.init_dsets()
         self.init_dloaders()
@@ -152,24 +153,34 @@ class Experiment:
 
     def init_envs(self):
         assert self.traj_save_len >= self.max_seq_len
-        make_val_envs = (
-            [self.make_val_env] * self.parallel_actors
-            if not isinstance(self.make_val_env, Iterable)
-            else self.make_val_env
-        )
-        make_train_envs = (
-            [self.make_train_env] * self.parallel_actors
-            if not isinstance(self.make_train_env, Iterable)
-            else self.make_train_env
-        )
-        if not len(make_train_envs) == self.parallel_actors:
-            utils.amago_warning(
-                f"`Experiment.parallel_actors` is {self.parallel_actors} but `make_train_env` is a list of length {len(make_train_envs)}"
+
+        if self.env_mode in ["async", "sync"]:
+            make_val_envs = (
+                [self.make_val_env] * self.parallel_actors
+                if not isinstance(self.make_val_env, Iterable)
+                else self.make_val_env
             )
-        if not len(make_val_envs) == self.parallel_actors:
-            utils.amago_warning(
-                f"`Experiment.parallel_actors` is {self.parallel_actors} but `make_val_env` is a list of length {len(make_val_envs)}"
+            make_train_envs = (
+                [self.make_train_env] * self.parallel_actors
+                if not isinstance(self.make_train_env, Iterable)
+                else self.make_train_env
             )
+            if not len(make_train_envs) == self.parallel_actors:
+                utils.amago_warning(
+                    f"`Experiment.parallel_actors` is {self.parallel_actors} but `make_train_env` is a list of length {len(make_train_envs)}"
+                )
+            if not len(make_val_envs) == self.parallel_actors:
+                utils.amago_warning(
+                    f"`Experiment.parallel_actors` is {self.parallel_actors} but `make_val_env` is a list of length {len(make_val_envs)}"
+                )
+            already_vectorized = False
+        elif self.env_mode == "vectorized":
+            make_train_envs = [self.make_train_env]
+            make_val_envs = [self.make_val_env]
+            already_vectorized = True
+        else:
+            raise ValueError(f"Invalid `env_mode` {self.env_mode}")
+
         if self.exploration_wrapper_Cls is not None and not issubclass(
             self.exploration_wrapper_Cls, ExplorationWrapper
         ):
@@ -181,6 +192,7 @@ class Experiment:
         shared_env_kwargs = dict(
             dset_root=self.dset_root,
             dset_name=self.dset_name,
+            already_vectorized=already_vectorized,
             save_trajs_as=self.save_trajs_as,
             traj_save_len=self.traj_save_len,
             max_seq_len=self.max_seq_len,
@@ -210,9 +222,17 @@ class Experiment:
         ]
 
         # make parallel envs
-        Par = gym.vector.AsyncVectorEnv if self.async_envs else DummyAsyncVectorEnv
+        if self.env_mode == "async":
+            Par = gym.vector.AsyncVectorEnv
+        elif self.env_mode in ["sync", "vectorized"]:
+            Par = DummyAsyncVectorEnv
         self.train_envs = Par(make_train)
-        self.train_envs.reset()
+        test_obs, _ = self.train_envs.reset()
+        for k, v in test_obs.items():
+            if v.shape[0] != self.parallel_actors:
+                utils.amago_warning(
+                    f"Environment observation key {k} appears to have batch size {v.shape[0]} but `parallel_actors` is {self.parallel_actors}"
+                )
         self.val_envs = Par(make_val)
         self.val_envs.reset()
 
