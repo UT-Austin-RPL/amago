@@ -202,12 +202,25 @@ class GPUSequenceBuffer:
 
 
 class ExplorationWrapper(ABC, gym.ActionWrapper):
+
+    def __init__(self, env : gym.Env, parallel_envs: int = 1):
+        super().__init__(env)
+        self.parallel_envs = parallel_envs
+
     @abstractmethod
     def add_exploration_noise(self, action: np.ndarray, local_step: int, horizon: int):
         raise NotImplementedError
 
     def action(self, a: np.ndarray):
-        return self.add_exploration_noise(a, self.env.step_count, self.env.horizon)
+        if self.parallel_envs == 1:
+            # use a dummy batch dimension to write the exploration wrapper in batch mode
+            a = a[np.newaxis, :]
+        else:
+            assert a.shape[0] == self.parallel_envs, "Parallel envs must be equal to the action batch size"
+        action =  self.add_exploration_noise(a, self.env.step_count, self.env.horizon)
+        if self.parallel_envs == 1:
+            action = action[0]
+        return action
 
     @property
     def return_history(self):
@@ -230,13 +243,14 @@ class BilevelEpsilonGreedy(ExplorationWrapper):
     def __init__(
         self,
         env: gym.Env,
+        parallel_envs: int = 1,
         eps_start_start: float = 1.0,  # start of training, start of rollout
         eps_start_end: float = 0.05,  # end of training, start of rollout
         eps_end_start: float = 0.8,  # start of training, end of rollout
         eps_end_end: float = 0.01,  # end of training, end of rollout
         steps_anneal: int = 1_000_000,
     ):
-        super().__init__(env)
+        super().__init__(env, parallel_envs=parallel_envs)
         self.eps_start_start = eps_start_start
         self.eps_start_end = eps_start_end
         self.eps_end_start = eps_end_start
@@ -250,8 +264,8 @@ class BilevelEpsilonGreedy(ExplorationWrapper):
 
     def reset(self, *args, **kwargs):
         out = super().reset(*args, **kwargs)
-        self.global_multiplier = random.random()
         np.random.seed(random.randint(0, 1e6))
+        self.global_multiplier = np.random.rand(self.parallel_envs)
         return out
 
     def current_eps(self, local_step: int, horizon: int):
@@ -274,8 +288,8 @@ class BilevelEpsilonGreedy(ExplorationWrapper):
         if self.discrete:
             # epsilon greedy (DQN-style)
             num_actions = self.env.action_space.n
-            random_action = random.randrange(0, num_actions)
-            use_random = random.random() <= noise
+            random_action = np.random.randint(0, num_actions, size=(self.parallel_envs,))
+            use_random = np.random.rand(self.parallel_envs) <= noise
             if use_random:
                 expl_action = np.full_like(action, random_action)
             else:
@@ -299,12 +313,14 @@ class EpsilonGreedy(BilevelEpsilonGreedy):
     def __init__(
         self,
         env: gym.Env,
+        parallel_envs: int = 1,
         eps_start: float = 1.0,
         eps_end: float = 0.05,
         steps_anneal: int = 1_000_000,
     ):
         super().__init__(
             env,
+            parallel_envs=parallel_envs,
             eps_start_start=eps_start,
             eps_start_end=eps_end,
             eps_end_start=eps_start,
@@ -497,9 +513,11 @@ class SequenceWrapper(gym.Wrapper):
         return self._current_timestep
 
 
+
 @dataclass
 class EnvCreator:
     make_env: Callable
+    already_vectorized: bool
     make_dset: bool
     dset_root: str
     dset_name: str
@@ -507,7 +525,6 @@ class EnvCreator:
     save_trajs_as: str
     traj_save_len: int
     max_seq_len: int
-    already_vectorized: bool
     stagger_traj_file_lengths: bool
     exploration_wrapper_Cls: Type[ExplorationWrapper]
 
@@ -527,7 +544,8 @@ class EnvCreator:
         env = self.make_env()
         self.horizon = max(self.horizon, env.horizon)
         if self.exploration_wrapper_Cls is not None:
-            env = self.exploration_wrapper_Cls(env)
+            parallel_envs = 1 if not self.already_vectorized else env.reset()[0].shape[0]
+            env = self.exploration_wrapper_Cls(env, parallel_envs=parallel_envs)
         env = SequenceWrapper(
             env,
             save_every=(self.save_every_low, self.save_every_high),

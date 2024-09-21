@@ -227,12 +227,12 @@ class Experiment:
         elif self.env_mode in ["sync", "vectorized"]:
             Par = DummyAsyncVectorEnv
         self.train_envs = Par(make_train)
-        test_obs, _ = self.train_envs.reset()
-        for k, v in test_obs.items():
-            if v.shape[0] != self.parallel_actors:
-                utils.amago_warning(
-                    f"Environment observation key {k} appears to have batch size {v.shape[0]} but `parallel_actors` is {self.parallel_actors}"
-                )
+        self.train_envs.reset()
+        test_obs = utils.call_async_env(self.train_envs, "current_timestep")
+        if not len(test_obs) == self.parallel_actors:
+            utils.amago_warning(
+                f"Environment batch size ({len(test_obs)} does not match `parallel_actors` ({self.parallel_actors})"
+            )
         self.val_envs = Par(make_val)
         self.val_envs.reset()
 
