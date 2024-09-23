@@ -34,11 +34,9 @@ class Agent(nn.Module):
     def __init__(
         self,
         obs_space: gym.spaces.Dict,
-        goal_space: gym.spaces.Box,
         rl2_space: gym.spaces.Box,
         action_space: gym.spaces.Space,
         max_seq_len: int,
-        horizon: int,
         tstep_encoder_Cls=FFTstepEncoder,
         traj_encoder_Cls=TformerTrajEncoder,
         num_critics: int = 4,
@@ -55,7 +53,6 @@ class Agent(nn.Module):
     ):
         super().__init__()
         self.obs_space = obs_space
-        self.goal_space = goal_space
         self.rl2_space = rl2_space
 
         self.action_space = action_space
@@ -83,13 +80,11 @@ class Agent(nn.Module):
 
         self.tstep_encoder = tstep_encoder_Cls(
             obs_space=obs_space,
-            goal_space=goal_space,
             rl2_space=rl2_space,
         )
         self.traj_encoder = traj_encoder_Cls(
             tstep_dim=self.tstep_encoder.emb_dim,
             max_seq_len=max_seq_len,
-            horizon=horizon,
         )
         self.emb_dim = self.traj_encoder.emb_dim
 
@@ -185,7 +180,6 @@ class Agent(nn.Module):
     def get_actions(
         self,
         obs,
-        goals,
         rl2s,
         seq_lengths,
         time_idxs,
@@ -198,10 +192,9 @@ class Agent(nn.Module):
         using_hidden = hidden_state is not None
         if using_hidden:
             obs = self.get_current_timestep(obs, seq_lengths)
-            goals = self.get_current_timestep(goals, seq_lengths)
             rl2s = self.get_current_timestep(rl2s, seq_lengths)
             time_idxs = self.get_current_timestep(time_idxs, seq_lengths.squeeze(-1))
-        tstep_emb = self.tstep_encoder(obs=obs, goals=goals, rl2s=rl2s)
+        tstep_emb = self.tstep_encoder(obs=obs, rl2s=rl2s)
 
         # sequence model embedding [batch, length, d_emb]
         traj_emb_t, hidden_state = self.traj_encoder(
@@ -241,7 +234,7 @@ class Agent(nn.Module):
         ##########################
         ## Step 0: Timestep Emb ##
         ##########################
-        o = self.tstep_encoder(obs=batch.obs, goals=batch.goals, rl2s=batch.rl2s, log_dict=active_log_dict)
+        o = self.tstep_encoder(obs=batch.obs, rl2s=batch.rl2s, log_dict=active_log_dict)
 
         ###########################
         ## Step 1: Get Organized ##
@@ -524,11 +517,9 @@ class MultiTaskAgent(Agent):
     def __init__(
         self,
         obs_space: gym.spaces.Dict,
-        goal_space: gym.spaces.Box,
         rl2_space: gym.spaces.Box,
         action_space: gym.spaces.Space,
         max_seq_len: int,
-        horizon: int,
         online_coeff: float = 0.0,
         offline_coeff: float = 1.0,
         fbc_filter_k: int = 3,
@@ -537,11 +528,9 @@ class MultiTaskAgent(Agent):
     ):
         super().__init__(
             obs_space=obs_space,
-            goal_space=goal_space,
             rl2_space=rl2_space,
             action_space=action_space,
             max_seq_len=max_seq_len,
-            horizon=horizon,
             online_coeff=online_coeff,
             offline_coeff=offline_coeff,
             **kwargs,
@@ -569,7 +558,7 @@ class MultiTaskAgent(Agent):
         ## Step 0: Timestep Emb ##
         ##########################
         o = self.tstep_encoder(
-            obs=batch.obs, goals=batch.goals, rl2s=batch.rl2s, log_dict=active_log_dict
+            obs=batch.obs, rl2s=batch.rl2s, log_dict=active_log_dict
         )
 
         ###########################

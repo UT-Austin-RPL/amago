@@ -1,77 +1,8 @@
-import warnings
 import copy
 import random
 
 import gymnasium as gym
 import numpy as np
-
-from amago.envs import AMAGOEnv
-from amago.envs.env_utils import AMAGO_ENV_LOG_PREFIX
-from amago.hindsight import GoalSeq
-
-
-class GymEnv(AMAGOEnv):
-    def __init__(
-        self,
-        gym_env: gym.Env,
-        env_name: str,
-        horizon: int,
-        start: int = 0,
-        zero_shot: bool = True,
-        convert_from_old_gym: bool = False,
-        soft_reset_kwargs={},
-    ):
-        if convert_from_old_gym:
-            gym_env = gym.wrappers.EnvCompatibility(gym_env)
-
-        super().__init__(gym_env, horizon=horizon, start=start)
-        self.zero_shot = zero_shot
-        self._env_name = env_name
-        self.soft_reset_kwargs = soft_reset_kwargs
-
-    @property
-    def env_name(self):
-        return self._env_name
-
-    @property
-    def blank_goal(self):
-        return np.zeros((1,), dtype=np.float32)
-
-    @property
-    def achieved_goal(self) -> np.ndarray:
-        return [self.blank_goal + 1]
-
-    @property
-    def kgoal_space(self) -> gym.spaces.Box:
-        return gym.spaces.Box(low=0.0, high=0.0, shape=(1, 1))
-
-    @property
-    def goal_sequence(self) -> GoalSeq:
-        goal_seq = [self.blank_goal]
-        return GoalSeq(seq=goal_seq, active_idx=0)
-
-    def step(self, action):
-        return super().step(
-            action,
-            normal_rl_reward=True,
-            normal_rl_reset=self.zero_shot,
-            soft_reset_kwargs=self.soft_reset_kwargs,
-        )
-
-
-class _DiscreteToBox(gym.ObservationWrapper):
-    def __init__(self, env):
-        super().__init__(env)
-        assert isinstance(env.observation_space, gym.spaces.Discrete)
-        self.n = env.observation_space.n
-        self.observation_space = gym.spaces.Box(
-            low=0, high=1, shape=(self.n,), dtype=np.int64
-        )
-
-    def observation(self, obs):
-        arr = np.zeros((self.n,), dtype=np.int64)
-        arr[obs] = 1
-        return arr
 
 
 class RandomLunar(gym.Env):
@@ -131,11 +62,11 @@ class MetaFrozenLake(gym.Env):
 
     def reset(self, *args, **kwargs):
         self.current_map = [[t for t in row] for row in generate_random_map(self.size)]
-        act_map = [(0, 0), (1, 0), (-1, 0), (0, 1), (0, -1)]
+        self.action_mapping = [(0, 0), (1, 0), (-1, 0), (0, 1), (0, -1)]
         if self.hard_mode and random.random() < 0.5:
-            # flip two control directions for an extra challenge
-            act_map[1], act_map[3] = act_map[3], act_map[1]
-        self.action_mapping = act_map
+            temp = self.action_mapping[1]
+            self.action_mapping[1] = self.action_mapping[3]
+            self.action_mapping[3] = temp
         self.current_k = 0
         return self.soft_reset()
 
@@ -182,14 +113,13 @@ class MetaFrozenLake(gym.Env):
         else:
             reward = 0.0
             soft_reset = False
+
         self.x = next_x
         self.y = next_y
 
         if soft_reset:
-            next_state, info = self.soft_reset()
-            success = on == "G"
-            info[f"{AMAGO_ENV_LOG_PREFIX}Episode {self.current_k} Success"] = success
             self.current_k += 1
+            next_state, info = self.soft_reset()
         else:
             next_state, info = self.make_obs(False), {}
 
@@ -202,18 +132,3 @@ class MetaFrozenLake(gym.Env):
         print(f"\nFrozen Lake (k={self.k_shots}, Hard Mode={self.hard_mode})")
         for row in render_map:
             print(" ".join(row))
-
-
-if __name__ == "__main__":
-    env = MetaFrozenLake(5, 2, False, True)
-    env.reset()
-    env.render()
-    done = False
-    while not done:
-        action = input()
-        action = {"a": 4, "w": 2, "d": 3, "s": 1, "x": 0}[action]
-        next_state, reward, done, _, info = env.step(action)
-        env.render()
-        print(next_state)
-        print(reward)
-        print(done)

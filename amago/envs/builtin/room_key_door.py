@@ -4,6 +4,9 @@ import numpy as np
 import gymnasium as gym
 
 
+# TODO: fix meta-RL rollouts
+
+
 class RoomKeyDoor(gym.Env):
     """
     A version of the Dark Room Key-Door Env.
@@ -16,10 +19,6 @@ class RoomKeyDoor(gym.Env):
         dark: bool = True,
         size: int = 9,
         max_episode_steps: int = 50,
-        # the appendix version of this experiment (vs. AD)
-        # used a fixed starting location to be consistent
-        # with the version in our AD replication. The main
-        # text version (vs. AMAGO-GRU) uses the random starts.
         start_location: tuple[int, int] | str = "random",
         key_location: tuple[int, int] | str = "random",
         goal_location: tuple[int, int] | str = "random",

@@ -21,7 +21,6 @@ from accelerate.utils import tqdm
 from . import utils
 from amago.envs.env_utils import (
     ReturnHistory,
-    SuccessHistory,
     SpecialMetricHistory,
     ExplorationWrapper,
     EpsilonGreedy,
@@ -31,7 +30,7 @@ from amago.envs.env_utils import (
     EnvCreator,
 )
 from .loading import Batch, TrajDset, RLData_pad_collate, MAGIC_PAD_VAL
-from .hindsight import Relabeler, RelabelWarning
+from .hindsight import Relabeler
 from .agent import Agent
 
 
@@ -64,7 +63,7 @@ class Experiment:
     dset_name: str = None
     dset_max_size: int = 15_000
     dset_filter_pct: Optional[float] = 0.1
-    relabel: str = "none"
+    relabel_Cls: type[Relabeler] = Relabeler
     goal_importance_sampling: bool = False
     stagger_traj_file_lengths: bool = True
     save_trajs_as: str = "npz"
@@ -127,23 +126,12 @@ class Experiment:
             self.traj_save_len >= self.max_seq_len
         ), "Save longer trajectories than the model can process"
 
-        if self.horizon <= self.max_seq_len and self.horizon <= self.traj_save_len:
-            mode = "Maximum Context (Perfect Meta-RL / Long-Term Memory)"
-        elif self.horizon > self.max_seq_len and self.horizon <= self.traj_save_len:
-            mode = "Fixed Context with Valid Relabeling (Approximate Meta-RL / POMDPs)"
-        elif self.horizon > self.max_seq_len and self.horizon > self.traj_save_len:
-            mode = (
-                "Fixed Context with Invalid Relabeling (Approximate Meta-RL / POMDPs)"
-            )
-
         self.accelerator.print(
             f"""\n\n \t\t {colored('AMAGO v2', 'green')}
             \t -------------------------
             \t Agent Type: {self.policy.__class__.__name__}
-            \t Environment Horizon: {self.horizon}
             \t Policy Max Sequence Length: {self.max_seq_len}
             \t Trajectory File Sequence Length: {self.traj_save_len}
-            \t Mode: {mode}
             \t Mixed Precision: {self.mixed_precision.upper()}
             \t Fast Inference: {self.fast_inference}
             \t Offline Loss Weight: {self.policy.offline_coeff}
@@ -177,7 +165,6 @@ class Experiment:
         elif self.env_mode == "vectorized":
             make_train_envs = [self.make_train_env]
             make_val_envs = [self.make_val_env]
-            already_vectorized = True
         else:
             raise ValueError(f"Invalid `env_mode` {self.env_mode}")
 
@@ -192,7 +179,6 @@ class Experiment:
         shared_env_kwargs = dict(
             dset_root=self.dset_root,
             dset_name=self.dset_name,
-            already_vectorized=already_vectorized,
             save_trajs_as=self.save_trajs_as,
             traj_save_len=self.traj_save_len,
             max_seq_len=self.max_seq_len,
@@ -228,18 +214,10 @@ class Experiment:
             Par = DummyAsyncVectorEnv
         self.train_envs = Par(make_train)
         self.train_envs.reset()
-        test_obs = utils.call_async_env(self.train_envs, "current_timestep")
-        if not len(test_obs) == self.parallel_actors:
-            utils.amago_warning(
-                f"Environment batch size ({len(test_obs)} does not match `parallel_actors` ({self.parallel_actors})"
-            )
         self.val_envs = Par(make_val)
         self.val_envs.reset()
 
-        # save info we need to initialize the agent nets
-        # (we assume each environment has the same observation and action spaces)
-        self.gcrl2_space = make_train[0].gcrl2_space
-        self.horizon = make_train[0].horizon
+        self.rl2_space = make_train[0].rl2_space
         # self.train_buffers holds the env state between rollout cycles
         # that are shorter than the horizon length
         self.train_buffers = None
@@ -310,14 +288,8 @@ class Experiment:
             shutil.rmtree(buffer_dir)
 
     def init_dsets(self):
-        if self.save_trajs_as != "trajectory" and self.relabel != "none":
-            utils.amago_warning(
-                "Saving data in efficient ('frozen') format... these files will be skipped by the Relabeler",
-                category=RelabelWarning,
-            )
-        warnings.filterwarnings("ignore", category=RelabelWarning)
         self.train_dset = TrajDset(
-            relabeler=Relabeler(self.relabel, self.goal_importance_sampling),
+            relabeler=self.relabel_Cls(),
             dset_root=self.dset_root,
             dset_name=self.dset_name,
             dset_split="train",
@@ -366,12 +338,10 @@ class Experiment:
 
     def init_model(self):
         policy_kwargs = {
-            "obs_space": self.gcrl2_space["obs"],
-            "goal_space": self.gcrl2_space["goal"],
-            "rl2_space": self.gcrl2_space["rl2"],
+            "obs_space": self.rl2_space["obs"],
+            "rl2_space": self.rl2_space["rl2"],
             "action_space": self.train_envs.single_action_space,
             "max_seq_len": self.max_seq_len,
-            "horizon": self.horizon,
         }
         policy = self.agent_type(**policy_kwargs)
         assert isinstance(policy, Agent)
@@ -399,7 +369,7 @@ class Experiment:
         buffers=None,
         hidden_state=None,
         render: bool = False,
-    ) -> tuple[ReturnHistory, SuccessHistory]:
+    ) -> tuple[ReturnHistory, SpecialMetricHistory]:
         """
         Main policy loop for interacting with the environment.
         """
@@ -428,11 +398,10 @@ class Experiment:
                 GPUSequenceBuffer, self.DEVICE, self.max_seq_len, self.parallel_actors
             )
             obs_seqs = make_buffer()
-            goal_seqs = make_buffer()
             rl2_seqs = make_buffer()
         else:
             # continue interaction from previous epoch
-            obs_seqs, goal_seqs, rl2_seqs = buffers
+            obs_seqs, rl2_seqs = buffers
 
         if hidden_state is None:
             # init new hidden state
@@ -441,18 +410,12 @@ class Experiment:
             )
 
         def get_t(_dones=None):
-            par_obs_goal_rl2 = utils.call_async_env(envs, "current_timestep")
+            par_obs_rl2 = utils.call_async_env(envs, "current_timestep")
             _obs = utils.stack_list_array_dicts(
-                [obs_goal_rl2[0] for obs_goal_rl2 in par_obs_goal_rl2], axis=0
+                [obs_goal_rl2[0] for obs_goal_rl2 in par_obs_rl2], axis=0
             )
-            _goal = np.stack(
-                [obs_goal_rl2[1] for obs_goal_rl2 in par_obs_goal_rl2], axis=0
-            )
-            _rl2 = np.stack(
-                [obs_goal_rl2[2] for obs_goal_rl2 in par_obs_goal_rl2], axis=0
-            )
+            _rl2 = np.stack([obs_goal_rl2[1] for obs_goal_rl2 in par_obs_rl2], axis=0)
             obs_seqs.add_timestep(_obs, _dones)
-            goal_seqs.add_timestep(_goal, _dones)
             rl2_seqs.add_timestep(_rl2, _dones)
 
         if buffers is None:
@@ -460,7 +423,6 @@ class Experiment:
 
         for _ in iter_:
             obs_tc_t = obs_seqs.sequences
-            goals_tc_t = goal_seqs.sequences["_"]
             rl2_tc_t = rl2_seqs.sequences["_"]
             seq_lengths = obs_seqs.sequence_lengths
             time_idxs = obs_seqs.time_idxs
@@ -469,7 +431,6 @@ class Experiment:
                 with self.caster():
                     actions, hidden_state = policy.get_actions(
                         obs=obs_tc_t,
-                        goals=goals_tc_t,
                         rl2s=rl2_tc_t,
                         seq_lengths=seq_lengths,
                         time_idxs=time_idxs,
@@ -485,13 +446,11 @@ class Experiment:
                 envs.render()
 
         return_history = utils.call_async_env(envs, "return_history")
-        success_history = utils.call_async_env(envs, "success_history")
         special_history = utils.call_async_env(envs, "special_history")
         return (
-            (obs_seqs, goal_seqs, rl2_seqs),
+            (obs_seqs, rl2_seqs),
             hidden_state,
             return_history,
-            success_history,
             special_history,
         )
 
@@ -501,7 +460,6 @@ class Experiment:
                 self.train_buffers,
                 self.hidden_state,
                 returns,
-                successes,
                 specials,
             ) = self.interact(
                 self.train_envs,
@@ -511,13 +469,11 @@ class Experiment:
 
     def evaluate_val(self):
         if self.val_timesteps_per_epoch > 0:
-            *_, returns, successes, specials = self.interact(
+            *_, returns, specials = self.interact(
                 self.val_envs,
                 self.val_timesteps_per_epoch,
             )
-            logs_per_process = self.policy_metrics(
-                returns, successes, specials=specials
-            )
+            logs_per_process = self.policy_metrics(returns, specials=specials)
             cur_return = logs_per_process["Average Total Return (Across All Env Names)"]
             if self.verbose:
                 self.accelerator.print(f"Average Return : {cur_return}")
@@ -532,12 +488,12 @@ class Experiment:
         )
         Par = gym.vector.AsyncVectorEnv if self.async_envs else DummyAsyncVectorEnv
         test_envs = Par([make for _ in range(self.parallel_actors)])
-        *_, returns, successes, specials = self.interact(
+        *_, returns, specials = self.interact(
             test_envs,
             timesteps,
             render=render,
         )
-        logs = self.policy_metrics(returns, successes, specials)
+        logs = self.policy_metrics(returns, specials)
         self.log(logs, key="test")
         test_envs.close()
         return logs
@@ -580,18 +536,14 @@ class Experiment:
     def policy_metrics(
         self,
         returns: ReturnHistory,
-        successes: SuccessHistory,
         specials: SpecialMetricHistory,
     ) -> dict:
         returns_by_env_name = defaultdict(list)
-        success_by_env_name = defaultdict(list)
         specials_by_env_name = defaultdict(lambda: defaultdict(list))
 
-        for ret, suc, spe in zip(returns, successes, specials):
+        for ret, spe in zip(returns, specials):
             for env_name, scores in ret.data.items():
                 returns_by_env_name[env_name].extend(scores)
-            for env_name, scores in suc.data.items():
-                success_by_env_name[env_name].extend(scores)
             for env_name, specials_dict in spe.data.items():
                 for special_key, special_val in specials_dict.items():
                     specials_by_env_name[env_name][special_key].extend(special_val)
@@ -599,10 +551,6 @@ class Experiment:
         avg_ret_per_env = {
             f"Average Total Return in {name}": np.array(scores).mean()
             for name, scores in returns_by_env_name.items()
-        }
-        avg_suc_per_env = {
-            f"Average Success Rate in {name}": np.array(scores).mean()
-            for name, scores in success_by_env_name.items()
         }
         avg_special_per_env = {
             f"Average {special_key} in {name}": np.array(special_vals).mean()
@@ -614,9 +562,7 @@ class Experiment:
                 list(avg_ret_per_env.values())
             ).mean()
         }
-        return (
-            avg_ret_per_env | avg_suc_per_env | avg_return_overall | avg_special_per_env
-        )
+        return avg_ret_per_env | avg_return_overall | avg_special_per_env
 
     def compute_loss(self, batch: Batch, log_step: bool):
         critic_loss, actor_loss = self.policy_aclr(batch, log_step=log_step)
@@ -648,7 +594,6 @@ class Experiment:
             "Critic Grad Norm": ggn(pi.critics),
             "TrajEncoder Grad Norm": ggn(pi.traj_encoder),
             "TstepEncoder Grad Norm": ggn(pi.tstep_encoder),
-            "TstepEncoder Goal Emb. Grad Norm": ggn(pi.tstep_encoder.goal_emb),
         }
         return grads
 

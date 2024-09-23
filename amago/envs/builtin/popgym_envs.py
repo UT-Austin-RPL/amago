@@ -5,7 +5,7 @@ import numpy as np
 import popgym
 from popgym.wrappers import Flatten, DiscreteAction
 
-from amago.envs.builtin.gym_envs import GymEnv
+from amago.envs import AMAGOEnv
 
 
 class _MultiDiscreteToBox(gym.ObservationWrapper):
@@ -40,7 +40,7 @@ class _DiscreteToBox(gym.ObservationWrapper):
         return arr
 
 
-class POPGymAMAGO(GymEnv):
+class POPGymAMAGO(AMAGOEnv):
     def __init__(self, env_name: str):
         str_to_cls = {v["id"]: k for k, v in popgym.envs.ALL.items()}
         env = str_to_cls[env_name]()
@@ -51,9 +51,7 @@ class POPGymAMAGO(GymEnv):
             env = _DiscreteToBox(env)
         elif isinstance(env.observation_space, gym.spaces.MultiDiscrete):
             env = _MultiDiscreteToBox(env)
-        super().__init__(
-            env, env_name=env_name, horizon=10_000, start=0, zero_shot=True
-        )
+        super().__init__(env, env_name=env_name)
 
 
 class MultiDomainPOPGym(gym.Env):
@@ -90,8 +88,6 @@ class MultiDomainPOPGym(gym.Env):
 
     def __init__(self, warmup_episodes: int = 1):
         self.warmup_episodes = warmup_episodes
-
-        str_to_cls = {v["id"]: k for k, v in popgym.envs.ALL.items()}
         self.name_to_env = {}
         for cls, id_dict in popgym.envs.ALL.items():
             raw_name = id_dict["id"].split("-")[1]
@@ -154,10 +150,10 @@ class MultiDomainPOPGym(gym.Env):
         return next_obs, shown_reward, shown_done, False, info
 
 
-class MultiDomainPOPGymAMAGO(GymEnv):
+class MultiDomainPOPGymAMAGO(AMAGOEnv):
     def __init__(self, warmup_episodes: int = 1):
         env = MultiDomainPOPGym(warmup_episodes)
-        super().__init__(env, env_name="TODO", horizon=10_000, start=0, zero_shot=True)
+        super().__init__(env, env_name="TODO")
 
     @property
     def env_name(self):

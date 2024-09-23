@@ -12,10 +12,10 @@ import gymnasium as gym
 import numpy as np
 
 from amago.envs.env_utils import space_convert
-from amago.envs.builtin.gym_envs import GymEnv
+from amago.envs import AMAGOEnv
 
 
-class Metaworld(GymEnv):
+class Metaworld(AMAGOEnv):
     def __init__(self, benchmark_name: str, split: str, k_shots):
         if benchmark_name == "ml10":
             benchmark = metaworld.ML10()
@@ -31,9 +31,6 @@ class Metaworld(GymEnv):
         super().__init__(
             gym_env=env,
             env_name=f"metaworld_{benchmark_name}",
-            horizon=k_shots * 500 + 1,
-            start=0,
-            zero_shot=True,
         )
 
     @property

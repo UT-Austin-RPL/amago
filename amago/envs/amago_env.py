@@ -1,6 +1,5 @@
-import random
 from abc import ABC, abstractmethod
-import copy
+from typing import Optional
 
 import numpy as np
 import gym as og_gym
@@ -12,15 +11,16 @@ from amago.envs.env_utils import (
     MultiBinaryActionWrapper,
     space_convert,
 )
-from amago.hindsight import Trajectory, GoalSeq, Timestep
+from amago.hindsight import Timestep
 
 
-class AMAGOEnv(gym.Wrapper, ABC):
-    def __init__(self, env: gym.Env, horizon: int, start: int = 0):
+class AMAGOEnv(gym.Wrapper):
+    def __init__(
+        self, env: gym.Env, env_name: Optional[str] = None, batched_envs: int = 1
+    ):
         super().__init__(env)
-
-        self.horizon = horizon
-        self.start = start
+        self.batched_envs = batched_envs
+        self._env_name = env_name
 
         # action space conversion
         self.discrete = isinstance(space_convert(env.action_space), gym.spaces.Discrete)
@@ -50,28 +50,15 @@ class AMAGOEnv(gym.Wrapper, ABC):
         return self.env.render(*args, **kwargs)
 
     @property
-    @abstractmethod
     def env_name(self):
-        raise NotImplementedError
-
-    @property
-    @abstractmethod
-    def achieved_goal(self) -> list[np.ndarray]:
-        raise NotImplementedError
-
-    @property
-    @abstractmethod
-    def kgoal_space(self) -> gym.spaces.Box:
-        raise NotImplementedError
-
-    @property
-    @abstractmethod
-    def goal_sequence(self) -> GoalSeq:
-        raise NotImplementedError
-
-    @property
-    def max_goal_seq_length(self):
-        return self.kgoal_space.shape[0]
+        """
+        Dynamically change the name of the current environment in a multi-task setting
+        """
+        if self._env_name is None:
+            raise ValueError(
+                "AMAGOEnv env_name is not set. Pass `env_name` on init or override `env_name` property."
+            )
+        return self._env_name
 
     @property
     def blank_action(self):
@@ -95,74 +82,66 @@ class AMAGOEnv(gym.Wrapper, ABC):
         return self.env.reset(seed=seed, options=options)
 
     def reset(self, seed=None, options=None) -> Timestep:
-        self.step_count = 0
+        self.step_count = np.zeros((self.batched_envs,), dtype=np.int32)
         obs, info = self.inner_reset(seed=seed, options=options)
         if not isinstance(obs, dict):
             obs = {"observation": obs}
-        timestep = Timestep(
-            obs=obs,
-            prev_action=self.make_action_rep(self.blank_action),
-            achieved_goal=self.achieved_goal,
-            goal_seq=self.goal_sequence,
-            time=0.0,
-            reset=True,
-            real_reward=None,
-            terminal=False,
-            raw_time_idx=0,
-        )
-        return timestep, info
+        if self.batched_envs == 1:
+            obs = [obs]
+        else:
+            obs = [
+                {k: v[idx] for k, v in obs.items()} for idx in range(self.batched_envs)
+            ]
+        timesteps = []
+        for o in obs:
+            timesteps.append(
+                Timestep(
+                    obs=o,
+                    prev_action=self.make_action_rep(self.blank_action),
+                    reward=0.0,
+                    terminal=False,
+                    time_idx=0,
+                ),
+            )
+        if self.batched_envs == 1:
+            timesteps = timesteps[0]
+        return timesteps, info
 
     def inner_step(self, action):
         return self.env.step(action)
 
-    def step(
-        self,
-        action,
-        normal_rl_reward: bool = False,
-        normal_rl_reset: bool = False,
-        soft_reset_kwargs: dict = {},
-    ) -> tuple[Timestep, float, bool, bool, dict]:
-        # freeze goal sequence before this timestep
-        goal_seq = copy.deepcopy(self.goal_sequence)
-
+    def step(self, action: np.ndarray) -> tuple[Timestep, float, bool, bool, dict]:
         # take environment step
-        obs, real_reward, terminated, truncated, info = self.inner_step(action)
-        self.step_count += 1
-
-        if not normal_rl_reward:
-            real_reward = None
-        elif self.step_count < self.start:
-            real_reward = 0.0
-
-        soft_done = terminated or truncated
-        if soft_done and not normal_rl_reset:
-            # roll through episode resets
-            obs, info = self.env.reset(**soft_reset_kwargs)
-
+        obs, rewards, terminated, truncated, info = self.inner_step(action)
         if not isinstance(obs, dict):
             obs = {"observation": obs}
-        # create Timestep. goal_seq holds desired goal before this timestep,
-        # achieved_goal holds goal we actually achieved this timestep.
-        timestep = Timestep(
-            obs=obs,
-            prev_action=self.make_action_rep(action),
-            achieved_goal=copy.deepcopy(self.achieved_goal),
-            goal_seq=goal_seq,
-            time=float(self.step_count) / self.horizon,
-            reset=soft_done,
-            real_reward=real_reward,
-            raw_time_idx=self.step_count,
-        )
+        if self.batched_envs == 1:
+            action = action[np.newaxis, :]
+            rewards = [rewards]
+            terminated = [terminated]
+            truncated = [truncated]
+            obs = {k: [v] for k, v in obs.items()}
 
-        # meta-termination (triggers resets of this environment,
-        # and used during optimization)
-        outer_terminated = (
-            normal_rl_reset and terminated
-        ) or timestep.all_goals_completed
-        outer_truncated = self.step_count >= self.horizon or (
-            truncated and normal_rl_reset
-        )
-        if outer_terminated or outer_truncated:
-            timestep.terminal = True
+        timesteps = []
+        for idx in range(self.batched_envs):
+            self.step_count[idx] += 1
+            done = terminated[idx] or truncated[idx]
+            timesteps.append(
+                Timestep(
+                    obs={k: v[idx] for k, v in obs.items()},
+                    prev_action=self.make_action_rep(action[idx]),
+                    reward=rewards[idx],
+                    terminal=done,
+                    time_idx=self.step_count[idx],
+                )
+            )
+            if done:
+                self.step_count[idx] = 0
 
-        return timestep, timestep.reward, outer_terminated, outer_truncated, info
+        if self.batched_envs == 1:
+            timesteps = timesteps[0]
+            rewards = rewards[0]
+            terminated = terminated[0]
+            truncated = truncated[0]
+
+        return timesteps, rewards, terminated, truncated, info

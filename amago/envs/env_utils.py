@@ -15,7 +15,7 @@ import gin
 from einops import rearrange
 
 from amago.loading import MAGIC_PAD_VAL
-from amago.hindsight import Timestep, Trajectory, GoalSeq
+from amago.hindsight import Timestep, Trajectory
 from amago.utils import amago_warning
 
 
@@ -203,23 +203,17 @@ class GPUSequenceBuffer:
 
 class ExplorationWrapper(ABC, gym.ActionWrapper):
 
-    def __init__(self, env : gym.Env, parallel_envs: int = 1):
-        super().__init__(env)
-        self.parallel_envs = parallel_envs
+    def __init__(self, amago_env):
+        super().__init__(amago_env)
+        self.batched_envs = amago_env.batched_envs
 
     @abstractmethod
-    def add_exploration_noise(self, action: np.ndarray, local_step: int, horizon: int):
+    def add_exploration_noise(self, action: np.ndarray, local_step: int):
         raise NotImplementedError
 
     def action(self, a: np.ndarray):
-        if self.parallel_envs == 1:
-            # use a dummy batch dimension to write the exploration wrapper in batch mode
-            a = a[np.newaxis, :]
-        else:
-            assert a.shape[0] == self.parallel_envs, "Parallel envs must be equal to the action batch size"
-        action =  self.add_exploration_noise(a, self.env.step_count, self.env.horizon)
-        if self.parallel_envs == 1:
-            action = action[0]
+        assert a.shape[0] == self.batched_envs
+        action = self.add_exploration_noise(a, self.env.step_count)
         return action
 
     @property
@@ -242,19 +236,20 @@ class BilevelEpsilonGreedy(ExplorationWrapper):
 
     def __init__(
         self,
-        env: gym.Env,
-        parallel_envs: int = 1,
+        amago_env,
+        rollout_horizon: int,
         eps_start_start: float = 1.0,  # start of training, start of rollout
         eps_start_end: float = 0.05,  # end of training, start of rollout
         eps_end_start: float = 0.8,  # start of training, end of rollout
         eps_end_end: float = 0.01,  # end of training, end of rollout
         steps_anneal: int = 1_000_000,
     ):
-        super().__init__(env, parallel_envs=parallel_envs)
+        super().__init__(amago_env)
         self.eps_start_start = eps_start_start
         self.eps_start_end = eps_start_end
         self.eps_end_start = eps_end_start
         self.eps_end_end = eps_end_end
+        self.rollout_horizon = rollout_horizon
 
         self.start_global_slope = (eps_start_start - eps_start_end) / steps_anneal
         self.end_global_slope = (eps_end_start - eps_end_end) / steps_anneal
@@ -265,10 +260,11 @@ class BilevelEpsilonGreedy(ExplorationWrapper):
     def reset(self, *args, **kwargs):
         out = super().reset(*args, **kwargs)
         np.random.seed(random.randint(0, 1e6))
-        self.global_multiplier = np.random.rand(self.parallel_envs)
+        # self.global_multiplier = np.random.rand(self.parallel_envs)
+        self.global_multiplier = np.ones(self.batched_envs)
         return out
 
-    def current_eps(self, local_step: int, horizon: int):
+    def current_eps(self, local_step: np.ndarray):
         ep_start = max(
             self.eps_start_start - self.start_global_slope * self.global_step,
             self.eps_start_end,
@@ -277,19 +273,22 @@ class BilevelEpsilonGreedy(ExplorationWrapper):
             self.eps_end_start - self.end_global_slope * self.global_step,
             self.eps_end_end,
         )
-        local_progress = float(local_step) / horizon
+        local_progress = local_step / self.rollout_horizon
         current = self.global_multiplier * (
             ep_start - ((ep_start - ep_end) * local_progress)
         )
         return current
 
-    def add_exploration_noise(self, action, local_step, horizon):
-        noise = self.current_eps(local_step, horizon)
+    def add_exploration_noise(self, action: np.ndarray, local_step: np.ndarray):
+        assert action.shape[0] == self.batched_envs
+        assert local_step.shape[0] == self.batched_envs
+
+        noise = self.current_eps(local_step)
         if self.discrete:
             # epsilon greedy (DQN-style)
             num_actions = self.env.action_space.n
-            random_action = np.random.randint(0, num_actions, size=(self.parallel_envs,))
-            use_random = np.random.rand(self.parallel_envs) <= noise
+            random_action = np.random.randint(0, num_actions, size=(self.batched_envs,))
+            use_random = np.random.rand(self.batched_envs) <= noise
             if use_random:
                 expl_action = np.full_like(action, random_action)
             else:
@@ -301,6 +300,8 @@ class BilevelEpsilonGreedy(ExplorationWrapper):
             expl_action = np.clip(expl_action, -1.0, 1.0).astype(np.float32)
             assert expl_action.dtype == np.float32
         self.global_step += 1
+
+        assert expl_action.shape[0] == self.batched_envs
         return expl_action
 
 
@@ -312,15 +313,14 @@ class EpsilonGreedy(BilevelEpsilonGreedy):
 
     def __init__(
         self,
-        env: gym.Env,
-        parallel_envs: int = 1,
+        amago_env,
         eps_start: float = 1.0,
         eps_end: float = 0.05,
         steps_anneal: int = 1_000_000,
     ):
         super().__init__(
-            env,
-            parallel_envs=parallel_envs,
+            amago_env,
+            rollout_horizon=float("inf"),
             eps_start_start=eps_start,
             eps_start_end=eps_end,
             eps_end_start=eps_start,
@@ -338,9 +338,6 @@ class ReturnHistory:
             self.data[env_name].append(score)
         else:
             self.data[env_name] = [score]
-
-
-SuccessHistory = ReturnHistory
 
 
 class SpecialMetricHistory:
@@ -365,11 +362,10 @@ AMAGO_ENV_LOG_PREFIX = SpecialMetricHistory.log_prefix
 
 class SequenceWrapper(gym.Wrapper):
     """
-    A wrapper that handles automatic resets, saving trajectory files to disk,
-    and rollout metrics. Automatically logs total return in all envs.
-    When using the goal-conditioned / relabeling system, this will
-    log meaningful total success rates. We also log any metric from the
-    gym env's `info` dict that begins with "AMAGO_LOG_METRIC"
+    A wrapper that saves trajectory files to disk and logs rollout metrics.
+    Automatically logs total return in all envs.
+
+    We also log any metric from the gym env's `info` dict that begins with "AMAGO_LOG_METRIC"
     (`amago.envs.env_utils.AMAGO_ENV_LOG_PREFIX`).
     """
 
@@ -407,11 +403,10 @@ class SequenceWrapper(gym.Wrapper):
             action_shape = self.env.action_space.n
         else:
             action_shape = self.env.action_space.shape[-1]
-        rl2_shape = action_shape + 3  # action + reward + done + time
-        self.gcrl2_space = gym.spaces.Dict(
+        rl2_shape = action_shape + 1  # action + reward
+        self.rl2_space = gym.spaces.Dict(
             {
                 "obs": self.env.observation_space,
-                "goal": self.env.kgoal_space,
                 "rl2": gym.spaces.Box(
                     shape=(rl2_shape,),
                     dtype=np.float32,
@@ -425,21 +420,14 @@ class SequenceWrapper(gym.Wrapper):
     def step_count(self):
         return self.env.step_count
 
-    @property
-    def horizon(self):
-        return self.env.horizon
-
     def reset_stats(self):
         # stores all of the success/return histories
         self.return_history = ReturnHistory(self.env_name)
-        self.success_history = SuccessHistory(self.env_name)
         self.special_history = SpecialMetricHistory(self.env_name)
 
     def reset(self, seed=None) -> Timestep:
         timestep, info = self.env.reset(seed=seed)
-        self.active_traj = Trajectory(
-            max_goals=self.env.max_goal_seq_length, timesteps=[timestep]
-        )
+        self.active_traj = Trajectory(timesteps=[timestep])
         self.since_last_save = 0
         self.save_this_time = (
             random.randint(*self.save_every) if self.save_every else None
@@ -456,24 +444,16 @@ class SequenceWrapper(gym.Wrapper):
         for info_key, info_val in info.items():
             if info_key.startswith(self.special_history.log_prefix):
                 self.special_history.add_score(self.env.env_name, info_key, info_val)
-
         if timestep.terminal:
             self.return_history.add_score(self.env.env_name, self.total_return)
-            success = (
-                self.active_traj.is_success
-                if "success" not in info
-                else info["success"]
-            )
-            self.success_history.add_score(self.env.env_name, success)
 
         save = (
             self.save_every is not None and self.since_last_save > self.save_this_time
         )
         if (timestep.terminal or save) and self.make_dset:
             self.log_to_disk()
-            self.active_traj = Trajectory(
-                max_goals=self.env.max_goal_seq_length, timesteps=[timestep]
-            )
+            self.active_traj = Trajectory(timesteps=[timestep])
+
         self._current_timestep = self.active_traj.make_sequence(last_only=True)
         self._total_frames += 1
         self._total_frames_by_env_name[self.env.env_name] += 1
@@ -500,24 +480,144 @@ class SequenceWrapper(gym.Wrapper):
     def total_frames_by_env_name(self) -> dict[str, int]:
         return self._total_frames_by_env_name
 
-    def turn_off_exploration(self):
-        if isinstance(self.env, ExplorationWrapper):
-            self.env.turn_off_exploration()
-
-    def turn_on_exploration(self):
-        if isinstance(self.env, ExplorationWrapper):
-            self.env.turn_on_exploration()
-
     @property
     def current_timestep(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         return self._current_timestep
 
 
+class AlreadyVectorizedSequenceWrapper(SequenceWrapper):
+    def __init__(
+        self,
+        env,
+        save_every: tuple[int, int] | None = None,
+        make_dset: bool = False,
+        dset_root: str = None,
+        dset_name: str = None,
+        dset_split: str = None,
+        save_trajs_as: str = "trajectory",
+    ):
+        super().__init__(
+            env,
+            save_every=save_every,
+            make_dset=make_dset,
+            dset_root=dset_root,
+            dset_name=dset_name,
+            dset_split=dset_split,
+            save_trajs_as=save_trajs_as,
+        )
+        self.batched_envs = env.batched_envs
+
+    def split_timesteps(self, timestep: Timestep, reset: bool) -> tuple[Timestep]:
+        breakpoint()
+        timesteps = []
+        for idx in range(self.batched_envs):
+            if reset:
+                action = timestep.prev_action
+                reward = timestep.reward
+            else:
+                action = timestep.prev_action[idx]
+                reward = timestep.reward[idx]
+            timesteps = Timestep(
+                obs={k: v[idx] for k, v in timestep.obs.items()},
+                prev_action=action,
+                reward=reward,
+                reset=reset,
+                real_reward=timestep.real_reward[idx],
+            )
+
+    def split_info(self, info: dict) -> tuple[dict]:
+        if info:
+            breakpoint()
+
+    def log_to_disk(self):
+        traj_name = f"{self.env.env_name.strip().replace('_', '')}_{uuid4().hex[:8]}_{time.time()}"
+        path = os.path.join(self.dset_write_dir, traj_name)
+        self.active_traj.save_to_disk(
+            path,
+            save_as=self.save_trajs_as,
+        )
+        self.since_last_save = 0
+
+    def reset(self, seed=None) -> tuple[np.ndarray, list]:
+        _timestep, _info = self.env.reset(seed=seed)
+        timesteps = self.split_timesteps(_timstep, reset=True)
+        infos = self.split_info(_info)
+        assert len(timesteps) == self.batched_envs
+        self.active_trajs = [
+            Trajectory(max_goals=self.env.max_goal_seq_length, timesteps=[t])
+            for t in timesteps
+        ]
+        self.since_last_save = [0 for _ in range(self.batched_envs)]
+        self.save_this_time = [
+            random.randint(*self.save_every) if self.save_every else None
+            for _ in range(self.batched_envs)
+        ]
+        self.total_return = np.zeros(self.env.batched_envs)
+        self._current_timesteps = [
+            traj.make_sequence(last_only=True) for traj in self.active_trajs
+        ]
+        return [tstep.obs for tstep in timesteps], infos
+
+    def sequence(self):
+        return [traj.make_sequence() for traj in self.active_trajs]
+
+    def step(self, action):
+        breakpoint()
+        _timestep, reward, terminated, truncated, _info = self.env.step(action)
+        timesteps = self.split_timesteps(_timestep)
+        infos = self.split_info(_info)
+
+        self.total_return += reward
+
+        self._current_timesteps = []
+        obs = []
+        assert len(timesteps) == self.batched_envs
+        for idx in range(self.batched_envs):
+            self.active_trajs[idx].add_timestep(timesteps[idx])
+            self.since_last_save[idx] += 1
+            self.total_return[idx] += reward[idx]
+            for info_key, info_val in infos[idx].items():
+                if info_key.startswith(self.special_history.log_prefix):
+                    self.special_history.add_score(
+                        self.env.env_name, info_key, info_val
+                    )
+
+            if timesteps[idx].terminal:
+                self.return_history.add_score(self.env.env_name, self.total_return[idx])
+                success = (
+                    self.active_trajs[idx].is_success
+                    if "success" not in infos[idx]
+                    else infos[idx]["success"]
+                )
+                self.success_history.add_score(self.env.env_name, success)
+
+            save = (
+                self.save_every is not None
+                and self.since_last_save[idx] > self.save_this_time[idx]
+            )
+            if timesteps[idx].terminal or save:
+                self.log_to_disk(idx=idx)
+                self.active_trajs[idx] = Trajectory(
+                    max_goals=self.env.max_goal_seq_length, timesteps=[timesteps[idx]]
+                )
+            self._current_timesteps.append(
+                self.active_trajs[idx].make_sequence(last_only=True)
+            )
+            obs.append(timesteps[idx].obs)
+        self._total_frames += self.batched_envs
+        self._total_frames_by_env_name[self.env.env_name] += self.batched_envs
+        return obs, reward, terminated, truncated, infos
+
+    def log_to_disk(self, idx: int):
+        traj_name = f"{self.env.env_name.strip().replace('_', '')}_{uuid4().hex[:8]}_{time.time()}"
+        path = os.path.join(self.dset_write_dir, traj_name)
+        self.active_trajs[idx].save_to_disk(path, save_as=self.save_trajs_as)
+        self.since_last_save[idx] = 0
+
 
 @dataclass
 class EnvCreator:
     make_env: Callable
-    already_vectorized: bool
     make_dset: bool
     dset_root: str
     dset_name: str
@@ -538,15 +638,17 @@ class EnvCreator:
         else:
             self.save_every_low = self.save_every_high = self.traj_save_len
         self.horizon = -float("inf")
-        self.gcrl2_space = None
+        self.rl2_space = None
 
     def __call__(self):
         env = self.make_env()
-        self.horizon = max(self.horizon, env.horizon)
+        already_vectorized = env.batched_envs > 1
         if self.exploration_wrapper_Cls is not None:
-            parallel_envs = 1 if not self.already_vectorized else env.reset()[0].shape[0]
-            env = self.exploration_wrapper_Cls(env, parallel_envs=parallel_envs)
-        env = SequenceWrapper(
+            env = self.exploration_wrapper_Cls(env)
+        SeqWrapper = (
+            AlreadyVectorizedSequenceWrapper if already_vectorized else SequenceWrapper
+        )
+        env = SeqWrapper(
             env,
             save_every=(self.save_every_low, self.save_every_high),
             make_dset=self.make_dset,
@@ -555,5 +657,5 @@ class EnvCreator:
             dset_split=self.dset_split,
             save_trajs_as=self.save_trajs_as,
         )
-        self.gcrl2_space = env.gcrl2_space
+        self.rl2_space = env.rl2_space
         return env

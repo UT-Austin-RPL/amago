@@ -310,7 +310,6 @@ class Transformer(nn.Module):
     def __init__(
         self,
         inp_dim: int,
-        max_pos_idx: int,
         d_model: int = 128,
         d_ff: int = 512,
         d_emb_ff: int = None,
@@ -324,19 +323,12 @@ class Transformer(nn.Module):
         activation: str = "leaky_relu",
         norm: str = "layer",
         causal: bool = True,
-        pos_emb: str = "learnable",
     ):
         super().__init__()
         assert attention in ["flash", "vanilla"]
-        assert pos_emb in ["learnable", "fixed"]
 
         # embedding
-        if pos_emb == "learnable":
-            self.position_embedding = nn.Embedding(
-                max_pos_idx + 1, embedding_dim=d_model
-            )
-        elif pos_emb == "fixed":
-            self.position_embedding = FixedPosEmb(d_model)
+        self.position_embedding = FixedPosEmb(d_model)
         d_emb_ff = d_emb_ff or d_model
         self.inp = nn.Linear(inp_dim, d_model)
         self.dropout = nn.Dropout(dropout_emb)

@@ -127,7 +127,6 @@ class RLData:
             traj = traj.freeze()
         assert isinstance(traj, FrozenTraj)
         self.obs = {k: torch.from_numpy(v) for k, v in traj.obs.items()}
-        self.goals = torch.from_numpy(traj.goals).float()
         self.rl2s = torch.from_numpy(traj.rl2s).float()
         self.time_idxs = torch.from_numpy(traj.time_idxs).long()
         self.rews = torch.from_numpy(traj.rews).float()
@@ -141,7 +140,6 @@ class RLData:
         i = random.randrange(0, max(len(self) - length + 1, 1))
         # the causal RL loss requires these off-by-one lengths
         self.obs = {k: v[i : i + length + 1] for k, v in self.obs.items()}
-        self.goals = self.goals[i : i + length + 1]
         self.rl2s = self.rl2s[i : i + length + 1]
         self.time_idxs = self.time_idxs[i : i + length + 1]
         self.dones = self.dones[i : i + length]
@@ -161,7 +159,6 @@ class Batch:
     """
 
     obs: dict[torch.Tensor]
-    goals: torch.Tensor
     rl2s: torch.Tensor
     rews: torch.Tensor
     dones: torch.Tensor
@@ -170,7 +167,6 @@ class Batch:
 
     def to(self, device):
         self.obs = {k: v.to(device) for k, v in self.obs.items()}
-        self.goals = self.goals.to(device)
         self.rl2s = self.rl2s.to(device)
         self.rews = self.rews.to(device)
         self.dones = self.dones.to(device)
@@ -182,7 +178,6 @@ class Batch:
 def RLData_pad_collate(samples: list[RLData]) -> Batch:
     assert samples[0].obs.keys() == samples[-1].obs.keys()
     obs = {k: pad([s.obs[k] for s in samples]) for k in samples[0].obs.keys()}
-    goals = pad([s.goals for s in samples])
     rl2s = pad([s.rl2s for s in samples])
     rews = pad([s.rews for s in samples])
     dones = pad([s.dones for s in samples])
@@ -190,7 +185,6 @@ def RLData_pad_collate(samples: list[RLData]) -> Batch:
     time_idxs = pad([s.time_idxs for s in samples])
     return Batch(
         obs=obs,
-        goals=goals,
         rl2s=rl2s,
         rews=rews,
         dones=dones,

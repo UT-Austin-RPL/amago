@@ -178,21 +178,6 @@ def switch_tstep_encoder(config: dict, arch: str, **kwargs):
     return config
 
 
-def turn_off_goal_conditioning(config: dict):
-    """
-    Make the goal embedding network redundant when the environment is not goal-conditioned.
-    This applies to most environments that do not use hindsight relabeling.
-    """
-    config.update(
-        {
-            "amago.nets.tstep_encoders.TstepEncoder.goal_emb_Cls": amago.nets.goal_embedders.FFGoalEmb,
-            "amago.nets.goal_embedders.FFGoalEmb.zero_embedding": True,
-            "amago.nets.goal_embedders.FFGoalEmb.goal_emb_dim": 1,
-        }
-    )
-    return config
-
-
 def switch_traj_encoder(config: dict, arch: str, memory_size: int, layers: int):
     """
     Convenient way to switch between TrajEncoders of different sizes without gin config files.

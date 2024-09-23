@@ -7,17 +7,14 @@ import gym as og_gym
 import numpy as np
 import gymnasium as gym
 
-from amago.envs.builtin.gym_envs import GymEnv
+from amago.envs import AMAGOEnv
 
 
-class ProcgenAMAGO(GymEnv):
-    def __init__(self, env, horizon: int):
+class ProcgenAMAGO(AMAGOEnv):
+    def __init__(self, env):
         super().__init__(
             gym_env=env,
             env_name="Procgen",
-            horizon=horizon,
-            start=0,
-            zero_shot=True,
         )
 
     @property
