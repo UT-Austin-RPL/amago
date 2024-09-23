@@ -10,7 +10,11 @@ import minigrid
 
 from amago.envs import AMAGOEnv
 from amago.hindsight import GoalSeq
-from amago.envs.env_utils import space_convert, DiscreteActionWrapper
+from amago.envs.env_utils import (
+    space_convert,
+    DiscreteActionWrapper,
+    AMAGO_ENV_LOG_PREFIX,
+)
 
 
 BANNED_BABYAI_TASKS = [
@@ -181,6 +185,9 @@ class MultitaskMetaBabyAI(gym.Env):
         next_obs, reward, terminated, truncated, info = self.env.step(action)
         done = False
         if terminated or truncated:
+            info[f"{AMAGO_ENV_LOG_PREFIX}Episode {self.current_episode} Success"] = (
+                reward > 0.0
+            )
             self.current_episode += 1
             if self.current_episode > self.k_episodes:
                 done = True
