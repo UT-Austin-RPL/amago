@@ -27,6 +27,7 @@ from amago.envs.env_utils import (
     SequenceWrapper,
     GPUSequenceBuffer,
     DummyAsyncVectorEnv,
+    AlreadyVectorizedEnv,
     EnvCreator,
 )
 from .loading import Batch, TrajDset, RLData_pad_collate, MAGIC_PAD_VAL
@@ -106,20 +107,20 @@ class Experiment:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             warnings.filterwarnings("always", category=utils.AmagoWarning)
-            self.init_envs()
+            env_summary = self.init_envs()
         self.init_dsets()
         self.init_dloaders()
         self.init_model()
         self.init_checkpoints()
         self.init_logger()
         if self.verbose:
-            self.summary()
+            self.summary(env_summary=env_summary)
 
     @property
     def DEVICE(self):
         return self.accelerator.device
 
-    def summary(self):
+    def summary(self, env_summary: str):
         total_params = utils.count_params(self.policy)
 
         assert (
@@ -130,6 +131,7 @@ class Experiment:
             f"""\n\n \t\t {colored('AMAGO v2', 'green')}
             \t -------------------------
             \t Agent Type: {self.policy.__class__.__name__}
+            \t Environment: {env_summary}
             \t Policy Max Sequence Length: {self.max_seq_len}
             \t Trajectory File Sequence Length: {self.traj_save_len}
             \t Mixed Precision: {self.mixed_precision.upper()}
@@ -143,16 +145,11 @@ class Experiment:
         assert self.traj_save_len >= self.max_seq_len
 
         if self.env_mode in ["async", "sync"]:
-            make_val_envs = (
-                [self.make_val_env] * self.parallel_actors
-                if not isinstance(self.make_val_env, Iterable)
-                else self.make_val_env
+            to_env_list = lambda e: (
+                [e] * self.parallel_actors if not isinstance(e, Iterable) else e
             )
-            make_train_envs = (
-                [self.make_train_env] * self.parallel_actors
-                if not isinstance(self.make_train_env, Iterable)
-                else self.make_train_env
-            )
+            make_val_envs = to_env_list(self.make_val_env)
+            make_train_envs = to_env_list(self.make_train_env)
             if not len(make_train_envs) == self.parallel_actors:
                 utils.amago_warning(
                     f"`Experiment.parallel_actors` is {self.parallel_actors} but `make_train_env` is a list of length {len(make_train_envs)}"
@@ -161,10 +158,15 @@ class Experiment:
                 utils.amago_warning(
                     f"`Experiment.parallel_actors` is {self.parallel_actors} but `make_val_env` is a list of length {len(make_val_envs)}"
                 )
-            already_vectorized = False
-        elif self.env_mode == "vectorized":
+            Par = (
+                gym.vector.AsyncVectorEnv
+                if self.env_mode == "async"
+                else DummyAsyncVectorEnv
+            )
+        elif self.env_mode == "already_vectorized":
             make_train_envs = [self.make_train_env]
             make_val_envs = [self.make_val_env]
+            Par = AlreadyVectorizedEnv
         else:
             raise ValueError(f"Invalid `env_mode` {self.env_mode}")
 
@@ -208,20 +210,29 @@ class Experiment:
         ]
 
         # make parallel envs
-        if self.env_mode == "async":
-            Par = gym.vector.AsyncVectorEnv
-        elif self.env_mode in ["sync", "vectorized"]:
-            Par = DummyAsyncVectorEnv
         self.train_envs = Par(make_train)
         self.train_envs.reset()
+        self.rl2_space = make_train[0].rl2_space
+        detected = len(utils.call_async_env(self.train_envs, "current_timestep"))
+        if detected != self.parallel_actors:
+            utils.amago_warning(
+                f"Experiment.parallel_actors ({self.parallel_actors}) does not match the batch dimension of the environment ({detected})"
+            )
         self.val_envs = Par(make_val)
         self.val_envs.reset()
 
-        self.rl2_space = make_train[0].rl2_space
         # self.train_buffers holds the env state between rollout cycles
         # that are shorter than the horizon length
         self.train_buffers = None
         self.hidden_state = None
+
+        if self.env_mode == "already_vectorized":
+            _inner = f"Vectorized Gym Env (x{self.parallel_actors})"
+            _desc = f"{Par.__name__}({_inner})"
+        else:
+            _inner = "Gym Env"
+            _desc = f"{Par.__name__}({_inner} x {self.parallel_actors})"
+        return _desc
 
     def init_checkpoints(self):
         self.ckpt_dir = os.path.join(
@@ -411,10 +422,15 @@ class Experiment:
 
         def get_t(_dones=None):
             par_obs_rl2 = utils.call_async_env(envs, "current_timestep")
-            _obs = utils.stack_list_array_dicts(
-                [obs_goal_rl2[0] for obs_goal_rl2 in par_obs_rl2], axis=0
-            )
-            _rl2 = np.stack([obs_goal_rl2[1] for obs_goal_rl2 in par_obs_rl2], axis=0)
+            assert len(par_obs_rl2) == self.parallel_actors
+            _obs = []
+            _rl2 = []
+            for _outer_parallel in par_obs_rl2:
+                for _inner_parallel in _outer_parallel:
+                    _obs.append(_inner_parallel[0])
+                    _rl2.append(_inner_parallel[1])
+            _obs = utils.stack_list_array_dicts(_obs, axis=0)
+            _rl2 = np.stack(_rl2, axis=0)
             obs_seqs.add_timestep(_obs, _dones)
             rl2_seqs.add_timestep(_rl2, _dones)
 

@@ -25,9 +25,9 @@ def add_common_cli(parser: ArgumentParser) -> ArgumentParser:
     )
     parser.add_argument(
         "--env_mode",
-        choices=["async", "sync", "vectorized"],
+        choices=["async", "sync", "already_vectorized"],
         default="async",
-        help="`async` runs single-threaded environments in parallel, `sync` imitates the same parallel API but runs each step sequentially to save overhead, `vectorized` should be used for environments that are already parallelized at the lowest wrapper level (e.g. they're jax accelerated).",
+        help="`async` runs single-threaded environments in parallel, `sync` imitates the same parallel API but runs each step sequentially to save overhead, `already_vectorized` should be used for environments that are already parallelized at the lowest wrapper level (e.g. they're jax accelerated and have a batch dimension).",
     )
     parser.add_argument(
         "--no_log",

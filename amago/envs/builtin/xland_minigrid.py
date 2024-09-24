@@ -101,6 +101,7 @@ class XLandMiniGridEnv(gym.Env):
         }
 
     def reset(self, *args, **kwargs):
+        print("reset!!!")
         ruleset = self.x_sample(self.ruleset_keys)
         self.env_params = self.env_params.replace(ruleset=ruleset)
         self.x_timestep = self.x_reset(self.env_params, self.reset_keys)

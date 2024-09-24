@@ -19,6 +19,51 @@ from amago.hindsight import Timestep, Trajectory
 from amago.utils import amago_warning
 
 
+class AlreadyVectorizedEnv(gym.Env):
+    """
+    Thin wrapper imitating the Async calls of a single environment
+    that already has a batch dimension.
+
+    Important: assumes the vectorized environment is handling
+    automatic resets.
+    """
+
+    def __init__(self, env_funcs):
+        assert len(env_funcs) == 1
+        self.env = env_funcs[0]()
+        self.batched_envs = self.env.batched_envs
+        self.observation_space = self.env.observation_space
+        self.action_space = self.env.action_space
+        self.single_action_space = self.action_space
+        self._call_buffer = None
+
+    def reset(self, *args, **kwargs):
+        outs = self.env.reset()
+        return outs
+
+    def call_async(self, prop):
+        try:
+            result = eval(f"self.env.{prop}()")
+        except:
+            result = eval(f"self.env.{prop}")
+        if isinstance(result, Iterable):
+            self._call_buffer = [[r] for r in result]
+        elif result is not None:
+            return result
+
+    def call_wait(self):
+        return self._call_buffer
+
+    def render(self):
+        return self.env.render()
+
+    def step(self, action):
+        assert action.shape[0] == self.batched_envs
+        obs, rewards, te, tr, info = self.env.step(action)
+        obs = np.stack(obs, axis=0)
+        return obs, rewards, te, tr, info
+
+
 class DummyAsyncVectorEnv(gym.Env):
     def __init__(self, env_funcs):
         self.envs = [e() for e in env_funcs]
@@ -86,9 +131,10 @@ class DiscreteActionWrapper(gym.ActionWrapper):
     def action(self, action):
         if isinstance(action, int):
             return action
-        if len(action.shape) > 0:
-            action = action[0]
-        action = int(action)
+        elif isinstance(action, np.ndarray) and action.ndim == 1:
+            return int(action[0])
+        elif isinstance(action, np.ndarray) and action.ndim == 2:
+            return np.squeeze(action, axis=1).astype(np.int8)
         return action
 
 
@@ -381,6 +427,7 @@ class SequenceWrapper(gym.Wrapper):
     ):
         super().__init__(env)
 
+        self.batched_envs = env.batched_envs
         self.make_dset = make_dset
         if make_dset:
             assert dset_root is not None
@@ -427,50 +474,60 @@ class SequenceWrapper(gym.Wrapper):
 
     def reset(self, seed=None) -> Timestep:
         timestep, info = self.env.reset(seed=seed)
-        self.active_traj = Trajectory(timesteps=[timestep])
-        self.since_last_save = 0
-        self.save_this_time = (
+        assert len(timestep) == self.batched_envs
+        self.active_trajs = [Trajectory(timesteps=[t]) for t in timestep]
+        self.since_last_save = [0 for _ in range(self.batched_envs)]
+        self.save_this_time = [
             random.randint(*self.save_every) if self.save_every else None
-        )
-        self.total_return = 0.0
-        self._current_timestep = self.active_traj.make_sequence(last_only=True)
-        return timestep.obs, info
+            for _ in range(self.batched_envs)
+        ]
+        self.total_return = [0.0 for _ in range(self.batched_envs)]
+        self._current_timestep = [
+            t.make_sequence(last_only=True) for t in self.active_trajs
+        ]
+        return [t.obs for t in timestep], info
 
     def step(self, action):
+        assert action.shape[0] == self.batched_envs
         timestep, reward, terminated, truncated, info = self.env.step(action)
+        assert len(timestep) == self.batched_envs
+        assert terminated.shape[0] == self.batched_envs
+        assert truncated.shape[0] == self.batched_envs
+        assert reward.shape[0] == self.batched_envs
+
         self.total_return += reward
-        self.active_traj.add_timestep(timestep)
-        self.since_last_save += 1
+        for idx in range(len(timestep)):
+            self.active_trajs[idx].add_timestep(timestep[idx])
+            self.since_last_save[idx] += 1
+            if timestep[idx].terminal:
+                self.return_history.add_score(self.env.env_name, self.total_return[idx])
+            save = (
+                self.save_every is not None
+                and self.since_last_save[idx] > self.save_this_time[idx]
+            )
+            if (timestep[idx].terminal or save) and self.make_dset:
+                self.log_to_disk(idx=idx)
+                self.active_trajs[idx] = Trajectory(timesteps=[timestep[idx]])
+
         for info_key, info_val in info.items():
             if info_key.startswith(self.special_history.log_prefix):
                 self.special_history.add_score(self.env.env_name, info_key, info_val)
-        if timestep.terminal:
-            self.return_history.add_score(self.env.env_name, self.total_return)
 
-        save = (
-            self.save_every is not None and self.since_last_save > self.save_this_time
-        )
-        if (timestep.terminal or save) and self.make_dset:
-            self.log_to_disk()
-            self.active_traj = Trajectory(timesteps=[timestep])
+        self._current_timestep = [
+            t.make_sequence(last_only=True) for t in self.active_trajs
+        ]
+        self._total_frames += len(timestep)
+        self._total_frames_by_env_name[self.env.env_name] += len(timestep)
+        return [t.obs for t in timestep], reward, terminated, truncated, info
 
-        self._current_timestep = self.active_traj.make_sequence(last_only=True)
-        self._total_frames += 1
-        self._total_frames_by_env_name[self.env.env_name] += 1
-        return timestep.obs, reward, terminated, truncated, info
-
-    def log_to_disk(self):
+    def log_to_disk(self, idx: int):
         traj_name = f"{self.env.env_name.strip().replace('_', '')}_{uuid4().hex[:8]}_{time.time()}"
         path = os.path.join(self.dset_write_dir, traj_name)
-        self.active_traj.save_to_disk(
-            path,
-            save_as=self.save_trajs_as,
-        )
-        self.since_last_save = 0
+        self.active_trajs[idx].save_to_disk(path, save_as=self.save_trajs_as)
+        self.since_last_save[idx] = 0
 
     def sequence(self):
-        seq = self.active_traj.make_sequence()
-        return seq
+        return [t.make_sequence() for t in self.active_trajs]
 
     @property
     def total_frames(self) -> int:
@@ -485,139 +542,12 @@ class SequenceWrapper(gym.Wrapper):
         return self._current_timestep
 
 
-class AlreadyVectorizedSequenceWrapper(SequenceWrapper):
-    def __init__(
-        self,
-        env,
-        save_every: tuple[int, int] | None = None,
-        make_dset: bool = False,
-        dset_root: str = None,
-        dset_name: str = None,
-        dset_split: str = None,
-        save_trajs_as: str = "trajectory",
-    ):
-        super().__init__(
-            env,
-            save_every=save_every,
-            make_dset=make_dset,
-            dset_root=dset_root,
-            dset_name=dset_name,
-            dset_split=dset_split,
-            save_trajs_as=save_trajs_as,
-        )
-        self.batched_envs = env.batched_envs
-
-    def split_timesteps(self, timestep: Timestep, reset: bool) -> tuple[Timestep]:
-        breakpoint()
-        timesteps = []
-        for idx in range(self.batched_envs):
-            if reset:
-                action = timestep.prev_action
-                reward = timestep.reward
-            else:
-                action = timestep.prev_action[idx]
-                reward = timestep.reward[idx]
-            timesteps = Timestep(
-                obs={k: v[idx] for k, v in timestep.obs.items()},
-                prev_action=action,
-                reward=reward,
-                reset=reset,
-                real_reward=timestep.real_reward[idx],
-            )
-
-    def split_info(self, info: dict) -> tuple[dict]:
-        if info:
-            breakpoint()
-
-    def log_to_disk(self):
-        traj_name = f"{self.env.env_name.strip().replace('_', '')}_{uuid4().hex[:8]}_{time.time()}"
-        path = os.path.join(self.dset_write_dir, traj_name)
-        self.active_traj.save_to_disk(
-            path,
-            save_as=self.save_trajs_as,
-        )
-        self.since_last_save = 0
-
-    def reset(self, seed=None) -> tuple[np.ndarray, list]:
-        _timestep, _info = self.env.reset(seed=seed)
-        timesteps = self.split_timesteps(_timstep, reset=True)
-        infos = self.split_info(_info)
-        assert len(timesteps) == self.batched_envs
-        self.active_trajs = [
-            Trajectory(max_goals=self.env.max_goal_seq_length, timesteps=[t])
-            for t in timesteps
-        ]
-        self.since_last_save = [0 for _ in range(self.batched_envs)]
-        self.save_this_time = [
-            random.randint(*self.save_every) if self.save_every else None
-            for _ in range(self.batched_envs)
-        ]
-        self.total_return = np.zeros(self.env.batched_envs)
-        self._current_timesteps = [
-            traj.make_sequence(last_only=True) for traj in self.active_trajs
-        ]
-        return [tstep.obs for tstep in timesteps], infos
-
-    def sequence(self):
-        return [traj.make_sequence() for traj in self.active_trajs]
-
-    def step(self, action):
-        breakpoint()
-        _timestep, reward, terminated, truncated, _info = self.env.step(action)
-        timesteps = self.split_timesteps(_timestep)
-        infos = self.split_info(_info)
-
-        self.total_return += reward
-
-        self._current_timesteps = []
-        obs = []
-        assert len(timesteps) == self.batched_envs
-        for idx in range(self.batched_envs):
-            self.active_trajs[idx].add_timestep(timesteps[idx])
-            self.since_last_save[idx] += 1
-            self.total_return[idx] += reward[idx]
-            for info_key, info_val in infos[idx].items():
-                if info_key.startswith(self.special_history.log_prefix):
-                    self.special_history.add_score(
-                        self.env.env_name, info_key, info_val
-                    )
-
-            if timesteps[idx].terminal:
-                self.return_history.add_score(self.env.env_name, self.total_return[idx])
-                success = (
-                    self.active_trajs[idx].is_success
-                    if "success" not in infos[idx]
-                    else infos[idx]["success"]
-                )
-                self.success_history.add_score(self.env.env_name, success)
-
-            save = (
-                self.save_every is not None
-                and self.since_last_save[idx] > self.save_this_time[idx]
-            )
-            if timesteps[idx].terminal or save:
-                self.log_to_disk(idx=idx)
-                self.active_trajs[idx] = Trajectory(
-                    max_goals=self.env.max_goal_seq_length, timesteps=[timesteps[idx]]
-                )
-            self._current_timesteps.append(
-                self.active_trajs[idx].make_sequence(last_only=True)
-            )
-            obs.append(timesteps[idx].obs)
-        self._total_frames += self.batched_envs
-        self._total_frames_by_env_name[self.env.env_name] += self.batched_envs
-        return obs, reward, terminated, truncated, infos
-
-    def log_to_disk(self, idx: int):
-        traj_name = f"{self.env.env_name.strip().replace('_', '')}_{uuid4().hex[:8]}_{time.time()}"
-        path = os.path.join(self.dset_write_dir, traj_name)
-        self.active_trajs[idx].save_to_disk(path, save_as=self.save_trajs_as)
-        self.since_last_save[idx] = 0
-
-
 @dataclass
 class EnvCreator:
     make_env: Callable
+    exploration_wrapper_Cls: Type[ExplorationWrapper]
+
+    # SequenceWrapper args
     make_dset: bool
     dset_root: str
     dset_name: str
@@ -626,7 +556,6 @@ class EnvCreator:
     traj_save_len: int
     max_seq_len: int
     stagger_traj_file_lengths: bool
-    exploration_wrapper_Cls: Type[ExplorationWrapper]
 
     def __post_init__(self):
         if self.max_seq_len < self.traj_save_len and self.stagger_traj_file_lengths:
@@ -637,18 +566,15 @@ class EnvCreator:
             )
         else:
             self.save_every_low = self.save_every_high = self.traj_save_len
-        self.horizon = -float("inf")
         self.rl2_space = None
+        self.already_vectorized = False
 
     def __call__(self):
         env = self.make_env()
-        already_vectorized = env.batched_envs > 1
+        self.already_vectorized = env.batched_envs > 1
         if self.exploration_wrapper_Cls is not None:
             env = self.exploration_wrapper_Cls(env)
-        SeqWrapper = (
-            AlreadyVectorizedSequenceWrapper if already_vectorized else SequenceWrapper
-        )
-        env = SeqWrapper(
+        env = SequenceWrapper(
             env,
             save_every=(self.save_every_low, self.save_every_high),
             make_dset=self.make_dset,

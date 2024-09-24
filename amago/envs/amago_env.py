@@ -87,24 +87,18 @@ class AMAGOEnv(gym.Wrapper):
         if not isinstance(obs, dict):
             obs = {"observation": obs}
         if self.batched_envs == 1:
-            obs = [obs]
-        else:
-            obs = [
-                {k: v[idx] for k, v in obs.items()} for idx in range(self.batched_envs)
-            ]
+            obs = {k: [v] for k, v in obs.items()}
         timesteps = []
-        for o in obs:
+        for idx in range(self.batched_envs):
             timesteps.append(
                 Timestep(
-                    obs=o,
+                    obs={k: v[idx] for k, v in obs.items()},
                     prev_action=self.make_action_rep(self.blank_action),
                     reward=0.0,
                     terminal=False,
                     time_idx=0,
                 ),
             )
-        if self.batched_envs == 1:
-            timesteps = timesteps[0]
         return timesteps, info
 
     def inner_step(self, action):
@@ -138,10 +132,10 @@ class AMAGOEnv(gym.Wrapper):
             if done:
                 self.step_count[idx] = 0
 
-        if self.batched_envs == 1:
-            timesteps = timesteps[0]
-            rewards = rewards[0]
-            terminated = terminated[0]
-            truncated = truncated[0]
-
-        return timesteps, rewards, terminated, truncated, info
+        return (
+            timesteps,
+            np.array(rewards),
+            np.array(terminated),
+            np.array(truncated),
+            info,
+        )
