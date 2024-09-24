@@ -128,6 +128,8 @@ class XLandMiniGridEnv(gym.Env):
         self.episode_steps += 1
         ep_end = self.x_timestep.last()
         ep_continues = ~ep_end
+
+        # log episode statistics
         info = defaultdict(list)
         if ep_end.any():
             for env in range(self.parallel_envs):
@@ -135,6 +137,7 @@ class XLandMiniGridEnv(gym.Env):
                     info[
                         f"{AMAGO_ENV_LOG_PREFIX}Ep {self.current_episode[env]} Return"
                     ].append(self.episode_return[env])
+        info = {k: np.array(v) for k, v in info.items()}
 
         # if the env needs to be reset right now...
         self.x_timestep = self.x_step(self.env_params, self.x_timestep, action)
@@ -153,7 +156,7 @@ class XLandMiniGridEnv(gym.Env):
         self.current_episode *= ~done
         # the reset will kick in on the next `step`
 
-        return self.get_obs(), reward, done, done, dict(info)
+        return self.get_obs(), reward, done, done, info
 
 
 if __name__ == "__main__":

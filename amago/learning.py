@@ -216,7 +216,7 @@ class Experiment:
         detected = len(utils.call_async_env(self.train_envs, "current_timestep"))
         if detected != self.parallel_actors:
             utils.amago_warning(
-                f"Experiment.parallel_actors ({self.parallel_actors}) does not match the batch dimension of the environment ({detected})"
+                f"Experiment.parallel_actors ({self.parallel_actors}) does not match the detected batch dimension of the environment ({detected})"
             )
         self.val_envs = Par(make_val)
         self.val_envs.reset()

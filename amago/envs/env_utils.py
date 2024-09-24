@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from uuid import uuid4
 from dataclasses import dataclass
 from collections import defaultdict
-from typing import Optional, Type, Callable, Iterable, Any
+from typing import Optional, Type, Callable, Iterable, Any, List
 
 import gymnasium as gym
 import numpy as np
@@ -16,7 +16,7 @@ from einops import rearrange
 
 from amago.loading import MAGIC_PAD_VAL
 from amago.hindsight import Timestep, Trajectory
-from amago.utils import amago_warning
+from amago.utils import amago_warning, stack_list_array_dicts
 
 
 class AlreadyVectorizedEnv(gym.Env):
@@ -46,10 +46,11 @@ class AlreadyVectorizedEnv(gym.Env):
             result = eval(f"self.env.{prop}()")
         except:
             result = eval(f"self.env.{prop}")
-        if isinstance(result, Iterable):
+        if isinstance(result, list | tuple | np.ndarray):
+            # imitate `batched_envs` envs each with a batch dim of 1
             self._call_buffer = [[r] for r in result]
-        elif result is not None:
-            return result
+        else:
+            self._call_buffer = [result]
 
     def call_wait(self):
         return self._call_buffer
@@ -333,13 +334,13 @@ class BilevelEpsilonGreedy(ExplorationWrapper):
         if self.discrete:
             # epsilon greedy (DQN-style)
             num_actions = self.env.action_space.n
-            random_action = np.random.randint(0, num_actions, size=(self.batched_envs,))
-            use_random = np.random.rand(self.batched_envs) <= noise
-            if use_random:
-                expl_action = np.full_like(action, random_action)
-            else:
-                expl_action = action
-            assert expl_action.dtype == np.uint8
+            random_action = np.random.randint(
+                0, num_actions, size=(self.batched_envs, 1)
+            )
+            use_random = (np.random.rand(self.batched_envs) <= noise)[:, np.newaxis]
+            expl_action = (
+                use_random * random_action + (1 - use_random) * action
+            ).astype(np.uint8)
         else:
             # random noise (TD3-style)
             expl_action = action + noise * np.random.randn(*action.shape)
@@ -394,13 +395,20 @@ class SpecialMetricHistory:
 
     def add_score(self, env_name: str, key: str, value: Any):
         if key.startswith(self.log_prefix):
+            # remove logging tag
             key = key[len(self.log_prefix) :].strip()
         if env_name not in self.data:
             self.data[env_name] = {}
+        if isinstance(value, torch.Tensor | np.ndarray):
+            # for batched env stats
+            value = value.flatten().tolist()
+        # flatten
+        if not isinstance(value, Iterable):
+            value = [value]
         if key not in self.data[env_name]:
-            self.data[env_name][key] = [value]
+            self.data[env_name][key] = value
         else:
-            self.data[env_name][key].append(value)
+            self.data[env_name][key].extend(value)
 
 
 AMAGO_ENV_LOG_PREFIX = SpecialMetricHistory.log_prefix
@@ -485,7 +493,7 @@ class SequenceWrapper(gym.Wrapper):
         self._current_timestep = [
             t.make_sequence(last_only=True) for t in self.active_trajs
         ]
-        return [t.obs for t in timestep], info
+        return stack_list_array_dicts([t.obs for t in timestep]), info
 
     def step(self, action):
         assert action.shape[0] == self.batched_envs
@@ -518,7 +526,13 @@ class SequenceWrapper(gym.Wrapper):
         ]
         self._total_frames += len(timestep)
         self._total_frames_by_env_name[self.env.env_name] += len(timestep)
-        return [t.obs for t in timestep], reward, terminated, truncated, info
+        return (
+            stack_list_array_dicts(t.obs for t in timestep),
+            reward,
+            terminated,
+            truncated,
+            info,
+        )
 
     def log_to_disk(self, idx: int):
         traj_name = f"{self.env.env_name.strip().replace('_', '')}_{uuid4().hex[:8]}_{time.time()}"

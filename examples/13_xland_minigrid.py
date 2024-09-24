@@ -8,7 +8,7 @@ import gymnasium as gym
 from einops import rearrange
 
 import amago
-from amago.envs.builtin.gym_envs import GymEnv
+from amago.envs import AMAGOEnv
 from amago.envs.builtin.xland_minigrid import XLandMiniGridEnv
 from amago.nets.utils import add_activation_log, symlog
 from amago.cli_utils import *
@@ -21,23 +21,20 @@ def add_cli(parser):
         default="trivial-1m",
         choices=["trivial-1m", "small-1m", "medium-1m", "high-1m", "high-3m"],
     )
-    parser.add_argument("--k_shots", type=int, default=25)
+    parser.add_argument("--k_shots", type=int, default=5)
     parser.add_argument("--rooms", type=int, default=4)
     parser.add_argument("--grid_size", type=int, default=13)
     parser.add_argument("--max_seq_len", type=int, default=2048)
     return parser
 
 
-class XLandMiniGridAMAGO(GymEnv):
+class XLandMiniGridAMAGO(AMAGOEnv):
     def __init__(self, env: XLandMiniGridEnv):
         assert isinstance(env, XLandMiniGridEnv)
-        horizon = env.suggested_max_seq_len
         super().__init__(
-            gym_env=env,
+            env=env,
             env_name=f"XLandMiniGrid-{env.ruleset_benchmark}-R{env.rooms}-{env.grid_size}x{env.grid_size}",
-            horizon=env.suggested_max_seq_len,
-            start=0,
-            zero_shot=True,
+            batched_envs=env.parallel_envs,
         )
 
 
@@ -45,15 +42,12 @@ class XLandMGTstepEncoder(amago.nets.tstep_encoders.TstepEncoder):
     def __init__(
         self,
         obs_space,
-        goal_space,
         rl2_space,
         grid_id_dim: int = 8,
         ff_dim: int = 384,
         out_dim: int = 256,
     ):
-        super().__init__(
-            obs_space=obs_space, goal_space=goal_space, rl2_space=rl2_space
-        )
+        super().__init__(obs_space=obs_space, rl2_space=rl2_space)
         self.embedding = nn.Embedding(15, embedding_dim=grid_id_dim)
         self.img_processor = amago.nets.cnn.GridworldCNN(
             img_shape=obs_space["grid"].shape,
@@ -76,7 +70,7 @@ class XLandMGTstepEncoder(amago.nets.tstep_encoders.TstepEncoder):
     def emb_dim(self):
         return self.out_dim
 
-    def inner_forward(self, obs, goal_rep, rl2s, log_dict=None):
+    def inner_forward(self, obs, rl2s, log_dict=None):
         grid_rep = self.embedding(obs["grid"].long())
         grid_rep = rearrange(grid_rep, "... h w layers emb -> ... h w (layers emb)")
         grid_rep = self.img_processor(obs["grid"])
@@ -100,7 +94,6 @@ if __name__ == "__main__":
         "amago.nets.actor_critic.NCriticsTwoHot.min_return": -100_000,
         "amago.nets.actor_critic.NCriticsTwoHot.max_return": 100_000,
         "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 64,
-        "amago.nets.traj_encoders.TformerTrajEncoder.pos_emb": "fixed",
     }
 
     switch_traj_encoder(
@@ -112,12 +105,14 @@ if __name__ == "__main__":
     use_config(config, args.configs)
 
     xland_kwargs = {
+        "parallel_envs": args.parallel_actors,
         "rooms": args.rooms,
         "grid_size": args.grid_size,
         "k_shots": args.k_shots,
         "ruleset_benchmark": args.benchmark,
     }
 
+    args.env_mode = "already_vectorized"
     make_train_env = lambda: XLandMiniGridAMAGO(
         XLandMiniGridEnv(**xland_kwargs, train_test_split="train"),
     )
@@ -128,6 +123,7 @@ if __name__ == "__main__":
 
     group_name = f"{args.run_name}_xlandmg_{args.benchmark}_R{args.rooms}_{args.grid_size}x{args.grid_size}"
     args.start_learning_at_epoch = traj_len // args.timesteps_per_epoch
+
     for trial in range(args.trials):
         run_name = group_name + f"_trial_{trial}"
         experiment = create_experiment_from_cli(
