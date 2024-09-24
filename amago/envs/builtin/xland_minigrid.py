@@ -1,7 +1,6 @@
 import random
-import tqdm
-import time
 from collections import defaultdict
+from typing import Optional
 
 import gymnasium as gym
 import numpy as np
@@ -41,7 +40,7 @@ class XLandMiniGridEnv(gym.Env):
         train_test_split: str = "train",
         train_test_split_key: int = 0,
         train_test_split_pct: float = 0.8,
-        jax_device: int = 4,
+        jax_device: Optional[int] = None,
     ):
         assert (
             jax is not None and xminigrid is not None
@@ -51,7 +50,9 @@ class XLandMiniGridEnv(gym.Env):
         self.k_shots = k_shots
         self.ruleset_benchmark = ruleset_benchmark
         self.parallel_envs = parallel_envs
-        self.jax_device = jax.devices()[jax_device]
+        self.jax_device = (
+            jax.devices()[jax_device] if jax_device else jax.devices("cpu")[0]
+        )
 
         benchmark = xminigrid.load_benchmark(name=ruleset_benchmark)
         train, test = benchmark.shuffle(key=jax.random.key(train_test_split_key)).split(
@@ -193,6 +194,9 @@ class XLandMiniGridEnv(gym.Env):
 
 
 if __name__ == "__main__":
+    import tqdm
+    import time
+
     env = XLandMiniGridEnv(
         parallel_envs=256,
         rooms=4,
