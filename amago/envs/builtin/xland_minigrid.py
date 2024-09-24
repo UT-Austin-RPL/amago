@@ -23,6 +23,13 @@ else:
 from amago.envs.env_utils import AMAGO_ENV_LOG_PREFIX
 
 
+def _swap_rules(old_goal, old_rule, old_tile, new_goal, new_rule, new_tile, replace):
+    goal = jnp.select(replace, new_goal, old_goal)
+    rule = jnp.select(replace, new_rule, old_rule)
+    tile = jnp.select(replace, new_tile, old_tile)
+    return goal, rule, tile
+
+
 class XLandMiniGridEnv(gym.Env):
     def __init__(
         self,
@@ -60,9 +67,7 @@ class XLandMiniGridEnv(gym.Env):
             DirectionObservationWrapper(DmEnvAutoResetWrapper(env))
         )
         key = jax.random.key(random.randint(0, 1_000_000))
-        reset_key, ruleset_key = jax.random.split(key)
-        self.reset_keys = jax.random.split(reset_key, num=parallel_envs)
-        self.ruleset_keys = jax.random.split(ruleset_key, num=parallel_envs)
+        self._reset_key, self._ruleset_key = jax.random.split(key)
 
         self.x_sample = jax.vmap(
             jax.jit(self.benchmark.sample_ruleset, device=self.jax_device)
@@ -73,6 +78,7 @@ class XLandMiniGridEnv(gym.Env):
         self.x_step = jax.vmap(
             jax.jit(self.x_env.step, device=self.jax_device), in_axes=(0, 0, 0)
         )
+        self.x_swap = jax.jit(_swap_rules, device=self.jax_device)
 
         obs_shapes = self.x_env.observation_shape(self.env_params)
         self.max_steps_per_episode = self.env_params.max_steps
@@ -92,6 +98,16 @@ class XLandMiniGridEnv(gym.Env):
         )
         self.reset()
 
+    def new_reset_keys(self):
+        keys = jax.random.split(self._reset_key, num=self.parallel_envs + 1)
+        self._reset_key = keys[0]
+        return keys[1:]
+
+    def new_ruleset_keys(self):
+        keys = jax.random.split(self._ruleset_key, num=self.parallel_envs + 1)
+        self._ruleset_key = keys[0]
+        return keys[1:]
+
     @property
     def suggested_max_seq_len(self):
         return self.max_steps_per_episode * self.k_shots
@@ -109,22 +125,30 @@ class XLandMiniGridEnv(gym.Env):
         }
 
     def reset(self, *args, **kwargs):
-        print("reset!!!")
-        ruleset = self.x_sample(self.ruleset_keys)
+        ruleset = self.x_sample(self.new_ruleset_keys())
         self.env_params = self.env_params.replace(ruleset=ruleset)
-        self.x_timestep = self.x_reset(self.env_params, self.reset_keys)
+        self.x_timestep = self.x_reset(self.env_params, self.new_reset_keys())
         self.current_episode = jnp.zeros(self.parallel_envs, dtype=jnp.int32)
         self.episode_return = jnp.zeros(self.parallel_envs, dtype=jnp.float32)
         self.episode_steps = jnp.zeros(self.parallel_envs, dtype=jnp.int32)
         return self.get_obs(), {}
 
     def replace_rules(self, replace):
-        new_ruleset = self.x_sample(self.ruleset_keys)
+        new_ruleset = self.x_sample(self.new_ruleset_keys())
         ruleset = self.env_params.ruleset
+        goals, rules, tiles = self.x_swap(
+            ruleset.goal,
+            ruleset.rules,
+            ruleset.init_tiles,
+            new_ruleset.goal,
+            new_ruleset.rules,
+            new_ruleset.init_tiles,
+            replace,
+        )
         updated = xminigrid.types.RuleSet(
-            goal=jnp.select(replace, new_ruleset.goal, ruleset.goal),
-            rules=jnp.select(replace, new_ruleset.rules, ruleset.rules),
-            init_tiles=jnp.select(replace, new_ruleset.init_tiles, ruleset.init_tiles),
+            goal=goals,
+            rules=rules,
+            init_tiles=tiles,
         )
         self.env_params = self.env_params.replace(ruleset=updated)
         return updated
@@ -176,7 +200,7 @@ if __name__ == "__main__":
         ruleset_benchmark="trivial-1m",
         train_test_split="train",
         train_test_split_key=0,
-        k_shots=10,
+        k_shots=2,
     )
     env.reset()
     steps = 100000
