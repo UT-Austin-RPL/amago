@@ -34,6 +34,7 @@ class XLandMiniGridEnv(gym.Env):
         train_test_split: str = "train",
         train_test_split_key: int = 0,
         train_test_split_pct: float = 0.8,
+        jax_device: int = 4,
     ):
         assert (
             jax is not None and xminigrid is not None
@@ -43,6 +44,7 @@ class XLandMiniGridEnv(gym.Env):
         self.k_shots = k_shots
         self.ruleset_benchmark = ruleset_benchmark
         self.parallel_envs = parallel_envs
+        self.jax_device = jax.devices()[jax_device]
 
         benchmark = xminigrid.load_benchmark(name=ruleset_benchmark)
         train, test = benchmark.shuffle(key=jax.random.key(train_test_split_key)).split(
@@ -62,9 +64,15 @@ class XLandMiniGridEnv(gym.Env):
         self.reset_keys = jax.random.split(reset_key, num=parallel_envs)
         self.ruleset_keys = jax.random.split(ruleset_key, num=parallel_envs)
 
-        self.x_sample = jax.vmap(jax.jit(self.benchmark.sample_ruleset))
-        self.x_reset = jax.vmap(jax.jit(self.x_env.reset), in_axes=(0, 0))
-        self.x_step = jax.vmap(jax.jit(self.x_env.step), in_axes=(0, 0, 0))
+        self.x_sample = jax.vmap(
+            jax.jit(self.benchmark.sample_ruleset, device=self.jax_device)
+        )
+        self.x_reset = jax.vmap(
+            jax.jit(self.x_env.reset, device=self.jax_device), in_axes=(0, 0)
+        )
+        self.x_step = jax.vmap(
+            jax.jit(self.x_env.step, device=self.jax_device), in_axes=(0, 0, 0)
+        )
 
         obs_shapes = self.x_env.observation_shape(self.env_params)
         self.max_steps_per_episode = self.env_params.max_steps
@@ -130,14 +138,13 @@ class XLandMiniGridEnv(gym.Env):
         ep_continues = ~ep_end
 
         # log episode statistics
+        done_idxs = jnp.nonzero(ep_end)
         info = defaultdict(list)
-        if ep_end.any():
-            for env in range(self.parallel_envs):
-                if ep_end[env]:
-                    info[
-                        f"{AMAGO_ENV_LOG_PREFIX}Ep {self.current_episode[env]} Return"
-                    ].append(self.episode_return[env])
-        info = {k: np.array(v) for k, v in info.items()}
+        for idx in done_idxs:
+            info[f"{AMAGO_ENV_LOG_PREFIX}Ep {self.current_episode[idx]} Return"].append(
+                self.episode_return[idx]
+            )
+            # info = {k: np.array(v) for k, v in info.items()}
 
         # if the env needs to be reset right now...
         self.x_timestep = self.x_step(self.env_params, self.x_timestep, action)
@@ -161,7 +168,7 @@ class XLandMiniGridEnv(gym.Env):
 
 if __name__ == "__main__":
     env = XLandMiniGridEnv(
-        parallel_envs=2,
+        parallel_envs=256,
         rooms=4,
         grid_size=13,
         ruleset_benchmark="trivial-1m",
