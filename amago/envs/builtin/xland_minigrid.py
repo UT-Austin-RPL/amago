@@ -138,13 +138,15 @@ class XLandMiniGridEnv(gym.Env):
         ep_continues = ~ep_end
 
         # log episode statistics
-        done_idxs = jnp.nonzero(ep_end)
-        info = defaultdict(list)
-        for idx in done_idxs:
-            info[f"{AMAGO_ENV_LOG_PREFIX}Ep {self.current_episode[idx]} Return"].append(
-                self.episode_return[idx]
-            )
-            # info = {k: np.array(v) for k, v in info.items()}
+        ep_end_idxs = jnp.nonzero(ep_end)[0]
+        if ep_end_idxs.shape[0] > 0:
+            info = defaultdict(list)
+            ep_returns = jnp.take(self.episode_return, ep_end_idxs)
+            ep_nums = jnp.take(self.current_episode, ep_end_idxs)
+            for ep_num, ep_return in zip(ep_nums, ep_returns):
+                info[f"{AMAGO_ENV_LOG_PREFIX}Ep {ep_num} Return"].append(ep_return)
+        else:
+            info = {}
 
         # if the env needs to be reset right now...
         self.x_timestep = self.x_step(self.env_params, self.x_timestep, action)
