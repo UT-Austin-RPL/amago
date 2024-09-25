@@ -13,6 +13,7 @@ except ImportError:
     xminigrid = None
 else:
     import jax.numpy as jnp
+    from jax import device_put as dp
     from xminigrid.wrappers import (
         DirectionObservationWrapper,
         DmEnvAutoResetWrapper,
@@ -51,8 +52,11 @@ class XLandMiniGridEnv(gym.Env):
         self.ruleset_benchmark = ruleset_benchmark
         self.parallel_envs = parallel_envs
         self.jax_device = (
-            jax.devices()[jax_device] if jax_device else jax.devices("cpu")[0]
+            jax.devices()[jax_device]
+            if jax_device is not None
+            else jax.devices("cpu")[0]
         )
+        print(self.jax_device)
 
         benchmark = xminigrid.load_benchmark(name=ruleset_benchmark)
         train, test = benchmark.shuffle(key=jax.random.key(train_test_split_key)).split(
@@ -64,6 +68,7 @@ class XLandMiniGridEnv(gym.Env):
         env, self.env_params = xminigrid.make(
             f"XLand-MiniGrid-R{rooms}-{grid_size}x{grid_size}"
         )
+        self.env_params = dp(self.env_params, self.jax_device)
         self.x_env = RulesAndGoalsObservationWrapper(
             DirectionObservationWrapper(DmEnvAutoResetWrapper(env))
         )
@@ -100,12 +105,18 @@ class XLandMiniGridEnv(gym.Env):
         self.reset()
 
     def new_reset_keys(self):
-        keys = jax.random.split(self._reset_key, num=self.parallel_envs + 1)
+        keys = dp(
+            jax.random.split(self._reset_key, num=self.parallel_envs + 1),
+            self.jax_device,
+        )
         self._reset_key = keys[0]
         return keys[1:]
 
     def new_ruleset_keys(self):
-        keys = jax.random.split(self._ruleset_key, num=self.parallel_envs + 1)
+        keys = dp(
+            jax.random.split(self._ruleset_key, num=self.parallel_envs + 1),
+            self.jax_device,
+        )
         self._ruleset_key = keys[0]
         return keys[1:]
 
@@ -129,9 +140,15 @@ class XLandMiniGridEnv(gym.Env):
         ruleset = self.x_sample(self.new_ruleset_keys())
         self.env_params = self.env_params.replace(ruleset=ruleset)
         self.x_timestep = self.x_reset(self.env_params, self.new_reset_keys())
-        self.current_episode = jnp.zeros(self.parallel_envs, dtype=jnp.int32)
-        self.episode_return = jnp.zeros(self.parallel_envs, dtype=jnp.float32)
-        self.episode_steps = jnp.zeros(self.parallel_envs, dtype=jnp.int32)
+        self.current_episode = jnp.zeros(
+            self.parallel_envs, dtype=jnp.int32, device=self.jax_device
+        )
+        self.episode_return = jnp.zeros(
+            self.parallel_envs, dtype=jnp.float32, device=self.jax_device
+        )
+        self.episode_steps = jnp.zeros(
+            self.parallel_envs, dtype=jnp.int32, device=self.jax_device
+        )
         return self.get_obs(), {}
 
     def replace_rules(self, replace):
@@ -155,7 +172,7 @@ class XLandMiniGridEnv(gym.Env):
         return updated
 
     def step(self, action):
-        action = np.array(action)
+        action = jnp.array(action, device=self.jax_device)
         assert action.shape == (self.parallel_envs,)
 
         self.episode_steps += 1
@@ -197,20 +214,29 @@ if __name__ == "__main__":
     import tqdm
     import time
 
-    env = XLandMiniGridEnv(
-        parallel_envs=256,
-        rooms=4,
-        grid_size=13,
-        ruleset_benchmark="trivial-1m",
-        train_test_split="train",
-        train_test_split_key=0,
-        k_shots=2,
+    from amago.envs import AMAGOEnv
+
+    env = AMAGOEnv(
+        XLandMiniGridEnv(
+            parallel_envs=256,
+            rooms=4,
+            grid_size=13,
+            ruleset_benchmark="high-3m",
+            train_test_split="train",
+            train_test_split_key=0,
+            k_shots=25,
+            jax_device=4,
+        ),
+        batched_envs=256,
     )
+
     env.reset()
     steps = 100000
     start = time.time()
     for step in tqdm.tqdm(range(steps)):
-        action = [env.action_space.sample() for _ in range(env.parallel_envs)]
+        action = np.array(
+            [env.action_space.sample() for _ in range(env.parallel_envs)]
+        )[:, np.newaxis]
         next_state, reward, done, _, info = env.step(action)
     end = time.time()
     print(f"FPS: {steps / (end - start)}")

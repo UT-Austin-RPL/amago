@@ -14,6 +14,7 @@ from amago.envs.env_utils import (
     space_convert,
 )
 from amago.hindsight import Timestep
+from amago.utils import unstack_dict
 
 
 class AMAGOEnv(gym.Wrapper):
@@ -85,18 +86,17 @@ class AMAGOEnv(gym.Wrapper):
         return self.env.reset(seed=seed, options=options)
 
     def reset(self, seed=None, options=None) -> Timestep:
-        self.step_count = np.zeros((self.batched_envs,), dtype=np.int32)
+        self.step_count = np.zeros((self.batched_envs,), dtype=np.int64)
         obs, info = self.inner_reset(seed=seed, options=options)
         if not isinstance(obs, dict):
             obs = {"observation": obs}
-        if self.batched_envs == 1:
-            obs = {k: [v] for k, v in obs.items()}
+        obs = [obs] if self.batched_envs == 1 else unstack_dict(obs)
+        prev_actions = np.unstack(self.blank_action, axis=0)
         timesteps = []
-        prev_actions = self.blank_action
         for idx in range(self.batched_envs):
             timesteps.append(
                 Timestep(
-                    obs={k: v[idx] for k, v in obs.items()},
+                    obs=obs[idx],
                     prev_action=prev_actions[idx],
                     reward=0.0,
                     terminal=False,
@@ -111,31 +111,42 @@ class AMAGOEnv(gym.Wrapper):
     def step(self, action: np.ndarray) -> tuple[Timestep, float, bool, bool, dict]:
         # take environment step
         obs, rewards, terminated, truncated, info = self.inner_step(action)
+        self.step_count += 1
+        prev_actions = self.make_action_rep(action)
+        done = np.logical_or(terminated, truncated)
         if not isinstance(obs, dict):
             obs = {"observation": obs}
+
         if self.batched_envs == 1:
-            action = action[np.newaxis, :]
-            rewards = [rewards]
-            terminated = [terminated]
-            truncated = [truncated]
-            obs = {k: [v] for k, v in obs.items()}
-
-        self.step_count += 1
-        done = np.logical_or(terminated, truncated)
-        prev_action = self.make_action_rep(action)
-        timesteps = []
-        for idx in range(self.batched_envs):
-            timesteps.append(
+            timesteps = [
                 Timestep(
-                    obs={k: v[idx] for k, v in obs.items()},
-                    prev_action=prev_action[idx],
-                    reward=rewards[idx],
-                    terminal=done[idx],
-                    time_idx=self.step_count[idx],
+                    obs=obs,
+                    prev_action=prev_actions[0],
+                    reward=rewards,
+                    terminal=done,
+                    time_idx=self.step_count[0].item(),
                 )
-            )
-        self.step_count *= ~done
+            ]
+        else:
+            _dones = np.unstack(done, axis=0)
+            _obs = unstack_dict(obs)
+            _rewards = np.unstack(rewards, axis=0)
+            _prev_actions = np.unstack(prev_actions, axis=0)
+            _time_idxs = np.unstack(self.step_count, axis=0)
+            timesteps = []
+            for idx in range(self.batched_envs):
+                timesteps.append(
+                    Timestep(
+                        obs=_obs[idx],
+                        prev_action=_prev_actions[idx],
+                        reward=_rewards[idx],
+                        terminal=_dones[idx],
+                        time_idx=_time_idxs[idx],
+                    )
+                )
 
+        # reset step count in case of auto reset envs that never call `reset`
+        self.step_count *= ~done
         return (
             timesteps,
             np.array(rewards),

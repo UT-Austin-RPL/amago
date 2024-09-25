@@ -27,6 +27,18 @@ def stack_list_array_dicts(list_: list[dict[np.ndarray]], axis=0):
     return {k: np.stack(v, axis=axis) for k, v in out.items()}
 
 
+def unstack_dict(dict_: dict[str, np.ndarray], axis=0):
+    unstacked = {k: np.unstack(v, axis=axis) for k, v in dict_.items()}
+    out = None
+    for k, vs in unstacked.items():
+        if out is None:
+            out = [{k: v} for v in vs]
+        else:
+            for i, v in enumerate(vs):
+                out[i][k] = v
+    return out
+
+
 class AmagoWarning(Warning):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
