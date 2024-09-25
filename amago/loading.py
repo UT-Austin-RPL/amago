@@ -19,7 +19,7 @@ def load_traj_from_disk(path: str) -> Trajectory | FrozenTraj:
     if ext == ".traj":
         with open(path, "rb") as f:
             disk = pickle.load(f)
-        traj = Trajectory(max_goals=disk.max_goals, timesteps=disk.timesteps)
+        traj = Trajectory(timesteps=disk.timesteps)
         return traj
     elif ext == ".npz":
         disk = FrozenTraj.from_dict(np.load(path))

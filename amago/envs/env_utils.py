@@ -135,7 +135,7 @@ class DiscreteActionWrapper(gym.ActionWrapper):
         elif isinstance(action, np.ndarray) and action.ndim == 1:
             return int(action[0])
         elif isinstance(action, np.ndarray) and action.ndim == 2:
-            return np.squeeze(action, axis=1).astype(np.int8)
+            return action[:, 0]
         return action
 
 
@@ -259,8 +259,11 @@ class ExplorationWrapper(ABC, gym.ActionWrapper):
         raise NotImplementedError
 
     def action(self, a: np.ndarray):
-        assert a.shape[0] == self.batched_envs
+        if self.batched_envs == 1:
+            a = a[np.newaxis, :]
         action = self.add_exploration_noise(a, self.env.step_count)
+        if self.batched_envs == 1:
+            action = np.squeeze(action, axis=0)
         return action
 
     @property
@@ -337,7 +340,7 @@ class BilevelEpsilonGreedy(ExplorationWrapper):
             random_action = np.random.randint(
                 0, num_actions, size=(self.batched_envs, 1)
             )
-            use_random = (np.random.rand(self.batched_envs) <= noise)[:, np.newaxis]
+            use_random = np.random.rand(self.batched_envs) <= noise
             expl_action = (
                 use_random * random_action + (1 - use_random) * action
             ).astype(np.uint8)
@@ -496,7 +499,6 @@ class SequenceWrapper(gym.Wrapper):
         return stack_list_array_dicts([t.obs for t in timestep]), info
 
     def step(self, action):
-        assert action.shape[0] == self.batched_envs
         timestep, reward, terminated, truncated, info = self.env.step(action)
         assert len(timestep) == self.batched_envs
         assert terminated.shape[0] == self.batched_envs

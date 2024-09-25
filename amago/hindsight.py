@@ -5,6 +5,7 @@ import warnings
 import copy
 import pickle
 from dataclasses import dataclass, asdict
+from typing import Optional, Iterable
 from abc import ABC, abstractmethod
 
 import torch
@@ -24,7 +25,7 @@ class Timestep:
     # time as an int (for position embeddings only)
     time_idx: int
     # meta-rollout terminal signal for the value loss
-    terminal: bool = False
+    terminal: bool
 
     def __eq__(self, other):
         if (
@@ -73,10 +74,7 @@ class FrozenTraj:
 
 
 class Trajectory:
-    def __init__(
-        self,
-        timesteps=None,
-    ):
+    def __init__(self, timesteps=Optional[Iterable[Timestep]]):
         self.timesteps = timesteps or []
 
     def add_timestep(self, timestep: Timestep):
