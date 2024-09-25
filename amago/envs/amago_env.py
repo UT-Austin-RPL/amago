@@ -4,6 +4,8 @@ from typing import Optional
 import numpy as np
 import gym as og_gym
 import gymnasium as gym
+import torch
+import torch.nn.functional as F
 
 from amago.envs.env_utils import (
     ContinuousActionWrapper,
@@ -37,6 +39,7 @@ class AMAGOEnv(gym.Wrapper):
             self.env = ContinuousActionWrapper(self.env)
             self.action_size = self.action_space.shape[-1]
         self.action_space = space_convert(self.env.action_space)
+        self._batch_idxs = np.arange(self.batched_envs)
 
         # observation space conversion (defaults to dict)
         obs_space = self.env.observation_space
@@ -63,17 +66,17 @@ class AMAGOEnv(gym.Wrapper):
     @property
     def blank_action(self):
         if self.discrete:
-            action = [i for i in range(self.action_size)]
+            action = np.ones((self.batched_envs, self.action_size), dtype=np.int8)
         elif self.multibinary:
-            action = np.zeros((self.action_size,), dtype=np.int8)
+            action = np.zeros((self.batched_envs, self.action_size), dtype=np.int8)
         else:
-            action = np.full((self.action_size,), -2.0)
+            action = np.full((self.batched_envs, self.action_size), -2.0)
         return action
 
     def make_action_rep(self, action) -> np.ndarray:
         if self.discrete:
-            action_rep = np.zeros((self.action_size,))
-            action_rep[action] = 1.0
+            action_rep = np.zeros((self.batched_envs, self.action_size), dtype=np.uint8)
+            action_rep[self._batch_idxs, np.squeeze(action, axis=1)] = 1
         else:
             action_rep = action.copy()
         return action_rep
@@ -89,11 +92,12 @@ class AMAGOEnv(gym.Wrapper):
         if self.batched_envs == 1:
             obs = {k: [v] for k, v in obs.items()}
         timesteps = []
+        prev_actions = self.blank_action
         for idx in range(self.batched_envs):
             timesteps.append(
                 Timestep(
                     obs={k: v[idx] for k, v in obs.items()},
-                    prev_action=self.make_action_rep(self.blank_action),
+                    prev_action=prev_actions[idx],
                     reward=0.0,
                     terminal=False,
                     time_idx=0,
@@ -116,21 +120,21 @@ class AMAGOEnv(gym.Wrapper):
             truncated = [truncated]
             obs = {k: [v] for k, v in obs.items()}
 
+        self.step_count += 1
+        done = np.logical_or(terminated, truncated)
+        prev_action = self.make_action_rep(action)
         timesteps = []
         for idx in range(self.batched_envs):
-            self.step_count[idx] += 1
-            done = terminated[idx] or truncated[idx]
             timesteps.append(
                 Timestep(
                     obs={k: v[idx] for k, v in obs.items()},
-                    prev_action=self.make_action_rep(action[idx]),
+                    prev_action=prev_action[idx],
                     reward=rewards[idx],
-                    terminal=done,
+                    terminal=done[idx],
                     time_idx=self.step_count[idx],
                 )
             )
-            if done:
-                self.step_count[idx] = 0
+        self.step_count *= ~done
 
         return (
             timesteps,
