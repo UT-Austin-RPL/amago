@@ -132,6 +132,7 @@ class Experiment:
             \t -------------------------
             \t Agent Type: {self.policy.__class__.__name__}
             \t Environment: {env_summary}
+            \t Accelerate Process: {self.accelerator.num_processes}
             \t Policy Max Sequence Length: {self.max_seq_len}
             \t Trajectory File Sequence Length: {self.traj_save_len}
             \t Mixed Precision: {self.mixed_precision.upper()}
