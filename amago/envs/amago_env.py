@@ -67,9 +67,9 @@ class AMAGOEnv(gym.Wrapper):
     @property
     def blank_action(self):
         if self.discrete:
-            action = np.ones((self.batched_envs, self.action_size), dtype=np.int8)
+            action = np.ones((self.batched_envs, self.action_size), dtype=np.uint8)
         elif self.multibinary:
-            action = np.zeros((self.batched_envs, self.action_size), dtype=np.int8)
+            action = np.zeros((self.batched_envs, self.action_size), dtype=np.uint8)
         else:
             action = np.full((self.batched_envs, self.action_size), -2.0)
         return action
@@ -79,9 +79,11 @@ class AMAGOEnv(gym.Wrapper):
             action_rep = np.zeros((self.batched_envs, self.action_size), dtype=np.uint8)
             action_rep[self._batch_idxs, action[..., 0]] = 1
         else:
-            action_rep = action.copy()
+            action_rep = action.copy().astype(
+                np.uint8 if self.multibinary else np.float32
+            )
             if self.batched_envs == 1 and action_rep.ndim == 1:
-                action_rep = action_rep[np.newaxis, ...]
+                action_rep = np.expand_dims(action_rep, axis=0)
         return action_rep
 
     def inner_reset(self, seed=None, options=None):
@@ -140,8 +142,11 @@ class AMAGOEnv(gym.Wrapper):
             rewards = np.array([rewards], dtype=np.float32)
             terminateds = np.array([terminateds], dtype=bool)
             truncateds = np.array([truncateds], dtype=bool)
+            if dones:
+                self.step_count[0] = 0
         else:
             dones = np.logical_or(terminateds, truncateds)
+            assert dones.shape == (self.batched_envs,)
             prev_actions = self.make_action_rep(action)
             # unstack to avoid indexing arrays during `Timestep` creation
             _dones = np.unstack(dones, axis=0)
@@ -149,8 +154,7 @@ class AMAGOEnv(gym.Wrapper):
             _rewards = np.unstack(rewards, axis=0)
             _prev_actions = np.unstack(prev_actions, axis=0)
             _time_idxs = np.unstack(self.step_count, axis=0)
-            while dones.ndim < 2:
-                dones = dones[..., np.newaxis]
+            self.step_count *= ~np.expand_dims(dones, axis=0)
             timesteps = []
             for idx in range(self.batched_envs):
                 # we can end up with random jax/np datatypes here...
@@ -164,7 +168,4 @@ class AMAGOEnv(gym.Wrapper):
                     )
                 )
 
-        # likely redundant step count reset... just in case the environment
-        # is not automatically reset by the parallel wrapper at the top of the stack.
-        self.step_count *= ~dones
         return timesteps, rewards, terminateds, truncateds, infos

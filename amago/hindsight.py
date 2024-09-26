@@ -17,14 +17,14 @@ from amago import utils
 
 @dataclass
 class Timestep:
-    obs: dict[np.ndarray]
+    obs: dict[str, np.ndarray]
     # action from the *previous* timestep
     prev_action: np.ndarray
-    # reward from the previous timestep; None when using goal-conditioned setup
+    # reward from the previous timestep
     reward: float
-    # time as an int (for position embeddings only)
+    # time as an int
     time_idx: int
-    # meta-rollout terminal signal for the value loss
+    # meta-rollout terminal signal
     terminal: bool
 
     def __eq__(self, other):
@@ -46,7 +46,7 @@ class Timestep:
 
 @dataclass
 class FrozenTraj:
-    obs: dict[np.ndarray]
+    obs: dict[str, np.ndarray]
     rl2s: np.ndarray
     time_idxs: np.ndarray
     rews: np.ndarray
