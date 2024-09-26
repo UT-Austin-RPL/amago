@@ -224,12 +224,10 @@ class GPUSequenceBuffer:
 
     @property
     def sequences(self):
-        longest = max(self.cur_idxs)
+        l = max(self.cur_idxs)
         out = {}
         for k in self.buffers[0].keys():
-            out[k] = torch.stack([buffer[k] for buffer in self.buffers], axis=0)[
-                :, :longest
-            ]
+            out[k] = torch.stack([buffer[k] for buffer in self.buffers], axis=0)[:, :l]
         return out
 
     @property
@@ -310,8 +308,7 @@ class BilevelEpsilonGreedy(ExplorationWrapper):
     def reset(self, *args, **kwargs):
         out = super().reset(*args, **kwargs)
         np.random.seed(random.randint(0, 1e6))
-        # self.global_multiplier = np.random.rand(self.parallel_envs)
-        self.global_multiplier = np.ones(self.batched_envs)
+        self.global_multiplier = np.random.rand(self.batched_envs)
         return out
 
     def current_eps(self, local_step: np.ndarray):
@@ -492,7 +489,7 @@ class SequenceWrapper(gym.Wrapper):
             random.randint(*self.save_every) if self.save_every else None
             for _ in range(self.batched_envs)
         ]
-        self.total_return = [0.0 for _ in range(self.batched_envs)]
+        self.total_return = np.zeros(self.batched_envs, dtype=np.float64)
         self._current_timestep = [
             t.make_sequence(last_only=True) for t in self.active_trajs
         ]
@@ -508,14 +505,15 @@ class SequenceWrapper(gym.Wrapper):
         self.total_return += reward
         for idx in range(len(timestep)):
             self.active_trajs[idx].add_timestep(timestep[idx])
+            done_idx = timestep[idx].terminal or timestep[idx].truncated
             self.since_last_save[idx] += 1
-            if timestep[idx].terminal:
+            if done_idx:
                 self.return_history.add_score(self.env.env_name, self.total_return[idx])
             save = (
                 self.save_every is not None
                 and self.since_last_save[idx] > self.save_this_time[idx]
             )
-            if (timestep[idx].terminal or save) and self.make_dset:
+            if (done_idx or save) and self.make_dset:
                 self.log_to_disk(idx=idx)
                 self.active_trajs[idx] = Trajectory(timesteps=[timestep[idx]])
 
@@ -529,7 +527,7 @@ class SequenceWrapper(gym.Wrapper):
         self._total_frames += len(timestep)
         self._total_frames_by_env_name[self.env.env_name] += len(timestep)
         return (
-            stack_list_array_dicts(t.obs for t in timestep),
+            stack_list_array_dicts([t.obs for t in timestep]),
             reward,
             terminated,
             truncated,

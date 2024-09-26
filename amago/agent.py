@@ -215,11 +215,8 @@ class Agent(nn.Module):
 
         # get intended gamma distribution (always in -1 idx)
         actions = actions[..., -1, :].cpu().float().numpy()
-        if self.discrete:
-            actions = actions.astype(np.uint8)
-        else:
-            actions = actions.astype(np.float32)
-        return actions, hidden_state
+        dtype = np.uint8 if self.discrete or self.multibinary else np.float32
+        return actions.astype(dtype), hidden_state
 
     def forward(self, batch: Batch, log_step: bool):
         """

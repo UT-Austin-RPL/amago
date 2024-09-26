@@ -110,7 +110,8 @@ class AMAGOEnv(gym.Wrapper):
                     prev_action=prev_actions[idx],
                     reward=0.0,
                     terminal=False,
-                    time_idx=self.step_count[idx].item(),
+                    truncated=False,
+                    time_idx=0,
                 ),
             )
         return timesteps, info
@@ -127,34 +128,29 @@ class AMAGOEnv(gym.Wrapper):
             obs = {"observation": obs}
 
         if self.batched_envs == 1:
-            # "batch" an unbatched env so the wrappers above know what shape to expect
-            dones = terminateds or truncateds
             prev_actions = self.make_action_rep(action[np.newaxis, ...])
             timesteps = [
                 Timestep(
                     obs=obs,
                     prev_action=prev_actions[0],
                     reward=rewards,
-                    terminal=dones,
+                    terminal=terminateds,
+                    truncated=truncateds,
                     time_idx=self.step_count[0].item(),
                 )
             ]
             rewards = np.array([rewards], dtype=np.float32)
             terminateds = np.array([terminateds], dtype=bool)
             truncateds = np.array([truncateds], dtype=bool)
-            if dones:
-                self.step_count[0] = 0
         else:
-            dones = np.logical_or(terminateds, truncateds)
-            assert dones.shape == (self.batched_envs,)
             prev_actions = self.make_action_rep(action)
             # unstack to avoid indexing arrays during `Timestep` creation
-            _dones = np.unstack(dones, axis=0)
+            _terminals = np.unstack(terminateds, axis=0)
+            _truncateds = np.unstack(truncateds, axis=0)
             _obs = unstack_dict(obs)
             _rewards = np.unstack(rewards, axis=0)
             _prev_actions = np.unstack(prev_actions, axis=0)
             _time_idxs = np.unstack(self.step_count, axis=0)
-            self.step_count *= ~np.expand_dims(dones, axis=0)
             timesteps = []
             for idx in range(self.batched_envs):
                 # we can end up with random jax/np datatypes here...
@@ -163,7 +159,8 @@ class AMAGOEnv(gym.Wrapper):
                         obs=_obs[idx],
                         prev_action=_prev_actions[idx],
                         reward=_rewards[idx],
-                        terminal=_dones[idx],
+                        terminal=_terminals[idx],
+                        truncateds=_truncateds[idx],
                         time_idx=_time_idxs[idx],
                     )
                 )

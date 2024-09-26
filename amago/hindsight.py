@@ -26,12 +26,14 @@ class Timestep:
     time_idx: int
     # meta-rollout terminal signal
     terminal: bool
+    truncated: bool
 
     def __eq__(self, other):
         if (
             (self.time_idx != other.time_idx)
             or (self.reward != other.reward)
             or (self.terminal != other.terminal)
+            or (self.truncated != other.truncated)
         ):
             return False
         if (self.prev_action != other.prev_action).any():
