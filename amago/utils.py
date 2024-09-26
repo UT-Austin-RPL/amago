@@ -2,18 +2,16 @@ import warnings
 import time
 import os
 from functools import partial
-from termcolor import colored
 from typing import Iterable
 
+import gin
 import numpy as np
+import gymnasium as gym
+from termcolor import colored
+from accelerate.utils import gather_object
 import torch
 from torch import nn
 from torch.optim.lr_scheduler import LambdaLR
-import gymnasium as gym
-import gin
-
-from accelerate import Accelerator
-from accelerate.utils import gather_object
 
 
 def stack_list_array_dicts(list_: list[dict[np.ndarray]], axis=0):

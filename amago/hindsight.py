@@ -1,16 +1,8 @@
-import random
-import os
-import math
-import warnings
-import copy
 import pickle
 from dataclasses import dataclass, asdict
 from typing import Optional, Iterable
-from abc import ABC, abstractmethod
 
-import torch
 import numpy as np
-import gin
 
 from amago import utils
 
@@ -26,22 +18,6 @@ class Timestep:
     time_idx: int
     # meta-rollout terminal signal
     terminal: bool
-
-    def __eq__(self, other):
-        if (
-            (self.time_idx != other.time_idx)
-            or (self.reward != other.reward)
-            or (self.terminal != other.terminal)
-        ):
-            return False
-        if (self.prev_action != other.prev_action).any():
-            return False
-        if len(self.obs.keys()) != len(other.obs.keys()):
-            return False
-        for (k1, v1), (k2, v2) in zip(self.obs.items(), other.obs.items()):
-            if k1 != k2 or (v1 != v2).any():
-                return False
-        return True
 
 
 @dataclass
@@ -150,6 +126,5 @@ class Trajectory:
 
 
 class Relabeler:
-
     def __call__(self, traj: Trajectory) -> Trajectory:
         return traj
