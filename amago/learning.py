@@ -19,17 +19,16 @@ from accelerate import Accelerator, DistributedDataParallelKwargs
 from accelerate.utils import tqdm
 
 from . import utils
-from amago.envs.env_utils import (
-    ReturnHistory,
-    SpecialMetricHistory,
-    ExplorationWrapper,
-    EpsilonGreedy,
-    SequenceWrapper,
+from .envs.env_utils import (
     GPUSequenceBuffer,
     DummyAsyncVectorEnv,
     AlreadyVectorizedEnv,
-    EnvCreator,
 )
+from .envs.exploration import (
+    ExplorationWrapper,
+    EpsilonGreedy,
+)
+from .envs import SequenceWrapper, ReturnHistory, SpecialMetricHistory, EnvCreator
 from .loading import Batch, TrajDset, RLData_pad_collate, MAGIC_PAD_VAL
 from .hindsight import Relabeler
 from .agent import Agent
