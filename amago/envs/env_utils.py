@@ -503,17 +503,17 @@ class SequenceWrapper(gym.Wrapper):
         assert reward.shape[0] == self.batched_envs
 
         self.total_return += reward
-        for idx in range(len(timestep)):
+        done = np.logical_or(terminated, truncated)
+        for idx in range(self.batched_envs):
             self.active_trajs[idx].add_timestep(timestep[idx])
-            done_idx = timestep[idx].terminal or timestep[idx].truncated
             self.since_last_save[idx] += 1
-            if done_idx:
+            if done[idx]:
                 self.return_history.add_score(self.env.env_name, self.total_return[idx])
             save = (
                 self.save_every is not None
                 and self.since_last_save[idx] > self.save_this_time[idx]
             )
-            if (done_idx or save) and self.make_dset:
+            if (done[idx] or save) and self.make_dset:
                 self.log_to_disk(idx=idx)
                 self.active_trajs[idx] = Trajectory(timesteps=[timestep[idx]])
 
@@ -552,7 +552,7 @@ class SequenceWrapper(gym.Wrapper):
         return self._total_frames_by_env_name
 
     @property
-    def current_timestep(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def current_timestep(self) -> tuple[np.ndarray, np.ndarray]:
         return self._current_timestep
 
 

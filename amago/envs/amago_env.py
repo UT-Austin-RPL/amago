@@ -110,7 +110,6 @@ class AMAGOEnv(gym.Wrapper):
                     prev_action=prev_actions[idx],
                     reward=0.0,
                     terminal=False,
-                    truncated=False,
                     time_idx=0,
                 ),
             )
@@ -135,7 +134,6 @@ class AMAGOEnv(gym.Wrapper):
                     prev_action=prev_actions[0],
                     reward=rewards,
                     terminal=terminateds,
-                    truncated=truncateds,
                     time_idx=self.step_count[0].item(),
                 )
             ]
@@ -146,7 +144,6 @@ class AMAGOEnv(gym.Wrapper):
             prev_actions = self.make_action_rep(action)
             # unstack to avoid indexing arrays during `Timestep` creation
             _terminals = np.unstack(terminateds, axis=0)
-            _truncateds = np.unstack(truncateds, axis=0)
             _obs = unstack_dict(obs)
             _rewards = np.unstack(rewards, axis=0)
             _prev_actions = np.unstack(prev_actions, axis=0)
@@ -160,7 +157,6 @@ class AMAGOEnv(gym.Wrapper):
                         prev_action=_prev_actions[idx],
                         reward=_rewards[idx],
                         terminal=_terminals[idx],
-                        truncateds=_truncateds[idx],
                         time_idx=_time_idxs[idx],
                     )
                 )
