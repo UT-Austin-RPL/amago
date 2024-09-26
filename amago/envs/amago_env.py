@@ -147,14 +147,14 @@ class AMAGOEnv(gym.Wrapper):
             terminateds = np.array([terminateds], dtype=bool)
             truncateds = np.array([truncateds], dtype=bool)
         else:
+            timesteps = []
             prev_actions = self.make_action_rep(action)
             # unstack to avoid indexing arrays during `Timestep` creation
             _terminals = np.unstack(terminateds, axis=0)
-            _obs = unstack_dict(obs)
             _rewards = np.unstack(rewards, axis=0)
             _prev_actions = np.unstack(prev_actions, axis=0)
             _time_idxs = np.unstack(self.step_count, axis=0)
-            timesteps = []
+            _obs = unstack_dict(obs)
             for idx in range(self.batched_envs):
                 # we can end up with random jax/np datatypes here...
                 timesteps.append(

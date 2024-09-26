@@ -1,4 +1,5 @@
 from itertools import chain
+from typing import Type
 
 import torch
 from torch import nn
@@ -10,8 +11,8 @@ import gin
 import gymnasium as gym
 
 from amago.loading import Batch, MAGIC_PAD_VAL
-from amago.nets.tstep_encoders import *
-from amago.nets.traj_encoders import *
+from amago.nets.tstep_encoders import TstepEncoder, FFTstepEncoder
+from amago.nets.traj_encoders import TrajEncoder, TformerTrajEncoder
 from amago.nets import actor_critic
 from amago import utils
 
@@ -37,8 +38,8 @@ class Agent(nn.Module):
         rl2_space: gym.spaces.Box,
         action_space: gym.spaces.Space,
         max_seq_len: int,
-        tstep_encoder_Cls=FFTstepEncoder,
-        traj_encoder_Cls=TformerTrajEncoder,
+        tstep_encoder_Cls: Type[TstepEncoder] = FFTstepEncoder,
+        traj_encoder_Cls: Type[TrajEncoder] = TformerTrajEncoder,
         num_critics: int = 4,
         num_critics_td: int = 2,
         online_coeff: float = 1.0,

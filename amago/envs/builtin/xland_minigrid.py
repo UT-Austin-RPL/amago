@@ -20,7 +20,7 @@ else:
         RulesAndGoalsObservationWrapper,
     )
 
-from amago.envs.env_utils import AMAGO_ENV_LOG_PREFIX
+from amago.envs import AMAGO_ENV_LOG_PREFIX
 
 
 def _swap_rules(old_goal, old_rule, old_tile, new_goal, new_rule, new_tile, replace):
@@ -56,7 +56,6 @@ class XLandMiniGridEnv(gym.Env):
             if jax_device is not None
             else jax.devices("cpu")[0]
         )
-        print(self.jax_device)
 
         benchmark = xminigrid.load_benchmark(name=ruleset_benchmark)
         train, test = benchmark.shuffle(key=jax.random.key(train_test_split_key)).split(
