@@ -25,8 +25,13 @@ def stack_list_array_dicts(list_: list[dict[np.ndarray]], axis=0):
     return {k: np.stack(v, axis=axis) for k, v in out.items()}
 
 
-def unstack_dict(dict_: dict[str, np.ndarray], axis=0):
-    unstacked = {k: np.unstack(v, axis=axis) for k, v in dict_.items()}
+def unstack_dict(
+    dict_: dict[str, np.ndarray | torch.Tensor], axis=0, pytorch: bool = False
+):
+    if pytorch:
+        unstacked = {k: v.unbind(dim=axis) for k, v in dict_.items()}
+    else:
+        unstacked = {k: np.unstack(v, axis=axis) for k, v in dict_.items()}
     out = None
     for k, vs in unstacked.items():
         if out is None:

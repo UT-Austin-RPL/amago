@@ -38,7 +38,7 @@ ATARI_TIME_LIMIT = (30 * 60 * 60) // 5  # (30 minutes of game time)
 
 def make_atari_game(game_name):
     return AtariAMAGOWrapper(
-        AtariGame(game=game_name, use_discrete_actions=True), horizon=ATARI_TIME_LIMIT
+        AtariGame(game=game_name, use_discrete_actions=True),
     )
 
 
@@ -50,9 +50,7 @@ if __name__ == "__main__":
 
     config = {
         "amago.agent.Agent.reward_multiplier": 0.25,
-        "amago.nets.traj_encoders.TformerTrajEncoder.pos_emb": "fixed",
     }
-    turn_off_goal_conditioning(config)
     switch_traj_encoder(
         config,
         arch=args.traj_encoder,

@@ -1,8 +1,11 @@
+import time
+
 import gymnasium as gym
 import numpy as np
 import torch
 
 from amago.loading import MAGIC_PAD_VAL
+from amago.utils import unstack_dict
 
 
 class AlreadyVectorizedEnv(gym.Env):
@@ -223,6 +226,86 @@ class GPUSequenceBuffer:
         for i, interval in enumerate(time_intervals):
             arange = torch.arange(*interval)
             self._time_idx_buffer[i, : len(arange)] = arange
+        out = self._time_idx_buffer[:, :longest]
+        return out
+
+    @property
+    def sequence_lengths(self):
+        # shaped for Batch, Length, Actions
+        return torch.Tensor(self.cur_idxs).to(self.device).view(-1, 1, 1).long()
+
+
+class GPUSequenceBuffer:
+    def __init__(self, device, max_len: int, num_parallel: int):
+        self.device = device
+        self.max_len = max_len
+        self.num_parallel = num_parallel
+        self.buffers = [None for _ in range(num_parallel)]
+        self.cur_idxs = torch.zeros(num_parallel, dtype=torch.long)
+        self.time_start = torch.zeros(num_parallel, dtype=torch.long)
+        self.time_end = torch.ones(num_parallel, dtype=torch.long)
+        self._time_idx_buffer = torch.zeros(
+            (num_parallel, max_len), device=self.device, dtype=torch.long
+        )
+
+    def _make_blank_buffer(self, array: np.ndarray):
+        shape = (self.max_len,) + array.shape[1:]
+        return torch.full(shape, MAGIC_PAD_VAL).to(
+            dtype=array.dtype, device=self.device
+        )
+
+    def add_timestep(self, arrays: np.ndarray | dict[np.ndarray], dones=None):
+        if not isinstance(arrays, dict):
+            arrays = {"_": arrays}
+
+        for k in arrays.keys():
+            v = torch.from_numpy(arrays[k]).to(self.device)
+            assert v.shape[0] == self.num_parallel
+            assert v.shape[1] == 1
+            arrays[k] = v
+
+        if dones is None:
+            dones = [False for _ in range(self.num_parallel)]
+
+        arrays = unstack_dict(arrays, axis=0, pytorch=True)
+        assert len(arrays) == self.num_parallel
+        for i in range(len(arrays)):
+            array = arrays[i]
+            self.time_end[i] += 1
+            if dones[i] or self.buffers[i] is None:
+                self.buffers[i] = {
+                    k: self._make_blank_buffer(array[k]) for k in array.keys()
+                }
+                self.cur_idxs[i] = 0
+                self.time_start[i] = 0
+                self.time_end[i] = 1
+            if self.cur_idxs[i] < self.max_len:
+                for k in array.keys():
+                    self.buffers[i][k][self.cur_idxs[i]] = array[k]
+                self.cur_idxs[i] += 1
+            else:
+                self.time_start[i] += 1
+                for k in array.keys():
+                    self.buffers[i][k] = torch.cat(
+                        (self.buffers[i][k], array[k]), axis=0
+                    )[-self.max_len :]
+
+    @property
+    def sequences(self):
+        l = max(self.cur_idxs)
+        out = {}
+        for k in self.buffers[0].keys():
+            out[k] = torch.stack([buffer[k] for buffer in self.buffers], axis=0)[:, :l]
+        return out
+
+    @property
+    @torch.compile
+    def time_idxs(self):
+        longest = self.cur_idxs.max()
+        intervals = self.time_start.shape[0]
+        for i in range(intervals):
+            interval = torch.arange(self.time_start[i], self.time_end[i])
+            self._time_idx_buffer[i, : interval.shape[0]] = interval
         out = self._time_idx_buffer[:, :longest]
         return out
 
