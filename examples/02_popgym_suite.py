@@ -38,7 +38,6 @@ if __name__ == "__main__":
         "amago.nets.actor_critic.NCriticsTwoHot.max_return": 1.0,  # paper: None
         "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 32,  # paper: 64
     }
-    turn_off_goal_conditioning(config)
     switch_traj_encoder(
         config,
         arch=args.traj_encoder,

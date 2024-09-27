@@ -346,7 +346,7 @@ class SequenceWrapper(gym.Wrapper):
         return self._total_frames_by_env_name
 
     @property
-    def current_timestep(self) -> tuple[np.ndarray, np.ndarray]:
+    def current_timestep(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         return self._current_timestep
 
 

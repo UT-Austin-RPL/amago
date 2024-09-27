@@ -10,7 +10,8 @@ setup(
     python_requires=">=3.10",
     install_requires=[
         "gymnasium>=0.26",
-        "torch>=2.0",
+        "torch>=2.4",
+        "numpy>=2.1",
         "matplotlib",
         "gin-config",
         "wandb",
@@ -23,6 +24,7 @@ setup(
     ],
     extras_require={
         "envs": [
+            "opencv-python",
             "popgym",
             "crafter",
             "opencv-python",

@@ -370,7 +370,7 @@ class Transformer(nn.Module):
         h = hidden_state or [[None, None, None] for _ in range(self.n_layers)]
 
         # emedding
-        pos_emb = self.position_embedding(pos_idxs)
+        pos_emb = self.position_embedding(pos_idxs.squeeze(-1))
         traj_emb = self.inp(seq)
         traj_emb = self.dropout(traj_emb + pos_emb)
 

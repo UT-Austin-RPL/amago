@@ -180,30 +180,20 @@ class Agent(nn.Module):
 
     def get_actions(
         self,
-        obs,
-        rl2s,
-        seq_lengths,
-        time_idxs,
+        obs: dict[str, torch.Tensor],
+        rl2s: torch.Tensor,
+        time_idxs: torch.Tensor,
         hidden_state=None,
         sample: bool = True,
     ):
         """
         Get rollout actions from the current policy.
         """
-        using_hidden = hidden_state is not None
-        if using_hidden:
-            obs = self.get_current_timestep(obs, seq_lengths)
-            rl2s = self.get_current_timestep(rl2s, seq_lengths)
-            time_idxs = self.get_current_timestep(time_idxs, seq_lengths.squeeze(-1))
         tstep_emb = self.tstep_encoder(obs=obs, rl2s=rl2s)
-
         # sequence model embedding [batch, length, d_emb]
         traj_emb_t, hidden_state = self.traj_encoder(
             tstep_emb, time_idxs=time_idxs, hidden_state=hidden_state
         )
-        if not using_hidden:
-            traj_emb_t = self.get_current_timestep(traj_emb_t, seq_lengths)
-
         # generate action distribution [batch, len(self.gammas), d_action]
         action_dists = self.actor(traj_emb_t.squeeze(1))
         if sample:
@@ -213,11 +203,10 @@ class Agent(nn.Module):
                 actions = torch.argmax(action_dists.probs, dim=-1, keepdim=True)
             else:
                 actions = action_dists.mean
-
         # get intended gamma distribution (always in -1 idx)
-        actions = actions[..., -1, :].cpu().float().numpy()
-        dtype = np.uint8 if self.discrete or self.multibinary else np.float32
-        return actions.astype(dtype), hidden_state
+        actions = actions[..., -1, :]
+        dtype = torch.uint8 if self.discrete or self.multibinary else torch.float32
+        return actions.to(dtype=dtype), hidden_state
 
     def forward(self, batch: Batch, log_step: bool):
         """

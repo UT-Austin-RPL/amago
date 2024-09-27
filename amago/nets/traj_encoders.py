@@ -100,6 +100,7 @@ class GRUTrajEncoder(TrajEncoder):
 
     def reset_hidden_state(self, hidden_state, dones):
         assert hidden_state is not None
+        breakpoint()
         hidden_state[:, dones] = 0.0
         return hidden_state
 
@@ -170,7 +171,7 @@ class TformerTrajEncoder(TrajEncoder):
         if hidden_state is None:
             return None
         assert isinstance(hidden_state, transformer.TformerHiddenState)
-        hidden_state.reset(idxs=dones)
+        hidden_state.reset(idxs=dones.squeeze(-1))
         return hidden_state
 
     def forward(self, seq, time_idxs, hidden_state=None):
@@ -285,7 +286,7 @@ class MambaTrajEncoder(TrajEncoder):
         if hidden_state is None:
             return None
         assert isinstance(hidden_state, _MambaHiddenState)
-        hidden_state.reset(idxs=dones)
+        hidden_state.reset(idxs=dones.squeeze(-1))
         return hidden_state
 
     def forward(self, seq, time_idxs=None, hidden_state=None):

@@ -116,11 +116,6 @@ def add_common_cli(parser: ArgumentParser) -> ArgumentParser:
         help="Skip learning updates for this many epochs at the beginning of training (if worried about overfitting to a small dataset)",
     )
     parser.add_argument(
-        "--slow_inference",
-        action="store_true",
-        help="Turn OFF fast-inference mode (key-value caching for Transformer, hidden state caching for RNN)",
-    )
-    parser.add_argument(
         "--mixed_precision",
         choices=["no", "bf16"],
         default="no",
@@ -164,15 +159,15 @@ def switch_tstep_encoder(config: dict, arch: str, **kwargs):
     """
     assert arch in ["ff", "cnn"]
     if arch == "ff":
-        config[
-            "amago.agent.Agent.tstep_encoder_Cls"
-        ] = amago.nets.tstep_encoders.FFTstepEncoder
+        config["amago.agent.Agent.tstep_encoder_Cls"] = (
+            amago.nets.tstep_encoders.FFTstepEncoder
+        )
         ff_config = "amago.nets.tstep_encoders.FFTstepEncoder"
         config.update({f"{ff_config}.{key}": val for key, val in kwargs.items()})
     elif arch == "cnn":
-        config[
-            "amago.agent.Agent.tstep_encoder_Cls"
-        ] = amago.nets.tstep_encoders.CNNTstepEncoder
+        config["amago.agent.Agent.tstep_encoder_Cls"] = (
+            amago.nets.tstep_encoders.CNNTstepEncoder
+        )
         cnn_config = "amago.nets.tstep_encoders.CNNTstepEncoder"
         config.update({f"{cnn_config}.{key}": val for key, val in kwargs.items()})
     return config
@@ -319,7 +314,6 @@ def create_experiment_from_cli(
         val_interval=cli.val_interval,
         ckpt_interval=cli.ckpt_interval,
         mixed_precision=cli.mixed_precision,
-        fast_inference=not cli.slow_inference,
         env_mode=cli.env_mode,
         **extra_experiment_kwargs,
     )

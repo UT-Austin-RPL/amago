@@ -148,7 +148,7 @@ class RLData:
         return self
 
 
-MAGIC_PAD_VAL = 0
+MAGIC_PAD_VAL = -2.0
 pad = partial(pad_sequence, batch_first=True, padding_value=MAGIC_PAD_VAL)
 
 

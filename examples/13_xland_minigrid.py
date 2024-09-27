@@ -21,6 +21,7 @@ def add_cli(parser):
         default="trivial-1m",
         choices=["trivial-1m", "small-1m", "medium-1m", "high-1m", "high-3m"],
     )
+    parser.add_argument("--xland_device", type=int, default=None)
     parser.add_argument("--k_shots", type=int, default=5)
     parser.add_argument("--rooms", type=int, default=4)
     parser.add_argument("--grid_size", type=int, default=13)
@@ -110,6 +111,7 @@ if __name__ == "__main__":
         "grid_size": args.grid_size,
         "k_shots": args.k_shots,
         "ruleset_benchmark": args.benchmark,
+        "jax_device": args.xland_device,
     }
 
     args.env_mode = "already_vectorized"

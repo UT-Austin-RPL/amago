@@ -20,7 +20,6 @@ from accelerate.utils import tqdm
 
 from . import utils
 from .envs.env_utils import (
-    GPUSequenceBuffer,
     DummyAsyncVectorEnv,
     AlreadyVectorizedEnv,
 )
@@ -90,7 +89,6 @@ class Experiment:
     lr_warmup_steps: int = 500
     grad_clip: float = 1.0
     l2_coeff: float = 1e-3
-    fast_inference: bool = True
     mixed_precision: str = "no"
 
     def start(self):
@@ -127,7 +125,7 @@ class Experiment:
         ), "Save longer trajectories than the model can process"
 
         self.accelerator.print(
-            f"""\n\n \t\t {colored('AMAGO v2', 'green')}
+            f"""\n\n \t\t {colored('AMAGO v3', 'green')}
             \t -------------------------
             \t Agent Type: {self.policy.__class__.__name__}
             \t Environment: {env_summary}
@@ -135,7 +133,6 @@ class Experiment:
             \t Policy Max Sequence Length: {self.max_seq_len}
             \t Trajectory File Sequence Length: {self.traj_save_len}
             \t Mixed Precision: {self.mixed_precision.upper()}
-            \t Fast Inference: {self.fast_inference}
             \t Offline Loss Weight: {self.policy.offline_coeff}
             \t Online Loss Weight: {self.policy.online_coeff}
             \t Total Parameters: {total_params:,d} \n\n"""
@@ -218,13 +215,9 @@ class Experiment:
             utils.amago_warning(
                 f"Experiment.parallel_actors ({self.parallel_actors}) does not match the detected batch dimension of the environment ({detected})"
             )
-        self.val_envs = Par(make_val)
-        self.val_envs.reset()
-
-        # self.train_buffers holds the env state between rollout cycles
-        # that are shorter than the horizon length
-        self.train_buffers = None
         self.hidden_state = None
+
+        self.val_envs = Par(make_val)
 
         if self.env_mode == "already_vectorized":
             _inner = f"Vectorized Gym Env (x{self.parallel_actors})"
@@ -319,8 +312,6 @@ class Experiment:
             collate_fn=RLData_pad_collate,
             pin_memory=True,
         )
-        # accelerator.free_memory clears everything.
-        # https://github.com/huggingface/accelerate/blob/2471eacdd648446f2f63eccb9b18a7731304f401/src/accelerate/accelerator.py#L3189
         self.train_dloader = self.accelerator.prepare(train_dloader)
 
     def init_logger(self):
@@ -377,7 +368,6 @@ class Experiment:
         self,
         envs,
         timesteps: int,
-        buffers=None,
         hidden_state=None,
         render: bool = False,
     ) -> tuple[ReturnHistory, SpecialMetricHistory]:
@@ -402,92 +392,69 @@ class Experiment:
         # (can make train-time stats useless depending on horizon vs. `timesteps`)
         utils.call_async_env(envs, "reset_stats")
 
-        if buffers is None:
-            # start of training or new eval cycle
-            envs.reset()
-            make_buffer = partial(
-                GPUSequenceBuffer, self.DEVICE, self.max_seq_len, self.parallel_actors
-            )
-            obs_seqs = make_buffer()
-            rl2_seqs = make_buffer()
-        else:
-            # continue interaction from previous epoch
-            obs_seqs, rl2_seqs = buffers
-
         if hidden_state is None:
             # init new hidden state
             hidden_state = policy.traj_encoder.init_hidden_state(
                 self.parallel_actors, self.DEVICE
             )
 
-        def get_t(_dones=None):
-            par_obs_rl2 = utils.call_async_env(envs, "current_timestep")
-            assert len(par_obs_rl2) == self.parallel_actors
-            _obs = []
-            _rl2 = []
-            for _outer_parallel in par_obs_rl2:
-                for _inner_parallel in _outer_parallel:
-                    _obs.append(_inner_parallel[0])
-                    _rl2.append(_inner_parallel[1])
+        def get_t():
+            # fetch `Timstep.make_sequence` from all envs
+            par_obs_rl2_time = utils.call_async_env(envs, "current_timestep")
+            assert len(par_obs_rl2_time) == self.parallel_actors
+            _obs, _rl2s, _time_idxs = [], [], []
+            for _outer_parallel in par_obs_rl2_time:
+                for _o, _r, _t in _outer_parallel:
+                    _obs.append(_o)
+                    _rl2s.append(_r)
+                    _time_idxs.append(_t)
+            # stack all the results
             _obs = utils.stack_list_array_dicts(_obs, axis=0)
-            _rl2 = np.stack(_rl2, axis=0)
-            obs_seqs.add_timestep(_obs, _dones)
-            rl2_seqs.add_timestep(_rl2, _dones)
+            _rl2s = np.stack(_rl2s, axis=0)
+            _time_idxs = np.stack(_time_idxs, axis=0)
+            # ---> torch --> GPU
+            _obs = {k: torch.from_numpy(v).to(self.DEVICE) for k, v in _obs.items()}
+            _rl2s = torch.from_numpy(_rl2s).to(self.DEVICE)
+            _time_idxs = torch.from_numpy(_time_idxs).to(self.DEVICE)
+            return _obs, _rl2s, _time_idxs
 
-        if buffers is None:
-            get_t()
-
+        obs, rl2s, time_idxs = get_t()
         for _ in iter_:
-            obs_tc_t = obs_seqs.sequences
-            rl2_tc_t = rl2_seqs.sequences["_"]
-            seq_lengths = obs_seqs.sequence_lengths
-            time_idxs = obs_seqs.time_idxs
-
             with torch.no_grad():
                 with self.caster():
                     actions, hidden_state = policy.get_actions(
-                        obs=obs_tc_t,
-                        rl2s=rl2_tc_t,
-                        seq_lengths=seq_lengths,
+                        obs=obs,
+                        rl2s=rl2s,
                         time_idxs=time_idxs,
                         sample=self.sample_actions,
-                        hidden_state=hidden_state if self.fast_inference else None,
+                        hidden_state=hidden_state,
                     )
-            *_, terminated, truncated, _ = envs.step(actions)
+            *_, terminated, truncated, _ = envs.step(actions.cpu().numpy())
             done = terminated | truncated
-            get_t(done)
+            obs, rl2s, time_idxs = get_t()
             hidden_state = policy.traj_encoder.reset_hidden_state(hidden_state, done)
-
             if render:
                 envs.render()
 
         return_history = utils.call_async_env(envs, "return_history")
         special_history = utils.call_async_env(envs, "special_history")
-        return (
-            (obs_seqs, rl2_seqs),
-            hidden_state,
-            return_history,
-            special_history,
-        )
+        return hidden_state, (return_history, special_history)
 
     def collect_new_training_data(self):
         if self.train_timesteps_per_epoch > 0:
-            (
-                self.train_buffers,
-                self.hidden_state,
-                returns,
-                specials,
-            ) = self.interact(
+            self.hidden_state, (returns, specials) = self.interact(
                 self.train_envs,
                 self.train_timesteps_per_epoch,
-                buffers=self.train_buffers,
+                hidden_state=self.hidden_state,
             )
 
     def evaluate_val(self):
         if self.val_timesteps_per_epoch > 0:
-            *_, returns, specials = self.interact(
+            self.val_envs.reset()
+            _, (returns, specials) = self.interact(
                 self.val_envs,
                 self.val_timesteps_per_epoch,
+                hidden_state=None,
             )
             logs_per_process = self.policy_metrics(returns, specials=specials)
             cur_return = logs_per_process["Average Total Return (Across All Env Names)"]
@@ -499,14 +466,17 @@ class Experiment:
     def evaluate_test(
         self, make_test_env: callable, timesteps: int, render: bool = False
     ):
+        # TODO: refactor
         make = lambda: SequenceWrapper(
             make_test_env(), save_every=None, make_dset=False
         )
         Par = gym.vector.AsyncVectorEnv if self.async_envs else DummyAsyncVectorEnv
         test_envs = Par([make for _ in range(self.parallel_actors)])
-        *_, returns, specials = self.interact(
+        test_envs.reset()
+        _, returns, specials = self.interact(
             test_envs,
             timesteps,
+            hidden_state=None,
             render=render,
         )
         logs = self.policy_metrics(returns, specials)
@@ -541,13 +511,6 @@ class Experiment:
                 | progress
                 | dict(total_frames_by_env_name)
             )
-
-    def make_figures(self, loss_info) -> dict[str, wandb.Image]:
-        """
-        Override this to create polished figures from raw logging
-        info and automatically dump them to wandb.
-        """
-        return {}
 
     def policy_metrics(
         self,

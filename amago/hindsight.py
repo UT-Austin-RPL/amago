@@ -69,7 +69,8 @@ class Trajectory:
         actions = np.stack([t.prev_action for t in timesteps], axis=0)
         rews = np.stack([t.reward for t in timesteps], axis=0)[:, np.newaxis]
         rl2 = np.concatenate((rews, actions), axis=-1).astype(np.float32)
-        return obs, rl2
+        time = np.array([t.time_idx for t in timesteps], dtype=np.int64)[:, np.newaxis]
+        return obs, rl2, time
 
     def make_sequence(self, last_only: bool = False):
         if last_only:
@@ -96,8 +97,7 @@ class Trajectory:
             )
 
     def freeze(self) -> FrozenTraj:
-        obs, rl2s = self.make_sequence()
-        time_idxs = np.array([t.time_idx for t in self.timesteps], dtype=np.int64)
+        obs, rl2s, time = self.make_sequence()
         rews = np.array([t.reward for t in self.timesteps[1:]], dtype=np.float32)[
             :, np.newaxis
         ]
@@ -110,7 +110,7 @@ class Trajectory:
         return FrozenTraj(
             obs=obs,
             rl2s=rl2s,
-            time_idxs=time_idxs,
+            time_idxs=time,
             rews=rews,
             dones=dones,
             actions=actions,
