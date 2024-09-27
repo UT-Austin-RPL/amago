@@ -291,6 +291,7 @@ class SequenceWrapper(gym.Wrapper):
 
     def step(self, action):
         timestep, reward, terminated, truncated, info = self.env.step(action)
+        start = time.time()
         assert len(timestep) == self.batched_envs
         assert terminated.shape[0] == self.batched_envs
         assert truncated.shape[0] == self.batched_envs
@@ -318,10 +319,13 @@ class SequenceWrapper(gym.Wrapper):
         self._current_timestep = [
             t.make_sequence(last_only=True) for t in self.active_trajs
         ]
+        print(f"rest of seq wrapper time: {time.time() - start}")
         self._total_frames += len(timestep)
         self._total_frames_by_env_name[self.env.env_name] += len(timestep)
+
+        obs = stack_list_array_dicts([t.obs for t in timestep])
         return (
-            stack_list_array_dicts([t.obs for t in timestep]),
+            obs,
             reward,
             terminated,
             truncated,

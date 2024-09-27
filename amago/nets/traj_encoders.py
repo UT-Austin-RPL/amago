@@ -100,8 +100,7 @@ class GRUTrajEncoder(TrajEncoder):
 
     def reset_hidden_state(self, hidden_state, dones):
         assert hidden_state is not None
-        breakpoint()
-        hidden_state[:, dones] = 0.0
+        hidden_state[:, dones.squeeze(-1)] = 0.0
         return hidden_state
 
     def forward(self, seq, time_idxs=None, hidden_state=None):
