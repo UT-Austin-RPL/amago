@@ -2,10 +2,8 @@ import os
 import shutil
 import warnings
 import contextlib
-import time
 from dataclasses import dataclass
 from collections import defaultdict
-from functools import partial
 from typing import Optional, Iterable
 
 import gin
@@ -211,13 +209,7 @@ class Experiment:
         self.train_envs = Par(make_train)
         self.train_envs.reset()
         self.rl2_space = make_train[0].rl2_space
-        detected = len(utils.call_async_env(self.train_envs, "current_timestep"))
-        if detected != self.parallel_actors:
-            utils.amago_warning(
-                f"Experiment.parallel_actors ({self.parallel_actors}) does not match the detected batch dimension of the environment ({detected})"
-            )
-        self.hidden_state = None
-
+        self.hidden_state = None  # holds train_env hidden state between rollouts
         self.val_envs = Par(make_val)
 
         if self.env_mode == "already_vectorized":
@@ -402,21 +394,22 @@ class Experiment:
         def get_t():
             # fetch `Timstep.make_sequence` from all envs
             par_obs_rl2_time = utils.call_async_env(envs, "current_timestep")
-            assert len(par_obs_rl2_time) == self.parallel_actors
             _obs, _rl2s, _time_idxs = [], [], []
-            for _outer_parallel in par_obs_rl2_time:
-                for _o, _r, _t in _outer_parallel:
-                    _obs.append(_o)
-                    _rl2s.append(_r)
-                    _time_idxs.append(_t)
+            for _o, _r, _t in par_obs_rl2_time:
+                _obs.append(_o)
+                _rl2s.append(_r)
+                _time_idxs.append(_t)
             # stack all the results
-            _obs = utils.stack_list_array_dicts(_obs, axis=0)
-            _rl2s = np.stack(_rl2s, axis=0)
-            _time_idxs = np.stack(_time_idxs, axis=0)
-            # ---> torch --> GPU
-            _obs = {k: torch.from_numpy(v).to(self.DEVICE) for k, v in _obs.items()}
-            _rl2s = torch.from_numpy(_rl2s).to(self.DEVICE)
-            _time_idxs = torch.from_numpy(_time_idxs).to(self.DEVICE)
+            _obs = utils.stack_list_array_dicts(_obs, axis=0, cat=True)
+            _rl2s = np.concatenate(_rl2s, axis=0)
+            _time_idxs = np.concatenate(_time_idxs, axis=0)
+            # ---> torch --> GPU --> dummy length dim
+            _obs = {
+                k: torch.from_numpy(v).to(self.DEVICE).unsqueeze(1)
+                for k, v in _obs.items()
+            }
+            _rl2s = torch.from_numpy(_rl2s).to(self.DEVICE).unsqueeze(1)
+            _time_idxs = torch.from_numpy(_time_idxs).to(self.DEVICE).unsqueeze(1)
             return _obs, _rl2s, _time_idxs
 
         obs, rl2s, time_idxs = get_t()

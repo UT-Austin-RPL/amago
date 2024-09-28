@@ -159,15 +159,15 @@ def switch_tstep_encoder(config: dict, arch: str, **kwargs):
     """
     assert arch in ["ff", "cnn"]
     if arch == "ff":
-        config["amago.agent.Agent.tstep_encoder_Cls"] = (
-            amago.nets.tstep_encoders.FFTstepEncoder
-        )
+        config[
+            "amago.agent.Agent.tstep_encoder_Cls"
+        ] = amago.nets.tstep_encoders.FFTstepEncoder
         ff_config = "amago.nets.tstep_encoders.FFTstepEncoder"
         config.update({f"{ff_config}.{key}": val for key, val in kwargs.items()})
     elif arch == "cnn":
-        config["amago.agent.Agent.tstep_encoder_Cls"] = (
-            amago.nets.tstep_encoders.CNNTstepEncoder
-        )
+        config[
+            "amago.agent.Agent.tstep_encoder_Cls"
+        ] = amago.nets.tstep_encoders.CNNTstepEncoder
         cnn_config = "amago.nets.tstep_encoders.CNNTstepEncoder"
         config.update({f"{cnn_config}.{key}": val for key, val in kwargs.items()})
     return config

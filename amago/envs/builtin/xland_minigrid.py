@@ -56,7 +56,9 @@ class XLandMiniGridEnv(gym.Env):
             if jax_device is not None
             else jax.devices("cpu")[0]
         )
+        print(f"Using JAX device {self.jax_device} for XLandMiniGridEnv")
 
+        # this always uses cuda memory for some reason?
         benchmark = xminigrid.load_benchmark(name=ruleset_benchmark)
         train, test = benchmark.shuffle(key=jax.random.key(train_test_split_key)).split(
             prop=train_test_split_pct
@@ -217,16 +219,16 @@ if __name__ == "__main__":
 
     env = AMAGOEnv(
         XLandMiniGridEnv(
-            parallel_envs=256,
+            parallel_envs=32,
             rooms=4,
             grid_size=13,
-            ruleset_benchmark="high-3m",
+            ruleset_benchmark="trivial-1m",
             train_test_split="train",
             train_test_split_key=0,
             k_shots=25,
-            jax_device=4,
+            jax_device=None,
         ),
-        batched_envs=256,
+        batched_envs=32,
     )
 
     env.reset()

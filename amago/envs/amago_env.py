@@ -19,7 +19,7 @@ from .env_utils import (
     space_convert,
 )
 from .exploration import ExplorationWrapper
-from amago.hindsight import Timestep, Trajectory
+from amago.hindsight import Timestep, Trajectory, split_batched_timestep
 from amago.utils import unstack_dict, stack_list_array_dicts
 
 
@@ -96,78 +96,50 @@ class AMAGOEnv(gym.Wrapper):
         return self.env.reset(seed=seed, options=options)
 
     def reset(self, seed=None, options=None) -> Timestep:
-        self.step_count = np.zeros((self.batched_envs, 1), dtype=np.int64)
+        self.step_count = np.zeros((self.batched_envs,), dtype=np.int64)
         obs, info = self.inner_reset(seed=seed, options=options)
         if not isinstance(obs, dict):
             obs = {"observation": obs}
-
         if self.batched_envs == 1:
-            obs = [obs]
-            prev_actions = [self.blank_action[0, ...]]
-        else:
-            obs = unstack_dict(obs)
-            prev_actions = np.unstack(self.blank_action, axis=0)
-
-        timesteps = []
-        for idx in range(self.batched_envs):
-            timesteps.append(
-                Timestep(
-                    obs=obs[idx],
-                    prev_action=prev_actions[idx],
-                    reward=0.0,
-                    terminal=False,
-                    time_idx=0,
-                ),
-            )
-        return timesteps, info
+            obs = {k: v[np.newaxis, ...] for k, v in obs.items()}
+        blank_action = self.blank_action
+        timestep = Timestep(
+            obs=obs,
+            prev_action=blank_action,
+            reward=np.zeros((self.batched_envs,), dtype=np.float32),
+            terminal=np.zeros((self.batched_envs,), dtype=bool),
+            time_idx=np.zeros((self.batched_envs,), dtype=np.int64),
+            batched_envs=self.batched_envs,
+        )
+        return timestep, info
 
     def inner_step(self, action):
         return self.env.step(action)
 
-    def step(self, action: np.ndarray) -> tuple[Timestep, float, bool, bool, dict]:
+    def step(
+        self, action: np.ndarray
+    ) -> tuple[Timestep, np.ndarray, np.ndarray, np.ndarray, dict]:
         # take environment step
         self.step_count += 1
         obs, rewards, terminateds, truncateds, infos = self.inner_step(action)
         if not isinstance(obs, dict):
             # force dict obs
             obs = {"observation": obs}
-
         if self.batched_envs == 1:
-            prev_actions = self.make_action_rep(action[np.newaxis, ...])
-            timesteps = [
-                Timestep(
-                    obs=obs,
-                    prev_action=prev_actions[0],
-                    reward=rewards,
-                    terminal=terminateds,
-                    time_idx=self.step_count[0].item(),
-                )
-            ]
+            obs = {k: v[np.newaxis, ...] for k, v in obs.items()}
             rewards = np.array([rewards], dtype=np.float32)
             terminateds = np.array([terminateds], dtype=bool)
             truncateds = np.array([truncateds], dtype=bool)
-        else:
-            timesteps = []
-            prev_actions = self.make_action_rep(action)
-            # unstack to avoid indexing arrays during `Timestep` creation
-            _terminals = np.unstack(terminateds, axis=0)
-            _rewards = np.unstack(rewards, axis=0)
-            _prev_actions = np.unstack(prev_actions, axis=0)
-            _time_idxs = np.unstack(self.step_count, axis=0)
-            _obs = unstack_dict(obs)
-            for idx in range(self.batched_envs):
-                # we can end up with random jax/np datatypes here...
-                timesteps.append(
-                    Timestep(
-                        obs=_obs[idx],
-                        prev_action=_prev_actions[idx],
-                        reward=_rewards[idx],
-                        terminal=_terminals[idx],
-                        time_idx=_time_idxs[idx],
-                    )
-                )
-
-        return timesteps, rewards, terminateds, truncateds, infos
+        prev_actions = self.make_action_rep(action)
+        timestep = Timestep(
+            obs=obs,
+            prev_action=prev_actions,
+            reward=rewards,
+            terminal=terminateds,
+            time_idx=self.step_count,
+            batched_envs=self.batched_envs,
+        )
+        return timestep, rewards, terminateds, truncateds, infos
 
 
 class ReturnHistory:
@@ -276,31 +248,32 @@ class SequenceWrapper(gym.Wrapper):
 
     def reset(self, seed=None) -> Timestep:
         timestep, info = self.env.reset(seed=seed)
-        assert len(timestep) == self.batched_envs
-        self.active_trajs = [Trajectory(timesteps=[t]) for t in timestep]
+        assert timestep.batched_envs == self.batched_envs
+        self._current_timestep = timestep.as_input()
+        self.active_trajs = [
+            Trajectory(timesteps=[t]) for t in split_batched_timestep(timestep)
+        ]
+        assert len(self.active_trajs) == self.batched_envs
         self.since_last_save = [0 for _ in range(self.batched_envs)]
         self.save_this_time = [
             random.randint(*self.save_every) if self.save_every else None
             for _ in range(self.batched_envs)
         ]
         self.total_return = np.zeros(self.batched_envs, dtype=np.float64)
-        self._current_timestep = [
-            t.make_sequence(last_only=True) for t in self.active_trajs
-        ]
-        return stack_list_array_dicts([t.obs for t in timestep]), info
+        return timestep.obs, info
 
     def step(self, action):
         timestep, reward, terminated, truncated, info = self.env.step(action)
         start = time.time()
-        assert len(timestep) == self.batched_envs
         assert terminated.shape[0] == self.batched_envs
         assert truncated.shape[0] == self.batched_envs
         assert reward.shape[0] == self.batched_envs
+        self._current_timestep = timestep.as_input()
 
         self.total_return += reward
         done = np.logical_or(terminated, truncated)
-        for idx in range(self.batched_envs):
-            self.active_trajs[idx].add_timestep(timestep[idx])
+        for idx, timestep in enumerate(split_batched_timestep(timestep)):
+            self.active_trajs[idx].add_timestep(timestep)
             self.since_last_save[idx] += 1
             if done[idx]:
                 self.return_history.add_score(self.env.env_name, self.total_return[idx])
@@ -310,22 +283,17 @@ class SequenceWrapper(gym.Wrapper):
             )
             if (done[idx] or save) and self.make_dset:
                 self.log_to_disk(idx=idx)
-                self.active_trajs[idx] = Trajectory(timesteps=[timestep[idx]])
+                self.active_trajs[idx] = Trajectory(timesteps=[timestep])
 
         for info_key, info_val in info.items():
             if info_key.startswith(self.special_history.log_prefix):
                 self.special_history.add_score(self.env.env_name, info_key, info_val)
 
-        self._current_timestep = [
-            t.make_sequence(last_only=True) for t in self.active_trajs
-        ]
-        print(f"rest of seq wrapper time: {time.time() - start}")
-        self._total_frames += len(timestep)
-        self._total_frames_by_env_name[self.env.env_name] += len(timestep)
+        self._total_frames += timestep.batched_envs
+        self._total_frames_by_env_name[self.env.env_name] += timestep.batched_envs
 
-        obs = stack_list_array_dicts([t.obs for t in timestep])
         return (
-            obs,
+            timestep.obs,
             reward,
             terminated,
             truncated,
@@ -337,9 +305,6 @@ class SequenceWrapper(gym.Wrapper):
         path = os.path.join(self.dset_write_dir, traj_name)
         self.active_trajs[idx].save_to_disk(path, save_as=self.save_trajs_as)
         self.since_last_save[idx] = 0
-
-    def sequence(self):
-        return [t.make_sequence() for t in self.active_trajs]
 
     @property
     def total_frames(self) -> int:

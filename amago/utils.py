@@ -14,7 +14,7 @@ from torch import nn
 from torch.optim.lr_scheduler import LambdaLR
 
 
-def stack_list_array_dicts(list_: list[dict[np.ndarray]], axis=0):
+def stack_list_array_dicts(list_: list[dict[np.ndarray]], axis=0, cat: bool = False):
     out = {}
     for t in list_:
         for k, v in t.items():
@@ -22,14 +22,19 @@ def stack_list_array_dicts(list_: list[dict[np.ndarray]], axis=0):
                 out[k].append(v)
             else:
                 out[k] = [v]
-    return {k: np.stack(v, axis=axis) for k, v in out.items()}
+    if cat:
+        return {k: np.concatenate(v, axis=axis) for k, v in out.items()}
+    else:
+        return {k: np.stack(v, axis=axis) for k, v in out.items()}
 
 
 def unstack_dict(
-    dict_: dict[str, np.ndarray | torch.Tensor], axis=0, pytorch: bool = False
+    dict_: dict[str, np.ndarray | torch.Tensor], axis=0, split: bool = False
 ):
-    if pytorch:
-        unstacked = {k: v.unbind(dim=axis) for k, v in dict_.items()}
+    # if pytorch:
+    #    unstacked = {k: v.unbind(dim=axis) for k, v in dict_.items()}
+    if split:
+        unstacked = {k: np.split(v, v.shape[axis], axis=axis) for k, v in dict_.items()}
     else:
         unstacked = {k: np.unstack(v, axis=axis) for k, v in dict_.items()}
     out = None

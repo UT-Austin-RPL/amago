@@ -35,11 +35,14 @@ class AlreadyVectorizedEnv(gym.Env):
             result = eval(f"self.env.{prop}()")
         except:
             result = eval(f"self.env.{prop}")
+        """
         if isinstance(result, list | tuple | np.ndarray):
             # imitate `batched_envs` envs each with a batch dim of 1
+            breakpoint()
             self._call_buffer = [[r] for r in result]
         else:
-            self._call_buffer = [result]
+        """
+        self._call_buffer = [result]
 
     def call_wait(self):
         return self._call_buffer

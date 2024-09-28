@@ -124,21 +124,6 @@ class Agent(nn.Module):
         # full weight copy to targets
         self.hard_sync_targets()
 
-    def get_current_timestep(
-        self, sequences: torch.Tensor | dict[torch.Tensor], seq_lengths: torch.Tensor
-    ):
-        dict_based = isinstance(sequences, dict)
-        if not dict_based:
-            sequences = {"dummy": sequences}
-        timesteps = {}
-        for k, v in sequences.items():
-            missing_dims = v.ndim - seq_lengths.ndim
-            seq_lengths_ = seq_lengths.reshape(seq_lengths.shape + (1,) * missing_dims)
-            timesteps[k] = torch.take_along_dim(v, seq_lengths_ - 1, dim=1)
-        if not dict_based:
-            timesteps = timesteps["dummy"]
-        return timesteps
-
     @property
     def trainable_params(self):
         """
