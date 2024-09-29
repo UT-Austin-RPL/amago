@@ -220,6 +220,7 @@ class SequenceWrapper(gym.Wrapper):
         self.save_trajs_as = save_trajs_as
         self._total_frames = 0
         self._total_frames_by_env_name = defaultdict(int)
+        self.reset_stats()
         if isinstance(self.env.action_space, gym.spaces.Discrete):
             action_shape = self.env.action_space.n
         else:
@@ -264,7 +265,6 @@ class SequenceWrapper(gym.Wrapper):
 
     def step(self, action):
         timestep, reward, terminated, truncated, info = self.env.step(action)
-        start = time.time()
         assert terminated.shape[0] == self.batched_envs
         assert truncated.shape[0] == self.batched_envs
         assert reward.shape[0] == self.batched_envs

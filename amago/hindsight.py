@@ -1,4 +1,5 @@
 import pickle
+import time
 from dataclasses import dataclass, asdict
 from typing import Optional, Iterable
 
@@ -40,10 +41,11 @@ class Timestep:
 def split_batched_timestep(t: Timestep) -> list[Timestep]:
     batched = t.batched_envs
     obs = utils.unstack_dict(t.obs, axis=0, split=True)
-    prev_actions = np.split(t.prev_action, batched, axis=0)
-    rewards = np.split(t.reward, batched, axis=0)
-    time_idxs = np.split(t.time_idx, batched, axis=0)
-    terminals = np.split(t.terminal, batched, axis=0)
+    # pad --> unstack seems faster than split
+    prev_actions = np.unstack(t.prev_action[:, np.newaxis, :], axis=0)
+    rewards = np.unstack(t.reward[:, np.newaxis], axis=0)
+    time_idxs = np.unstack(t.time_idx[:, np.newaxis], axis=0)
+    terminals = np.unstack(t.terminal[:, np.newaxis], axis=0)
     timesteps = []
     for i in range(len(obs)):
         timesteps.append(

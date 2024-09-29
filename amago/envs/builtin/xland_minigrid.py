@@ -215,20 +215,23 @@ if __name__ == "__main__":
     import tqdm
     import time
 
-    from amago.envs import AMAGOEnv
+    from amago.envs import AMAGOEnv, SequenceWrapper
 
-    env = AMAGOEnv(
-        XLandMiniGridEnv(
-            parallel_envs=32,
-            rooms=4,
-            grid_size=13,
-            ruleset_benchmark="trivial-1m",
-            train_test_split="train",
-            train_test_split_key=0,
-            k_shots=25,
-            jax_device=None,
-        ),
-        batched_envs=32,
+    env = SequenceWrapper(
+        AMAGOEnv(
+            XLandMiniGridEnv(
+                parallel_envs=512,
+                rooms=4,
+                grid_size=13,
+                ruleset_benchmark="trivial-1m",
+                train_test_split="train",
+                train_test_split_key=0,
+                k_shots=25,
+                jax_device=0,
+            ),
+            batched_envs=512,
+            env_name="XLandMiniGridEnv",
+        )
     )
 
     env.reset()
