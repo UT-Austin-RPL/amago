@@ -36,6 +36,8 @@ def stack_list_array_dicts(list_: list[dict[np.ndarray]], axis=0, cat: bool = Fa
 
 
 def split_batch(arr, axis: int):
+    # this split does the same thing as `np.unstack` without requiring numpy 2.1+.
+    # split seems to be much slower than unstack if the array is not in cpu memory.
     return np.split(np.ascontiguousarray(arr), arr.shape[axis], axis=axis)
 
 

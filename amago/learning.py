@@ -66,6 +66,7 @@ class Experiment:
     goal_importance_sampling: bool = False
     stagger_traj_file_lengths: bool = True
     save_trajs_as: str = "npz"
+    dloader_workers: int = 6
 
     # Learning Schedule
     epochs: int = 1000
@@ -83,7 +84,6 @@ class Experiment:
     # Optimization
     batch_size: int = 24
     batches_per_update: int = 1
-    dloader_workers: int = 6
     learning_rate: float = 1e-4
     critic_loss_weight: float = 10.0
     lr_warmup_steps: int = 500
@@ -197,9 +197,11 @@ class Experiment:
         make_val = [
             EnvCreator(
                 make_env=env_func,
-                # v2: no longer saves trajectories
+                # v2: no longer saves val trajectories to avoid unnecessary disk writes.
+                # we never found anything useful from tracking validation optimization metrics.
                 make_dset=False,
                 dset_split="val",
+                # no exploration noise
                 exploration_wrapper_Cls=None,
                 **shared_env_kwargs,
             )
@@ -208,10 +210,10 @@ class Experiment:
 
         # make parallel envs
         self.train_envs = Par(make_train)
+        self.val_envs = Par(make_val)
         self.train_envs.reset()
         self.rl2_space = make_train[0].rl2_space
         self.hidden_state = None  # holds train_env hidden state between rollouts
-        self.val_envs = Par(make_val)
 
         if self.env_mode == "already_vectorized":
             _inner = f"Vectorized Gym Env (x{self.parallel_actors})"
@@ -222,6 +224,7 @@ class Experiment:
         return _desc
 
     def init_checkpoints(self):
+        # creates ckpts/training_states and ckpts/policy_weights dirs
         self.ckpt_dir = os.path.join(
             self.dset_root, self.dset_name, self.run_name, "ckpts"
         )
@@ -264,12 +267,14 @@ class Experiment:
             )
 
     def write_latest_policy(self):
+        # write absolute latest policy to a hardcoded location used by `read_latest_policy`
         ckpt_name = os.path.join(
             self.dset_root, self.dset_name, self.run_name, "policy.pt"
         )
         torch.save(self.policy_aclr.state_dict(), ckpt_name)
 
     def read_latest_policy(self):
+        # read the latest policy -- used to communicate weight updates between learning/collecting processes
         ckpt_name = os.path.join(
             self.dset_root, self.dset_name, self.run_name, "policy.pt"
         )
@@ -281,6 +286,7 @@ class Experiment:
             utils.amago_warning("Latest policy checkpoint was not loaded.")
 
     def delete_buffer_from_disk(self):
+        # convenience method to delete the replay buffer from disk to prevent users from filling their disk.
         buffer_dir = os.path.join(self.dset_root, self.dset_name, "train")
         if os.path.exists(buffer_dir):
             shutil.rmtree(buffer_dir)
@@ -298,7 +304,7 @@ class Experiment:
         )
 
     def init_dloaders(self):
-        self.train_dset.refresh_files()
+        self.train_dset.refresh_files()  # we only find new .traj files at the start of each epoch
         train_dloader = DataLoader(
             self.train_dset,
             batch_size=self.batch_size,
@@ -316,6 +322,7 @@ class Experiment:
         with open(config_path, "w") as f:
             f.write(gin_config)
         if self.log_to_wandb:
+            # records the gin config on the wandb dashboard
             gin_as_wandb = utils.gin_as_wandb_config()
             log_dir = os.path.join(self.dset_root, "wandb_logs")
             os.makedirs(log_dir, exist_ok=True)
@@ -333,6 +340,7 @@ class Experiment:
             )
 
     def init_model(self):
+        # build initial policy based on observation shapes
         policy_kwargs = {
             "obs_space": self.rl2_space["obs"],
             "rl2_space": self.rl2_space["rl2"],
@@ -341,6 +349,7 @@ class Experiment:
         }
         policy = self.agent_type(**policy_kwargs)
         assert isinstance(policy, Agent)
+        # AdamW with linear warmup
         optimizer = torch.optim.AdamW(
             policy.trainable_params,
             lr=self.learning_rate,
@@ -393,7 +402,7 @@ class Experiment:
             )
 
         def get_t():
-            # fetch `Timstep.make_sequence` from all envs
+            # fetch `Timestep.make_sequence` from all envs
             par_obs_rl2_time = utils.call_async_env(envs, "current_timestep")
             _obs, _rl2s, _time_idxs = [], [], []
             for _o, _r, _t in par_obs_rl2_time:
@@ -445,8 +454,10 @@ class Experiment:
 
     def evaluate_val(self):
         if self.val_timesteps_per_epoch > 0:
+            # reset envs first
             self.val_envs.reset()
             start_time = time.time()
+            # interact from a blank hidden state that is discarded
             _, (returns, specials) = self.interact(
                 self.val_envs,
                 self.val_timesteps_per_epoch,
@@ -464,6 +475,7 @@ class Experiment:
             if self.verbose:
                 self.accelerator.print(f"Average Return : {cur_return}")
                 self.accelerator.print(f"Env FPS : {fps:.2f}")
+            # validation metrics are averaged over all processes
             logs_global = utils.avg_over_accelerate(logs_per_process)
             self.log(logs_global, key="val")
 
@@ -506,6 +518,7 @@ class Experiment:
             for env_name, frames in env_frames.items():
                 total_frames_by_env_name[f"total_frames-{env_name}"] += frames
         if self.log_to_wandb:
+            # lets any metric be plotted against epoch and total_frames
             progress = {
                 "epoch": self.epoch,
                 "total_frames": total_frames,

@@ -31,6 +31,18 @@ class Multigammas:
 
 
 @gin.configurable
+def binary_filter(adv, threshold: float = 0.0):
+    """
+    Procgen results in the second paper use a `threshold` of -1e-4 (instead of 0),
+    which sometimes helps stability in sparse reward envs, but defaulting
+    to it was a version control mistake. This would never matter when
+    using scalar output critics but *does* matter when using classification
+    two-hot critics with many bins where advantages are often close to zero.
+    """
+    return adv > threshold
+
+
+@gin.configurable
 class Agent(nn.Module):
     def __init__(
         self,
@@ -190,7 +202,7 @@ class Agent(nn.Module):
                 actions = action_dists.mean
         # get intended gamma distribution (always in -1 idx)
         actions = actions[..., -1, :]
-        dtype = torch.uint8 if self.discrete or self.multibinary else torch.float32
+        dtype = torch.uint8 if (self.discrete or self.multibinary) else torch.float32
         return actions.to(dtype=dtype), hidden_state
 
     def forward(self, batch: Batch, log_step: bool):
@@ -247,7 +259,6 @@ class Agent(nn.Module):
         critic_loss = None
         # one actor forward pass
         a_dist = self.actor(s_rep)
-
         if self.discrete:
             a_agent = a_dist.probs
         elif self.actor.actions_differentiable:
@@ -470,18 +481,6 @@ class Agent(nn.Module):
             "PopArt b (mean over gamma)": self.popart.b.data.mean().item(),
             "PopArt sigma (mean over gamma)": self.popart.sigma.mean().item(),
         }
-
-
-@gin.configurable
-def binary_filter(adv, threshold: float = 0.0):
-    """
-    Many results in the second paper use a `threshold` of -1e-4 (instead of 0),
-    which sometimes helps stability in sparse reward envs, but defaulting
-    to it was a version control mistake. This would never matter when
-    using scalar output critics but *does* matter when using classification
-    two-hot critics with many bins where advantages are often close to zero.
-    """
-    return adv > threshold
 
 
 @gin.configurable

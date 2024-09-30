@@ -98,16 +98,17 @@ class AMAGOEnv(gym.Wrapper):
         self.step_count = np.zeros((self.batched_envs,), dtype=np.int64)
         obs, info = self.inner_reset(seed=seed, options=options)
         if not isinstance(obs, dict):
+            # force dict obs
             obs = {"observation": obs}
         if self.batched_envs == 1:
+            # force batch dim
             obs = {k: v[np.newaxis, ...] for k, v in obs.items()}
-        blank_action = self.blank_action
         timestep = Timestep(
             obs=obs,
-            prev_action=blank_action,
+            prev_action=self.blank_action,
             reward=np.zeros((self.batched_envs,), dtype=np.float32),
             terminal=np.zeros((self.batched_envs,), dtype=bool),
-            time_idx=np.zeros((self.batched_envs,), dtype=np.int64),
+            time_idx=self.step_count.copy(),
             batched_envs=self.batched_envs,
         )
         return timestep, info
@@ -119,12 +120,13 @@ class AMAGOEnv(gym.Wrapper):
         self, action: np.ndarray
     ) -> tuple[Timestep, np.ndarray, np.ndarray, np.ndarray, dict]:
         # take environment step
-        self.step_count += 1
         obs, rewards, terminateds, truncateds, infos = self.inner_step(action)
+        self.step_count += 1
         if not isinstance(obs, dict):
             # force dict obs
             obs = {"observation": obs}
         if self.batched_envs == 1:
+            # force batch dim
             obs = {k: v[np.newaxis, ...] for k, v in obs.items()}
             rewards = np.array([rewards], dtype=np.float32)
             terminateds = np.array([terminateds], dtype=bool)
@@ -135,7 +137,7 @@ class AMAGOEnv(gym.Wrapper):
             prev_action=prev_actions,
             reward=rewards,
             terminal=terminateds,
-            time_idx=self.step_count,
+            time_idx=self.step_count.copy(),
             batched_envs=self.batched_envs,
         )
         return timestep, rewards, terminateds, truncateds, infos

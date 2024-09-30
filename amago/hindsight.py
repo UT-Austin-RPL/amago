@@ -41,6 +41,8 @@ class Timestep:
 
 def split_batched_timestep(t: Timestep) -> list[Timestep]:
     batched = t.batched_envs
+    if batched == 1:
+        return [t]
     obs = utils.split_dict(t.obs, axis=0)
     prev_actions = utils.split_batch(t.prev_action, axis=0)
     rewards = utils.split_batch(t.reward, axis=0)
