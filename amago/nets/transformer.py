@@ -1,4 +1,5 @@
 import math
+from typing import Optional
 
 import torch
 from torch import nn
@@ -255,33 +256,33 @@ class Cache:
 
 class TformerHiddenState:
     def __init__(
-        self, key_cache: list[Cache], val_cache: list[Cache], timesteps: torch.Tensor
+        self, key_cache: list[Cache], val_cache: list[Cache], seq_lens: torch.Tensor
     ):
         assert isinstance(key_cache, list) and len(key_cache) == len(val_cache)
-        assert timesteps.dtype == torch.int32
+        assert seq_lens.dtype == torch.int32
         self.n_layers = len(key_cache)
         self.key_cache = key_cache
         self.val_cache = val_cache
-        self.timesteps = timesteps
+        self.seq_lens = seq_lens
 
     def reset(self, idxs):
-        self.timesteps[idxs] = 0
+        self.seq_lens[idxs] = 0
 
     def update(self):
-        self.timesteps += 1
-        for i, timestep in enumerate(self.timesteps):
+        self.seq_lens += 1
+        for i, timestep in enumerate(self.seq_lens):
             if timestep == len(self.key_cache[0]):
                 for k, v in zip(self.key_cache, self.val_cache):
                     k.roll_back(i)
                     v.roll_back(i)
-                self.timesteps[i] -= 1
+                self.seq_lens[i] -= 1
 
     def __getitem__(self, layer_idx):
         assert layer_idx < self.n_layers
         return (
             self.key_cache[layer_idx].data,
             self.val_cache[layer_idx].data,
-            self.timesteps,
+            self.seq_lens,
         )
 
 
@@ -312,7 +313,6 @@ class Transformer(nn.Module):
         inp_dim: int,
         d_model: int = 128,
         d_ff: int = 512,
-        d_emb_ff: int = None,
         n_heads: int = 4,
         layers: int = 3,
         dropout_emb: float = 0.05,
@@ -329,7 +329,6 @@ class Transformer(nn.Module):
 
         # embedding
         self.position_embedding = FixedPosEmb(d_model)
-        d_emb_ff = d_emb_ff or d_model
         self.inp = nn.Linear(inp_dim, d_model)
         self.dropout = nn.Dropout(dropout_emb)
 
@@ -358,16 +357,17 @@ class Transformer(nn.Module):
         self.layers = nn.ModuleList([make_layer() for _ in range(layers)])
         self.norm = Normalization(method=norm, d_model=d_model)
         self.d_model = d_model
+        self._blank_hidden_state = [[None, None, None] for _ in range(self.n_layers)]
 
     @property
     def emb_dim(self):
         return self.d_model
 
-    def forward(self, seq, pos_idxs, hidden_state: None | TformerHiddenState):
+    def forward(self, seq, pos_idxs, hidden_state: Optional[TformerHiddenState] = None):
         if self.training:
             assert hidden_state is None
         batch, length, dim = seq.shape
-        h = hidden_state or [[None, None, None] for _ in range(self.n_layers)]
+        h = hidden_state or self._blank_hidden_state
 
         # emedding
         pos_emb = self.position_embedding(pos_idxs.squeeze(-1))

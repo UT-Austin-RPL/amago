@@ -4,9 +4,6 @@ import gymnasium as gym
 import numpy as np
 import torch
 
-from amago.loading import MAGIC_PAD_VAL
-from amago.utils import unstack_dict
-
 
 class AlreadyVectorizedEnv(gym.Env):
     """
@@ -35,11 +32,7 @@ class AlreadyVectorizedEnv(gym.Env):
             result = eval(f"self.env.{prop}()")
         except:
             result = eval(f"self.env.{prop}")
-        if isinstance(result, list | tuple | np.ndarray):
-            # imitate `batched_envs` envs each with a batch dim of 1
-            self._call_buffer = [[r] for r in result]
-        else:
-            self._call_buffer = [result]
+        self._call_buffer = [result]
 
     def call_wait(self):
         return self._call_buffer
@@ -122,9 +115,11 @@ class DiscreteActionWrapper(gym.ActionWrapper):
         if isinstance(action, int):
             return action
         elif isinstance(action, np.ndarray) and action.ndim == 1:
-            return int(action[0])
+            assert action.shape[0] == 1 and action.dtype == np.uint8
+            return action[0].item()
         elif isinstance(action, np.ndarray) and action.ndim == 2:
-            return action[:, 0]
+            assert action.shape[1] == 1
+            return np.squeeze(action, axis=1)
         return action
 
 

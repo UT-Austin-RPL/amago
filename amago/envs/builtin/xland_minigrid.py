@@ -1,6 +1,7 @@
 import random
 from collections import defaultdict
 from typing import Optional
+from functools import partial
 
 import gymnasium as gym
 import numpy as np
@@ -56,7 +57,9 @@ class XLandMiniGridEnv(gym.Env):
             if jax_device is not None
             else jax.devices("cpu")[0]
         )
+        print(f"Using JAX device {self.jax_device} for XLandMiniGridEnv")
 
+        # this always uses cuda memory for some reason?
         benchmark = xminigrid.load_benchmark(name=ruleset_benchmark)
         train, test = benchmark.shuffle(key=jax.random.key(train_test_split_key)).split(
             prop=train_test_split_pct
@@ -150,7 +153,7 @@ class XLandMiniGridEnv(gym.Env):
         )
         return self.get_obs(), {}
 
-    def replace_rules(self, replace):
+    def replace_rules(self, replace_idxs):
         new_ruleset = self.x_sample(self.new_ruleset_keys())
         ruleset = self.env_params.ruleset
         goals, rules, tiles = self.x_swap(
@@ -160,7 +163,7 @@ class XLandMiniGridEnv(gym.Env):
             new_ruleset.goal,
             new_ruleset.rules,
             new_ruleset.init_tiles,
-            replace,
+            replace_idxs,
         )
         updated = xminigrid.types.RuleSet(
             goal=goals,
@@ -198,6 +201,7 @@ class XLandMiniGridEnv(gym.Env):
 
         reward = self.x_timestep.reward
         self.episode_return += reward
+        next_obs = self.get_obs()
 
         # handle meta-resets by changing the ruleset
         done = self.current_episode >= self.k_shots
@@ -206,31 +210,30 @@ class XLandMiniGridEnv(gym.Env):
         self.current_episode *= ~done
         # the reset will kick in on the next `step`
 
-        return self.get_obs(), reward, done, done, info
+        return next_obs, reward, done, done, info
 
 
 if __name__ == "__main__":
     import tqdm
     import time
 
-    from amago.envs import AMAGOEnv
+    from amago.envs import AMAGOEnv, SequenceWrapper
 
-    env = AMAGOEnv(
-        XLandMiniGridEnv(
-            parallel_envs=256,
-            rooms=4,
-            grid_size=13,
-            ruleset_benchmark="high-3m",
-            train_test_split="train",
-            train_test_split_key=0,
-            k_shots=25,
-            jax_device=4,
-        ),
-        batched_envs=256,
+    env = XLandMiniGridEnv(
+        parallel_envs=1024,
+        rooms=4,
+        grid_size=13,
+        ruleset_benchmark="trivial-1m",
+        train_test_split="train",
+        train_test_split_key=0,
+        k_shots=25,
+        jax_device=0,
     )
+    env = AMAGOEnv(env, env_name="XLandMiniGridEnv", batched_envs=1024)
+    env = SequenceWrapper(env)
 
     env.reset()
-    steps = 100000
+    steps = 3_000
     start = time.time()
     for step in tqdm.tqdm(range(steps)):
         action = np.array(

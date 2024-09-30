@@ -14,7 +14,16 @@ from torch import nn
 from torch.optim.lr_scheduler import LambdaLR
 
 
-def stack_list_array_dicts(list_: list[dict[np.ndarray]], axis=0):
+class AmagoWarning(Warning):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+def amago_warning(msg: str, category=AmagoWarning):
+    warnings.warn(colored(f"{msg}", "green"), category=category)
+
+
+def stack_list_array_dicts(list_: list[dict[np.ndarray]], axis=0, cat: bool = False):
     out = {}
     for t in list_:
         for k, v in t.items():
@@ -22,16 +31,18 @@ def stack_list_array_dicts(list_: list[dict[np.ndarray]], axis=0):
                 out[k].append(v)
             else:
                 out[k] = [v]
-    return {k: np.stack(v, axis=axis) for k, v in out.items()}
+    f = np.concatenate if cat else np.stack
+    return {k: f(v, axis=axis) for k, v in out.items()}
 
 
-def unstack_dict(
-    dict_: dict[str, np.ndarray | torch.Tensor], axis=0, pytorch: bool = False
-):
-    if pytorch:
-        unstacked = {k: v.unbind(dim=axis) for k, v in dict_.items()}
-    else:
-        unstacked = {k: np.unstack(v, axis=axis) for k, v in dict_.items()}
+def split_batch(arr, axis: int):
+    # this split does the same thing as `np.unstack` without requiring numpy 2.1+.
+    # split seems to be much slower than unstack if the array is not in cpu memory.
+    return np.split(np.ascontiguousarray(arr), arr.shape[axis], axis=axis)
+
+
+def split_dict(dict_: dict[str, np.ndarray], axis=0):
+    unstacked = {k: split_batch(v, axis=axis) for k, v in dict_.items()}
     out = None
     for k, vs in unstacked.items():
         if out is None:
@@ -40,15 +51,6 @@ def unstack_dict(
             for i, v in enumerate(vs):
                 out[i][k] = v
     return out
-
-
-class AmagoWarning(Warning):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-
-def amago_warning(msg: str, category=AmagoWarning):
-    warnings.warn(colored(f"{msg}", "green"), category=category)
 
 
 def avg_over_accelerate(data: dict[str, int | float]):

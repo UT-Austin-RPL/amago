@@ -162,7 +162,7 @@ class TformerTrajEncoder(TrajEncoder):
         hidden_state = transformer.TformerHiddenState(
             key_cache=[make_cache() for _ in range(self.tformer.n_layers)],
             val_cache=[make_cache() for _ in range(self.tformer.n_layers)],
-            timesteps=torch.zeros((batch_size,), dtype=torch.int32, device=device),
+            seq_lens=torch.zeros((batch_size,), dtype=torch.int32, device=device),
         )
         return hidden_state
 
