@@ -36,8 +36,8 @@ def binary_filter(adv, threshold: float = 0.0):
     Procgen results in the second paper use a `threshold` of -1e-4 (instead of 0),
     which sometimes helps stability in sparse reward envs, but defaulting
     to it was a version control mistake. This would never matter when
-    using scalar output critics but *does* matter when using classification
-    two-hot critics with many bins where advantages are often close to zero.
+    using scalar output critics (`Agent`) but *does* matter when using classification
+    two-hot critics (`MultiTaskAgent`) with many bins where advantages are often close to zero.
     """
     return adv > threshold
 
@@ -60,6 +60,7 @@ class Agent(nn.Module):
         reward_multiplier: float = 10.0,
         tau: float = 0.003,
         fake_filter: bool = False,
+        fbc_filter_func: callable = binary_filter,
         popart: bool = True,
         use_target_actor: bool = True,
         use_multigamma: bool = True,
@@ -85,6 +86,7 @@ class Agent(nn.Module):
         self.reward_multiplier = reward_multiplier
         self.pad_val = MAGIC_PAD_VAL
         self.fake_filter = fake_filter
+        self.fbc_filter_func = fbc_filter_func
         self.offline_coeff = offline_coeff
         self.online_coeff = online_coeff
         self.tau = tau
@@ -357,7 +359,7 @@ class Agent(nn.Module):
                     assert val_s_g.shape == (B, L - 1, G, 1)
                     advantage_a_s_g = q_s_a_g.mean(2) - val_s_g
                     assert advantage_a_s_g.shape == (B, L - 1, G, 1)
-                    filter_ = (advantage_a_s_g > 1e-3).float()
+                    filter_ = self.fbc_filter_func(advantage_a_s_g).float()
             else:
                 # Behavior Cloning
                 filter_ = torch.ones((1, 1, 1, 1), device=a.device)
@@ -494,7 +496,6 @@ class MultiTaskAgent(Agent):
         online_coeff: float = 0.0,
         offline_coeff: float = 1.0,
         fbc_filter_k: int = 3,
-        fbc_filter_func: callable = binary_filter,
         **kwargs,
     ):
         super().__init__(
@@ -507,7 +508,6 @@ class MultiTaskAgent(Agent):
             **kwargs,
         )
         self.fbc_filter_k = fbc_filter_k
-        self.fbc_filter_func = fbc_filter_func
 
         critic_kwargs = {
             "state_dim": self.traj_encoder.emb_dim,
