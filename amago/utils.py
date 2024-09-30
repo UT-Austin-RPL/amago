@@ -13,38 +13,10 @@ import torch
 from torch import nn
 from torch.optim.lr_scheduler import LambdaLR
 
-
-def stack_list_array_dicts(list_: list[dict[np.ndarray]], axis=0, cat: bool = False):
-    out = {}
-    for t in list_:
-        for k, v in t.items():
-            if k in out:
-                out[k].append(v)
-            else:
-                out[k] = [v]
-    if cat:
-        return {k: np.concatenate(v, axis=axis) for k, v in out.items()}
-    else:
-        return {k: np.stack(v, axis=axis) for k, v in out.items()}
-
-
-def unstack_dict(
-    dict_: dict[str, np.ndarray | torch.Tensor], axis=0, split: bool = False
-):
-    # if pytorch:
-    #    unstacked = {k: v.unbind(dim=axis) for k, v in dict_.items()}
-    if split:
-        unstacked = {k: np.split(v, v.shape[axis], axis=axis) for k, v in dict_.items()}
-    else:
-        unstacked = {k: np.unstack(v, axis=axis) for k, v in dict_.items()}
-    out = None
-    for k, vs in unstacked.items():
-        if out is None:
-            out = [{k: v} for v in vs]
-        else:
-            for i, v in enumerate(vs):
-                out[i][k] = v
-    return out
+try:
+    from numba import njit
+except ImportError:
+    njit = None
 
 
 class AmagoWarning(Warning):
@@ -54,6 +26,49 @@ class AmagoWarning(Warning):
 
 def amago_warning(msg: str, category=AmagoWarning):
     warnings.warn(colored(f"{msg}", "green"), category=category)
+
+
+def stack_list_array_dicts(list_: list[dict[np.ndarray]], axis=0, cat: bool = False):
+    out = {}
+    for t in list_:
+        for k, v in t.items():
+            if k in out:
+                out[k].append(v)
+            else:
+                out[k] = [v]
+    f = np.concatenate if cat else np.stack
+    return {k: f(v, axis=axis) for k, v in out.items()}
+
+
+def try_numba(func):
+    if njit is not None:
+        return njit(func)
+    else:
+        amago_warning("`numba` not installed.")
+        return func
+
+
+@try_numba
+def _unstack(arr: np.ndarray, into: int, axis: int):
+    return np.split(arr, into, axis=axis)
+
+
+def unstack_dict(dict_: dict[str, np.ndarray], axis=0, split: bool = False):
+    # pad_if_split = (lambda x: np.expand_dims(x, axis=axis+1)) if split else (lambda x : x)
+    # unstacked = {k: np.unstack(pad_if_split(v), axis=axis) for k, v in dict_.items()}
+    # unstacked = {k: np.split(v, v.shape[axis], axis=axis) for k, v in dict_.items()}
+    unstacked = {
+        k: _unstack(np.ascontiguousarray(v), into=v.shape[axis], axis=axis)
+        for k, v in dict_.items()
+    }
+    out = None
+    for k, vs in unstacked.items():
+        if out is None:
+            out = [{k: v} for v in vs]
+        else:
+            for i, v in enumerate(vs):
+                out[i][k] = v
+    return out
 
 
 def avg_over_accelerate(data: dict[str, int | float]):

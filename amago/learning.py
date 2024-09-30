@@ -1,4 +1,5 @@
 import os
+import time
 import shutil
 import warnings
 import contextlib
@@ -445,15 +446,24 @@ class Experiment:
     def evaluate_val(self):
         if self.val_timesteps_per_epoch > 0:
             self.val_envs.reset()
+            start_time = time.time()
             _, (returns, specials) = self.interact(
                 self.val_envs,
                 self.val_timesteps_per_epoch,
                 hidden_state=None,
             )
+            end_time = time.time()
+            fps = (
+                self.val_timesteps_per_epoch
+                * self.parallel_actors
+                / (end_time - start_time)
+            )
             logs_per_process = self.policy_metrics(returns, specials=specials)
+            logs_per_process["env_frames_per_second"] = fps
             cur_return = logs_per_process["Average Total Return (Across All Env Names)"]
             if self.verbose:
                 self.accelerator.print(f"Average Return : {cur_return}")
+                self.accelerator.print(f"Env FPS : {fps:.2f}")
             logs_global = utils.avg_over_accelerate(logs_per_process)
             self.log(logs_global, key="val")
 
