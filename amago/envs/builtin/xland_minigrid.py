@@ -77,14 +77,15 @@ class XLandMiniGridEnv(gym.Env):
         key = jax.random.key(random.randint(0, 1_000_000))
         self._reset_key, self._ruleset_key = jax.random.split(key)
 
-        self.x_sample = jax.vmap(
-            jax.jit(self.benchmark.sample_ruleset, device=self.jax_device)
+        # according to gymnax, jit(vmap()) is faster than vmap(jit())... seems to be true here
+        self.x_sample = jax.jit(
+            jax.vmap(self.benchmark.sample_ruleset), device=self.jax_device
         )
-        self.x_reset = jax.vmap(
-            jax.jit(self.x_env.reset, device=self.jax_device), in_axes=(0, 0)
+        self.x_reset = jax.jit(
+            jax.vmap(self.x_env.reset, in_axes=(0, 0)), device=self.jax_device
         )
-        self.x_step = jax.vmap(
-            jax.jit(self.x_env.step, device=self.jax_device), in_axes=(0, 0, 0)
+        self.x_step = jax.jit(
+            jax.vmap(self.x_env.step, in_axes=(0, 0, 0)), device=self.jax_device
         )
         self.x_swap = jax.jit(_swap_rules, device=self.jax_device)
 
@@ -207,6 +208,7 @@ class XLandMiniGridEnv(gym.Env):
         done = self.current_episode >= self.k_shots
         if done.any():
             self.replace_rules(replace=done)
+            reset_timestep = self.x_reset(self.env_params, self.new_reset_keys())
         self.current_episode *= ~done
         # the reset will kick in on the next `step`
 
