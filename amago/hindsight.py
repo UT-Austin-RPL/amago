@@ -39,38 +39,13 @@ class Timestep:
         return self.obs, rl2, self.time_idx[:, np.newaxis]
 
 
-@utils.try_numba
-def _split_rest_timestep(prev_actions, rewards, time_idxs, terminals, batched):
-    prev_actions = np.split(prev_actions, batched, axis=0)
-    rewards = np.split(rewards, batched, axis=0)
-    time_idxs = np.split(time_idxs, batched, axis=0)
-    terminals = np.split(terminals, batched, axis=0)
-    return prev_actions, rewards, time_idxs, terminals
-
-
 def split_batched_timestep(t: Timestep) -> list[Timestep]:
     batched = t.batched_envs
-    obs = utils.unstack_dict(t.obs, axis=0, split=True)
-
-    prev_action = np.ascontiguousarray(t.prev_action)
-    reward = np.ascontiguousarray(t.reward)
-    time_idx = np.ascontiguousarray(t.time_idx)
-    terminal = np.ascontiguousarray(t.terminal)
-
-    prev_actions, rewards, time_idxs, terminals = _split_rest_timestep(
-        prev_action, reward, time_idx, terminal, batched
-    )
-    """
-    # pad --> unstack seems faster than split --> pad
-    prev_actions = np.unstack(t.prev_action[:, np.newaxis, :], axis=0)
-    rewards = np.unstack(t.reward[:, np.newaxis], axis=0)
-    time_idxs = np.unstack(t.time_idx[:, np.newaxis], axis=0)
-    terminals = np.unstack(t.terminal[:, np.newaxis], axis=0)
-    prev_actions = np.split(t.prev_action, batched, axis=0)
-    rewards = np.split(t.reward, batched, axis=0)
-    time_idxs = np.split(t.time_idx, batched, axis=0)
-    terminals = np.split(t.terminal, batched, axis=0)
-    """
+    obs = utils.split_dict(t.obs, axis=0)
+    prev_actions = utils.split_batch(t.prev_action, axis=0)
+    rewards = utils.split_batch(t.reward, axis=0)
+    time_idxs = utils.split_batch(t.time_idx, axis=0)
+    terminals = utils.split_batch(t.terminal, axis=0)
     timesteps = [
         Timestep(
             obs=obs[i],

@@ -20,7 +20,6 @@ from .env_utils import (
 )
 from .exploration import ExplorationWrapper
 from amago.hindsight import Timestep, Trajectory, split_batched_timestep
-from amago.utils import unstack_dict, stack_list_array_dicts
 
 
 class AMAGOEnv(gym.Wrapper):

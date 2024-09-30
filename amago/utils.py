@@ -13,11 +13,6 @@ import torch
 from torch import nn
 from torch.optim.lr_scheduler import LambdaLR
 
-try:
-    from numba import njit
-except ImportError:
-    njit = None
-
 
 class AmagoWarning(Warning):
     def __init__(self, *args, **kwargs):
@@ -40,27 +35,12 @@ def stack_list_array_dicts(list_: list[dict[np.ndarray]], axis=0, cat: bool = Fa
     return {k: f(v, axis=axis) for k, v in out.items()}
 
 
-def try_numba(func):
-    if njit is not None:
-        return njit(func)
-    else:
-        amago_warning("`numba` not installed.")
-        return func
+def split_batch(arr, axis: int):
+    return np.split(np.ascontiguousarray(arr), arr.shape[axis], axis=axis)
 
 
-@try_numba
-def _unstack(arr: np.ndarray, into: int, axis: int):
-    return np.split(arr, into, axis=axis)
-
-
-def unstack_dict(dict_: dict[str, np.ndarray], axis=0, split: bool = False):
-    # pad_if_split = (lambda x: np.expand_dims(x, axis=axis+1)) if split else (lambda x : x)
-    # unstacked = {k: np.unstack(pad_if_split(v), axis=axis) for k, v in dict_.items()}
-    # unstacked = {k: np.split(v, v.shape[axis], axis=axis) for k, v in dict_.items()}
-    unstacked = {
-        k: _unstack(np.ascontiguousarray(v), into=v.shape[axis], axis=axis)
-        for k, v in dict_.items()
-    }
+def split_dict(dict_: dict[str, np.ndarray], axis=0):
+    unstacked = {k: split_batch(v, axis=axis) for k, v in dict_.items()}
     out = None
     for k, vs in unstacked.items():
         if out is None:

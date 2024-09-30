@@ -4,9 +4,6 @@ import gymnasium as gym
 import numpy as np
 import torch
 
-from amago.loading import MAGIC_PAD_VAL
-from amago.utils import unstack_dict
-
 
 class AlreadyVectorizedEnv(gym.Env):
     """
