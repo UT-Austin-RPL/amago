@@ -244,14 +244,15 @@ class Cache:
         )
         # make silent bugs in k/v cache... much louder
         self.data[:] = torch.nan
+        self.device = device
 
     def __len__(self):
         return self.data.shape[1]
 
-    def roll_back(self, idx):
-        roll = self.data[idx, 1:].clone()
-        self.data[idx, :-1] = roll
-        self.data[idx, -1] = torch.nan  # no silent bugs
+    def roll_back(self, idxs):
+        roll = self.data[idxs, 1:].clone()
+        self.data[idxs, :-1] = roll
+        self.data[idxs, -1] = torch.nan  # no silent bugs
 
 
 class TformerHiddenState:
@@ -264,18 +265,20 @@ class TformerHiddenState:
         self.key_cache = key_cache
         self.val_cache = val_cache
         self.seq_lens = seq_lens
+        self.device = key_cache[0].device
+        assert all(c.device == self.device for c in key_cache + val_cache)
 
     def reset(self, idxs):
         self.seq_lens[idxs] = 0
 
     def update(self):
         self.seq_lens += 1
-        for i, timestep in enumerate(self.seq_lens):
-            if timestep == len(self.key_cache[0]):
-                for k, v in zip(self.key_cache, self.val_cache):
-                    k.roll_back(i)
-                    v.roll_back(i)
-                self.seq_lens[i] -= 1
+        roll_back_idxs = torch.where(self.seq_lens == len(self.key_cache[0]))[0]
+        if roll_back_idxs.shape[0] > 0:
+            for k, v in zip(self.key_cache, self.val_cache):
+                k.roll_back(roll_back_idxs)
+                v.roll_back(roll_back_idxs)
+            self.seq_lens[roll_back_idxs] -= 1
 
     def __getitem__(self, layer_idx):
         assert layer_idx < self.n_layers
