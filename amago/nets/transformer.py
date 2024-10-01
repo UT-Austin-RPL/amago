@@ -234,54 +234,58 @@ class Cache:
         self,
         device: torch.device,
         dtype: torch.dtype,
+        layers: int,
         batch_size: int,
         max_seq_len: int,
         n_heads: int,
         head_dim: int,
     ):
         self.data = torch.zeros(
-            (batch_size, max_seq_len, n_heads, head_dim), dtype=dtype, device=device
+            (layers, batch_size, max_seq_len, n_heads, head_dim),
+            dtype=dtype,
+            device=device,
         )
         # make silent bugs in k/v cache... much louder
         self.data[:] = torch.nan
+        self.device = device
 
     def __len__(self):
-        return self.data.shape[1]
+        return self.data.shape[2]
 
-    def roll_back(self, idx):
-        roll = self.data[idx, 1:].clone()
-        self.data[idx, :-1] = roll
-        self.data[idx, -1] = torch.nan  # no silent bugs
+    @torch.compile
+    def roll_back(self, seq_lens):
+        idxs = torch.where(seq_lens == self.data.shape[2] - 1)[0]
+        roll = self.data[:, idxs, 1:].clone()
+        self.data[:, idxs, :-1] = roll
+        self.data[:, idxs, -1] = torch.nan  # no silent bugs
+        return idxs
 
 
 class TformerHiddenState:
-    def __init__(
-        self, key_cache: list[Cache], val_cache: list[Cache], seq_lens: torch.Tensor
-    ):
-        assert isinstance(key_cache, list) and len(key_cache) == len(val_cache)
+    def __init__(self, key_cache: Cache, val_cache: Cache, seq_lens: torch.Tensor):
         assert seq_lens.dtype == torch.int32
-        self.n_layers = len(key_cache)
+        assert key_cache.device == val_cache.device
+        self.n_layers = key_cache.data.shape[0]
+        assert self.n_layers == val_cache.data.shape[0]
         self.key_cache = key_cache
         self.val_cache = val_cache
         self.seq_lens = seq_lens
+        self.device = key_cache.device
 
     def reset(self, idxs):
         self.seq_lens[idxs] = 0
 
     def update(self):
         self.seq_lens += 1
-        for i, timestep in enumerate(self.seq_lens):
-            if timestep == len(self.key_cache[0]):
-                for k, v in zip(self.key_cache, self.val_cache):
-                    k.roll_back(i)
-                    v.roll_back(i)
-                self.seq_lens[i] -= 1
+        self.key_cache.roll_back(self.seq_lens)
+        idxs = self.val_cache.roll_back(self.seq_lens)
+        self.seq_lens[idxs] -= 1
 
     def __getitem__(self, layer_idx):
         assert layer_idx < self.n_layers
         return (
-            self.key_cache[layer_idx].data,
-            self.val_cache[layer_idx].data,
+            self.key_cache.data[layer_idx],
+            self.val_cache.data[layer_idx],
             self.seq_lens,
         )
 
