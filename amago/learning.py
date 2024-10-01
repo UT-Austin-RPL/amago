@@ -652,13 +652,14 @@ class Experiment:
             # training
             elif epoch < self.start_learning_at_epoch:
                 continue
-            self.policy_aclr.train()
-            for train_step, batch in make_pbar(self.train_dloader, epoch):
-                total_step = (epoch * self.train_batches_per_epoch) + train_step
-                log_step = total_step % self.log_interval == 0
-                loss_dict = self.train_step(batch, log_step=log_step)
-                if log_step:
-                    self.log(loss_dict, key="train-update")
+            if self.train_batches_per_epoch > 0:
+                self.policy_aclr.train()
+                for train_step, batch in make_pbar(self.train_dloader, epoch):
+                    total_step = (epoch * self.train_batches_per_epoch) + train_step
+                    log_step = total_step % self.log_interval == 0
+                    loss_dict = self.train_step(batch, log_step=log_step)
+                    if log_step:
+                        self.log(loss_dict, key="train-update")
             self.accelerator.wait_for_everyone()
 
             # buffer management
