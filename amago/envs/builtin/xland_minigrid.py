@@ -168,12 +168,10 @@ class XLandMiniGridEnv(gym.Env):
 
     def reset(self, *args, **kwargs):
         # set all done, then reset if done
-        self.is_done = jnp.ones(
-            self.parallel_envs, dtype=jnp.bool_, device=self.jax_device
-        )
-        return self.reset_if_done()
+        is_done = jnp.ones(self.parallel_envs, dtype=jnp.bool_, device=self.jax_device)
+        return self.reset_if_done(is_done)
 
-    def reset_if_done(self):
+    def reset_if_done(self, is_done):
         # generate a new ruleset in parallel for every env
         new_ruleset = self.x_sample(self.new_ruleset_keys())
         ruleset = self.env_params.ruleset
@@ -186,7 +184,7 @@ class XLandMiniGridEnv(gym.Env):
             new_ruleset.goal,
             new_ruleset.rules,
             new_ruleset.init_tiles,
-            self.is_done,
+            is_done,
         )
         updated = xminigrid.types.RuleSet(
             goal=goals,
@@ -199,13 +197,14 @@ class XLandMiniGridEnv(gym.Env):
         reset_timestep = self.x_reset(self.env_params, self.new_reset_keys())
 
         # keep old timestep if not done, else take new timestep
-        new_timestep = self.x_swap_tsteps(self.x_timestep, reset_timestep, self.is_done)
+        new_timestep = self.x_swap_tsteps(self.x_timestep, reset_timestep, is_done)
         self.x_timestep = new_timestep
 
         # keep counters if not done, else reset them
-        self.current_episode = self.current_episode * ~self.is_done
-        self.episode_return = self.episode_return * ~self.is_done
-        self.episode_steps = self.episode_steps * ~self.is_done
+        not_done = ~is_done
+        self.current_episode *= not_done
+        self.episode_return *= not_done
+        self.episode_steps *= not_done
         return self.get_obs(), {}
 
     def step(self, action):
@@ -233,13 +232,17 @@ class XLandMiniGridEnv(gym.Env):
         self.episode_return *= ep_continues
         self.episode_steps *= ep_continues
         self.current_episode += ep_end
-
         reward = self.x_timestep.reward
         self.episode_return += reward
-        next_obs = self.get_obs()
 
+        # meta-resets need to happen on the same timestep as they occur
         done = self.current_episode >= self.k_shots
-        self.is_done = done.copy()
+        if done.any():
+            self.reset_if_done(done)
+
+        next_obs = self.get_obs()
+        reward = np.array(reward, dtype=np.float32)
+        done = np.array(done, dtype=np.bool_)
         return next_obs, reward, done, done, info
 
 
@@ -270,8 +273,5 @@ if __name__ == "__main__":
             [env.action_space.sample() for _ in range(env.parallel_envs)]
         )[:, np.newaxis]
         next_state, reward, terminated, truncated, info = env.step(action)
-        done = np.logical_or(terminated, truncated)
-        if done.any():
-            env.reset_if_done()
     end = time.time()
     print(f"FPS: {steps / (end - start)}")
