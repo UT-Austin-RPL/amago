@@ -1,4 +1,5 @@
 import os
+import copy
 import random
 import warnings
 import time
@@ -38,12 +39,15 @@ class AMAGOEnv(gym.Wrapper):
         if self.discrete:
             self.env = DiscreteActionWrapper(self.env)
             self.action_size = self.action_space.n
+            self.action_dtype = np.uint8
         elif self.multibinary:
             self.env = MultiBinaryActionWrapper(self.env)
             self.action_size = self.action_space.n
+            self.action_dtype = np.uint8
         else:
             self.env = ContinuousActionWrapper(self.env)
             self.action_size = self.action_space.shape[-1]
+            self.action_dtype = np.float32
         self.action_space = space_convert(self.env.action_space)
         self._batch_idxs = np.arange(self.batched_envs)
 
@@ -62,6 +66,7 @@ class AMAGOEnv(gym.Wrapper):
     def env_name(self):
         """
         Dynamically change the name of the current environment in a multi-task setting
+        (for logging and saving .traj files)
         """
         if self._env_name is None:
             raise ValueError(
@@ -69,27 +74,16 @@ class AMAGOEnv(gym.Wrapper):
             )
         return self._env_name
 
-    @property
-    def blank_action(self):
-        if self.discrete:
-            action = np.ones((self.batched_envs, self.action_size), dtype=np.uint8)
-        elif self.multibinary:
-            action = np.zeros((self.batched_envs, self.action_size), dtype=np.uint8)
-        else:
-            action = np.full((self.batched_envs, self.action_size), -2.0)
-        return action
-
     def make_action_rep(self, action) -> np.ndarray:
         if self.discrete:
+            # action as one-hot
             action_rep = np.zeros((self.batched_envs, self.action_size), dtype=np.uint8)
             action_rep[self._batch_idxs, action[..., 0]] = 1
         else:
-            action_rep = action.copy().astype(
-                np.uint8 if self.multibinary else np.float32
-            )
+            action_rep = action.copy()
             if self.batched_envs == 1 and action_rep.ndim == 1:
                 action_rep = np.expand_dims(action_rep, axis=0)
-        return action_rep
+        return action_rep.astype(self.action_dtype)
 
     def inner_reset(self, seed=None, options=None):
         return self.env.reset(seed=seed, options=options)
@@ -105,7 +99,9 @@ class AMAGOEnv(gym.Wrapper):
             obs = {k: v[np.newaxis, ...] for k, v in obs.items()}
         timestep = Timestep(
             obs=obs,
-            prev_action=self.blank_action,
+            prev_action=np.zeros(
+                (self.batched_envs, self.action_size), dtype=self.action_dtype
+            ),
             reward=np.zeros((self.batched_envs,), dtype=np.float32),
             terminal=np.zeros((self.batched_envs,), dtype=bool),
             time_idx=self.step_count.copy(),
@@ -140,6 +136,8 @@ class AMAGOEnv(gym.Wrapper):
             time_idx=self.step_count.copy(),
             batched_envs=self.batched_envs,
         )
+        # reset the step count here in case the env is going to auto-reset itself
+        self.step_count *= ~np.logical_or(terminateds, truncateds)
         return timestep, rewards, terminateds, truncateds, infos
 
 
@@ -217,7 +215,6 @@ class SequenceWrapper(gym.Wrapper):
         self.dset_name = dset_name
         self.dset_split = dset_split
         self.save_every = save_every
-        self.since_last_save = 0
         self.save_trajs_as = save_trajs_as
         self._total_frames = 0
         self._total_frames_by_env_name = defaultdict(int)
@@ -248,6 +245,9 @@ class SequenceWrapper(gym.Wrapper):
         self.return_history = ReturnHistory(self.env_name)
         self.special_history = SpecialMetricHistory(self.env_name)
 
+    def random_traj_length(self):
+        return random.randint(*self.save_every) if self.save_every else None
+
     def reset(self, seed=None) -> Timestep:
         timestep, info = self.env.reset(seed=seed)
         assert timestep.batched_envs == self.batched_envs
@@ -255,11 +255,9 @@ class SequenceWrapper(gym.Wrapper):
         self.active_trajs = [
             Trajectory(timesteps=[t]) for t in split_batched_timestep(timestep)
         ]
-        assert len(self.active_trajs) == self.batched_envs
         self.since_last_save = [0 for _ in range(self.batched_envs)]
         self.save_this_time = [
-            random.randint(*self.save_every) if self.save_every else None
-            for _ in range(self.batched_envs)
+            self.random_traj_length() for _ in range(self.batched_envs)
         ]
         self.total_return = np.zeros(self.batched_envs, dtype=np.float64)
         return timestep.obs, info
@@ -269,22 +267,27 @@ class SequenceWrapper(gym.Wrapper):
         assert terminated.shape[0] == self.batched_envs
         assert truncated.shape[0] == self.batched_envs
         assert reward.shape[0] == self.batched_envs
-        self._current_timestep = timestep.as_input()
 
         self.total_return += reward
         done = np.logical_or(terminated, truncated)
-        for idx, timestep in enumerate(split_batched_timestep(timestep)):
-            self.active_trajs[idx].add_timestep(timestep)
+        for idx, split_timestep in enumerate(split_batched_timestep(timestep)):
+            self.active_trajs[idx].add_timestep(split_timestep)
             self.since_last_save[idx] += 1
             if done[idx]:
+                # we're going to handle this as if the env auto-resets such that the last timestep of this trajectory
+                # is the same as the first timestep of the next trajectory. However, if the env is not vectorized, this
+                # will all be overriden by the `reset` call that is passed down by AsyncVectorEnv as soon as it sees a `done`.
                 self.return_history.add_score(self.env.env_name, self.total_return[idx])
-            save = (
+                self.total_return[idx] = 0
+                # the observation is correct for the new traj but the step counter, terminals, etc. of the `Timestep` are not
+                split_timestep = split_timestep.create_reset_version(np.array([True]))
+                self.finish_active_traj(idx=idx, new_init_timestep=split_timestep)
+            elif (
                 self.save_every is not None
                 and self.since_last_save[idx] > self.save_this_time[idx]
-            )
-            if (done[idx] or save) and self.make_dset:
-                self.log_to_disk(idx=idx)
-                self.active_trajs[idx] = Trajectory(timesteps=[timestep])
+            ):
+                # initial timestep of new trajectory is the exact same as the last timestep of the previous trajectory
+                self.finish_active_traj(idx=idx, new_init_timestep=split_timestep)
 
         for info_key, info_val in info.items():
             if info_key.startswith(self.special_history.log_prefix):
@@ -293,6 +296,12 @@ class SequenceWrapper(gym.Wrapper):
         self._total_frames += timestep.batched_envs
         self._total_frames_by_env_name[self.env.env_name] += timestep.batched_envs
 
+        if done.any():  # avoid a deepcopy if we can
+            timestep = timestep.create_reset_version(done)
+
+        # - if the env is running in a pool of async/sync envs, terminated/truncated will trigger a `reset`, redoing the reset logic already done here
+        # - if the env is vectorized, dones will never be checked for a reset but *will* be used to reset the agent's hidden state
+        self._current_timestep = timestep.as_input()
         return (
             timestep.obs,
             reward,
@@ -301,11 +310,16 @@ class SequenceWrapper(gym.Wrapper):
             info,
         )
 
-    def log_to_disk(self, idx: int):
-        traj_name = f"{self.env.env_name.strip().replace('_', '')}_{uuid4().hex[:8]}_{time.time()}"
-        path = os.path.join(self.dset_write_dir, traj_name)
-        self.active_trajs[idx].save_to_disk(path, save_as=self.save_trajs_as)
-        self.since_last_save[idx] = 0
+    def finish_active_traj(self, idx: int, new_init_timestep: Timestep):
+        if self.make_dset:
+            # environment name, a random id, and a timestamp .traj
+            traj_name = f"{self.env.env_name.strip().replace('_', '')}_{uuid4().hex[:8]}_{time.time()}"
+            path = os.path.join(self.dset_write_dir, traj_name)
+            self.active_trajs[idx].save_to_disk(path, save_as=self.save_trajs_as)
+            self.since_last_save[idx] = 0
+            self.save_this_time[idx] = self.random_traj_length()
+        # these values will be overriden if we can call `reset`
+        self.active_trajs[idx] = Trajectory(timesteps=[new_init_timestep])
 
     @property
     def total_frames(self) -> int:

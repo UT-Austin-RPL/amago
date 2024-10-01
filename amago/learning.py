@@ -435,6 +435,8 @@ class Experiment:
                     )
             *_, terminated, truncated, _ = envs.step(actions.cpu().numpy())
             done = terminated | truncated
+            if done.ndim == 2:
+                done = done.squeeze(1)
             obs, rl2s, time_idxs = get_t()
             hidden_state = policy.traj_encoder.reset_hidden_state(hidden_state, done)
             if render:

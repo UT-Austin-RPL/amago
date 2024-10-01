@@ -22,7 +22,7 @@ def add_cli(parser):
         choices=["trivial-1m", "small-1m", "medium-1m", "high-1m", "high-3m"],
     )
     parser.add_argument("--xland_device", type=int, default=None)
-    parser.add_argument("--k_shots", type=int, default=5)
+    parser.add_argument("--k_shots", type=int, default=2)
     parser.add_argument("--rooms", type=int, default=4)
     parser.add_argument("--grid_size", type=int, default=13)
     parser.add_argument("--max_seq_len", type=int, default=2048)
@@ -134,6 +134,7 @@ if __name__ == "__main__":
             make_val_env=make_val_env,
             max_seq_len=args.max_seq_len,
             traj_save_len=traj_len,
+            stagger_traj_file_lengths=False,
             run_name=run_name,
             group_name=group_name,
             val_timesteps_per_epoch=traj_len,

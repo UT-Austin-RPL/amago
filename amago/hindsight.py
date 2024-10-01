@@ -1,4 +1,5 @@
 import pickle
+import copy
 import time
 from dataclasses import dataclass, asdict
 from typing import Optional, Iterable
@@ -37,6 +38,15 @@ class Timestep:
             (self.reward[:, np.newaxis], self.prev_action), axis=-1
         ).astype(np.float32)
         return self.obs, rl2, self.time_idx[:, np.newaxis]
+
+    def create_reset_version(self, reset_idxs):
+        assert reset_idxs.shape[0] == self.batched_envs
+        new = copy.deepcopy(self)
+        new.reward[reset_idxs] = 0
+        new.time_idx[reset_idxs] = 0
+        new.terminal[reset_idxs] = False
+        new.prev_action[reset_idxs] = 0
+        return new
 
 
 def split_batched_timestep(t: Timestep) -> list[Timestep]:
