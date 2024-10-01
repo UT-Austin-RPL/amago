@@ -249,10 +249,13 @@ class Cache:
     def __len__(self):
         return self.data.shape[1]
 
-    def roll_back(self, idxs):
+    @torch.compile
+    def roll_back(self, seq_lens):
+        idxs = torch.where(seq_lens == self.data.shape[1] - 1)[0]
         roll = self.data[idxs, 1:].clone()
         self.data[idxs, :-1] = roll
         self.data[idxs, -1] = torch.nan  # no silent bugs
+        return idxs
 
 
 class TformerHiddenState:
@@ -273,12 +276,10 @@ class TformerHiddenState:
 
     def update(self):
         self.seq_lens += 1
-        roll_back_idxs = torch.where(self.seq_lens == len(self.key_cache[0]))[0]
-        if roll_back_idxs.shape[0] > 0:
-            for k, v in zip(self.key_cache, self.val_cache):
-                k.roll_back(roll_back_idxs)
-                v.roll_back(roll_back_idxs)
-            self.seq_lens[roll_back_idxs] -= 1
+        for k, v in zip(self.key_cache, self.val_cache):
+            k.roll_back(self.seq_lens)
+            idxs = v.roll_back(self.seq_lens)
+        self.seq_lens[idxs] -= 1
 
     def __getitem__(self, layer_idx):
         assert layer_idx < self.n_layers
