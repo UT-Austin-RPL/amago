@@ -137,7 +137,6 @@ class Trajectory:
         return len(self.timesteps)
 
     def save_to_disk(self, path: str, save_as: str):
-        breakpoint()
         if save_as == "trajectory":
             with open(f"{path}.traj", "wb") as f:
                 pickle.dump(self, f)

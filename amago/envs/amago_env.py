@@ -245,6 +245,9 @@ class SequenceWrapper(gym.Wrapper):
         self.return_history = ReturnHistory(self.env_name)
         self.special_history = SpecialMetricHistory(self.env_name)
 
+    def random_traj_length(self):
+        return random.randint(*self.save_every) if self.save_every else None
+
     def reset(self, seed=None) -> Timestep:
         timestep, info = self.env.reset(seed=seed)
         assert timestep.batched_envs == self.batched_envs
@@ -252,11 +255,9 @@ class SequenceWrapper(gym.Wrapper):
         self.active_trajs = [
             Trajectory(timesteps=[t]) for t in split_batched_timestep(timestep)
         ]
-        assert len(self.active_trajs) == self.batched_envs
         self.since_last_save = [0 for _ in range(self.batched_envs)]
         self.save_this_time = [
-            random.randint(*self.save_every) if self.save_every else None
-            for _ in range(self.batched_envs)
+            self.random_traj_length() for _ in range(self.batched_envs)
         ]
         self.total_return = np.zeros(self.batched_envs, dtype=np.float64)
         return timestep.obs, info
@@ -278,6 +279,7 @@ class SequenceWrapper(gym.Wrapper):
                 # will all be overriden by the `reset` call that is passed down by AsyncVectorEnv as soon as it sees a `done`.
                 self.return_history.add_score(self.env.env_name, self.total_return[idx])
                 self.total_return[idx] = 0
+                # the observation is correct for the new traj but the step counter, terminals, etc. of the `Timestep` are not
                 split_timestep = split_timestep.create_reset_version(np.array([True]))
                 self.finish_active_traj(idx=idx, new_init_timestep=split_timestep)
             elif (
@@ -315,7 +317,7 @@ class SequenceWrapper(gym.Wrapper):
             path = os.path.join(self.dset_write_dir, traj_name)
             self.active_trajs[idx].save_to_disk(path, save_as=self.save_trajs_as)
             self.since_last_save[idx] = 0
-            self.save_this_time[idx] = random.randint(*self.save_every)
+            self.save_this_time[idx] = self.random_traj_length()
         # these values will be overriden if we can call `reset`
         self.active_trajs[idx] = Trajectory(timesteps=[new_init_timestep])
 

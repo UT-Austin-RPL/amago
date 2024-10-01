@@ -149,7 +149,7 @@ class XLandMiniGridEnv(gym.Env):
 
     @property
     def suggested_max_seq_len(self):
-        return self.max_steps_per_episode * self.k_shots
+        return (self.max_steps_per_episode + 1) * self.k_shots
 
     def get_obs(self):
         obs = self.x_timestep.observation
@@ -232,7 +232,7 @@ class XLandMiniGridEnv(gym.Env):
         self.episode_return *= ep_continues
         self.episode_steps *= ep_continues
         self.current_episode += ep_end
-        reward = self.x_timestep.reward
+        reward = self.x_timestep.reward.copy()
         self.episode_return += reward
 
         # meta-resets need to happen on the same timestep as they occur

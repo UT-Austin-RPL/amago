@@ -96,20 +96,18 @@ class BilevelEpsilonGreedy(ExplorationWrapper):
             random_action = np.random.randint(
                 0, num_actions, size=(self.batched_envs, 1)
             )
-            use_random = np.random.rand(self.batched_envs) <= noise
+            use_random = np.expand_dims(np.random.rand(self.batched_envs) <= noise, 1)
             expl_action = (
                 use_random * random_action + (1 - use_random) * action
             ).astype(np.uint8)
-            assert expl_action.shape[1] == 1
+            assert expl_action.shape == (self.batched_envs, 1)
         else:
             # random noise (TD3-style)
             expl_action = action + noise * np.random.randn(*action.shape)
             expl_action = np.clip(expl_action, -1.0, 1.0).astype(np.float32)
             assert expl_action.dtype == np.float32
-            assert expl_action.shape[1] == action.shape[1]
+            assert expl_action.shape == (self.batched_envs, action.shape[1])
         self.global_step += 1
-
-        assert expl_action.shape[0] == self.batched_envs
         return expl_action
 
 
