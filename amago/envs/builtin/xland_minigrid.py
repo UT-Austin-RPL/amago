@@ -1,7 +1,6 @@
 import random
 from collections import defaultdict
 from typing import Optional
-from functools import partial
 
 import gymnasium as gym
 import numpy as np
@@ -25,10 +24,22 @@ from amago.envs import AMAGO_ENV_LOG_PREFIX
 
 
 def _swap_rules(old_goal, old_rule, old_tile, new_goal, new_rule, new_tile, replace):
+    # overly verbose three-way select for jit. slightly faster i think
     goal = jnp.select(replace, new_goal, old_goal)
     rule = jnp.select(replace, new_rule, old_rule)
     tile = jnp.select(replace, new_tile, old_tile)
     return goal, rule, tile
+
+
+def _swap_trees(old_tree, new_tree, replace):
+    def select_fn(old, new):
+        # pad to avoid error (no idea what i'm doing with jax trees)
+        diff = old.ndim - replace.ndim
+        axes = tuple([1 + i for i in range(diff)])
+        idxs = jnp.expand_dims(replace, axes)
+        return jnp.where(idxs, old, new)
+
+    return jax.tree_util.tree_map(select_fn, new_tree, old_tree)
 
 
 class XLandMiniGridEnv(gym.Env):
@@ -87,7 +98,8 @@ class XLandMiniGridEnv(gym.Env):
         self.x_step = jax.jit(
             jax.vmap(self.x_env.step, in_axes=(0, 0, 0)), device=self.jax_device
         )
-        self.x_swap = jax.jit(_swap_rules, device=self.jax_device)
+        self.x_swap_rules = jax.jit(_swap_rules, device=self.jax_device)
+        self.x_swap_tsteps = jax.jit(_swap_trees, device=self.jax_device)
 
         obs_shapes = self.x_env.observation_shape(self.env_params)
         self.max_steps_per_episode = self.env_params.max_steps
@@ -105,7 +117,19 @@ class XLandMiniGridEnv(gym.Env):
                 ),
             }
         )
-        self.reset()
+        # establish placeholder values for resets
+        ruleset = self.x_sample(self.new_ruleset_keys())
+        self.env_params = self.env_params.replace(ruleset=ruleset)
+        self.x_timestep = self.x_reset(self.env_params, self.new_reset_keys())
+        self.current_episode = jnp.zeros(
+            self.parallel_envs, dtype=jnp.int32, device=self.jax_device
+        )
+        self.episode_return = jnp.zeros(
+            self.parallel_envs, dtype=jnp.float32, device=self.jax_device
+        )
+        self.episode_steps = jnp.zeros(
+            self.parallel_envs, dtype=jnp.int32, device=self.jax_device
+        )
 
     def new_reset_keys(self):
         keys = dp(
@@ -133,6 +157,9 @@ class XLandMiniGridEnv(gym.Env):
         direction_done = np.concatenate(
             (obs["direction"], done[:, np.newaxis]), axis=-1
         )
+        # it seems more in the spirit of AdA's XLand to give the "goal" as an observation
+        # but let the agent meta-learn the "rules"... though it's not clear if that
+        # makes xland minigrid easier than it was meant to be...
         return {
             "grid": np.array(obs["img"], dtype=np.uint8),
             "direction_done": direction_done,
@@ -140,31 +167,26 @@ class XLandMiniGridEnv(gym.Env):
         }
 
     def reset(self, *args, **kwargs):
-        ruleset = self.x_sample(self.new_ruleset_keys())
-        self.env_params = self.env_params.replace(ruleset=ruleset)
-        self.x_timestep = self.x_reset(self.env_params, self.new_reset_keys())
-        self.current_episode = jnp.zeros(
-            self.parallel_envs, dtype=jnp.int32, device=self.jax_device
+        # set all done, then reset if done
+        self.is_done = jnp.ones(
+            self.parallel_envs, dtype=jnp.bool_, device=self.jax_device
         )
-        self.episode_return = jnp.zeros(
-            self.parallel_envs, dtype=jnp.float32, device=self.jax_device
-        )
-        self.episode_steps = jnp.zeros(
-            self.parallel_envs, dtype=jnp.int32, device=self.jax_device
-        )
-        return self.get_obs(), {}
+        return self.reset_if_done()
 
-    def replace_rules(self, replace_idxs):
+    def reset_if_done(self):
+        # generate a new ruleset in parallel for every env
         new_ruleset = self.x_sample(self.new_ruleset_keys())
         ruleset = self.env_params.ruleset
-        goals, rules, tiles = self.x_swap(
+
+        # keep the old ruleset if the env is not done, else take new ruleset
+        goals, rules, tiles = self.x_swap_rules(
             ruleset.goal,
             ruleset.rules,
             ruleset.init_tiles,
             new_ruleset.goal,
             new_ruleset.rules,
             new_ruleset.init_tiles,
-            replace_idxs,
+            self.is_done,
         )
         updated = xminigrid.types.RuleSet(
             goal=goals,
@@ -172,7 +194,19 @@ class XLandMiniGridEnv(gym.Env):
             init_tiles=tiles,
         )
         self.env_params = self.env_params.replace(ruleset=updated)
-        return updated
+
+        # reset every env
+        reset_timestep = self.x_reset(self.env_params, self.new_reset_keys())
+
+        # keep old timestep if not done, else take new timestep
+        new_timestep = self.x_swap_tsteps(self.x_timestep, reset_timestep, self.is_done)
+        self.x_timestep = new_timestep
+
+        # keep counters if not done, else reset them
+        self.current_episode = self.current_episode * ~self.is_done
+        self.episode_return = self.episode_return * ~self.is_done
+        self.episode_steps = self.episode_steps * ~self.is_done
+        return self.get_obs(), {}
 
     def step(self, action):
         action = jnp.array(action, device=self.jax_device)
@@ -204,14 +238,8 @@ class XLandMiniGridEnv(gym.Env):
         self.episode_return += reward
         next_obs = self.get_obs()
 
-        # handle meta-resets by changing the ruleset
         done = self.current_episode >= self.k_shots
-        if done.any():
-            self.replace_rules(replace=done)
-            reset_timestep = self.x_reset(self.env_params, self.new_reset_keys())
-        self.current_episode *= ~done
-        # the reset will kick in on the next `step`
-
+        self.is_done = done.copy()
         return next_obs, reward, done, done, info
 
 
@@ -228,7 +256,7 @@ if __name__ == "__main__":
         ruleset_benchmark="trivial-1m",
         train_test_split="train",
         train_test_split_key=0,
-        k_shots=25,
+        k_shots=2,
         jax_device=0,
     )
     env = AMAGOEnv(env, env_name="XLandMiniGridEnv", batched_envs=1024)
@@ -241,6 +269,9 @@ if __name__ == "__main__":
         action = np.array(
             [env.action_space.sample() for _ in range(env.parallel_envs)]
         )[:, np.newaxis]
-        next_state, reward, done, _, info = env.step(action)
+        next_state, reward, terminated, truncated, info = env.step(action)
+        done = np.logical_or(terminated, truncated)
+        if done.any():
+            env.reset_if_done()
     end = time.time()
     print(f"FPS: {steps / (end - start)}")
