@@ -153,6 +153,7 @@ class TformerTrajEncoder(TrajEncoder):
             return transformer.Cache(
                 device=device,
                 dtype=torch.bfloat16,
+                layers=self.tformer.n_layers,
                 batch_size=batch_size,
                 max_seq_len=self.max_seq_len,
                 n_heads=self.tformer.n_heads,
@@ -160,8 +161,8 @@ class TformerTrajEncoder(TrajEncoder):
             )
 
         hidden_state = transformer.TformerHiddenState(
-            key_cache=[make_cache() for _ in range(self.tformer.n_layers)],
-            val_cache=[make_cache() for _ in range(self.tformer.n_layers)],
+            key_cache=make_cache(),
+            val_cache=make_cache(),
             seq_lens=torch.zeros((batch_size,), dtype=torch.int32, device=device),
         )
         return hidden_state
