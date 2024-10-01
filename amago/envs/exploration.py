@@ -85,6 +85,15 @@ class BilevelEpsilonGreedy(ExplorationWrapper):
         )
         return current
 
+    def step(self, action):
+        obs, rew, terminated, truncated, info = self.env.step(action)
+        done = np.logical_or(terminated, truncated)
+        if done.any():
+            # handle auto-resets by resetting the global multiplier
+            new_global_multiplier = np.random.rand(self.batched_envs)
+            self.global_multiplier[done] = new_global_multiplier[done]
+        return obs, rew, terminated, truncated, info
+
     def add_exploration_noise(self, action: np.ndarray, local_step: np.ndarray):
         assert action.shape[0] == self.batched_envs
         assert local_step.shape[0] == self.batched_envs
