@@ -1,10 +1,9 @@
 from argparse import ArgumentParser
-from functools import partial
 
 import wandb
 import torch
 from torch import nn
-import gymnasium as gym
+from torch.nn import functional as F
 from einops import rearrange
 
 import amago
@@ -22,9 +21,9 @@ def add_cli(parser):
         choices=["trivial-1m", "small-1m", "medium-1m", "high-1m", "high-3m"],
     )
     parser.add_argument("--xland_device", type=int, default=None)
-    parser.add_argument("--k_shots", type=int, default=2)
-    parser.add_argument("--rooms", type=int, default=4)
-    parser.add_argument("--grid_size", type=int, default=13)
+    parser.add_argument("--k_shots", type=int, default=10)
+    parser.add_argument("--rooms", type=int, default=1)
+    parser.add_argument("--grid_size", type=int, default=9)
     parser.add_argument("--max_seq_len", type=int, default=2048)
     return parser
 
@@ -45,22 +44,45 @@ class XLandMGTstepEncoder(amago.nets.tstep_encoders.TstepEncoder):
         obs_space,
         rl2_space,
         grid_id_dim: int = 8,
+        grid_emb_dim: int = 200,
+        goal_id_dim: int = 12,
+        goal_emb_dim: int = 40,
         ff_dim: int = 384,
         out_dim: int = 256,
     ):
         super().__init__(obs_space=obs_space, rl2_space=rl2_space)
-        self.embedding = nn.Embedding(15, embedding_dim=grid_id_dim)
-        self.img_processor = amago.nets.cnn.GridworldCNN(
+
+        # grid world embedding
+        low_token = lambda space: space.low.max().item()
+        high_token = lambda space: space.high.max().item()
+        grid_tokens = high_token(obs_space["grid"]) - low_token(obs_space["grid"]) + 1
+        self.grid_embedding = nn.Embedding(grid_tokens, embedding_dim=grid_id_dim)
+        self.grid_processor = amago.nets.cnn.GridworldCNN(
             img_shape=obs_space["grid"].shape,
             channels_first=False,
             activation="leaky_relu",
             channels=[32, 48, 64],
         )
-        img_out_dim = self.img_processor(
+        grid_out_dim = self.grid_processor(
             torch.zeros((1, 1) + obs_space["grid"].shape, dtype=torch.uint8)
         ).shape[-1]
+        self.grid_rep_ff = nn.Linear(grid_out_dim, grid_emb_dim)
+
+        # goal token embedding
+        goal_tokens = high_token(obs_space["goal"]) - low_token(obs_space["goal"]) + 1
+        self.goal_embedding = nn.Embedding(goal_tokens, embedding_dim=goal_id_dim)
+        goal_inp_dim = goal_id_dim * obs_space["goal"].shape[0]
+        self.goal_rep_ff = nn.Sequential(
+            nn.Linear(goal_inp_dim, goal_inp_dim),
+            nn.LeakyReLU(),
+            nn.Linear(goal_inp_dim, goal_emb_dim),
+        )
+
+        # merge grid, goal, and other array features
         self.merge = nn.Sequential(
-            nn.Linear(img_out_dim + 4 + 1 + self.rl2_space.shape[-1], ff_dim),
+            nn.Linear(
+                grid_emb_dim + goal_emb_dim + 4 + 1 + self.rl2_space.shape[-1], ff_dim
+            ),
             nn.LeakyReLU(),
             nn.Linear(ff_dim, out_dim),
         )
@@ -72,12 +94,20 @@ class XLandMGTstepEncoder(amago.nets.tstep_encoders.TstepEncoder):
         return self.out_dim
 
     def inner_forward(self, obs, rl2s, log_dict=None):
-        grid_rep = self.embedding(obs["grid"].long())
+        grid_rep = self.grid_embedding(obs["grid"].long())
         grid_rep = rearrange(grid_rep, "... h w layers emb -> ... h w (layers emb)")
-        grid_rep = self.img_processor(obs["grid"])
+        grid_rep = self.grid_processor(obs["grid"])
         add_activation_log("encoder-grid-rep", grid_rep, log_dict)
+        grid_rep = F.leaky_relu(self.grid_rep_ff(grid_rep))
+        add_activation_log("encoder-grid-rep-ff", grid_rep, log_dict)
+
+        goal_rep = self.goal_embedding(obs["goal"].long())
+        goal_rep = rearrange(goal_rep, "... length emb -> ... (length emb)")
+        goal_rep = F.leaky_relu(self.goal_rep_ff(goal_rep))
+        add_activation_log("encoder-goal-rep-ff", grid_rep, log_dict)
+
         extras = torch.cat((obs["direction_done"], symlog(rl2s)), dim=-1)
-        merged_rep = torch.cat((grid_rep, extras), dim=-1)
+        merged_rep = torch.cat((grid_rep, goal_rep, extras), dim=-1)
         merged_rep = self.merge(merged_rep)
         add_activation_log("encoder-merged-rep", merged_rep, log_dict)
         out = self.out_norm(merged_rep)
@@ -125,6 +155,7 @@ if __name__ == "__main__":
 
     group_name = f"{args.run_name}_xlandmg_{args.benchmark}_R{args.rooms}_{args.grid_size}x{args.grid_size}"
     args.start_learning_at_epoch = traj_len // args.timesteps_per_epoch
+    args.max_seq_len = min(args.max_seq_len, traj_len)
 
     for trial in range(args.trials):
         run_name = group_name + f"_trial_{trial}"
