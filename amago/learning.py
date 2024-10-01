@@ -216,7 +216,7 @@ class Experiment:
         self.hidden_state = None  # holds train_env hidden state between rollouts
 
         if self.env_mode == "already_vectorized":
-            _inner = f"Vectorized Gym Env (x{self.parallel_actors})"
+            _inner = f"Vectorized Gym Env x{self.parallel_actors}"
             _desc = f"{Par.__name__}({_inner})"
         else:
             _inner = "Gym Env"
@@ -433,7 +433,7 @@ class Experiment:
                         sample=self.sample_actions,
                         hidden_state=hidden_state,
                     )
-            *_, terminated, truncated, _ = envs.step(actions.cpu().numpy())
+            *_, terminated, truncated, _ = envs.step(actions.squeeze(1).cpu().numpy())
             done = terminated | truncated
             if done.ndim == 2:
                 done = done.squeeze(1)
@@ -484,21 +484,29 @@ class Experiment:
     def evaluate_test(
         self, make_test_env: callable, timesteps: int, render: bool = False
     ):
-        # TODO: refactor
         make = lambda: SequenceWrapper(
             make_test_env(), save_every=None, make_dset=False
         )
-        Par = gym.vector.AsyncVectorEnv if self.async_envs else DummyAsyncVectorEnv
-        test_envs = Par([make for _ in range(self.parallel_actors)])
+        if self.env_mode == "already_vectorized":
+            Par = AlreadyVectorizedEnv
+            env_list = [make]
+        elif self.env_mode == "async":
+            Par = gym.vector.AsyncVectorEnv
+            env_list = [make for _ in range(self.parallel_actors)]
+        elif self.env_mode == "sync":
+            Par = DummyAsyncVectorEnv
+            env_list = [make for _ in range(self.parallel_actors)]
+        test_envs = Par(env_list)
         test_envs.reset()
-        _, returns, specials = self.interact(
+        _, (returns, specials) = self.interact(
             test_envs,
             timesteps,
             hidden_state=None,
             render=render,
         )
         logs = self.policy_metrics(returns, specials)
-        self.log(logs, key="test")
+        logs_global = utils.avg_over_accelerate(logs)
+        self.log(logs_global, key="test")
         test_envs.close()
         return logs
 

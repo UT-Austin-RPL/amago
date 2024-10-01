@@ -194,7 +194,7 @@ class Agent(nn.Module):
             tstep_emb, time_idxs=time_idxs, hidden_state=hidden_state
         )
         # generate action distribution [batch, len(self.gammas), d_action]
-        action_dists = self.actor(traj_emb_t.squeeze(1))
+        action_dists = self.actor(traj_emb_t)
         if sample:
             actions = action_dists.sample()
         else:
