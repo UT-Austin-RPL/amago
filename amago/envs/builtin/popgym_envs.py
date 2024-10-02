@@ -2,8 +2,16 @@ import random
 
 import gymnasium as gym
 import numpy as np
-import popgym
-from popgym.wrappers import Flatten, DiscreteAction
+
+from amago.utils import amago_warning
+
+try:
+    import popgym
+    from popgym.wrappers import Flatten, DiscreteAction
+except ImportError:
+    amago_warning(
+        "Missing popgym Install: `pip install amago[basic_envs]` or `pip install popgym`"
+    )
 
 from amago.envs import AMAGOEnv
 

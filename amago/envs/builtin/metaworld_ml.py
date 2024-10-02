@@ -1,12 +1,12 @@
 import random
-import warnings
+
+from amago.utils import amago_warning
 
 try:
     import metaworld
 except:
-    warnings.warn(
-        "Missing metaworld Install: `pip install amago[envs]` or `pip install git+https://github.com/Farama-Foundation/Metaworld.git@04be337a12305e393c0caf0cbf5ec7755c7c8feb`",
-        category=Warning,
+    amago_warning(
+        "Missing metaworld Install: `pip install amago[metaworld_env]` or `pip install git+https://github.com/Farama-Foundation/Metaworld.git@04be337a12305e393c0caf0cbf5ec7755c7c8feb`"
     )
 import gymnasium as gym
 import numpy as np
@@ -29,7 +29,7 @@ class Metaworld(AMAGOEnv):
 
         env = KShotMetaworld(benchmark, split, k_shots)
         super().__init__(
-            gym_env=env,
+            env=env,
             env_name=f"metaworld_{benchmark_name}",
         )
 
@@ -81,7 +81,6 @@ class KShotMetaworld(gym.Env):
         self.task_name = new_task
         self.env.set_task(random.choice(tasks))
         obs = self.env.reset()
-        # print(f"Task: {self.task_name}, Target Pos: {self.env._target_pos}, Object Pos: {self.env.obj_init_pos}")
         return self.get_obs(obs, True), {}
 
     def step(self, action):
@@ -110,21 +109,3 @@ class KShotMetaworld(gym.Env):
             truncated,
             {"success": self.successes},
         )
-
-
-if __name__ == "__main__":
-    benchmark = metaworld.ML45()
-    env = KShotMetaworld(benchmark, "train", k_shots=10)
-    for ep in range(10):
-        print(env.task_name)
-        input()
-        env.reset()
-        done = False
-        step = 0
-        while not done:
-            print(f"{ep}, {step}")
-            next_state, reward, terminated, truncated, info = env.step(
-                env.action_space.sample()
-            )
-            done = terminated or truncated
-            step += 1

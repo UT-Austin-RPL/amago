@@ -2,14 +2,19 @@ import random
 import warnings
 import math
 
+from amago.utils import amago_warning
+
 try:
     import retro
 except ImportError:
-    warnings.warn(
+    amago_warning(
         "Missing stable-retro Install: `https://stable-retro.farama.org/getting_started/"
     )
+try:
+    import cv2
+except ImportError:
+    amago_warning("Missing cv2 Install: `pip install opencv-python`")
 import gymnasium as gym
-import cv2
 import numpy as np
 from einops import rearrange
 

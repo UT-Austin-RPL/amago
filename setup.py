@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="amago",
-    version="2.0.0",
+    version="3.0.0",
     author="Jake Grigsby",
     author_email="grigsby@cs.utexas.edu",
     license="MIT",
@@ -11,32 +11,32 @@ setup(
     install_requires=[
         "gymnasium>=0.26",
         "torch>=2.4",
-        "numpy>=2.1",
-        "matplotlib",
+        "numpy>=2.0",
         "gin-config",
         "wandb",
         "einops",
         "tqdm",
         "gym",
-        "accelerate",
+        "accelerate>=0.33",
         "termcolor",
         "huggingface_hub",
     ],
     extras_require={
-        "envs": [
-            "opencv-python",
-            "popgym",
-            "crafter",
-            "opencv-python",
-            # original metaworld
+        "metaworld_env": [
             "metaworld @ git+https://github.com/Farama-Foundation/Metaworld.git@04be337a12305e393c0caf0cbf5ec7755c7c8feb",
             # fix common metaworld install bug
             "cython<3",
+        ],
+        "basic_envs": [
+            "popgym",
+            "minigrid",
             # deepmind alchemy
             "dm_env",
             "dm_alchemy @ git+https://github.com/deepmind/dm_alchemy.git",
-            "procgen",
-            "minigrid",
+        ],
+        "jax_envs": [
+            "xminigrid",
+            "gymnax",
         ],
         "flash": ["ninja", "packaging", "flash-attn"],
         "mamba": ["causal-conv1d>=1.1.0", "mamba-ssm"],
