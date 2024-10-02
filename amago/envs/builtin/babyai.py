@@ -6,7 +6,7 @@ import gymnasium as gym
 import cv2
 import minigrid
 
-from amago.envs.env_utils import AMAGO_ENV_LOG_PREFIX
+from amago.envs import AMAGO_ENV_LOG_PREFIX
 
 
 BANNED_BABYAI_TASKS = [
@@ -79,6 +79,7 @@ class MultitaskMetaBabyAI(gym.Env):
                 "extra": extra_space,
             }
         )
+        self.reset()
 
     def sample_new_env(self, env_name: str):
         env = gym.make(f"BabyAI-{env_name}")
