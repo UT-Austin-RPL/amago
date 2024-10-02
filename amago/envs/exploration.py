@@ -44,7 +44,7 @@ class BilevelEpsilonGreedy(ExplorationWrapper):
     def __init__(
         self,
         amago_env,
-        rollout_horizon: int,
+        rollout_horizon: int = gin.REQUIRED,
         eps_start_start: float = 1.0,  # start of training, start of rollout
         eps_start_end: float = 0.05,  # end of training, start of rollout
         eps_end_start: float = 0.8,  # start of training, end of rollout
@@ -86,7 +86,7 @@ class BilevelEpsilonGreedy(ExplorationWrapper):
         return current
 
     def step(self, action):
-        obs, rew, terminated, truncated, info = self.env.step(action)
+        obs, rew, terminated, truncated, info = super().step(action)
         done = np.logical_or(terminated, truncated)
         if done.any():
             # handle auto-resets by resetting the global multiplier
