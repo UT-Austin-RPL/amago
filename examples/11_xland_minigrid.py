@@ -18,13 +18,13 @@ def add_cli(parser):
     parser.add_argument(
         "--benchmark",
         type=str,
-        default="trivial-1m",
+        default="small-1m",
         choices=["trivial-1m", "small-1m", "medium-1m", "high-1m", "high-3m"],
     )
     parser.add_argument("--xland_device", type=int, default=None)
-    parser.add_argument("--k_shots", type=int, default=10)
-    parser.add_argument("--rooms", type=int, default=1)
-    parser.add_argument("--grid_size", type=int, default=9)
+    parser.add_argument("--k_shots", type=int, default=25)
+    parser.add_argument("--rooms", type=int, default=4)
+    parser.add_argument("--grid_size", type=int, default=13)
     parser.add_argument("--max_seq_len", type=int, default=2048)
     return parser
 
@@ -121,11 +121,12 @@ if __name__ == "__main__":
     add_common_cli(parser)
     add_cli(parser)
     args = parser.parse_args()
+
     config = {
         "amago.agent.Agent.reward_multiplier": 100.0,
         "amago.agent.Agent.tstep_encoder_Cls": XLandMGTstepEncoder,
-        "amago.nets.actor_critic.NCriticsTwoHot.min_return": -100_000,
-        "amago.nets.actor_critic.NCriticsTwoHot.max_return": 100_000,
+        "amago.nets.actor_critic.NCriticsTwoHot.min_return": -10_000,
+        "amago.nets.actor_critic.NCriticsTwoHot.max_return": 10_000,
         "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 64,
     }
 

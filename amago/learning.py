@@ -271,7 +271,7 @@ class Experiment:
         ckpt_name = os.path.join(
             self.dset_root, self.dset_name, self.run_name, "policy.pt"
         )
-        torch.save(self.policy_aclr.state_dict(), ckpt_name)
+        torch.save(self.policy.state_dict(), ckpt_name)
 
     def read_latest_policy(self):
         # read the latest policy -- used to communicate weight updates between learning/collecting processes
@@ -281,7 +281,7 @@ class Experiment:
         ckpt = utils.retry_load_checkpoint(ckpt_name, map_location=self.DEVICE)
         if ckpt is not None:
             self.accelerator.print("Loading latest policy....")
-            self.policy_aclr.load_state_dict(ckpt)
+            self.policy.load_state_dict(ckpt)
         else:
             utils.amago_warning("Latest policy checkpoint was not loaded.")
 
@@ -558,6 +558,10 @@ class Experiment:
             f"Average Total Return in {name}": np.array(scores).mean()
             for name, scores in returns_by_env_name.items()
         }
+        bottom_quintile_ret_per_env = {
+            f"Bottom Quintile Total Return in {name}": np.percentile(scores, 20)
+            for name, scores in returns_by_env_name.items()
+        }
         avg_special_per_env = {
             f"Average {special_key} in {name}": np.array(special_vals).mean()
             for name, specials_dict in specials_by_env_name.items()
@@ -568,7 +572,12 @@ class Experiment:
                 list(avg_ret_per_env.values())
             ).mean()
         }
-        return avg_ret_per_env | avg_return_overall | avg_special_per_env
+        return (
+            avg_ret_per_env
+            | avg_return_overall
+            | avg_special_per_env
+            | bottom_quintile_ret_per_env
+        )
 
     def compute_loss(self, batch: Batch, log_step: bool):
         critic_loss, actor_loss = self.policy_aclr(batch, log_step=log_step)
