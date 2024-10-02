@@ -701,6 +701,7 @@ class MultiTaskAgent(Agent):
                 self.maximized_critics.bin_dist_to_raw_vals(q_s_a_agent).min(2).values
             )
             actor_loss += self.online_coeff * -(q_s_a_agent[:, :-1, ...])
+        
 
         return critic_loss, actor_loss
 

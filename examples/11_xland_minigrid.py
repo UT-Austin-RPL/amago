@@ -5,6 +5,7 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 from einops import rearrange
+import gin
 
 import amago
 from amago.envs import AMAGOEnv
@@ -38,17 +39,18 @@ class XLandMiniGridAMAGO(AMAGOEnv):
         )
 
 
+@gin.configurable
 class XLandMGTstepEncoder(amago.nets.tstep_encoders.TstepEncoder):
     def __init__(
         self,
         obs_space,
         rl2_space,
         grid_id_dim: int = 8,
-        grid_emb_dim: int = 200,
-        goal_id_dim: int = 12,
-        goal_emb_dim: int = 40,
-        ff_dim: int = 384,
-        out_dim: int = 256,
+        grid_emb_dim: int = 128,
+        goal_id_dim: int = 8,
+        goal_emb_dim: int = 32,
+        ff_dim: int = 256,
+        out_dim: int = 128,
     ):
         super().__init__(obs_space=obs_space, rl2_space=rl2_space)
 

@@ -123,6 +123,7 @@ class DrQCNN(CNN):
         return x
 
 
+@gin.configurable(allowlist=["channels"])
 class GridworldCNN(CNN):
     def __init__(
         self,

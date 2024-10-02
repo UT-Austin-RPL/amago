@@ -1,14 +1,17 @@
 from argparse import ArgumentParser
+import math
 from functools import partial
 
 import gymnax
 from gymnax.wrappers import GymnaxToVectorGymWrapper
 
 import jax
+import jax.numpy as jnp
 import wandb
 import numpy as np
 
 from amago.envs import AMAGOEnv
+from amago.nets.cnn import GridworldCNN
 from amago.cli_utils import *
 
 
@@ -22,11 +25,23 @@ def add_cli(parser):
 
 class GymnaxCompatibility(GymnaxToVectorGymWrapper):
     """
-    Gymnax wants to give us the batched observation and action spaces,
-    but AMAGO is expecting unbatched spaces.
-    It's also going to send out jax arrays, but we need numpy.
+    Convert gymnax Gym wrapper to the expected AMAGO interface.
+
+        - Gymnax wants to give us the batched observation and action spaces,
+          but AMAGO is expecting unbatched spaces.
+        - It's also going to send out jax arrays, but we need numpy.
 
     A key point is that this only works because gymnax envs automatically reset.
+    The "already_vectorized" mode in AMAGO relies on auto-resets because we cannot
+    reset specific indices of the vectorized enviornment from the highest wrapper level.
+    However, some of the auto-reset logic does not work in the GymnaxToVectorGymWrapper. For example,
+    CartPole-v1 will auto-reset without ever giving a reward other than 1.0.
+
+    Many of the gymnax envs appear to be broken by recent versions of jax.
+    This script mainly serves as a way to test the already_vectorized env API used by
+    XLand MiniGrid (an unsolved environment) with easy gymnax envs like
+    Pendulum-v1. There are a couple memory/meta-RL bsuite envs where AMAGO+Transformer
+    is significantly better than the gymnax reference scores though.
     """
 
     @property
@@ -43,12 +58,7 @@ class GymnaxCompatibility(GymnaxToVectorGymWrapper):
         return obs, info
 
     def step(self, action):
-        obs, rewards, te, tr, info = super().step(action)
-
-        # Convert jax arrays to numpy
-        # We could probably get jax arrays to work, but it would
-        # fail a lot of assert checks, and the data's going to be
-        # saved to disk as numpy and loaded as torch anyway.
+        obs, rewards, te, tr, info = super().step(jnp.array(action))
         obs = np.array(obs)
         rewards = np.array(rewards)
         te = np.array(te)
@@ -63,6 +73,35 @@ def make_gymnax_amago(env_name, parallel_envs):
     return AMAGOEnv(
         env=vec_env, env_name=f"gymnax_{env_name}", batched_envs=parallel_envs
     )
+
+
+def simple_switch_tstep_encoder(config, obs_shape):
+    """
+    We'll move past the somewhat random collection of gymnax envs by making up a simple
+    timestep encoder based on a few hacks. If we really cared about gymnax performance we
+    could tune this per environment.
+    """
+    if len(obs_shape) == 3:
+        print(f"Guessing CNN for observation of shape {obs_shape}")
+        channels_first = np.argmin(obs_shape).item() == 0
+        switch_tstep_encoder(
+            config,
+            "cnn",
+            cnn_Cls=GridworldCNN,
+            channels_first=channels_first,
+            drqv2_aug=False,
+        )
+    else:
+        print(f"Guessing MLP for observation of shape {obs_shape}")
+        dim = math.prod(obs_shape)  # FFTstepEncoder will flatten the obs on input
+        switch_tstep_encoder(
+            config,
+            "ff",
+            d_hidden=max(dim // 3, 128),
+            n_layers=2,
+            d_output=max(dim // 4, 96),
+        )
+    return config
 
 
 if __name__ == "__main__":
@@ -82,6 +121,11 @@ if __name__ == "__main__":
         memory_size=args.memory_size,
         layers=args.memory_layers,
     )
+
+    test_env, _params = gymnax.make(args.env)
+    test_obs_shape = test_env.observation_space(_params).shape
+    simple_switch_tstep_encoder(config, test_obs_shape)
+
     use_config(config, args.configs)
 
     # free speedup by doing env computation on a spare GPU
@@ -104,10 +148,13 @@ if __name__ == "__main__":
                 make_train_env=make_env,
                 make_val_env=make_env,
                 max_seq_len=args.max_seq_len,
-                traj_save_len=args.max_seq_len * 4,
+                traj_save_len=args.max_seq_len * 20,
                 run_name=run_name,
                 group_name=group_name,
                 val_timesteps_per_epoch=args.eval_timesteps,
+                grad_clip=2.0,
+                l2_coeff=1e-4,
+                save_trajs_as="npz-compressed",
             )
             experiment = switch_async_mode(experiment, args)
             experiment.start()

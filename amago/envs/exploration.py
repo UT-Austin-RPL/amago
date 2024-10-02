@@ -44,7 +44,7 @@ class BilevelEpsilonGreedy(ExplorationWrapper):
     def __init__(
         self,
         amago_env,
-        rollout_horizon: int = gin.REQUIRED,
+        rollout_horizon: int = gin.REQUIRED,  # must configure with gin on a case-by-case basis, e.g. gin.bind_parameter("BilevelEpsilonGreedy.rollout_horizon", 100)
         eps_start_start: float = 1.0,  # start of training, start of rollout
         eps_start_end: float = 0.05,  # end of training, start of rollout
         eps_end_start: float = 0.8,  # start of training, end of rollout
@@ -115,7 +115,7 @@ class BilevelEpsilonGreedy(ExplorationWrapper):
             assert expl_action.shape == (self.batched_envs, 1)
         else:
             # random noise (TD3-style)
-            expl_action = action + noise * np.random.randn(*action.shape)
+            expl_action = action + noise[:, np.newaxis] * np.random.randn(*action.shape)
             expl_action = np.clip(expl_action, -1.0, 1.0).astype(np.float32)
             assert expl_action.dtype == np.float32
             assert expl_action.shape == (self.batched_envs, action.shape[1])
