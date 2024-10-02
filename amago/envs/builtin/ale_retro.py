@@ -174,7 +174,7 @@ class ALE(gym.Env):
 class RetroAMAGOWrapper(AMAGOEnv):
     def __init__(self, env: gym.Env):
         super().__init__(
-            gym_env=env,
+            env=env,
             env_name="RetroArcade-placeholder",
         )
 
@@ -244,6 +244,7 @@ class RetroArcade(gym.Env):
             )
             console = self.game_start_flat[0][0].split("-")[-1]
             self.action_space = gym.spaces.Discrete(self.discrete_action_n[console])
+        self.reset()
 
     def render(self, *args, **kwargs):
         return self._env.render(*args, **kwargs)

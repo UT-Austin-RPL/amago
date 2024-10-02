@@ -61,6 +61,9 @@ class BilevelEpsilonGreedy(ExplorationWrapper):
         self.start_global_slope = (eps_start_start - eps_start_end) / steps_anneal
         self.end_global_slope = (eps_end_start - eps_end_end) / steps_anneal
         self.discrete = isinstance(self.env.action_space, gym.spaces.Discrete)
+        assert not isinstance(
+            self.env.action_space, gym.spaces.MultiBinary
+        ), "Use a custom wrapper for MultiBinary actions"
         self.global_step = 0
         self.global_multiplier = 1.0
 

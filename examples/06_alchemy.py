@@ -2,8 +2,7 @@ from argparse import ArgumentParser
 
 import wandb
 
-import amago
-from amago.envs.builtin.gym_envs import GymEnv
+from amago.envs import AMAGOEnv
 from amago.envs.builtin.alchemy import SymbolicAlchemy
 from amago.cli_utils import *
 
@@ -19,7 +18,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     config = {"amago.nets.tstep_encoders.FFTstepEncoder.hide_rl2s": args.hide_rl2s}
-    turn_off_goal_conditioning(config)
     switch_traj_encoder(
         config,
         arch=args.traj_encoder,
@@ -27,18 +25,13 @@ if __name__ == "__main__":
         layers=args.memory_layers,
     )
     use_config(config, args.configs)
-    # this is another example where the environment handles the
-    # k-shot learning for us, and amago acts as if it is zero-shot.
-    make_train_env = lambda: GymEnv(
+    make_train_env = lambda: AMAGOEnv(
         gym_env=SymbolicAlchemy(),
         env_name="dm_symbolic_alchemy",
-        horizon=201,
-        zero_shot=True,
     )
     group_name = f"{args.run_name}_symbolic_dm_alchemy"
     for trial in range(args.trials):
         run_name = group_name + f"_trial_{trial}"
-
         experiment = create_experiment_from_cli(
             args,
             make_train_env=make_train_env,
@@ -49,7 +42,6 @@ if __name__ == "__main__":
             run_name=run_name,
             val_timesteps_per_epoch=2000,
         )
-
         switch_async_mode(experiment, args)
         experiment.start()
         if args.ckpt is not None:
