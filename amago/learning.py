@@ -9,7 +9,6 @@ from typing import Optional, Iterable
 
 import gin
 from termcolor import colored
-import wandb
 import torch
 from torch.utils.data import DataLoader
 import numpy as np
@@ -142,6 +141,8 @@ class Experiment:
         assert self.traj_save_len >= self.max_seq_len
 
         if self.env_mode in ["async", "sync"]:
+            # default environment mode wrapping individual gym environments in a pool of async processes
+            # and handling resets by waiting for the termination signal to reach the highest wrapper level
             to_env_list = lambda e: (
                 [e] * self.parallel_actors if not isinstance(e, Iterable) else e
             )
@@ -161,6 +162,9 @@ class Experiment:
                 else DummyAsyncVectorEnv
             )
         elif self.env_mode == "already_vectorized":
+            # alternate environment mode designed for jax / gpu-accelerated envs that handle parallelization
+            # with a batch dimension on the lowest wrapper level. These envs must auto-reset and treat the last
+            # timestep of a trajectory as the first timestep of the next trajectory.
             make_train_envs = [self.make_train_env]
             make_val_envs = [self.make_val_env]
             Par = AlreadyVectorizedEnv
@@ -286,7 +290,7 @@ class Experiment:
             utils.amago_warning("Latest policy checkpoint was not loaded.")
 
     def delete_buffer_from_disk(self):
-        # convenience method to delete the replay buffer from disk to prevent users from filling their disk.
+        # convenience method to delete the replay buffer to prevent users from accidentally filling their disk.
         buffer_dir = os.path.join(self.dset_root, self.dset_name, "train")
         if os.path.exists(buffer_dir):
             shutil.rmtree(buffer_dir)
@@ -447,39 +451,40 @@ class Experiment:
         return hidden_state, (return_history, special_history)
 
     def collect_new_training_data(self):
-        if self.train_timesteps_per_epoch > 0:
-            self.hidden_state, (returns, specials) = self.interact(
-                self.train_envs,
-                self.train_timesteps_per_epoch,
-                hidden_state=self.hidden_state,
-            )
+        self.hidden_state, (returns, specials) = self.interact(
+            self.train_envs,
+            self.train_timesteps_per_epoch,
+            hidden_state=self.hidden_state,
+        )
 
     def evaluate_val(self):
-        if self.val_timesteps_per_epoch > 0:
-            # reset envs first
-            self.val_envs.reset()
-            start_time = time.time()
-            # interact from a blank hidden state that is discarded
-            _, (returns, specials) = self.interact(
-                self.val_envs,
-                self.val_timesteps_per_epoch,
-                hidden_state=None,
+        # reset envs first
+        self.val_envs.reset()
+        start_time = time.time()
+        # interact from a blank hidden state that is discarded
+        _, (returns, specials) = self.interact(
+            self.val_envs,
+            self.val_timesteps_per_epoch,
+            hidden_state=None,
+        )
+        end_time = time.time()
+        fps = (
+            self.val_timesteps_per_epoch
+            * self.parallel_actors
+            / (end_time - start_time)
+        )
+        logs_per_process = self.policy_metrics(returns, specials=specials)
+        logs_per_process["env_frames_per_second_per_process"] = fps
+        cur_return = logs_per_process["Average Total Return (Across All Env Names)"]
+        if self.verbose:
+            self.accelerator.print(f"Average Return : {cur_return}")
+            # print FPS as the total over accelerate processes
+            self.accelerator.print(
+                f"Env FPS : {fps * self.accelerator.num_processes:.2f}"
             )
-            end_time = time.time()
-            fps = (
-                self.val_timesteps_per_epoch
-                * self.parallel_actors
-                / (end_time - start_time)
-            )
-            logs_per_process = self.policy_metrics(returns, specials=specials)
-            logs_per_process["env_frames_per_second"] = fps
-            cur_return = logs_per_process["Average Total Return (Across All Env Names)"]
-            if self.verbose:
-                self.accelerator.print(f"Average Return : {cur_return}")
-                self.accelerator.print(f"Env FPS : {fps:.2f}")
-            # validation metrics are averaged over all processes
-            logs_global = utils.avg_over_accelerate(logs_per_process)
-            self.log(logs_global, key="val")
+        # validation metrics are averaged over all processes
+        logs_global = utils.avg_over_accelerate(logs_per_process)
+        self.log(logs_global, key="val")
 
     def evaluate_test(
         self, make_test_env: callable, timesteps: int, render: bool = False
@@ -519,6 +524,7 @@ class Experiment:
             else:
                 log_dict[k] = v
 
+        # lets any metric be plotted against epoch and total_frames
         total_frames = sum(utils.call_async_env(self.train_envs, "total_frames"))
         frames_by_env_name = utils.call_async_env(
             self.train_envs, "total_frames_by_env_name"
@@ -528,7 +534,6 @@ class Experiment:
             for env_name, frames in env_frames.items():
                 total_frames_by_env_name[f"total_frames-{env_name}"] += frames
         if self.log_to_wandb:
-            # lets any metric be plotted against epoch and total_frames
             progress = {
                 "epoch": self.epoch,
                 "total_frames": total_frames,
@@ -635,6 +640,25 @@ class Experiment:
         else:
             return contextlib.suppress()
 
+    def manage_replay_buffer(self):
+        dset_size = self.train_dset.count_trajectories()
+        dset_gb = self.train_dset.disk_usage
+        needs_filter = (
+            dset_size > self.dset_max_size and self.dset_filter_pct is not None
+        )
+        if needs_filter and self.accelerator.is_main_process:
+            pct_to_filter = max(
+                self.dset_filter_pct, (dset_size - self.dset_max_size) / dset_size
+            )
+            self.train_dset.filter(pct_to_filter)
+        self.log(
+            {
+                "Trajectory Files Saved in Replay Buffer": dset_size,
+                "Train Buffer Disk Space (GB)": dset_gb,
+            },
+            key="buffer",
+        )
+
     def learn(self):
         def make_pbar(loader, epoch_num):
             if self.verbose:
@@ -654,11 +678,20 @@ class Experiment:
 
             # environment interaction
             self.policy_aclr.eval()
-            if self.val_interval and epoch % self.val_interval == 0:
+            if (
+                self.val_interval
+                and epoch % self.val_interval == 0
+                and self.val_timesteps_per_epoch > 0
+            ):
                 self.evaluate_val()
-            if epoch >= self.start_collecting_at_epoch:
+            if (
+                epoch >= self.start_collecting_at_epoch
+                and self.train_timesteps_per_epoch > 0
+            ):
                 self.collect_new_training_data()
             self.accelerator.wait_for_everyone()
+
+            # refresh dataset with newly collected trajectories
             self.init_dloaders()
             if self.train_dset.count_trajectories() == 0:
                 utils.amago_warning(
@@ -679,25 +712,8 @@ class Experiment:
                         self.log(loss_dict, key="train-update")
             self.accelerator.wait_for_everyone()
 
-            # buffer management
-            dset_size = self.train_dset.count_trajectories()
-            dset_gb = self.train_dset.disk_usage
-            needs_filter = (
-                dset_size > self.dset_max_size and self.dset_filter_pct is not None
-            )
-            self.accelerator.wait_for_everyone()
-            if needs_filter and self.accelerator.is_main_process:
-                pct_to_filter = max(
-                    self.dset_filter_pct, (dset_size - self.dset_max_size) / dset_size
-                )
-                self.train_dset.filter(pct_to_filter)
-            self.log(
-                {
-                    "Trajectory Files Saved in Replay Buffer": dset_size,
-                    "Train Buffer Disk Space (GB)": dset_gb,
-                },
-                key="buffer",
-            )
+            # delete excess trajectories from disk
+            self.manage_replay_buffer()
             self.accelerator.wait_for_everyone()
 
             # end epoch
