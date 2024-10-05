@@ -24,16 +24,14 @@ from amago.envs import AMAGO_ENV_LOG_PREFIX
 
 
 def _swap_rules(old_goal, old_rule, old_tile, new_goal, new_rule, new_tile, replace):
-    # overly verbose three-way select for jit. slightly faster i think
-    goal = jnp.select(replace, new_goal, old_goal)
-    rule = jnp.select(replace, new_rule, old_rule)
-    tile = jnp.select(replace, new_tile, old_tile)
+    goal = jnp.where(jnp.expand_dims(replace, 1), new_goal, old_goal)
+    rule = jnp.where(jnp.expand_dims(replace, (1, 2)), new_rule, old_rule)
+    tile = jnp.where(jnp.expand_dims(replace, (1, 2)), new_tile, old_tile)
     return goal, rule, tile
 
 
 def _swap_trees(old_tree, new_tree, replace):
     def select_fn(old, new):
-        # pad to avoid error (no idea what i'm doing with jax trees)
         diff = old.ndim - replace.ndim
         axes = tuple([1 + i for i in range(diff)])
         idxs = jnp.expand_dims(replace, axes)
@@ -90,7 +88,8 @@ class XLandMiniGridEnv(gym.Env):
 
         # according to gymnax, jit(vmap()) is faster than vmap(jit())... seems to be true here
         self.x_sample = jax.jit(
-            jax.vmap(self.benchmark.sample_ruleset), device=self.jax_device
+            jax.vmap(self.benchmark.sample_ruleset, in_axes=(0,)),
+            device=self.jax_device,
         )
         self.x_reset = jax.jit(
             jax.vmap(self.x_env.reset, in_axes=(0, 0)), device=self.jax_device
@@ -245,10 +244,10 @@ class XLandMiniGridEnv(gym.Env):
         done = np.array(done, dtype=np.bool_)
         return next_obs, reward, done, done, info
 
-    def render(self, *args, **kwargs):
-        # this does not work with numpy > 2.0 (tries to initialize uint8 array of -1s)
+    def render(self, env_idx: int, *args, **kwargs):
+        # this does not work with numpy > 2.0
         return self.x_env.render(
-            self.env_params, jax.tree_map(lambda x: x[0], self.x_timestep)
+            self.env_params, jax.tree_map(lambda x: x[env_idx], self.x_timestep)
         )
 
 
@@ -259,7 +258,7 @@ if __name__ == "__main__":
     from amago.envs import AMAGOEnv, SequenceWrapper
 
     env = XLandMiniGridEnv(
-        parallel_envs=2,
+        parallel_envs=4,
         rooms=1,
         grid_size=9,
         ruleset_benchmark="trivial-1m",
@@ -268,16 +267,31 @@ if __name__ == "__main__":
         k_shots=2,
         jax_device=0,
     )
-    env = AMAGOEnv(env, env_name="XLandMiniGridEnv", batched_envs=2)
+    env = AMAGOEnv(env, env_name="XLandMiniGridEnv", batched_envs=4)
     env = SequenceWrapper(env)
+
+    render_idxs = [0, 1, 2, 3]
+
+    if render_idxs is not None:
+        fig, axs = plt.subplots(1, len(render_idxs))
 
     env.reset()
     steps = 3_000
     start = time.time()
     for step in tqdm.tqdm(range(steps)):
+        print(env.current_episode)
         action = np.array(
             [env.action_space.sample() for _ in range(env.parallel_envs)]
         )[:, np.newaxis]
         next_state, reward, terminated, truncated, info = env.step(action)
+
+        if render_idxs is not None:
+            for _i, ax in zip(render_idxs, axs):
+                ax.clear()
+                img = env.unwrapped.render(env_idx=_i)
+                ax.imshow(img)
+            plt.pause(0.01)
+            fig.canvas.draw()
+
     end = time.time()
     print(f"FPS: {steps / (end - start)}")
