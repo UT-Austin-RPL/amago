@@ -245,24 +245,30 @@ class XLandMiniGridEnv(gym.Env):
         done = np.array(done, dtype=np.bool_)
         return next_obs, reward, done, done, info
 
+    def render(self, *args, **kwargs):
+        # this does not work with numpy > 2.0 (tries to initialize uint8 array of -1s)
+        return self.x_env.render(
+            self.env_params, jax.tree_map(lambda x: x[0], self.x_timestep)
+        )
+
 
 if __name__ == "__main__":
     import tqdm
     import time
-
+    import matplotlib.pyplot as plt
     from amago.envs import AMAGOEnv, SequenceWrapper
 
     env = XLandMiniGridEnv(
-        parallel_envs=1024,
-        rooms=4,
-        grid_size=13,
+        parallel_envs=2,
+        rooms=1,
+        grid_size=9,
         ruleset_benchmark="trivial-1m",
         train_test_split="train",
         train_test_split_key=0,
         k_shots=2,
         jax_device=0,
     )
-    env = AMAGOEnv(env, env_name="XLandMiniGridEnv", batched_envs=1024)
+    env = AMAGOEnv(env, env_name="XLandMiniGridEnv", batched_envs=2)
     env = SequenceWrapper(env)
 
     env.reset()
