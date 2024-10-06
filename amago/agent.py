@@ -32,13 +32,6 @@ class Multigammas:
 
 @gin.configurable
 def binary_filter(adv, threshold: float = 0.0):
-    """
-    Procgen results in the second paper use a `threshold` of -1e-4 (instead of 0),
-    which sometimes helps stability in sparse reward envs, but defaulting
-    to it was a version control mistake. This would never matter when
-    using scalar output critics (`Agent`) but *does* matter when using classification
-    two-hot critics (`MultiTaskAgent`) with many bins where advantages are often close to zero.
-    """
     return adv > threshold
 
 
@@ -328,7 +321,7 @@ class Agent(nn.Module):
                     critic_mask,
                     q_s_a_g,
                     self.popart(q_s_a_g, normalized=False),
-                    r=r,
+                    r=r / self.reward_multiplier,
                     d=d,
                     td_target=td_target,
                 )

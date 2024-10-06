@@ -77,7 +77,14 @@ if __name__ == "__main__":
         memory_size=args.memory_size,
         layers=args.memory_layers,
     )
-    switch_tstep_encoder(config, arch="ff", n_layers=2, d_hidden=128, d_output=128)
+    switch_tstep_encoder(
+        config,
+        arch="ff",
+        n_layers=2,
+        d_hidden=128,
+        d_output=128,
+        normalize_inputs=False,
+    )
     use_config(config, args.configs)
 
     group_name = f"{args.run_name}_TMazePassive_H{args.horizon}"

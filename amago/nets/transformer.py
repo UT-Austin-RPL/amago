@@ -295,6 +295,7 @@ class Cache:
             dtype=dtype,
             device=device,
         )
+        self.max_seq_len = max_seq_len
         # make silent bugs in k/v cache... much louder
         self.data[:] = torch.nan
         self.device = device
@@ -304,7 +305,7 @@ class Cache:
 
     @torch.compile
     def roll_back(self, seq_lens):
-        idxs = torch.where(seq_lens == self.data.shape[2] - 1)[0]
+        idxs = torch.where(seq_lens == self.max_seq_len)[0]
         roll = self.data[:, idxs, 1:].clone()
         self.data[:, idxs, :-1] = roll
         self.data[:, idxs, -1] = torch.nan  # no silent bugs
