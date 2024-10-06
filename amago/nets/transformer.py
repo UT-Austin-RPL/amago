@@ -9,6 +9,8 @@ import gin
 
 from .utils import activation_switch
 from amago.utils import amago_warning
+from amago.nets.ff import Normalization
+
 
 try:
     import flash_attn
@@ -16,18 +18,60 @@ except ImportError:
     amago_warning("Missing FlashAttention (2.0) Install")
 
 
-class Normalization(nn.Module):
-    def __init__(self, method: str, d_model: int):
+class VanillaAttention(nn.Module):
+    def __init__(self, causal: bool = True, attention_dropout: float = 0.0):
         super().__init__()
-        assert method in ["layer", "none"]
-        if method == "layer":
-            self.norm = nn.LayerNorm(d_model)
-        elif method == "none":
-            self.norm = lambda x: x
-        self.method = method
+        self.dropout = nn.Dropout(attention_dropout)
+        self.causal = causal
+        self._mask = None
 
-    def forward(self, x):
-        return self.norm(x)
+    @torch.compile
+    def _inference_with_cache(self, qkv, key_cache, val_cache, cache_seqlens):
+        # fmt: off
+        queries, keys, values = torch.unbind(qkv, dim=2)
+        B, L, H, E = queries.shape
+        assert L == 1
+        scale = 1.0 / math.sqrt(E)
+        # fill cache, trim sequences
+        key_cache[:, cache_seqlens] = keys
+        val_cache[:, cache_seqlens] = values
+        end = cache_seqlens + 1
+        max_len = end.max()
+        k_cache = key_cache[:, :max_len]
+        v_cache = val_cache[:, :max_len]
+        # attention scores + masking
+        scores = torch.einsum("blhe,blhe->blh", queries, k_cache)
+        mask = torch.arange(max_len, device=cache_seqlens.device)[None, :] >= end[:, None]
+        scores.masked_fill_(mask[:, :, None], -torch.inf)
+        # output
+        A = self.dropout(torch.softmax(scale * scores, dim=1))
+        V = torch.einsum("blh,blhd->bhd", A, v_cache).unsqueeze(1)
+        # fmt: on
+        return V
+
+    def _forward_without_cache(self, qkv):
+        queries, keys, values = torch.unbind(qkv, dim=2)
+        B, L, H, E = queries.shape
+        _, S, _, D = values.shape
+        scale = 1.0 / math.sqrt(E)
+        scores = torch.einsum("blhe,bshe->bhls", queries, keys)
+        if self._mask is None or self._mask.shape != (B, 1, L, L):
+            self._mask = torch.triu(
+                torch.ones((B, 1, L, L), dtype=torch.bool, device=qkv.device),
+                diagonal=1,
+            )
+        if self.causal:
+            scores.masked_fill_(self._mask, -torch.inf)
+        A = self.dropout(torch.softmax(scale * scores, dim=-1))
+        V = torch.einsum("bhls,bshd->blhd", A, values)
+        return V
+
+    def forward(self, qkv, key_cache=None, val_cache=None, cache_seqlens=None):
+        if key_cache is None and val_cache is None or cache_seqlens is None:
+            return self._forward_without_cache(qkv)
+        else:
+            assert not self.training
+            return self._inference_with_cache(qkv, key_cache, val_cache, cache_seqlens)
 
 
 @gin.configurable(allowlist=["window_size"])
@@ -68,9 +112,48 @@ class FlashAttention(nn.Module):
         return out
 
 
-class SigmaReparam(nn.Module):
+class SigmaReparam(nn.Linear):
     """
-    https://arxiv.org/pdf/2303.06296.pdf Appendix C
+    Updated version of SigmaReparam following the initialization strategy in the official code release.
+    https://github.com/apple/ml-sigma-reparam/blob/fea4e359126f812bd3e0a12234c56330fe4b5fa2/vision/layers.py#L90
+    https://github.com/ywchan2005/sigma-reparam-pytorch/blob/2a5676ac71f75567a09db4ecafc1a4d7bc135b8e/sigma_reparam.py#L5
+    """
+
+    def __init__(self, d_in, d_out, bias: bool = True):
+        super().__init__(d_in, d_out, bias=bias)
+        nn.init.trunc_normal_(self.weight, std=0.02)
+        u = torch.linalg.svd(self.weight.T, full_matrices=False)[-1][0].detach()
+        v = torch.linalg.svd(self.weight, full_matrices=False)[-1][0].detach()
+        self.register_buffer("u", u)
+        self.register_buffer("v", v)
+        self.gamma = nn.Parameter(torch.ones(1), requires_grad=True)
+
+    def forward(self, x):
+        if self.training:
+            with torch.no_grad():
+                u = (self.weight @ self.v).float()
+                self.u.data = F.normalize(u, dim=0)
+                v = (self.weight.T @ self.u).float()
+                self.v.data = F.normalize(v, dim=0)
+        sigma = einsum(self.u, self.weight, self.v, "d, d c , c->")
+        W_hat = self.gamma / sigma * self.weight
+        out = F.linear(x, W_hat, self.bias)
+        return out
+
+
+class SigmaReparamLegacyInit(nn.Module):
+    """
+    When I implemented SigmaReparam for AMAGOv1, the code had not been open-sourced and I only
+    had https://arxiv.org/pdf/2303.06296.pdf to go on. This code follows the pseudocode in
+    Appendix C. The initialization strategy results in unusually large initial output values.
+    I assumed this was fine because it worked so well empirically (w/ flash attention).
+    Finally looked into this for VanillaAttention, and the official code release clearly goes out
+    of its way to fix this problem with a specific init...
+
+    Leaving this original version here in case the large init happens to be helpful in some cases.
+    It is not realistic to re-run all the experiments in both papers to find out for sure. Between
+    the clear emphasis on numerical stability in the official code and my own experience with (rare)
+    policy NaNs at init, I think the updated version should be the default even if it breaks reproducibility.
     """
 
     def __init__(self, d_in, d_out, bias: bool = True):
@@ -103,36 +186,6 @@ class SigmaReparam(nn.Module):
         W_hat = self.gamma / sigma * self.W
         out = F.linear(x, W_hat, self.b)
         return out
-
-
-class VanillaAttention(nn.Module):
-    def __init__(self, causal: bool = True, attention_dropout: float = 0.0):
-        super().__init__()
-        self.dropout = nn.Dropout(attention_dropout)
-        self.causal = causal
-        self._mask = None
-
-    def forward(self, qkv, key_cache=None, val_cache=None, cache_seqlens=None):
-        assert (
-            key_cache is None and val_cache is None
-        ), "VanillaAttention does not support `fast_inference` mode"
-        queries, keys, values = torch.unbind(qkv, dim=2)
-        B, L, H, E = queries.shape
-        _, S, _, D = values.shape
-        scale = 1.0 / math.sqrt(E)
-
-        scores = torch.einsum("blhe,bshe->bhls", queries, keys)
-        if self._mask is None or self._mask.shape != (B, 1, L, L):
-            self._mask = torch.triu(
-                torch.ones((B, 1, L, L), dtype=torch.bool, device=qkv.device),
-                diagonal=1,
-            )
-        if self.causal:
-            scores.masked_fill_(self._mask, -torch.inf)
-
-        A = self.dropout(torch.softmax(scale * scores, dim=-1))
-        V = torch.einsum("bhls,bshd->blhd", A, values)
-        return V
 
 
 @gin.configurable(allowlist=["head_scaling", "sigma_reparam"])
@@ -245,6 +298,7 @@ class Cache:
             dtype=dtype,
             device=device,
         )
+        self.max_seq_len = max_seq_len
         # make silent bugs in k/v cache... much louder
         self.data[:] = torch.nan
         self.device = device
@@ -254,7 +308,7 @@ class Cache:
 
     @torch.compile
     def roll_back(self, seq_lens):
-        idxs = torch.where(seq_lens == self.data.shape[2] - 1)[0]
+        idxs = torch.where(seq_lens == self.max_seq_len)[0]
         roll = self.data[:, idxs, 1:].clone()
         self.data[:, idxs, :-1] = roll
         self.data[:, idxs, -1] = torch.nan  # no silent bugs

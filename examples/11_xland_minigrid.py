@@ -23,7 +23,7 @@ def add_cli(parser):
     )
     parser.add_argument("--xland_device", type=int, default=None)
     parser.add_argument("--k_shots", type=int, default=15)
-    parser.add_argument("--rooms", type=int, default=2)
+    parser.add_argument("--rooms", type=int, default=1)
     parser.add_argument("--grid_size", type=int, default=9)
     parser.add_argument("--max_seq_len", type=int, default=2048)
     return parser
@@ -125,6 +125,7 @@ if __name__ == "__main__":
     config = {
         "amago.agent.Agent.reward_multiplier": 100.0,
         "amago.agent.Agent.tstep_encoder_Cls": XLandMGTstepEncoder,
+        "amago.envs.exploration.EpsilonGreedy.steps_anneal": 1_000_000,
         "amago.nets.actor_critic.NCriticsTwoHot.min_return": -25_000,
         "amago.nets.actor_critic.NCriticsTwoHot.max_return": 25_000,
         "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 64,
@@ -173,6 +174,7 @@ if __name__ == "__main__":
             group_name=group_name,
             val_timesteps_per_epoch=traj_len,
             save_trajs_as="npz-compressed",
+            grad_clip=2.0,
         )
         switch_async_mode(experiment, args)
         experiment.start()

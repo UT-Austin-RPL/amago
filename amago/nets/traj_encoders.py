@@ -56,11 +56,6 @@ class FFTrajEncoder(TrajEncoder):
         self.dropout = nn.Dropout(dropout)
         self._emb_dim = d_model
 
-    def init_hidden_state(self, batch_size: int, device: torch.device):
-        # easy trick that will make the Agent chop off previous timesteps
-        # from the sequence.
-        return True
-
     def forward(self, seq, time_idxs=None, hidden_state=None):
         traj_emb = self.dropout(self.activation(self.traj_emb(seq)))
         for traj_block in self.traj_blocks:
@@ -146,13 +141,14 @@ class TformerTrajEncoder(TrajEncoder):
             attention=attention,
             norm=norm,
         )
+        self.attention = attention
         self.d_model = d_model
 
     def init_hidden_state(self, batch_size: int, device: torch.device):
         def make_cache():
             return transformer.Cache(
                 device=device,
-                dtype=torch.bfloat16,
+                dtype=torch.bfloat16 if self.attention == "flash" else torch.float32,
                 layers=self.tformer.n_layers,
                 batch_size=batch_size,
                 max_seq_len=self.max_seq_len,

@@ -11,8 +11,6 @@ from amago.cli_utils import *
 def add_cli(parser):
     parser.add_argument("--env", type=str, required=True)
     parser.add_argument("--max_seq_len", type=int, default=128)
-    parser.add_argument("--reward_scale", type=int, default=1.0)
-    parser.add_argument("--no_popart", action="store_true")
     parser.add_argument("--eval_timesteps", type=int, default=1000)
     return parser
 
@@ -24,8 +22,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     config = {
-        "amago.agent.Agent.reward_multiplier": args.reward_scale,
-        "amago.agent.Agent.popart": not args.no_popart,
+        # dictionary that sets default value for kwargs of classes that are marked as `gin.configurable`
+        # see https://github.com/google/gin-config for more information. For example:
+        "amago.nets.traj_encoders.TformerTrajEncoder.attention": "flash",  # or "vanilla" if flash attention is not available
     }
     switch_traj_encoder(
         config,

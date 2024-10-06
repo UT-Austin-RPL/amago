@@ -48,6 +48,7 @@ class Experiment:
     env_mode: str = "async"
     exploration_wrapper_Cls: Optional[type[ExplorationWrapper]] = EpsilonGreedy
     sample_actions: bool = True
+    force_reset_train_envs_every: Optional[int] = None
 
     # Logging
     log_to_wandb: bool = False
@@ -451,6 +452,12 @@ class Experiment:
         return hidden_state, (return_history, special_history)
 
     def collect_new_training_data(self):
+        if (
+            self.force_reset_train_envs_every is not None
+            and self.epoch % self.force_reset_train_envs_every == 0
+        ):
+            self.train_envs.reset()
+            self.hidden_state = None
         self.hidden_state, (returns, specials) = self.interact(
             self.train_envs,
             self.train_timesteps_per_epoch,
@@ -603,6 +610,7 @@ class Experiment:
         return {
             "critic_loss": masked_critic_loss,
             "actor_loss": masked_actor_loss,
+            "seq_len": L_1 + 1,
             "mask": state_mask,
         } | update_info
 
