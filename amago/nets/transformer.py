@@ -119,20 +119,17 @@ class FlashAttention(nn.Module):
 
 class SigmaReparam(nn.Linear):
     """
+    Updated version of SigmaReparam following the initialization strategy in the official code release.
     https://github.com/apple/ml-sigma-reparam/blob/fea4e359126f812bd3e0a12234c56330fe4b5fa2/vision/layers.py#L90
     """
 
     def __init__(self, d_in, d_out, bias: bool = True):
         super().__init__(d_in, d_out, bias=bias)
-        # nn.init.trunc_normal_(self.weight, std=0.02)
+        nn.init.trunc_normal_(self.weight, std=0.02)
         u = torch.linalg.svd(self.weight.T, full_matrices=False)[-1][0].detach()
         v = torch.linalg.svd(self.weight, full_matrices=False)[-1][0].detach()
         self.register_buffer("u", u)
         self.register_buffer("v", v)
-        # u = torch.randn(d_out)
-        # self.register_buffer("u", F.normalize(u, dim=0))
-        # v = torch.randn(d_in)
-        # self.register_buffer("v", F.normalize(v, dim=0))
         self.gamma = nn.Parameter(torch.ones(1), requires_grad=True)
 
     def forward(self, x):
@@ -150,7 +147,17 @@ class SigmaReparam(nn.Linear):
 
 class SigmaReparamLegacyInit(nn.Module):
     """
-    https://arxiv.org/pdf/2303.06296.pdf Appendix C
+    When I implemented SigmaReparam for AMAGOv1, the code had not been open-sourced and I only
+    had https://arxiv.org/pdf/2303.06296.pdf to go on. This code follows the pseudocode in
+    Appendix C. The initialization strategy results in unusually large initial output values.
+    I assumed this was intentional because it worked so well empirically (w/ flash attention).
+    Finally looked into this for VanillaAttention, and the official code release clearly goes out
+    of its way to fix this problem with a specific init...
+
+    Leaving this original version here in case the large init happens to be helpful in some cases.
+    It is not realistic to re-run all the experiments in both papers to find out for sure. Between
+    the clear emphasis on numerical stability in the official code and my own experience with (rare)
+    policy NaNs at init, I think the updated version should be the default even if it breaks reproducibility.
     """
 
     def __init__(self, d_in, d_out, bias: bool = True):
