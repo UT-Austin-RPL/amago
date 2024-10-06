@@ -603,6 +603,7 @@ class Experiment:
         return {
             "critic_loss": masked_critic_loss,
             "actor_loss": masked_actor_loss,
+            "seq_len": L_1 + 1,
             "mask": state_mask,
         } | update_info
 

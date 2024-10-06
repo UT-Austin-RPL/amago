@@ -215,11 +215,11 @@ class Agent(nn.Module):
         """
         # fmt: off
         self.update_info = {}  # holds wandb stats
-        active_log_dict = self.update_info if log_step else None
 
         ##########################
         ## Step 0: Timestep Emb ##
         ##########################
+        active_log_dict = self.update_info if log_step else None
         o = self.tstep_encoder(obs=batch.obs, rl2s=batch.rl2s, log_dict=active_log_dict)
 
         ###########################
@@ -328,8 +328,9 @@ class Agent(nn.Module):
                     critic_mask,
                     q_s_a_g,
                     self.popart(q_s_a_g, normalized=False),
-                    r,
-                    td_target,
+                    r=r,
+                    d=d,
+                    td_target=td_target,
                 )
                 popart_stats = self._popart_stats()
                 self.update_info.update(td_stats | popart_stats)
@@ -382,12 +383,14 @@ class Agent(nn.Module):
         # fmt: on
         return critic_loss, actor_loss
 
-    def _td_stats(self, mask, raw_q_s_a_g, q_s_a_g, r, td_target) -> dict:
+    def _td_stats(self, mask, raw_q_s_a_g, q_s_a_g, r, d, td_target) -> dict:
         # messy data gathering for wandb console
         def masked_avg(x_, dim=0):
             return (mask[..., dim, :] * x_[..., dim, :]).sum().detach() / mask[
                 ..., dim, :
             ].sum()
+
+        where_mask = torch.where(mask.all(2, keepdims=True) > 0)
 
         stats = {}
         for i, gamma in enumerate(self.gammas):
@@ -404,18 +407,13 @@ class Agent(nn.Module):
         stats.update(
             {
                 "Q(s, a) (global std, rescaled, ignoring padding)": q_s_a_g.std(),
-                "Min TD Target": td_target[
-                    torch.where(mask.all(2, keepdims=True) > 0)
-                ].min(),
-                "Max TD Target": td_target[
-                    torch.where(mask.all(2, keepdims=True) > 0)
-                ].max(),
+                "Min TD Target": td_target[where_mask].min(),
+                "Max TD Target": td_target[where_mask].max(),
                 "TD Target (test-time gamma)": masked_avg(td_target, -1),
                 "Mean Reward (in training sequences)": masked_avg(r),
-                "real_return": torch.flip(
-                    torch.cumsum(torch.flip(mask.all(2, keepdims=True) * r, (1,)), 1),
-                    (1,),
-                ).squeeze(-1),
+                "Sequences Containing Done": d[:, :, 0, 0, 0].any(1).sum(),
+                "Min Reward (in training sequences)": r[where_mask].min(),
+                "Max Reward (in training sequences)": r[where_mask].max(),
             }
         )
         return stats
@@ -523,11 +521,11 @@ class MultiTaskAgent(Agent):
     def forward(self, batch: Batch, log_step: bool):
         # fmt: off
         self.update_info = {}  # holds wandb stats
-        active_log_dict = self.update_info if log_step else None
 
         ##########################
         ## Step 0: Timestep Emb ##
         ##########################
+        active_log_dict = self.update_info if log_step else None
         o = self.tstep_encoder(
             obs=batch.obs, rl2s=batch.rl2s, log_dict=active_log_dict
         )

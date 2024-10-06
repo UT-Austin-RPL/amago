@@ -26,6 +26,7 @@ if __name__ == "__main__":
     config = {
         "amago.agent.Agent.reward_multiplier": args.reward_scale,
         "amago.agent.Agent.popart": not args.no_popart,
+        # "amago.nets.traj_encoders.TformerTrajEncoder.attention": "vanilla",
     }
     switch_traj_encoder(
         config,

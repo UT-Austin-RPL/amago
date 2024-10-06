@@ -35,6 +35,7 @@ if __name__ == "__main__":
         "amago.nets.actor_critic.NCriticsTwoHot.min_return": -1.0,  # paper: None
         "amago.nets.actor_critic.NCriticsTwoHot.max_return": 1.0,  # paper: None
         "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 32,  # paper: 64
+        # "amago.nets.traj_encoders.TformerTrajEncoder.attention": "vanilla",
     }
     switch_traj_encoder(
         config,

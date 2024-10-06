@@ -146,13 +146,14 @@ class TformerTrajEncoder(TrajEncoder):
             attention=attention,
             norm=norm,
         )
+        self.attention = attention
         self.d_model = d_model
 
     def init_hidden_state(self, batch_size: int, device: torch.device):
         def make_cache():
             return transformer.Cache(
                 device=device,
-                dtype=torch.bfloat16,
+                dtype=torch.bfloat16 if self.attention == "flash" else torch.float32,
                 layers=self.tformer.n_layers,
                 batch_size=batch_size,
                 max_seq_len=self.max_seq_len,
