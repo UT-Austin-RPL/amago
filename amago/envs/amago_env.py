@@ -219,6 +219,7 @@ class SequenceWrapper(gym.Wrapper):
         self.save_trajs_as = save_trajs_as
         self._total_frames = 0
         self._total_frames_by_env_name = defaultdict(int)
+        self.finished_trajs = []
         self.reset_stats()
         if isinstance(self.env.action_space, gym.spaces.Discrete):
             action_shape = self.env.action_space.n
@@ -316,11 +317,18 @@ class SequenceWrapper(gym.Wrapper):
             # environment name, a random id, and a timestamp .traj
             traj_name = f"{self.env.env_name.strip().replace('_', '')}_{uuid4().hex[:8]}_{time.time()}"
             path = os.path.join(self.dset_write_dir, traj_name)
-            self.active_trajs[idx].save_to_disk(path, save_as=self.save_trajs_as)
+            # put path and trajectory in the queue to be saved
+            self.finished_trajs.append((path, self.active_trajs[idx]))
             self.since_last_save[idx] = 0
             self.save_this_time[idx] = self.random_traj_length()
         # these values will be overriden if we can call `reset`
         self.active_trajs[idx] = Trajectory(timesteps=[new_init_timestep])
+
+    def save_finished_trajs(self):
+        # save all the trajectories we've finished to disk
+        while len(self.finished_trajs) > 0:
+            path, traj = self.finished_trajs.pop()
+            traj.save_to_disk(path, save_as=self.save_trajs_as)
 
     @property
     def total_frames(self) -> int:
