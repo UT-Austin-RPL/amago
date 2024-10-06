@@ -191,6 +191,7 @@ class Experiment:
         make_train = [
             EnvCreator(
                 make_env=env_func,
+                # save trajectories to disk
                 make_dset=True,
                 dset_split="train",
                 # adds exploration noise
@@ -202,8 +203,7 @@ class Experiment:
         make_val = [
             EnvCreator(
                 make_env=env_func,
-                # v2: no longer saves val trajectories to avoid unnecessary disk writes.
-                # we never found anything useful from tracking validation optimization metrics.
+                # do not save trajectories to disk
                 make_dset=False,
                 dset_split="val",
                 # no exploration noise
@@ -463,6 +463,7 @@ class Experiment:
             self.train_timesteps_per_epoch,
             hidden_state=self.hidden_state,
         )
+        utils.call_async_env(self.train_envs, "save_finished_trajs")
 
     def evaluate_val(self):
         # reset envs first
