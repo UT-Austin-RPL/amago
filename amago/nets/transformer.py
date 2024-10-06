@@ -25,6 +25,7 @@ class VanillaAttention(nn.Module):
         self.causal = causal
         self._mask = None
 
+    @torch.compile
     def _inference_with_cache(self, qkv, key_cache, val_cache, cache_seqlens):
         # fmt: off
         queries, keys, values = torch.unbind(qkv, dim=2)
@@ -39,18 +40,12 @@ class VanillaAttention(nn.Module):
         k_cache = key_cache[:, :max_len]
         v_cache = val_cache[:, :max_len]
         # attention scores + masking
-        scores_old = (queries * k_cache).sum(dim=-1)
         scores = torch.einsum("blhe,blhe->blh", queries, k_cache)
-        if not torch.allclose(scores, scores_old, atol=.1):
-            breakpoint()
         mask = torch.arange(max_len, device=cache_seqlens.device)[None, :] >= end[:, None]
         scores.masked_fill_(mask[:, :, None], -torch.inf)
         # output
         A = self.dropout(torch.softmax(scale * scores, dim=1))
         V = torch.einsum("blh,blhd->bhd", A, v_cache).unsqueeze(1)
-        V_old = (A.unsqueeze(-1) * v_cache).sum(dim=1, keepdim=True)
-        if not torch.allclose(V, V_old, atol=.1):
-            breakpoint()
         # fmt: on
         return V
 
@@ -121,6 +116,7 @@ class SigmaReparam(nn.Linear):
     """
     Updated version of SigmaReparam following the initialization strategy in the official code release.
     https://github.com/apple/ml-sigma-reparam/blob/fea4e359126f812bd3e0a12234c56330fe4b5fa2/vision/layers.py#L90
+    https://github.com/ywchan2005/sigma-reparam-pytorch/blob/2a5676ac71f75567a09db4ecafc1a4d7bc135b8e/sigma_reparam.py#L5
     """
 
     def __init__(self, d_in, d_out, bias: bool = True):
@@ -150,7 +146,7 @@ class SigmaReparamLegacyInit(nn.Module):
     When I implemented SigmaReparam for AMAGOv1, the code had not been open-sourced and I only
     had https://arxiv.org/pdf/2303.06296.pdf to go on. This code follows the pseudocode in
     Appendix C. The initialization strategy results in unusually large initial output values.
-    I assumed this was intentional because it worked so well empirically (w/ flash attention).
+    I assumed this was fine because it worked so well empirically (w/ flash attention).
     Finally looked into this for VanillaAttention, and the official code release clearly goes out
     of its way to fix this problem with a specific init...
 
