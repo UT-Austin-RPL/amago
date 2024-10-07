@@ -50,6 +50,7 @@ if __name__ == "__main__":
             traj_save_len=args.max_seq_len * 4,
             run_name=run_name,
             group_name=group_name,
+            sample_actions=False,
             val_timesteps_per_epoch=args.eval_timesteps,
         )
         experiment = switch_async_mode(experiment, args)

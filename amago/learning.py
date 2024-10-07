@@ -655,7 +655,7 @@ class Experiment:
         needs_filter = (
             dset_size > self.dset_max_size and self.dset_filter_pct is not None
         )
-        if needs_filter and self.accelerator.is_main_process:
+        if needs_filter:
             pct_to_filter = max(
                 self.dset_filter_pct, (dset_size - self.dset_max_size) / dset_size
             )
@@ -722,7 +722,8 @@ class Experiment:
             self.accelerator.wait_for_everyone()
 
             # delete excess trajectories from disk
-            self.manage_replay_buffer()
+            if self.accelerator.is_main_process:
+                self.manage_replay_buffer()
             self.accelerator.wait_for_everyone()
 
             # end epoch

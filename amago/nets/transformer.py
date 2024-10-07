@@ -87,6 +87,7 @@ class FlashAttention(nn.Module):
         self.causal = causal
         self.window_size = window_size
 
+    @torch.compiler.disable
     def forward(self, qkv, key_cache=None, val_cache=None, cache_seqlens=None):
         qkv = qkv.to(torch.bfloat16)
         if key_cache is None or val_cache is None or cache_seqlens is None:
@@ -128,6 +129,7 @@ class SigmaReparam(nn.Linear):
         self.register_buffer("v", v)
         self.gamma = nn.Parameter(torch.ones(1), requires_grad=True)
 
+    @torch.compile
     def forward(self, x):
         if self.training:
             with torch.no_grad():
@@ -267,6 +269,7 @@ class TransformerLayer(nn.Module):
         self.dropout_ff = nn.Dropout(dropout_ff)
         self.activation = activation_switch(activation)
 
+    @torch.compile
     def forward(self, self_seq, key_cache=None, val_cache=None, cache_seqlens=None):
         q1 = self.norm1(self_seq)  # pre-norm
         q1 = self.self_attention(
@@ -349,6 +352,7 @@ class FixedPosEmb(nn.Module):
         super().__init__()
         self.d_model = d_model
 
+    @torch.compile
     def forward(self, pos_idxs: torch.LongTensor):
         B, L = pos_idxs.shape
         emb = torch.zeros(

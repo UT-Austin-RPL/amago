@@ -34,8 +34,6 @@ class GymnaxCompatibility(GymnaxToVectorGymWrapper):
     A key point is that this only works because gymnax envs automatically reset.
     The "already_vectorized" mode in AMAGO relies on auto-resets because we cannot
     reset specific indices of the vectorized enviornment from the highest wrapper level.
-    However, some of the auto-reset logic does not work in the GymnaxToVectorGymWrapper. For example,
-    CartPole-v1 will auto-reset without ever giving a reward other than 1.0.
 
     Many of the gymnax envs appear to be broken by recent versions of jax.
     This script mainly serves as a way to test the already_vectorized env API used by

@@ -1,6 +1,4 @@
 import random
-from typing import Callable, Tuple
-from enum import Enum
 
 import procgen
 import gym as og_gym

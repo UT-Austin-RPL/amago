@@ -64,10 +64,6 @@ class KShotMetaworld(gym.Env):
             env_tasks[name] = (env_cls(), all_tasks)
         return env_tasks
 
-    def soft_reset(self):
-        self.current_time = 0
-        obs = self
-
     def get_obs(self, og_obs, soft_reset: bool):
         return np.concatenate((og_obs, [float(soft_reset)])).astype(np.float32)
 

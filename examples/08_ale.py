@@ -48,6 +48,9 @@ if __name__ == "__main__":
 
     config = {
         "amago.agent.Agent.reward_multiplier": 0.25,
+        "amago.agent.Agent.offline_coeff": (
+            1.0 if args.agent_type == "multitask" else 0.0
+        ),
     }
     switch_traj_encoder(
         config,
@@ -75,9 +78,7 @@ if __name__ == "__main__":
         game_name = games[actor % len(games)]
         env_funcs.append(partial(make_atari_game, game_name))
 
-    group_name = (
-        f"{args.run_name}_{','.join(games)}_atari_l_{args.max_seq_len}_cnn_{args.cnn}"
-    )
+    group_name = f"{args.run_name}_atari_l_{args.max_seq_len}_cnn_{args.cnn}"
     for trial in range(args.trials):
         run_name = group_name + f"_trial_{trial}"
         experiment = create_experiment_from_cli(

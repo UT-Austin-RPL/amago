@@ -115,6 +115,7 @@ class DrQCNN(CNN):
         self.conv4 = nn.Conv2d(32, 32, kernel_size=3, stride=1)
         self.apply(weight_init)
 
+    @torch.compile
     def conv_forward(self, imgs):
         x = self.activation(self.conv1(imgs))
         x = self.activation(self.conv2(x))
@@ -140,6 +141,7 @@ class GridworldCNN(CNN):
         self.conv2 = nn.Conv2d(channels[0], channels[1], kernel_size=2, stride=1)
         self.conv3 = nn.Conv2d(channels[1], channels[2], kernel_size=2, stride=1)
 
+    @torch.compile
     def conv_forward(self, imgs):
         x = self.activation(self.conv1(imgs))
         x = self.activation(self.conv2(x))
@@ -174,6 +176,7 @@ class NatureishCNN(CNN):
         )
         self.apply(weight_init)
 
+    @torch.compile
     def conv_forward(self, imgs):
         x = self.activation(self.conv1(imgs))
         x = self.activation(self.conv2(x))
@@ -235,6 +238,7 @@ class IMPALAishCNN(CNN):
             blocks.append(_IMPALAConvBlock(inp, out))
         self.blocks = nn.ModuleList(blocks)
 
+    @torch.compile
     def conv_forward(self, imgs: torch.Tensor) -> torch.Tensor:
         for block in self.blocks:
             imgs = block(imgs)
