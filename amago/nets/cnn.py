@@ -208,7 +208,7 @@ class IMPALAishCNN(CNN):
                     depth, depth, kernel_size=3, stride=1, padding="same"
                 )
                 self.activation = activation_switch(activation)
-                self.norm = nn.GroupNorm(4, depth) if post_group_norm else lambda i: i
+                self.norm = nn.GroupNorm(4, depth) if post_group_norm else nn.Identity()
 
             def forward(self, x):
                 xp = self.conv1(self.activation(x))

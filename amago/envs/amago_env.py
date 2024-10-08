@@ -340,6 +340,10 @@ class SequenceWrapper(gym.Wrapper):
     def current_timestep(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         return self._current_timestep
 
+    @property
+    def env_name(self):
+        return self.env.env_name
+
 
 @dataclass
 class EnvCreator:

@@ -630,8 +630,9 @@ class MultiTaskAgent(Agent):
                     critic_mask,
                     raw_q_s_a_g_,
                     self.popart.normalize_values(raw_q_s_a_g_),
-                    r,
-                    td_target,
+                    r=r,
+                    d=d,
+                    td_target=td_target,
                     raw_q_bins=q_s_a_g.probs[:, :-1],
                 )
                 popart_stats = self._popart_stats()
@@ -696,12 +697,15 @@ class MultiTaskAgent(Agent):
 
         return critic_loss, actor_loss
 
-    def _td_stats(self, mask, raw_q_s_a_g, q_s_a_g, r, td_target, raw_q_bins) -> dict:
+    def _td_stats(
+        self, mask, raw_q_s_a_g, q_s_a_g, r, d, td_target, raw_q_bins
+    ) -> dict:
         stats = super()._td_stats(
             mask=mask,
             raw_q_s_a_g=raw_q_s_a_g,
             q_s_a_g=q_s_a_g,
             r=r,
+            d=d,
             td_target=td_target,
         )
         *_, Bins = raw_q_bins.shape

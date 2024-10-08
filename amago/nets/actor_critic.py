@@ -244,7 +244,6 @@ class Actor(nn.Module):
         self._gmm_modes = gmm_modes
         self._cont_dist_kind = cont_dist_kind
 
-    @torch.compile
     def forward(self, state):
         dist_params = self.base(state)
         dist_params = rearrange(
@@ -356,7 +355,6 @@ class NCritics(nn.Module):
     def __len__(self):
         return self.num_critics
 
-    @torch.compile
     def forward(self, state: torch.Tensor, action: torch.Tensor):
         if self.discrete:
             # now clipped inside of Discrete dist

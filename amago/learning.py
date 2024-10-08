@@ -293,7 +293,7 @@ class Experiment:
     def delete_buffer_from_disk(self):
         # convenience method to delete the replay buffer to prevent users from accidentally filling their disk.
         buffer_dir = os.path.join(self.dset_root, self.dset_name, "train")
-        if os.path.exists(buffer_dir):
+        if os.path.exists(buffer_dir) and self.accelerator.is_main_process:
             shutil.rmtree(buffer_dir)
 
     def init_dsets(self):
@@ -482,7 +482,7 @@ class Experiment:
             / (end_time - start_time)
         )
         logs_per_process = self.policy_metrics(returns, specials=specials)
-        logs_per_process["env_frames_per_second_per_process"] = fps
+        logs_per_process["Env FPS (per_process)"] = fps
         cur_return = logs_per_process["Average Total Return (Across All Env Names)"]
         if self.verbose:
             self.accelerator.print(f"Average Return : {cur_return}")
@@ -543,8 +543,8 @@ class Experiment:
                 total_frames_by_env_name[f"total_frames-{env_name}"] += frames
         if self.log_to_wandb:
             progress = {
-                "epoch": self.epoch,
-                "total_frames": total_frames,
+                "Epoch": self.epoch,
+                "Total Frames": total_frames,
             }
             self.accelerator.log(
                 {f"{key}/{subkey}": val for subkey, val in log_dict.items()}

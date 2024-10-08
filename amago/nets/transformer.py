@@ -16,6 +16,8 @@ try:
     import flash_attn
 except ImportError:
     amago_warning("Missing FlashAttention (2.0) Install")
+else:
+    torch.set_float32_matmul_precision("high")
 
 
 class VanillaAttention(nn.Module):
@@ -123,6 +125,7 @@ class SigmaReparam(nn.Linear):
     def __init__(self, d_in, d_out, bias: bool = True):
         super().__init__(d_in, d_out, bias=bias)
         nn.init.trunc_normal_(self.weight, std=0.02)
+        # init can be quite slow...
         u = torch.linalg.svd(self.weight.T, full_matrices=False)[-1][0].detach()
         v = torch.linalg.svd(self.weight, full_matrices=False)[-1][0].detach()
         self.register_buffer("u", u)
@@ -155,7 +158,7 @@ class SigmaReparamLegacyInit(nn.Module):
     Leaving this original version here in case the large init happens to be helpful in some cases.
     It is not realistic to re-run all the experiments in both papers to find out for sure. Between
     the clear emphasis on numerical stability in the official code and my own experience with (rare)
-    policy NaNs at init, I think the updated version should be the default even if it breaks reproducibility.
+    policy NaNs at init, I think the updated version should be the default.
     """
 
     def __init__(self, d_in, d_out, bias: bool = True):
@@ -352,7 +355,6 @@ class FixedPosEmb(nn.Module):
         super().__init__()
         self.d_model = d_model
 
-    @torch.compile
     def forward(self, pos_idxs: torch.LongTensor):
         B, L = pos_idxs.shape
         emb = torch.zeros(
