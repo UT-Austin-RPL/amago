@@ -75,7 +75,6 @@ class FFBlock(nn.Module):
         self.dropout = nn.Dropout(dropout)
         self.activation = activation_switch(activation)
 
-    @torch.compile
     def forward(self, x):
         x1 = self.dropout(self.activation(self.ff1(x)))
         x1 = self.dropout(self.activation(self.ff2(x1)))

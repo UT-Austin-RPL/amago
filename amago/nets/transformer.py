@@ -132,7 +132,6 @@ class SigmaReparam(nn.Linear):
         self.register_buffer("v", v)
         self.gamma = nn.Parameter(torch.ones(1), requires_grad=True)
 
-    @torch.compile
     def forward(self, x):
         if self.training:
             with torch.no_grad():
@@ -312,7 +311,6 @@ class Cache:
     def __len__(self):
         return self.data.shape[2]
 
-    @torch.compile
     def roll_back(self, seq_lens):
         idxs = torch.where(seq_lens == self.max_seq_len)[0]
         roll = self.data[:, idxs, 1:].clone()
@@ -427,24 +425,30 @@ class Transformer(nn.Module):
     def emb_dim(self):
         return self.d_model
 
-    def forward(self, seq, pos_idxs, hidden_state: Optional[TformerHiddenState] = None):
-        if self.training:
-            assert hidden_state is None
-        batch, length, dim = seq.shape
-        h = hidden_state or self._blank_hidden_state
-
-        # emedding
+    def preprocess_seq(self, seq, pos_idxs):
         pos_emb = self.position_embedding(pos_idxs.squeeze(-1))
         traj_emb = self.inp(seq)
         traj_emb = self.dropout(traj_emb + pos_emb)
+        return traj_emb
 
-        # self-attention
+    @torch.compile
+    def training_forward(self, seq):
+        for layer in self.layers:
+            seq = layer(seq)
+        return self.norm(seq)
+
+    def inference_forward(self, seq, hidden_state):
         for i, layer in enumerate(self.layers):
-            traj_emb = layer(traj_emb, *h[i])
-        traj_emb = self.norm(traj_emb)
+            seq = layer(seq, *hidden_state[i])
+        return self.norm(seq)
 
+    def forward(self, seq, pos_idxs, hidden_state: Optional[TformerHiddenState] = None):
+        traj_emb = self.preprocess_seq(seq, pos_idxs)
         if hidden_state is not None:
-            # controls the sequence length of the k/v cache
+            assert not self.training
+            traj_emb = self.inference_forward(traj_emb, hidden_state)
             hidden_state.update()
-
+        else:
+            assert self.training
+            traj_emb = self.training_forward(traj_emb)
         return traj_emb, hidden_state
