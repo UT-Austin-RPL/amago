@@ -32,7 +32,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     config = {
-        "amago.envs.env_utils.ExplorationWrapper.steps_anneal": 2_000_000,
+        "BilevelEpsilonGreedy.steps_anneal": 2_000_000,
         "amago.nets.tstep_encoders.FFTstepEncoder.hide_rl2s": args.hide_rl2s,
         "amago.agent.Agent.reward_multiplier": 1.0,
         # delete the next three lines to use the paper settings, which were
