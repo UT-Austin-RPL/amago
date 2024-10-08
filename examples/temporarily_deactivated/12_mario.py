@@ -9,7 +9,7 @@ import numpy as np
 
 import amago
 from amago.envs.builtin.ale_retro import RetroAMAGOWrapper, RetroArcade
-from amago.envs.env_utils import EpsilonGreedy, ExplorationWrapper
+from amago.envs.exploration import EpsilonGreedy, ExplorationWrapper
 from amago.nets.cnn import NatureishCNN, IMPALAishCNN
 from amago.cli_utils import *
 
@@ -48,7 +48,7 @@ MARIO_TEST = {
 
 
 @gin.configurable
-class MultiBinaryExploration(ExplorationWrapper):
+class MultiBinaryExploration(EpsilonGreedy):
     def __init__(
         self,
         env: gym.Env,
@@ -57,22 +57,15 @@ class MultiBinaryExploration(ExplorationWrapper):
         flip: float = 0.15,
         steps_anneal: int = 500_000,
     ):
-        super().__init__(env)
-        self.eps_start = eps_start
-        self.eps_end = eps_end
+        super().__init__(
+            env, eps_start=eps_start, eps_end=eps_end, steps_anneal=steps_anneal
+        )
         self.flip = flip
-        self.eps_slope = (eps_start - eps_end) / steps_anneal
         self.multibinary = isinstance(self.env.action_space, gym.spaces.MultiBinary)
         assert self.multibinary
-        self.global_step = 0
 
-    def current_eps(self, local_step: int, horizon: int):
-        eps = max(self.eps_start - self.eps_slope * self.global_step, self.eps_end)
-        current = self.global_multiplier * eps
-        return current
-
-    def add_exploration_noise(self, action: np.ndarray, local_step: int, horizon: int):
-        noise = self.current_eps(local_step, horizon)
+    def add_exploration_noise(self, action: np.ndarray, local_step: int):
+        noise = self.current_eps(local_step)
         use_random = random.random() <= noise
         should_flip = np.random.random(*action.shape) <= self.flip
         expl_action = (1 - should_flip) * action + should_flip * np.invert(
@@ -130,9 +123,7 @@ if __name__ == "__main__":
         "amago.learning.Experiment.exploration_wrapper_Cls": (
             EpsilonGreedy if args.use_discrete_actions else MultiBinaryExploration
         ),
-        "amago.nets.traj_encoders.TformerTrajEncoder.pos_emb": "fixed",
     }
-    turn_off_goal_conditioning(config)
     switch_traj_encoder(
         config,
         arch=args.traj_encoder,
@@ -167,7 +158,6 @@ if __name__ == "__main__":
     )
 
     group_name = f"{args.run_name}_mario_{args.game_group}_l_{args.max_seq_len}_cnn_{args.cnn}_{'MT' if args.agent_type == 'multitask' else 'ST'}"
-    print(group_name)
     for trial in range(args.trials):
         run_name = group_name + f"_trial_{trial}"
         experiment = create_experiment_from_cli(

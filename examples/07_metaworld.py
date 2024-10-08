@@ -2,9 +2,8 @@ from argparse import ArgumentParser
 
 import wandb
 
-import amago
 from amago.envs.builtin.metaworld_ml import Metaworld
-from amago.envs.env_utils import BilevelEpsilonGreedy
+from amago.envs.exploration import BilevelEpsilonGreedy
 from amago.cli_utils import *
 
 
@@ -32,7 +31,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     config = {
-        "amago.envs.env_utils.ExplorationWrapper.steps_anneal": 2_000_000,
+        "BilevelEpsilonGreedy.steps_anneal": 2_000_000,
+        "BilevelEpsilonGreedy.rollout_horizon": args.k * 500,
         "amago.nets.tstep_encoders.FFTstepEncoder.hide_rl2s": args.hide_rl2s,
         "amago.agent.Agent.reward_multiplier": 1.0,
         # delete the next three lines to use the paper settings, which were
@@ -41,7 +41,6 @@ if __name__ == "__main__":
         "amago.nets.actor_critic.NCriticsTwoHot.max_return": 5000 * args.k,
         "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 96,
     }
-    turn_off_goal_conditioning(config)
     switch_traj_encoder(
         config,
         arch=args.traj_encoder,

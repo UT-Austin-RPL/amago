@@ -24,9 +24,10 @@ def add_common_cli(parser: ArgumentParser) -> ArgumentParser:
         help="Quick switch between default `agent.Agent` and `agent.MultiTaskAgent`. MultiTaskAgent is useful when training on mixed environments with multiple rewards functions.",
     )
     parser.add_argument(
-        "--no_async",
-        action="store_true",
-        help="Run the 'parallel' actors in one thread. Saves resources when environments are already fast.",
+        "--env_mode",
+        choices=["async", "sync", "already_vectorized"],
+        default="async",
+        help="`async` runs single-threaded environments in parallel, `sync` imitates the same parallel API but runs each step sequentially to save overhead, `already_vectorized` should be used for environments that are already parallelized at the lowest wrapper level (e.g. they're jax accelerated and have a batch dimension).",
     )
     parser.add_argument(
         "--no_log",
@@ -115,11 +116,6 @@ def add_common_cli(parser: ArgumentParser) -> ArgumentParser:
         help="Skip learning updates for this many epochs at the beginning of training (if worried about overfitting to a small dataset)",
     )
     parser.add_argument(
-        "--slow_inference",
-        action="store_true",
-        help="Turn OFF fast-inference mode (key-value caching for Transformer, hidden state caching for RNN)",
-    )
-    parser.add_argument(
         "--mixed_precision",
         choices=["no", "bf16"],
         default="no",
@@ -163,32 +159,17 @@ def switch_tstep_encoder(config: dict, arch: str, **kwargs):
     """
     assert arch in ["ff", "cnn"]
     if arch == "ff":
-        config[
-            "amago.agent.Agent.tstep_encoder_Cls"
-        ] = amago.nets.tstep_encoders.FFTstepEncoder
+        config["amago.agent.Agent.tstep_encoder_Cls"] = (
+            amago.nets.tstep_encoders.FFTstepEncoder
+        )
         ff_config = "amago.nets.tstep_encoders.FFTstepEncoder"
         config.update({f"{ff_config}.{key}": val for key, val in kwargs.items()})
     elif arch == "cnn":
-        config[
-            "amago.agent.Agent.tstep_encoder_Cls"
-        ] = amago.nets.tstep_encoders.CNNTstepEncoder
+        config["amago.agent.Agent.tstep_encoder_Cls"] = (
+            amago.nets.tstep_encoders.CNNTstepEncoder
+        )
         cnn_config = "amago.nets.tstep_encoders.CNNTstepEncoder"
         config.update({f"{cnn_config}.{key}": val for key, val in kwargs.items()})
-    return config
-
-
-def turn_off_goal_conditioning(config: dict):
-    """
-    Make the goal embedding network redundant when the environment is not goal-conditioned.
-    This applies to most environments that do not use hindsight relabeling.
-    """
-    config.update(
-        {
-            "amago.nets.tstep_encoders.TstepEncoder.goal_emb_Cls": amago.nets.goal_embedders.FFGoalEmb,
-            "amago.nets.goal_embedders.FFGoalEmb.zero_embedding": True,
-            "amago.nets.goal_embedders.FFGoalEmb.goal_emb_dim": 1,
-        }
-    )
     return config
 
 
@@ -308,9 +289,11 @@ def create_experiment_from_cli(
     cli = command_line_args
 
     experiment = experiment_Cls(
-        agent_type=amago.agent.Agent
-        if cli.agent_type == "agent"
-        else amago.agent.MultiTaskAgent,
+        agent_type=(
+            amago.agent.Agent
+            if cli.agent_type == "agent"
+            else amago.agent.MultiTaskAgent
+        ),
         make_train_env=make_train_env,
         make_val_env=make_val_env,
         max_seq_len=max_seq_len,
@@ -331,8 +314,7 @@ def create_experiment_from_cli(
         val_interval=cli.val_interval,
         ckpt_interval=cli.ckpt_interval,
         mixed_precision=cli.mixed_precision,
-        fast_inference=not cli.slow_inference,
-        async_envs=not cli.no_async,
+        env_mode=cli.env_mode,
         **extra_experiment_kwargs,
     )
 

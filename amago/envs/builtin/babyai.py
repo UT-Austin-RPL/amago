@@ -1,20 +1,12 @@
-import warnings
-import copy
 import random
-from typing import Iterable, Tuple, List
+from typing import Tuple, List
 
 import numpy as np
 import gymnasium as gym
 import cv2
 import minigrid
 
-from amago.envs import AMAGOEnv
-from amago.hindsight import GoalSeq
-from amago.envs.env_utils import (
-    space_convert,
-    DiscreteActionWrapper,
-    AMAGO_ENV_LOG_PREFIX,
-)
+from amago.envs import AMAGO_ENV_LOG_PREFIX
 
 
 BANNED_BABYAI_TASKS = [
@@ -87,6 +79,7 @@ class MultitaskMetaBabyAI(gym.Env):
                 "extra": extra_space,
             }
         )
+        self.reset()
 
     def sample_new_env(self, env_name: str):
         env = gym.make(f"BabyAI-{env_name}")

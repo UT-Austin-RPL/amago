@@ -1,11 +1,9 @@
 from argparse import ArgumentParser
-from copy import deepcopy
 from functools import partial
 
 import wandb
 import gym
 
-import amago
 from amago.envs.builtin.ale_retro import AtariAMAGOWrapper, AtariGame
 from amago.nets.cnn import NatureishCNN, IMPALAishCNN
 from amago.cli_utils import *
@@ -38,7 +36,7 @@ ATARI_TIME_LIMIT = (30 * 60 * 60) // 5  # (30 minutes of game time)
 
 def make_atari_game(game_name):
     return AtariAMAGOWrapper(
-        AtariGame(game=game_name, use_discrete_actions=True), horizon=ATARI_TIME_LIMIT
+        AtariGame(game=game_name, use_discrete_actions=True),
     )
 
 
@@ -50,9 +48,10 @@ if __name__ == "__main__":
 
     config = {
         "amago.agent.Agent.reward_multiplier": 0.25,
-        "amago.nets.traj_encoders.TformerTrajEncoder.pos_emb": "fixed",
+        "amago.agent.Agent.offline_coeff": (
+            1.0 if args.agent_type == "multitask" else 0.0
+        ),
     }
-    turn_off_goal_conditioning(config)
     switch_traj_encoder(
         config,
         arch=args.traj_encoder,
@@ -79,9 +78,7 @@ if __name__ == "__main__":
         game_name = games[actor % len(games)]
         env_funcs.append(partial(make_atari_game, game_name))
 
-    group_name = (
-        f"{args.run_name}_{','.join(games)}_atari_l_{args.max_seq_len}_cnn_{args.cnn}"
-    )
+    group_name = f"{args.run_name}_atari_l_{args.max_seq_len}_cnn_{args.cnn}"
     for trial in range(args.trials):
         run_name = group_name + f"_trial_{trial}"
         experiment = create_experiment_from_cli(

@@ -1,15 +1,14 @@
 import os
+import time
 import shutil
 import warnings
 import contextlib
 from dataclasses import dataclass
 from collections import defaultdict
-from functools import partial
 from typing import Optional, Iterable
 
 import gin
 from termcolor import colored
-import wandb
 import torch
 from torch.utils.data import DataLoader
 import numpy as np
@@ -19,20 +18,18 @@ from accelerate import Accelerator, DistributedDataParallelKwargs
 from accelerate.utils import tqdm
 
 from . import utils
-from .agent import Agent
-from amago.envs.env_utils import (
-    ReturnHistory,
-    SuccessHistory,
-    SpecialMetricHistory,
+from .envs.env_utils import (
+    DummyAsyncVectorEnv,
+    AlreadyVectorizedEnv,
+)
+from .envs.exploration import (
     ExplorationWrapper,
     EpsilonGreedy,
-    SequenceWrapper,
-    GPUSequenceBuffer,
-    DummyAsyncVectorEnv,
-    EnvCreator,
 )
+from .envs import SequenceWrapper, ReturnHistory, SpecialMetricHistory, EnvCreator
 from .loading import Batch, TrajDset, RLData_pad_collate, MAGIC_PAD_VAL
-from .hindsight import Relabeler, RelabelWarning
+from .hindsight import Relabeler
+from .agent import Agent
 
 
 @gin.configurable
@@ -48,9 +45,10 @@ class Experiment:
     make_train_env: callable | Iterable[callable]
     make_val_env: callable | Iterable[callable]
     parallel_actors: int = 10
-    async_envs: bool = True
+    env_mode: str = "async"
     exploration_wrapper_Cls: Optional[type[ExplorationWrapper]] = EpsilonGreedy
     sample_actions: bool = True
+    force_reset_train_envs_every: Optional[int] = None
 
     # Logging
     log_to_wandb: bool = False
@@ -64,10 +62,11 @@ class Experiment:
     dset_name: str = None
     dset_max_size: int = 15_000
     dset_filter_pct: Optional[float] = 0.1
-    relabel: str = "none"
+    relabel_Cls: type[Relabeler] = Relabeler
     goal_importance_sampling: bool = False
     stagger_traj_file_lengths: bool = True
     save_trajs_as: str = "npz"
+    dloader_workers: int = 6
 
     # Learning Schedule
     epochs: int = 1000
@@ -85,13 +84,11 @@ class Experiment:
     # Optimization
     batch_size: int = 24
     batches_per_update: int = 1
-    dloader_workers: int = 6
     learning_rate: float = 1e-4
     critic_loss_weight: float = 10.0
     lr_warmup_steps: int = 500
     grad_clip: float = 1.0
     l2_coeff: float = 1e-3
-    fast_inference: bool = True
     mixed_precision: str = "no"
 
     def start(self):
@@ -106,45 +103,36 @@ class Experiment:
         )
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            self.init_envs()
+            warnings.filterwarnings("always", category=utils.AmagoWarning)
+            env_summary = self.init_envs()
         self.init_dsets()
         self.init_dloaders()
         self.init_model()
         self.init_checkpoints()
         self.init_logger()
         if self.verbose:
-            self.summary()
+            self.summary(env_summary=env_summary)
 
     @property
     def DEVICE(self):
         return self.accelerator.device
 
-    def summary(self):
+    def summary(self, env_summary: str):
         total_params = utils.count_params(self.policy)
 
         assert (
             self.traj_save_len >= self.max_seq_len
         ), "Save longer trajectories than the model can process"
 
-        if self.horizon <= self.max_seq_len and self.horizon <= self.traj_save_len:
-            mode = "Maximum Context (Perfect Meta-RL / Long-Term Memory)"
-        elif self.horizon > self.max_seq_len and self.horizon <= self.traj_save_len:
-            mode = "Fixed Context with Valid Relabeling (Approximate Meta-RL / POMDPs)"
-        elif self.horizon > self.max_seq_len and self.horizon > self.traj_save_len:
-            mode = (
-                "Fixed Context with Invalid Relabeling (Approximate Meta-RL / POMDPs)"
-            )
-
         self.accelerator.print(
-            f"""\n\n \t\t {colored('AMAGO v2', 'green')}
+            f"""\n\n \t\t {colored('AMAGO v3', 'green')}
             \t -------------------------
             \t Agent Type: {self.policy.__class__.__name__}
-            \t Environment Horizon: {self.horizon}
+            \t Environment: {env_summary}
+            \t Accelerate Processes: {self.accelerator.num_processes}
             \t Policy Max Sequence Length: {self.max_seq_len}
             \t Trajectory File Sequence Length: {self.traj_save_len}
-            \t Mode: {mode}
             \t Mixed Precision: {self.mixed_precision.upper()}
-            \t Fast Inference: {self.fast_inference}
             \t Offline Loss Weight: {self.policy.offline_coeff}
             \t Online Loss Weight: {self.policy.online_coeff}
             \t Total Parameters: {total_params:,d} \n\n"""
@@ -152,24 +140,38 @@ class Experiment:
 
     def init_envs(self):
         assert self.traj_save_len >= self.max_seq_len
-        make_val_envs = (
-            [self.make_val_env] * self.parallel_actors
-            if not isinstance(self.make_val_env, Iterable)
-            else self.make_val_env
-        )
-        make_train_envs = (
-            [self.make_train_env] * self.parallel_actors
-            if not isinstance(self.make_train_env, Iterable)
-            else self.make_train_env
-        )
-        if not len(make_train_envs) == self.parallel_actors:
-            utils.amago_warning(
-                f"`Experiment.parallel_actors` is {self.parallel_actors} but `make_train_env` is a list of length {len(make_train_envs)}"
+
+        if self.env_mode in ["async", "sync"]:
+            # default environment mode wrapping individual gym environments in a pool of async processes
+            # and handling resets by waiting for the termination signal to reach the highest wrapper level
+            to_env_list = lambda e: (
+                [e] * self.parallel_actors if not isinstance(e, Iterable) else e
             )
-        if not len(make_val_envs) == self.parallel_actors:
-            utils.amago_warning(
-                f"`Experiment.parallel_actors` is {self.parallel_actors} but `make_val_env` is a list of length {len(make_val_envs)}"
+            make_val_envs = to_env_list(self.make_val_env)
+            make_train_envs = to_env_list(self.make_train_env)
+            if not len(make_train_envs) == self.parallel_actors:
+                utils.amago_warning(
+                    f"`Experiment.parallel_actors` is {self.parallel_actors} but `make_train_env` is a list of length {len(make_train_envs)}"
+                )
+            if not len(make_val_envs) == self.parallel_actors:
+                utils.amago_warning(
+                    f"`Experiment.parallel_actors` is {self.parallel_actors} but `make_val_env` is a list of length {len(make_val_envs)}"
+                )
+            Par = (
+                gym.vector.AsyncVectorEnv
+                if self.env_mode == "async"
+                else DummyAsyncVectorEnv
             )
+        elif self.env_mode == "already_vectorized":
+            # alternate environment mode designed for jax / gpu-accelerated envs that handle parallelization
+            # with a batch dimension on the lowest wrapper level. These envs must auto-reset and treat the last
+            # timestep of a trajectory as the first timestep of the next trajectory.
+            make_train_envs = [self.make_train_env]
+            make_val_envs = [self.make_val_env]
+            Par = AlreadyVectorizedEnv
+        else:
+            raise ValueError(f"Invalid `env_mode` {self.env_mode}")
+
         if self.exploration_wrapper_Cls is not None and not issubclass(
             self.exploration_wrapper_Cls, ExplorationWrapper
         ):
@@ -189,6 +191,7 @@ class Experiment:
         make_train = [
             EnvCreator(
                 make_env=env_func,
+                # save trajectories to disk
                 make_dset=True,
                 dset_split="train",
                 # adds exploration noise
@@ -200,9 +203,10 @@ class Experiment:
         make_val = [
             EnvCreator(
                 make_env=env_func,
-                # v2: no longer saves trajectories
+                # do not save trajectories to disk
                 make_dset=False,
                 dset_split="val",
+                # no exploration noise
                 exploration_wrapper_Cls=None,
                 **shared_env_kwargs,
             )
@@ -210,22 +214,22 @@ class Experiment:
         ]
 
         # make parallel envs
-        Par = gym.vector.AsyncVectorEnv if self.async_envs else DummyAsyncVectorEnv
         self.train_envs = Par(make_train)
-        self.train_envs.reset()
         self.val_envs = Par(make_val)
-        self.val_envs.reset()
+        self.train_envs.reset()
+        self.rl2_space = make_train[0].rl2_space
+        self.hidden_state = None  # holds train_env hidden state between rollouts
 
-        # save info we need to initialize the agent nets
-        # (we assume each environment has the same observation and action spaces)
-        self.gcrl2_space = make_train[0].gcrl2_space
-        self.horizon = make_train[0].horizon
-        # self.train_buffers holds the env state between rollout cycles
-        # that are shorter than the horizon length
-        self.train_buffers = None
-        self.hidden_state = None
+        if self.env_mode == "already_vectorized":
+            _inner = f"Vectorized Gym Env x{self.parallel_actors}"
+            _desc = f"{Par.__name__}({_inner})"
+        else:
+            _inner = "Gym Env"
+            _desc = f"{Par.__name__}({_inner} x {self.parallel_actors})"
+        return _desc
 
     def init_checkpoints(self):
+        # creates ckpts/training_states and ckpts/policy_weights dirs
         self.ckpt_dir = os.path.join(
             self.dset_root, self.dset_name, self.run_name, "ckpts"
         )
@@ -268,36 +272,33 @@ class Experiment:
             )
 
     def write_latest_policy(self):
+        # write absolute latest policy to a hardcoded location used by `read_latest_policy`
         ckpt_name = os.path.join(
             self.dset_root, self.dset_name, self.run_name, "policy.pt"
         )
-        torch.save(self.policy_aclr.state_dict(), ckpt_name)
+        torch.save(self.policy.state_dict(), ckpt_name)
 
     def read_latest_policy(self):
+        # read the latest policy -- used to communicate weight updates between learning/collecting processes
         ckpt_name = os.path.join(
             self.dset_root, self.dset_name, self.run_name, "policy.pt"
         )
         ckpt = utils.retry_load_checkpoint(ckpt_name, map_location=self.DEVICE)
         if ckpt is not None:
             self.accelerator.print("Loading latest policy....")
-            self.policy_aclr.load_state_dict(ckpt)
+            self.policy.load_state_dict(ckpt)
         else:
             utils.amago_warning("Latest policy checkpoint was not loaded.")
 
     def delete_buffer_from_disk(self):
+        # convenience method to delete the replay buffer to prevent users from accidentally filling their disk.
         buffer_dir = os.path.join(self.dset_root, self.dset_name, "train")
-        if os.path.exists(buffer_dir):
+        if os.path.exists(buffer_dir) and self.accelerator.is_main_process:
             shutil.rmtree(buffer_dir)
 
     def init_dsets(self):
-        if self.save_trajs_as != "trajectory" and self.relabel != "none":
-            utils.amago_warning(
-                "Saving data in efficient ('frozen') format... these files will be skipped by the Relabeler",
-                category=RelabelWarning,
-            )
-        warnings.filterwarnings("ignore", category=RelabelWarning)
         self.train_dset = TrajDset(
-            relabeler=Relabeler(self.relabel, self.goal_importance_sampling),
+            relabeler=self.relabel_Cls(),
             dset_root=self.dset_root,
             dset_name=self.dset_name,
             dset_split="train",
@@ -308,7 +309,7 @@ class Experiment:
         )
 
     def init_dloaders(self):
-        self.train_dset.refresh_files()
+        self.train_dset.refresh_files()  # we only find new .traj files at the start of each epoch
         train_dloader = DataLoader(
             self.train_dset,
             batch_size=self.batch_size,
@@ -316,8 +317,6 @@ class Experiment:
             collate_fn=RLData_pad_collate,
             pin_memory=True,
         )
-        # accelerator.free_memory clears everything.
-        # https://github.com/huggingface/accelerate/blob/2471eacdd648446f2f63eccb9b18a7731304f401/src/accelerate/accelerator.py#L3189
         self.train_dloader = self.accelerator.prepare(train_dloader)
 
     def init_logger(self):
@@ -328,6 +327,7 @@ class Experiment:
         with open(config_path, "w") as f:
             f.write(gin_config)
         if self.log_to_wandb:
+            # records the gin config on the wandb dashboard
             gin_as_wandb = utils.gin_as_wandb_config()
             log_dir = os.path.join(self.dset_root, "wandb_logs")
             os.makedirs(log_dir, exist_ok=True)
@@ -345,16 +345,16 @@ class Experiment:
             )
 
     def init_model(self):
+        # build initial policy based on observation shapes
         policy_kwargs = {
-            "obs_space": self.gcrl2_space["obs"],
-            "goal_space": self.gcrl2_space["goal"],
-            "rl2_space": self.gcrl2_space["rl2"],
+            "obs_space": self.rl2_space["obs"],
+            "rl2_space": self.rl2_space["rl2"],
             "action_space": self.train_envs.single_action_space,
             "max_seq_len": self.max_seq_len,
-            "horizon": self.horizon,
         }
         policy = self.agent_type(**policy_kwargs)
         assert isinstance(policy, Agent)
+        # AdamW with linear warmup
         optimizer = torch.optim.AdamW(
             policy.trainable_params,
             lr=self.learning_rate,
@@ -376,10 +376,9 @@ class Experiment:
         self,
         envs,
         timesteps: int,
-        buffers=None,
         hidden_state=None,
         render: bool = False,
-    ) -> tuple[ReturnHistory, SuccessHistory]:
+    ) -> tuple[ReturnHistory, SpecialMetricHistory]:
         """
         Main policy loop for interacting with the environment.
         """
@@ -401,108 +400,99 @@ class Experiment:
         # (can make train-time stats useless depending on horizon vs. `timesteps`)
         utils.call_async_env(envs, "reset_stats")
 
-        if buffers is None:
-            # start of training or new eval cycle
-            envs.reset()
-            make_buffer = partial(
-                GPUSequenceBuffer, self.DEVICE, self.max_seq_len, self.parallel_actors
-            )
-            obs_seqs = make_buffer()
-            goal_seqs = make_buffer()
-            rl2_seqs = make_buffer()
-        else:
-            # continue interaction from previous epoch
-            obs_seqs, goal_seqs, rl2_seqs = buffers
-
         if hidden_state is None:
             # init new hidden state
             hidden_state = policy.traj_encoder.init_hidden_state(
                 self.parallel_actors, self.DEVICE
             )
 
-        def get_t(_dones=None):
-            par_obs_goal_rl2 = utils.call_async_env(envs, "current_timestep")
-            _obs = utils.stack_list_array_dicts(
-                [obs_goal_rl2[0] for obs_goal_rl2 in par_obs_goal_rl2], axis=0
-            )
-            _goal = np.stack(
-                [obs_goal_rl2[1] for obs_goal_rl2 in par_obs_goal_rl2], axis=0
-            )
-            _rl2 = np.stack(
-                [obs_goal_rl2[2] for obs_goal_rl2 in par_obs_goal_rl2], axis=0
-            )
-            obs_seqs.add_timestep(_obs, _dones)
-            goal_seqs.add_timestep(_goal, _dones)
-            rl2_seqs.add_timestep(_rl2, _dones)
+        def get_t():
+            # fetch `Timestep.make_sequence` from all envs
+            par_obs_rl2_time = utils.call_async_env(envs, "current_timestep")
+            _obs, _rl2s, _time_idxs = [], [], []
+            for _o, _r, _t in par_obs_rl2_time:
+                _obs.append(_o)
+                _rl2s.append(_r)
+                _time_idxs.append(_t)
+            # stack all the results
+            _obs = utils.stack_list_array_dicts(_obs, axis=0, cat=True)
+            _rl2s = np.concatenate(_rl2s, axis=0)
+            _time_idxs = np.concatenate(_time_idxs, axis=0)
+            # ---> torch --> GPU --> dummy length dim
+            _obs = {
+                k: torch.from_numpy(v).to(self.DEVICE).unsqueeze(1)
+                for k, v in _obs.items()
+            }
+            _rl2s = torch.from_numpy(_rl2s).to(self.DEVICE).unsqueeze(1)
+            _time_idxs = torch.from_numpy(_time_idxs).to(self.DEVICE).unsqueeze(1)
+            return _obs, _rl2s, _time_idxs
 
-        if buffers is None:
-            get_t()
-
+        obs, rl2s, time_idxs = get_t()
         for _ in iter_:
-            obs_tc_t = obs_seqs.sequences
-            goals_tc_t = goal_seqs.sequences["_"]
-            rl2_tc_t = rl2_seqs.sequences["_"]
-            seq_lengths = obs_seqs.sequence_lengths
-            time_idxs = obs_seqs.time_idxs
-
             with torch.no_grad():
                 with self.caster():
                     actions, hidden_state = policy.get_actions(
-                        obs=obs_tc_t,
-                        goals=goals_tc_t,
-                        rl2s=rl2_tc_t,
-                        seq_lengths=seq_lengths,
+                        obs=obs,
+                        rl2s=rl2s,
                         time_idxs=time_idxs,
                         sample=self.sample_actions,
-                        hidden_state=hidden_state if self.fast_inference else None,
+                        hidden_state=hidden_state,
                     )
-            *_, terminated, truncated, _ = envs.step(actions)
+            *_, terminated, truncated, _ = envs.step(actions.squeeze(1).cpu().numpy())
             done = terminated | truncated
-            get_t(done)
+            if done.ndim == 2:
+                done = done.squeeze(1)
+            obs, rl2s, time_idxs = get_t()
             hidden_state = policy.traj_encoder.reset_hidden_state(hidden_state, done)
-
             if render:
                 envs.render()
 
         return_history = utils.call_async_env(envs, "return_history")
-        success_history = utils.call_async_env(envs, "success_history")
         special_history = utils.call_async_env(envs, "special_history")
-        return (
-            (obs_seqs, goal_seqs, rl2_seqs),
-            hidden_state,
-            return_history,
-            success_history,
-            special_history,
-        )
+        return hidden_state, (return_history, special_history)
 
     def collect_new_training_data(self):
-        if self.train_timesteps_per_epoch > 0:
-            (
-                self.train_buffers,
-                self.hidden_state,
-                returns,
-                successes,
-                specials,
-            ) = self.interact(
-                self.train_envs,
-                self.train_timesteps_per_epoch,
-                buffers=self.train_buffers,
-            )
+        if (
+            self.force_reset_train_envs_every is not None
+            and self.epoch % self.force_reset_train_envs_every == 0
+        ):
+            self.train_envs.reset()
+            self.hidden_state = None
+        self.hidden_state, (returns, specials) = self.interact(
+            self.train_envs,
+            self.train_timesteps_per_epoch,
+            hidden_state=self.hidden_state,
+        )
+        utils.call_async_env(self.train_envs, "save_finished_trajs")
 
     def evaluate_val(self):
-        if self.val_timesteps_per_epoch > 0:
-            *_, returns, successes, specials = self.interact(
-                self.val_envs,
-                self.val_timesteps_per_epoch,
+        # reset envs first
+        self.val_envs.reset()
+        start_time = time.time()
+        # interact from a blank hidden state that is discarded
+        _, (returns, specials) = self.interact(
+            self.val_envs,
+            self.val_timesteps_per_epoch,
+            hidden_state=None,
+        )
+        end_time = time.time()
+        fps = (
+            self.val_timesteps_per_epoch
+            * self.parallel_actors
+            / (end_time - start_time)
+        )
+        logs_per_process = self.policy_metrics(returns, specials=specials)
+        logs_per_process["Env FPS (per_process)"] = fps
+        cur_return = logs_per_process["Average Total Return (Across All Env Names)"]
+        if self.verbose:
+            self.accelerator.print(f"Average Return : {cur_return}")
+            # print FPS as the total over accelerate processes
+            self.accelerator.print(
+                f"Env FPS : {fps * self.accelerator.num_processes:.2f}"
             )
-            logs_per_process = self.policy_metrics(
-                returns, successes, specials=specials
-            )
-            cur_return = logs_per_process["Average Total Return (Across All Env Names)"]
-            if self.verbose:
-                self.accelerator.print(f"Average Return : {cur_return}")
-            logs_global = utils.avg_over_accelerate(logs_per_process)
-            self.log(logs_global, key="val")
+        # validation metrics are averaged over all processes
+        logs_global = utils.avg_over_accelerate(logs_per_process)
+        self.log(logs_global, key="val")
 
     def evaluate_test(
         self, make_test_env: callable, timesteps: int, render: bool = False
@@ -510,15 +500,26 @@ class Experiment:
         make = lambda: SequenceWrapper(
             make_test_env(), save_every=None, make_dset=False
         )
-        Par = gym.vector.AsyncVectorEnv if self.async_envs else DummyAsyncVectorEnv
-        test_envs = Par([make for _ in range(self.parallel_actors)])
-        *_, returns, successes, specials = self.interact(
+        if self.env_mode == "already_vectorized":
+            Par = AlreadyVectorizedEnv
+            env_list = [make]
+        elif self.env_mode == "async":
+            Par = gym.vector.AsyncVectorEnv
+            env_list = [make for _ in range(self.parallel_actors)]
+        elif self.env_mode == "sync":
+            Par = DummyAsyncVectorEnv
+            env_list = [make for _ in range(self.parallel_actors)]
+        test_envs = Par(env_list)
+        test_envs.reset()
+        _, (returns, specials) = self.interact(
             test_envs,
             timesteps,
+            hidden_state=None,
             render=render,
         )
-        logs = self.policy_metrics(returns, successes, specials)
-        self.log(logs, key="test")
+        logs = self.policy_metrics(returns, specials)
+        logs_global = utils.avg_over_accelerate(logs)
+        self.log(logs_global, key="test")
         test_envs.close()
         return logs
 
@@ -531,6 +532,7 @@ class Experiment:
             else:
                 log_dict[k] = v
 
+        # lets any metric be plotted against epoch and total_frames
         total_frames = sum(utils.call_async_env(self.train_envs, "total_frames"))
         frames_by_env_name = utils.call_async_env(
             self.train_envs, "total_frames_by_env_name"
@@ -541,8 +543,8 @@ class Experiment:
                 total_frames_by_env_name[f"total_frames-{env_name}"] += frames
         if self.log_to_wandb:
             progress = {
-                "epoch": self.epoch,
-                "total_frames": total_frames,
+                "Epoch": self.epoch,
+                "Total Frames": total_frames,
             }
             self.accelerator.log(
                 {f"{key}/{subkey}": val for subkey, val in log_dict.items()}
@@ -550,28 +552,17 @@ class Experiment:
                 | dict(total_frames_by_env_name)
             )
 
-    def make_figures(self, loss_info) -> dict[str, wandb.Image]:
-        """
-        Override this to create polished figures from raw logging
-        info and automatically dump them to wandb.
-        """
-        return {}
-
     def policy_metrics(
         self,
         returns: ReturnHistory,
-        successes: SuccessHistory,
         specials: SpecialMetricHistory,
     ) -> dict:
         returns_by_env_name = defaultdict(list)
-        success_by_env_name = defaultdict(list)
         specials_by_env_name = defaultdict(lambda: defaultdict(list))
 
-        for ret, suc, spe in zip(returns, successes, specials):
+        for ret, spe in zip(returns, specials):
             for env_name, scores in ret.data.items():
                 returns_by_env_name[env_name].extend(scores)
-            for env_name, scores in suc.data.items():
-                success_by_env_name[env_name].extend(scores)
             for env_name, specials_dict in spe.data.items():
                 for special_key, special_val in specials_dict.items():
                     specials_by_env_name[env_name][special_key].extend(special_val)
@@ -580,9 +571,9 @@ class Experiment:
             f"Average Total Return in {name}": np.array(scores).mean()
             for name, scores in returns_by_env_name.items()
         }
-        avg_suc_per_env = {
-            f"Average Success Rate in {name}": np.array(scores).mean()
-            for name, scores in success_by_env_name.items()
+        bottom_quintile_ret_per_env = {
+            f"Bottom Quintile Total Return in {name}": np.percentile(scores, 20)
+            for name, scores in returns_by_env_name.items()
         }
         avg_special_per_env = {
             f"Average {special_key} in {name}": np.array(special_vals).mean()
@@ -595,7 +586,10 @@ class Experiment:
             ).mean()
         }
         return (
-            avg_ret_per_env | avg_suc_per_env | avg_return_overall | avg_special_per_env
+            avg_ret_per_env
+            | avg_return_overall
+            | avg_special_per_env
+            | bottom_quintile_ret_per_env
         )
 
     def compute_loss(self, batch: Batch, log_step: bool):
@@ -617,6 +611,7 @@ class Experiment:
         return {
             "critic_loss": masked_critic_loss,
             "actor_loss": masked_actor_loss,
+            "seq_len": L_1 + 1,
             "mask": state_mask,
         } | update_info
 
@@ -628,7 +623,6 @@ class Experiment:
             "Critic Grad Norm": ggn(pi.critics),
             "TrajEncoder Grad Norm": ggn(pi.traj_encoder),
             "TstepEncoder Grad Norm": ggn(pi.tstep_encoder),
-            "TstepEncoder Goal Emb. Grad Norm": ggn(pi.tstep_encoder.goal_emb),
         }
         return grads
 
@@ -655,6 +649,25 @@ class Experiment:
         else:
             return contextlib.suppress()
 
+    def manage_replay_buffer(self):
+        dset_size = self.train_dset.count_trajectories()
+        dset_gb = self.train_dset.disk_usage
+        needs_filter = (
+            dset_size > self.dset_max_size and self.dset_filter_pct is not None
+        )
+        if needs_filter:
+            pct_to_filter = max(
+                self.dset_filter_pct, (dset_size - self.dset_max_size) / dset_size
+            )
+            self.train_dset.filter(pct_to_filter)
+        self.log(
+            {
+                "Trajectory Files Saved in Replay Buffer": dset_size,
+                "Train Buffer Disk Space (GB)": dset_gb,
+            },
+            key="buffer",
+        )
+
     def learn(self):
         def make_pbar(loader, epoch_num):
             if self.verbose:
@@ -674,11 +687,20 @@ class Experiment:
 
             # environment interaction
             self.policy_aclr.eval()
-            if self.val_interval and epoch % self.val_interval == 0:
+            if (
+                self.val_interval
+                and epoch % self.val_interval == 0
+                and self.val_timesteps_per_epoch > 0
+            ):
                 self.evaluate_val()
-            if epoch >= self.start_collecting_at_epoch:
+            if (
+                epoch >= self.start_collecting_at_epoch
+                and self.train_timesteps_per_epoch > 0
+            ):
                 self.collect_new_training_data()
             self.accelerator.wait_for_everyone()
+
+            # refresh dataset with newly collected trajectories
             self.init_dloaders()
             if self.train_dset.count_trajectories() == 0:
                 utils.amago_warning(
@@ -689,34 +711,19 @@ class Experiment:
             # training
             elif epoch < self.start_learning_at_epoch:
                 continue
-            self.policy_aclr.train()
-            for train_step, batch in make_pbar(self.train_dloader, epoch):
-                total_step = (epoch * self.train_batches_per_epoch) + train_step
-                log_step = total_step % self.log_interval == 0
-                loss_dict = self.train_step(batch, log_step=log_step)
-                if log_step:
-                    self.log(loss_dict, key="train-update")
+            if self.train_batches_per_epoch > 0:
+                self.policy_aclr.train()
+                for train_step, batch in make_pbar(self.train_dloader, epoch):
+                    total_step = (epoch * self.train_batches_per_epoch) + train_step
+                    log_step = total_step % self.log_interval == 0
+                    loss_dict = self.train_step(batch, log_step=log_step)
+                    if log_step:
+                        self.log(loss_dict, key="train-update")
             self.accelerator.wait_for_everyone()
 
-            # buffer management
-            dset_size = self.train_dset.count_trajectories()
-            dset_gb = self.train_dset.disk_usage
-            needs_filter = (
-                dset_size > self.dset_max_size and self.dset_filter_pct is not None
-            )
-            self.accelerator.wait_for_everyone()
-            if needs_filter and self.accelerator.is_main_process:
-                pct_to_filter = max(
-                    self.dset_filter_pct, (dset_size - self.dset_max_size) / dset_size
-                )
-                self.train_dset.filter(pct_to_filter)
-            self.log(
-                {
-                    "Trajectory Files Saved in Replay Buffer": dset_size,
-                    "Train Buffer Disk Space (GB)": dset_gb,
-                },
-                key="buffer",
-            )
+            # delete excess trajectories from disk
+            if self.accelerator.is_main_process:
+                self.manage_replay_buffer()
             self.accelerator.wait_for_everyone()
 
             # end epoch

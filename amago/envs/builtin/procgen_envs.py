@@ -1,23 +1,18 @@
 import random
-from typing import Callable, Tuple
-from enum import Enum
 
 import procgen
 import gym as og_gym
 import numpy as np
 import gymnasium as gym
 
-from amago.envs.builtin.gym_envs import GymEnv
+from amago.envs import AMAGOEnv
 
 
-class ProcgenAMAGO(GymEnv):
-    def __init__(self, env, horizon: int):
+class ProcgenAMAGO(AMAGOEnv):
+    def __init__(self, env):
         super().__init__(
-            gym_env=env,
+            env=env,
             env_name="Procgen",
-            horizon=horizon,
-            start=0,
-            zero_shot=True,
         )
 
     @property
@@ -68,6 +63,7 @@ class TwoShotMTProcgen(gym.Env):
         self.games = games
         self.reward_scales = reward_scales
         self.env = None
+        self.reset()
 
     def frame(self, frame):
         if self._current_episode > 0:

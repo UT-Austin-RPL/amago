@@ -1,4 +1,5 @@
 import math
+from typing import Optional
 
 import torch
 from torch import nn
@@ -8,25 +9,71 @@ import gin
 
 from .utils import activation_switch
 from amago.utils import amago_warning
+from amago.nets.ff import Normalization
+
 
 try:
     import flash_attn
 except ImportError:
     amago_warning("Missing FlashAttention (2.0) Install")
+else:
+    torch.set_float32_matmul_precision("high")
 
 
-class Normalization(nn.Module):
-    def __init__(self, method: str, d_model: int):
+class VanillaAttention(nn.Module):
+    def __init__(self, causal: bool = True, attention_dropout: float = 0.0):
         super().__init__()
-        assert method in ["layer", "none"]
-        if method == "layer":
-            self.norm = nn.LayerNorm(d_model)
-        elif method == "none":
-            self.norm = lambda x: x
-        self.method = method
+        self.dropout = nn.Dropout(attention_dropout)
+        self.causal = causal
+        self._mask = None
 
-    def forward(self, x):
-        return self.norm(x)
+    @torch.compile
+    def _inference_with_cache(self, qkv, key_cache, val_cache, cache_seqlens):
+        # fmt: off
+        queries, keys, values = torch.unbind(qkv, dim=2)
+        B, L, H, E = queries.shape
+        assert L == 1
+        scale = 1.0 / math.sqrt(E)
+        # fill cache, trim sequences
+        key_cache[:, cache_seqlens] = keys
+        val_cache[:, cache_seqlens] = values
+        end = cache_seqlens + 1
+        max_len = end.max()
+        k_cache = key_cache[:, :max_len]
+        v_cache = val_cache[:, :max_len]
+        # attention scores + masking
+        scores = torch.einsum("blhe,blhe->blh", queries, k_cache)
+        mask = torch.arange(max_len, device=cache_seqlens.device)[None, :] >= end[:, None]
+        scores.masked_fill_(mask[:, :, None], -torch.inf)
+        # output
+        A = self.dropout(torch.softmax(scale * scores, dim=1))
+        V = torch.einsum("blh,blhd->bhd", A, v_cache).unsqueeze(1)
+        # fmt: on
+        return V
+
+    def _forward_without_cache(self, qkv):
+        queries, keys, values = torch.unbind(qkv, dim=2)
+        B, L, H, E = queries.shape
+        _, S, _, D = values.shape
+        scale = 1.0 / math.sqrt(E)
+        scores = torch.einsum("blhe,bshe->bhls", queries, keys)
+        if self._mask is None or self._mask.shape != (B, 1, L, L):
+            self._mask = torch.triu(
+                torch.ones((B, 1, L, L), dtype=torch.bool, device=qkv.device),
+                diagonal=1,
+            )
+        if self.causal:
+            scores.masked_fill_(self._mask, -torch.inf)
+        A = self.dropout(torch.softmax(scale * scores, dim=-1))
+        V = torch.einsum("bhls,bshd->blhd", A, values)
+        return V
+
+    def forward(self, qkv, key_cache=None, val_cache=None, cache_seqlens=None):
+        if key_cache is None and val_cache is None or cache_seqlens is None:
+            return self._forward_without_cache(qkv)
+        else:
+            assert not self.training
+            return self._inference_with_cache(qkv, key_cache, val_cache, cache_seqlens)
 
 
 @gin.configurable(allowlist=["window_size"])
@@ -42,6 +89,7 @@ class FlashAttention(nn.Module):
         self.causal = causal
         self.window_size = window_size
 
+    @torch.compiler.disable
     def forward(self, qkv, key_cache=None, val_cache=None, cache_seqlens=None):
         qkv = qkv.to(torch.bfloat16)
         if key_cache is None or val_cache is None or cache_seqlens is None:
@@ -67,9 +115,49 @@ class FlashAttention(nn.Module):
         return out
 
 
-class SigmaReparam(nn.Module):
+class SigmaReparam(nn.Linear):
     """
-    https://arxiv.org/pdf/2303.06296.pdf Appendix C
+    Updated version of SigmaReparam following the initialization strategy in the official code release.
+    https://github.com/apple/ml-sigma-reparam/blob/fea4e359126f812bd3e0a12234c56330fe4b5fa2/vision/layers.py#L90
+    https://github.com/ywchan2005/sigma-reparam-pytorch/blob/2a5676ac71f75567a09db4ecafc1a4d7bc135b8e/sigma_reparam.py#L5
+    """
+
+    def __init__(self, d_in, d_out, bias: bool = True):
+        super().__init__(d_in, d_out, bias=bias)
+        nn.init.trunc_normal_(self.weight, std=0.02)
+        # init can be quite slow...
+        u = torch.linalg.svd(self.weight.T, full_matrices=False)[-1][0].detach()
+        v = torch.linalg.svd(self.weight, full_matrices=False)[-1][0].detach()
+        self.register_buffer("u", u)
+        self.register_buffer("v", v)
+        self.gamma = nn.Parameter(torch.ones(1), requires_grad=True)
+
+    def forward(self, x):
+        if self.training:
+            with torch.no_grad():
+                u = (self.weight @ self.v).float()
+                self.u.data = F.normalize(u, dim=0)
+                v = (self.weight.T @ self.u).float()
+                self.v.data = F.normalize(v, dim=0)
+        sigma = einsum(self.u, self.weight, self.v, "d, d c , c->")
+        W_hat = self.gamma / sigma * self.weight
+        out = F.linear(x, W_hat, self.bias)
+        return out
+
+
+class SigmaReparamLegacyInit(nn.Module):
+    """
+    When I implemented SigmaReparam for AMAGOv1, the code had not been open-sourced and I only
+    had https://arxiv.org/pdf/2303.06296.pdf to go on. This code follows the pseudocode in
+    Appendix C. The initialization strategy results in unusually large initial output values.
+    I assumed this was fine because it worked so well empirically (w/ flash attention).
+    Finally looked into this for VanillaAttention, and the official code release clearly goes out
+    of its way to fix this problem with a specific init...
+
+    Leaving this original version here in case the large init happens to be helpful in some cases.
+    It is not realistic to re-run all the experiments in both papers to find out for sure. Between
+    the clear emphasis on numerical stability in the official code and my own experience with (rare)
+    policy NaNs at init, I think the updated version should be the default.
     """
 
     def __init__(self, d_in, d_out, bias: bool = True):
@@ -102,36 +190,6 @@ class SigmaReparam(nn.Module):
         W_hat = self.gamma / sigma * self.W
         out = F.linear(x, W_hat, self.b)
         return out
-
-
-class VanillaAttention(nn.Module):
-    def __init__(self, causal: bool = True, attention_dropout: float = 0.0):
-        super().__init__()
-        self.dropout = nn.Dropout(attention_dropout)
-        self.causal = causal
-        self._mask = None
-
-    def forward(self, qkv, key_cache=None, val_cache=None, cache_seqlens=None):
-        assert (
-            key_cache is None and val_cache is None
-        ), "VanillaAttention does not support `fast_inference` mode"
-        queries, keys, values = torch.unbind(qkv, dim=2)
-        B, L, H, E = queries.shape
-        _, S, _, D = values.shape
-        scale = 1.0 / math.sqrt(E)
-
-        scores = torch.einsum("blhe,bshe->bhls", queries, keys)
-        if self._mask is None or self._mask.shape != (B, 1, L, L):
-            self._mask = torch.triu(
-                torch.ones((B, 1, L, L), dtype=torch.bool, device=qkv.device),
-                diagonal=1,
-            )
-        if self.causal:
-            scores.masked_fill_(self._mask, -torch.inf)
-
-        A = self.dropout(torch.softmax(scale * scores, dim=-1))
-        V = torch.einsum("bhls,bshd->blhd", A, values)
-        return V
 
 
 @gin.configurable(allowlist=["head_scaling", "sigma_reparam"])
@@ -213,6 +271,7 @@ class TransformerLayer(nn.Module):
         self.dropout_ff = nn.Dropout(dropout_ff)
         self.activation = activation_switch(activation)
 
+    @torch.compile
     def forward(self, self_seq, key_cache=None, val_cache=None, cache_seqlens=None):
         q1 = self.norm1(self_seq)  # pre-norm
         q1 = self.self_attention(
@@ -233,55 +292,59 @@ class Cache:
         self,
         device: torch.device,
         dtype: torch.dtype,
+        layers: int,
         batch_size: int,
         max_seq_len: int,
         n_heads: int,
         head_dim: int,
     ):
         self.data = torch.zeros(
-            (batch_size, max_seq_len, n_heads, head_dim), dtype=dtype, device=device
+            (layers, batch_size, max_seq_len, n_heads, head_dim),
+            dtype=dtype,
+            device=device,
         )
+        self.max_seq_len = max_seq_len
         # make silent bugs in k/v cache... much louder
         self.data[:] = torch.nan
+        self.device = device
 
     def __len__(self):
-        return self.data.shape[1]
+        return self.data.shape[2]
 
-    def roll_back(self, idx):
-        roll = self.data[idx, 1:].clone()
-        self.data[idx, :-1] = roll
-        self.data[idx, -1] = torch.nan  # no silent bugs
+    def roll_back(self, seq_lens):
+        idxs = torch.where(seq_lens == self.max_seq_len)[0]
+        roll = self.data[:, idxs, 1:].clone()
+        self.data[:, idxs, :-1] = roll
+        self.data[:, idxs, -1] = torch.nan  # no silent bugs
+        return idxs
 
 
 class TformerHiddenState:
-    def __init__(
-        self, key_cache: list[Cache], val_cache: list[Cache], timesteps: torch.Tensor
-    ):
-        assert isinstance(key_cache, list) and len(key_cache) == len(val_cache)
-        assert timesteps.dtype == torch.int32
-        self.n_layers = len(key_cache)
+    def __init__(self, key_cache: Cache, val_cache: Cache, seq_lens: torch.Tensor):
+        assert seq_lens.dtype == torch.int32
+        assert key_cache.device == val_cache.device
+        self.n_layers = key_cache.data.shape[0]
+        assert self.n_layers == val_cache.data.shape[0]
         self.key_cache = key_cache
         self.val_cache = val_cache
-        self.timesteps = timesteps
+        self.seq_lens = seq_lens
+        self.device = key_cache.device
 
     def reset(self, idxs):
-        self.timesteps[idxs] = 0
+        self.seq_lens[idxs] = 0
 
     def update(self):
-        self.timesteps += 1
-        for i, timestep in enumerate(self.timesteps):
-            if timestep == len(self.key_cache[0]):
-                for k, v in zip(self.key_cache, self.val_cache):
-                    k.roll_back(i)
-                    v.roll_back(i)
-                self.timesteps[i] -= 1
+        self.seq_lens += 1
+        self.key_cache.roll_back(self.seq_lens)
+        idxs = self.val_cache.roll_back(self.seq_lens)
+        self.seq_lens[idxs] -= 1
 
     def __getitem__(self, layer_idx):
         assert layer_idx < self.n_layers
         return (
-            self.key_cache[layer_idx].data,
-            self.val_cache[layer_idx].data,
-            self.timesteps,
+            self.key_cache.data[layer_idx],
+            self.val_cache.data[layer_idx],
+            self.seq_lens,
         )
 
 
@@ -310,10 +373,8 @@ class Transformer(nn.Module):
     def __init__(
         self,
         inp_dim: int,
-        max_pos_idx: int,
         d_model: int = 128,
         d_ff: int = 512,
-        d_emb_ff: int = None,
         n_heads: int = 4,
         layers: int = 3,
         dropout_emb: float = 0.05,
@@ -324,20 +385,12 @@ class Transformer(nn.Module):
         activation: str = "leaky_relu",
         norm: str = "layer",
         causal: bool = True,
-        pos_emb: str = "learnable",
     ):
         super().__init__()
         assert attention in ["flash", "vanilla"]
-        assert pos_emb in ["learnable", "fixed"]
 
         # embedding
-        if pos_emb == "learnable":
-            self.position_embedding = nn.Embedding(
-                max_pos_idx + 1, embedding_dim=d_model
-            )
-        elif pos_emb == "fixed":
-            self.position_embedding = FixedPosEmb(d_model)
-        d_emb_ff = d_emb_ff or d_model
+        self.position_embedding = FixedPosEmb(d_model)
         self.inp = nn.Linear(inp_dim, d_model)
         self.dropout = nn.Dropout(dropout_emb)
 
@@ -366,29 +419,36 @@ class Transformer(nn.Module):
         self.layers = nn.ModuleList([make_layer() for _ in range(layers)])
         self.norm = Normalization(method=norm, d_model=d_model)
         self.d_model = d_model
+        self._blank_hidden_state = [[None, None, None] for _ in range(self.n_layers)]
 
     @property
     def emb_dim(self):
         return self.d_model
 
-    def forward(self, seq, pos_idxs, hidden_state: None | TformerHiddenState):
-        if self.training:
-            assert hidden_state is None
-        batch, length, dim = seq.shape
-        h = hidden_state or [[None, None, None] for _ in range(self.n_layers)]
-
-        # emedding
-        pos_emb = self.position_embedding(pos_idxs)
+    def preprocess_seq(self, seq, pos_idxs):
+        pos_emb = self.position_embedding(pos_idxs.squeeze(-1))
         traj_emb = self.inp(seq)
         traj_emb = self.dropout(traj_emb + pos_emb)
+        return traj_emb
 
-        # self-attention
+    @torch.compile
+    def training_forward(self, seq):
+        for layer in self.layers:
+            seq = layer(seq)
+        return self.norm(seq)
+
+    def inference_forward(self, seq, hidden_state):
         for i, layer in enumerate(self.layers):
-            traj_emb = layer(traj_emb, *h[i])
-        traj_emb = self.norm(traj_emb)
+            seq = layer(seq, *hidden_state[i])
+        return self.norm(seq)
 
+    def forward(self, seq, pos_idxs, hidden_state: Optional[TformerHiddenState] = None):
+        traj_emb = self.preprocess_seq(seq, pos_idxs)
         if hidden_state is not None:
-            # controls the sequence length of the k/v cache
+            assert not self.training
+            traj_emb = self.inference_forward(traj_emb, hidden_state)
             hidden_state.update()
-
+        else:
+            assert self.training
+            traj_emb = self.training_forward(traj_emb)
         return traj_emb, hidden_state

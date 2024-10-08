@@ -2,7 +2,6 @@ from argparse import ArgumentParser
 
 import wandb
 
-import amago
 from amago.envs.builtin.popgym_envs import POPGymAMAGO, MultiDomainPOPGymAMAGO
 from amago.cli_utils import *
 
@@ -10,7 +9,6 @@ from amago.cli_utils import *
 def add_cli(parser):
     parser.add_argument("--env", type=str, default="AutoencodeEasy")
     parser.add_argument("--max_seq_len", type=int, default=2000)
-    parser.add_argument("--traj_save_len", type=int, default=2000)
     parser.add_argument(
         "--multidomain",
         action="store_true",
@@ -38,7 +36,6 @@ if __name__ == "__main__":
         "amago.nets.actor_critic.NCriticsTwoHot.max_return": 1.0,  # paper: None
         "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 32,  # paper: 64
     }
-    turn_off_goal_conditioning(config)
     switch_traj_encoder(
         config,
         arch=args.traj_encoder,
@@ -65,10 +62,8 @@ if __name__ == "__main__":
             args,
             make_train_env=make_train_env,
             make_val_env=make_train_env,
-            # For this one script to work across every environment,
-            # these are arbitrary sequence limits we'll never each.
             max_seq_len=args.max_seq_len,
-            traj_save_len=args.traj_save_len,
+            traj_save_len=2000,
             group_name=group_name,
             run_name=run_name,
             val_timesteps_per_epoch=2000,

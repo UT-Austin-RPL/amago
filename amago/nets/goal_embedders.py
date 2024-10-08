@@ -6,7 +6,6 @@ from einops import rearrange
 import gin
 
 
-@gin.configurable(denylist=["goal_dim"])
 class FFGoalEmb(nn.Module):
     def __init__(
         self,
@@ -34,7 +33,6 @@ class FFGoalEmb(nn.Module):
         return goal_emb
 
 
-@gin.configurable(denylist=["goal_dim"])
 class TokenGoalEmb(nn.Module):
     def __init__(
         self,

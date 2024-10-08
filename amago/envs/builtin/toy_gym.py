@@ -1,77 +1,8 @@
-import warnings
 import copy
 import random
 
 import gymnasium as gym
 import numpy as np
-
-from amago.envs import AMAGOEnv
-from amago.envs.env_utils import AMAGO_ENV_LOG_PREFIX
-from amago.hindsight import GoalSeq
-
-
-class GymEnv(AMAGOEnv):
-    def __init__(
-        self,
-        gym_env: gym.Env,
-        env_name: str,
-        horizon: int,
-        start: int = 0,
-        zero_shot: bool = True,
-        convert_from_old_gym: bool = False,
-        soft_reset_kwargs={},
-    ):
-        if convert_from_old_gym:
-            gym_env = gym.wrappers.EnvCompatibility(gym_env)
-
-        super().__init__(gym_env, horizon=horizon, start=start)
-        self.zero_shot = zero_shot
-        self._env_name = env_name
-        self.soft_reset_kwargs = soft_reset_kwargs
-
-    @property
-    def env_name(self):
-        return self._env_name
-
-    @property
-    def blank_goal(self):
-        return np.zeros((1,), dtype=np.float32)
-
-    @property
-    def achieved_goal(self) -> np.ndarray:
-        return [self.blank_goal + 1]
-
-    @property
-    def kgoal_space(self) -> gym.spaces.Box:
-        return gym.spaces.Box(low=0.0, high=0.0, shape=(1, 1))
-
-    @property
-    def goal_sequence(self) -> GoalSeq:
-        goal_seq = [self.blank_goal]
-        return GoalSeq(seq=goal_seq, active_idx=0)
-
-    def step(self, action):
-        return super().step(
-            action,
-            normal_rl_reward=True,
-            normal_rl_reset=self.zero_shot,
-            soft_reset_kwargs=self.soft_reset_kwargs,
-        )
-
-
-class _DiscreteToBox(gym.ObservationWrapper):
-    def __init__(self, env):
-        super().__init__(env)
-        assert isinstance(env.observation_space, gym.spaces.Discrete)
-        self.n = env.observation_space.n
-        self.observation_space = gym.spaces.Box(
-            low=0, high=1, shape=(self.n,), dtype=np.int64
-        )
-
-    def observation(self, obs):
-        arr = np.zeros((self.n,), dtype=np.int64)
-        arr[obs] = 1
-        return arr
 
 
 class RandomLunar(gym.Env):
@@ -131,11 +62,11 @@ class MetaFrozenLake(gym.Env):
 
     def reset(self, *args, **kwargs):
         self.current_map = [[t for t in row] for row in generate_random_map(self.size)]
-        act_map = [(0, 0), (1, 0), (-1, 0), (0, 1), (0, -1)]
+        self.action_mapping = [(0, 0), (1, 0), (-1, 0), (0, 1), (0, -1)]
         if self.hard_mode and random.random() < 0.5:
-            # flip two control directions for an extra challenge
-            act_map[1], act_map[3] = act_map[3], act_map[1]
-        self.action_mapping = act_map
+            temp = self.action_mapping[1]
+            self.action_mapping[1] = self.action_mapping[3]
+            self.action_mapping[3] = temp
         self.current_k = 0
         return self.soft_reset()
 
@@ -182,14 +113,13 @@ class MetaFrozenLake(gym.Env):
         else:
             reward = 0.0
             soft_reset = False
+
         self.x = next_x
         self.y = next_y
 
         if soft_reset:
-            next_state, info = self.soft_reset()
-            success = on == "G"
-            info[f"{AMAGO_ENV_LOG_PREFIX}Episode {self.current_k} Success"] = success
             self.current_k += 1
+            next_state, info = self.soft_reset()
         else:
             next_state, info = self.make_obs(False), {}
 
@@ -204,16 +134,111 @@ class MetaFrozenLake(gym.Env):
             print(" ".join(row))
 
 
-if __name__ == "__main__":
-    env = MetaFrozenLake(5, 2, False, True)
-    env.reset()
-    env.render()
-    done = False
-    while not done:
-        action = input()
-        action = {"a": 4, "w": 2, "d": 3, "s": 1, "x": 0}[action]
-        next_state, reward, done, _, info = env.step(action)
-        env.render()
-        print(next_state)
-        print(reward)
-        print(done)
+class RoomKeyDoor(gym.Env):
+    """
+    A version of the Dark Room Key-Door Env.
+
+    Based on Algorithm Distillation (Laskin et al., 2022)
+    """
+
+    def __init__(
+        self,
+        dark: bool = True,
+        size: int = 9,
+        max_episode_steps: int = 50,
+        meta_rollout_horizon: int = 500,
+        start_location: tuple[int, int] | str = "random",
+        key_location: tuple[int, int] | str = "random",
+        goal_location: tuple[int, int] | str = "random",
+        randomize_actions: bool = False,
+    ):
+        self.dark = dark
+        self.size = size
+        self.H = max_episode_steps
+        self.H_meta = meta_rollout_horizon
+        self.observation_space = gym.spaces.Box(
+            low=0.0, high=1.0, shape=(4 if self.dark else 8,)
+        )
+        self.action_space = gym.spaces.Discrete(5)
+        self.goal_location = goal_location
+        self.key_location = key_location
+        self.start_location = start_location
+        self.randomize_actions = randomize_actions
+
+    def reset_same_task(self):
+        self.pos = self.start
+        self.episode_time = 0
+        self.has_key = False
+
+    def reset(self, *args, **kwargs):
+        self.generate_task()
+        self.global_time = 0
+        self.reset_same_task()
+        self.reset_next_step = False
+        return self.obs(), {}
+
+    def generate_task(self):
+        self.start = np.array(
+            random.choices(range(self.size), k=2)
+            if self.start_location == "random"
+            else self.start_location
+        )
+        self.key = np.array(
+            random.choices(range(self.size), k=2)
+            if self.key_location == "random"
+            else self.key_location
+        )
+        self.goal = np.array(
+            random.choices(range(self.size), k=2)
+            if self.goal_location == "random"
+            else self.goal_location
+        )
+        self.dirs = [[0, -1], [-1, 0], [0, 1], [1, 0], [0, 0]]
+        if self.randomize_actions:
+            random.shuffle(self.dirs)
+
+    def step(self, action: int):
+        self.global_time += 1
+        if self.reset_next_step:
+            self.reset_same_task()
+            self.reset_next_step = False
+            reward = 0.0
+        else:
+            self.episode_time += 1
+            self.pos = np.clip(self.pos + np.array(self.dirs[action]), 0, self.size - 1)
+            reward = 0.0
+            if self.has_key and (self.pos == self.goal).all():
+                reward = 1.0
+                self.reset_next_step = True
+            elif not self.has_key and (self.pos == self.key).all():
+                reward = 1.0
+                self.has_key = True
+            if self.episode_time >= self.H:
+                self.reset_next_step = True
+        metadone = self.global_time >= self.H_meta
+        return self.obs(), reward, metadone, metadone, {}
+
+    def obs(self):
+        x, y = self.pos
+        norm = lambda j: float(j) / self.size
+        # time and has_key keep this fully observed
+        base = [norm(x), norm(y), self.has_key, float(self.episode_time) / self.H]
+        if not self.dark:
+            goal_x, goal_y = self.goal
+            key_x, key_y = self.key
+            base += [norm(goal_x), norm(goal_y), norm(key_x), norm(key_y)]
+        return np.array(base, dtype=np.float32)
+
+    def render(self, *args, **kwargs):
+        img = [["." for _ in range(self.size)] for _ in range(self.size)]
+        player_x, player_y = self.pos
+        goal_x, goal_y = self.goal
+        key_x, key_y = self.key
+        img[player_x][player_y] = "P"
+        img[goal_x][goal_y] = "D"
+        img[key_x][key_y] = "K"
+        print(
+            f"{'Dark' if self.dark else 'Light'} Room Key-Door: Key = {self.key}, Door = {self.goal}, Player = {self.pos}"
+        )
+        for row in img:
+            print(" ".join(row))

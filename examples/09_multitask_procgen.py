@@ -2,7 +2,6 @@ from argparse import ArgumentParser
 
 import wandb
 
-import amago
 from amago.envs.builtin.procgen_envs import (
     TwoShotMTProcgen,
     ProcgenAMAGO,
@@ -48,8 +47,7 @@ if __name__ == "__main__":
     add_common_cli(parser)
     args = parser.parse_args()
 
-    config = {"amago.nets.traj_encoders.TformerTrajEncoder.pos_emb": "fixed"}
-    turn_off_goal_conditioning(config)
+    config = {}
     switch_traj_encoder(
         config,
         arch=args.traj_encoder,
@@ -64,13 +62,11 @@ if __name__ == "__main__":
     horizon = 2000 if "easy" in args.distribution else 5000
     make_train_env = lambda: ProcgenAMAGO(
         TwoShotMTProcgen(**procgen_kwargs, seed_range=(0, args.train_seeds)),
-        horizon=horizon,
     )
     make_test_env = lambda: ProcgenAMAGO(
         TwoShotMTProcgen(
             **procgen_kwargs, seed_range=(args.train_seeds + 1, 10_000_000)
         ),
-        horizon=horizon,
     )
 
     group_name = f"{args.run_name}_{args.distribution}_procgen_l_{args.max_seq_len}"

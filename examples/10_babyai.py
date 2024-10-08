@@ -8,7 +8,7 @@ import gymnasium as gym
 
 import amago
 from amago.envs.builtin.babyai import MultitaskMetaBabyAI, ALL_BABYAI_TASKS
-from amago.envs.builtin.gym_envs import GymEnv
+from amago.envs import AMAGOEnv
 from amago.nets.utils import add_activation_log, symlog
 from amago.cli_utils import *
 
@@ -80,17 +80,11 @@ TRAIN_TASKS = [
 TEST_TASKS = ALL_BABYAI_TASKS
 
 
-class BabyAIAMAGOEnv(GymEnv):
-    def __init__(self, env: gym.Env, horizon=1000):
+class BabyAIAMAGOEnv(AMAGOEnv):
+    def __init__(self, env: gym.Env):
         assert isinstance(env, MultitaskMetaBabyAI)
         super().__init__(
-            gym_env=env,
-            env_name="To Be Named",
-            horizon=horizon,
-            start=0,
-            # in new examples we recommend ignoring the built-in reset
-            # features and just wrapping the base env to reset itself.
-            zero_shot=True,
+            env=env,
         )
 
     @property
@@ -103,15 +97,12 @@ class BabyTstepEncoder(amago.nets.tstep_encoders.TstepEncoder):
         self,
         obs_kind: str,
         obs_space,
-        goal_space,
         rl2_space,
         extras_dim: int = 16,
         mission_dim: int = 48,
         emb_dim: int = 300,
     ):
-        super().__init__(
-            obs_space=obs_space, goal_space=goal_space, rl2_space=rl2_space
-        )
+        super().__init__(obs_space=obs_space, rl2_space=rl2_space)
         self.obs_kind = obs_kind
         if obs_kind in ["partial-image", "full-image"]:
             cnn_type = amago.nets.cnn.NatureishCNN
@@ -151,7 +142,7 @@ class BabyTstepEncoder(amago.nets.tstep_encoders.TstepEncoder):
     def emb_dim(self):
         return self._emb_dim
 
-    def inner_forward(self, obs, goal_rep, rl2s, log_dict=None):
+    def inner_forward(self, obs, rl2s, log_dict=None):
         rl2s = symlog(rl2s)
         extras = torch.cat((rl2s, obs["extra"]), dim=-1)
         extras_rep = self.extras_processor(extras)
@@ -179,10 +170,6 @@ if __name__ == "__main__":
         "amago.nets.actor_critic.NCriticsTwoHot.min_return": None,
         "amago.nets.actor_critic.NCriticsTwoHot.max_return": None,
         "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 64,
-        "amago.agent.Agent.offline_coeff": (
-            1.0 if args.agent_type == "multitask" else 0.0
-        ),
-        "amago.nets.traj_encoders.TformerTrajEncoder.pos_emb": "fixed",
     }
     switch_traj_encoder(
         config,
@@ -190,11 +177,6 @@ if __name__ == "__main__":
         memory_size=args.memory_size,
         layers=args.memory_layers,
     )
-    # it's possible to route the BabyAI "mission" string tokens through
-    # our goal conditioning, but since we're not relabeling,
-    # it's easier to treat it as part of the observation and turn our
-    # goal conditioning off.
-    turn_off_goal_conditioning(config)
     use_config(config, args.configs)
 
     make_train_env = lambda: BabyAIAMAGOEnv(

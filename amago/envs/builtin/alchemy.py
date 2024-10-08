@@ -1,16 +1,14 @@
 import random
-import warnings
-
 
 import gymnasium as gym
+from amago.utils import amago_warning
 
 try:
     import dm_env
     from dm_env import specs
-    import dm_alchemy
     from dm_alchemy import symbolic_alchemy
 except ImportError:
-    warnings.warn("Missing dm_env / dm_alchemy Install: `pip install amago[envs]`")
+    amago_warning("Missing dm_env / dm_alchemy Install: `pip install amago[basic_envs]")
 
 
 class GymFromDMEnv(gym.Env):

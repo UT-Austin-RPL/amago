@@ -504,7 +504,8 @@ class PopArtLayer(nn.Module):
 
     @property
     def sigma(self):
-        return (torch.sqrt(self.nu - self.mu**2)).clamp(1e-4, 1e6)
+        inner = (self.nu - self.mu**2).clamp(1e-4, 1e8)
+        return torch.sqrt(inner).clamp(1e-4, 1e6)
 
     def normalize_values(self, val):
         if not self.enabled:
