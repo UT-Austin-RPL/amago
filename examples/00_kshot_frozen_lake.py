@@ -14,7 +14,6 @@ def add_cli(parser):
     )
     parser.add_argument("--run_name", type=str, required=True)
     parser.add_argument("--buffer_dir", type=str, required=True)
-    parser.add_argument("--gpu", type=int, required=True)
     parser.add_argument("--log", action="store_true")
     parser.add_argument("--trials", type=int, default=3)
     parser.add_argument("--lake_size", type=int, default=5)
@@ -87,10 +86,10 @@ if __name__ == "__main__":
             make_val_env=make_env,
             max_seq_len=args.max_rollout_length,
             traj_save_len=args.max_rollout_length,
+            agent_type=amago.agent.Agent,
             dset_max_size=10_000,
             run_name=run_name,
             dset_name=run_name,
-            gpu=args.gpu,
             dset_root=args.buffer_dir,
             dloader_workers=10,
             log_to_wandb=args.log,
@@ -98,7 +97,7 @@ if __name__ == "__main__":
             epochs=500 if not args.hard_mode else 900,
             parallel_actors=24,
             train_timesteps_per_epoch=350,
-            train_grad_updates_per_epoch=700,
+            train_batches_per_epoch=700,
             val_interval=20,
             val_timesteps_per_epoch=args.max_rollout_length * 2,
             ckpt_interval=50,

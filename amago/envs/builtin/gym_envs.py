@@ -6,6 +6,7 @@ import gymnasium as gym
 import numpy as np
 
 from amago.envs import AMAGOEnv
+from amago.envs.env_utils import AMAGO_ENV_LOG_PREFIX
 from amago.hindsight import GoalSeq
 
 
@@ -130,11 +131,11 @@ class MetaFrozenLake(gym.Env):
 
     def reset(self, *args, **kwargs):
         self.current_map = [[t for t in row] for row in generate_random_map(self.size)]
-        self.action_mapping = [(0, 0), (1, 0), (-1, 0), (0, 1), (0, -1)]
+        act_map = [(0, 0), (1, 0), (-1, 0), (0, 1), (0, -1)]
         if self.hard_mode and random.random() < 0.5:
-            temp = self.action_mapping[1]
-            self.action_mapping[1] = self.action_mapping[3]
-            self.action_mapping[3] = temp
+            # flip two control directions for an extra challenge
+            act_map[1], act_map[3] = act_map[3], act_map[1]
+        self.action_mapping = act_map
         self.current_k = 0
         return self.soft_reset()
 
@@ -181,13 +182,14 @@ class MetaFrozenLake(gym.Env):
         else:
             reward = 0.0
             soft_reset = False
-
         self.x = next_x
         self.y = next_y
 
         if soft_reset:
-            self.current_k += 1
             next_state, info = self.soft_reset()
+            success = on == "G"
+            info[f"{AMAGO_ENV_LOG_PREFIX}Episode {self.current_k} Success"] = success
+            self.current_k += 1
         else:
             next_state, info = self.make_obs(False), {}
 
