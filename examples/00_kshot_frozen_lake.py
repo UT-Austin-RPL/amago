@@ -7,7 +7,7 @@ from amago.cli_utils import *
 def add_cli(parser):
     parser.add_argument(
         "--experiment",
-        choices=["no-memory", "memory-rnn", "memory-transformer"],
+        choices=["no-memory", "memory-rnn", "memory-transformer", "memory-mamba"],
         required=True,
     )
     parser.add_argument("--run_name", type=str, required=True)
@@ -19,6 +19,7 @@ def add_cli(parser):
     parser.add_argument("--hard_mode", action="store_true")
     parser.add_argument("--recover_mode", action="store_true")
     parser.add_argument("--max_rollout_length", type=int, default=512)
+    parser.add_argument("--max_seq_len", type=int, default=512)
     return parser
 
 
@@ -36,6 +37,8 @@ if __name__ == "__main__":
         traj_encoder = "rnn"
     elif args.experiment == "memory-transformer":
         traj_encoder = "transformer"
+    elif args.experiment == "memory-mamba":
+        traj_encoder = "mamba"
     else:
         traj_encoder = "ff"
     switch_traj_encoder(
@@ -71,7 +74,7 @@ if __name__ == "__main__":
         experiment = amago.Experiment(
             make_train_env=make_env,
             make_val_env=make_env,
-            max_seq_len=args.max_rollout_length,
+            max_seq_len=args.max_seq_len,
             traj_save_len=args.max_rollout_length,
             agent_type=amago.agent.Agent,
             dset_max_size=12_500,

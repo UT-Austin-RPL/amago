@@ -31,16 +31,17 @@ def _swap_rules(old_goal, old_rule, old_tile, new_goal, new_rule, new_tile, repl
 
 
 def _swap_trees(old_tree, new_tree, replace):
+
     def select_fn(old, new):
         diff = old.ndim - replace.ndim
         axes = tuple([1 + i for i in range(diff)])
         idxs = jnp.expand_dims(replace, axes)
-        return jnp.where(idxs, old, new)
+        return jnp.where(idxs, new, old)
 
-    return jax.tree_util.tree_map(select_fn, new_tree, old_tree)
+    return jax.tree_util.tree_map(select_fn, old_tree, new_tree)
 
 
-class XLandMiniGridEnv(gym.Env):
+class XLandMinigridVectorizedGym(gym.Env):
     def __init__(
         self,
         parallel_envs: int,
@@ -99,6 +100,7 @@ class XLandMiniGridEnv(gym.Env):
         )
         self.x_swap_rules = jax.jit(_swap_rules, device=self.jax_device)
         self.x_swap_tsteps = jax.jit(_swap_trees, device=self.jax_device)
+        self.x_swap_tsteps_new = jax.jit(_swap_trees, device=self.jax_device)
 
         obs_shapes = self.x_env.observation_shape(self.env_params)
         self.max_steps_per_episode = self.env_params.max_steps
@@ -245,7 +247,6 @@ class XLandMiniGridEnv(gym.Env):
         return next_obs, reward, done, done, info
 
     def render(self, env_idx: int, *args, **kwargs):
-        # this does not work with numpy > 2.0
         return self.x_env.render(
             self.env_params, jax.tree_map(lambda x: x[env_idx], self.x_timestep)
         )
@@ -257,7 +258,7 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     from amago.envs import AMAGOEnv, SequenceWrapper
 
-    env = XLandMiniGridEnv(
+    env = XLandMinigridVectorizedGym(
         parallel_envs=4,
         rooms=1,
         grid_size=9,
@@ -265,12 +266,12 @@ if __name__ == "__main__":
         train_test_split="train",
         train_test_split_key=0,
         k_shots=2,
-        jax_device=0,
+        jax_device=6,
     )
     env = AMAGOEnv(env, env_name="XLandMiniGridEnv", batched_envs=4)
     env = SequenceWrapper(env)
 
-    render_idxs = [0, 1, 2, 3]
+    render_idxs = None
 
     if render_idxs is not None:
         fig, axs = plt.subplots(1, len(render_idxs))

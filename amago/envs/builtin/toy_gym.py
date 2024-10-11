@@ -4,6 +4,8 @@ import random
 import gymnasium as gym
 import numpy as np
 
+from amago.envs import AMAGO_ENV_LOG_PREFIX
+
 
 class RandomLunar(gym.Env):
     def __init__(
@@ -118,8 +120,10 @@ class MetaFrozenLake(gym.Env):
         self.y = next_y
 
         if soft_reset:
-            self.current_k += 1
             next_state, info = self.soft_reset()
+            success = on == "G"
+            info[f"{AMAGO_ENV_LOG_PREFIX}Episode {self.current_k} Success"] = success
+            self.current_k += 1
         else:
             next_state, info = self.make_obs(False), {}
 
