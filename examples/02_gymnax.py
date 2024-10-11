@@ -1,10 +1,13 @@
 from argparse import ArgumentParser
+import os
+
+os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
 import math
 from functools import partial
 
 import gymnax
 from gymnax.wrappers import GymnaxToVectorGymWrapper
-
+import torch
 import jax
 import jax.numpy as jnp
 import wandb
@@ -19,7 +22,6 @@ def add_cli(parser):
     parser.add_argument("--env", type=str, required=True)
     parser.add_argument("--max_seq_len", type=int, default=128)
     parser.add_argument("--eval_timesteps", type=int, default=1000)
-    parser.add_argument("--jax_device_idx", type=int, default=None)
     return parser
 
 
@@ -119,42 +121,35 @@ if __name__ == "__main__":
         memory_size=args.memory_size,
         layers=args.memory_layers,
     )
-
-    test_env, _params = gymnax.make(args.env)
-    test_obs_shape = test_env.observation_space(_params).shape
+    with jax.default_device(jax.devices("cpu")[0]):
+        test_env, env_params = gymnax.make(args.env)
+        test_obs_shape = test_env.observation_space(env_params).shape
     simple_switch_tstep_encoder(config, test_obs_shape)
 
     use_config(config, args.configs)
-
-    # free speedup by doing env computation on a spare GPU
-    # e.g. `CUDA_VISIBLE_DEVICES=1,2 python ... --jax_device_idx 1` will put AMAGO training on gpu id 1, gymnax on gpu id 2
-    jax_device = (
-        jax.devices("cpu")[0]
-        if args.jax_device_idx is None
-        else jax.devices()[args.jax_device_idx]
+    make_env = partial(
+        make_gymnax_amago, env_name=args.env, parallel_envs=args.parallel_actors
     )
-
-    with jax.default_device(jax_device):
-        make_env = partial(
-            make_gymnax_amago, env_name=args.env, parallel_envs=args.parallel_actors
+    group_name = f"{args.run_name}_{args.env}"
+    for trial in range(args.trials):
+        run_name = group_name + f"_trial_{trial}"
+        experiment = create_experiment_from_cli(
+            args,
+            make_train_env=make_env,
+            make_val_env=make_env,
+            max_seq_len=args.max_seq_len,
+            traj_save_len=args.max_seq_len * 20,
+            run_name=run_name,
+            group_name=group_name,
+            val_timesteps_per_epoch=args.eval_timesteps,
+            grad_clip=2.0,
+            l2_coeff=1e-4,
+            save_trajs_as="npz-compressed",
         )
-        group_name = f"{args.run_name}_{args.env}"
-        for trial in range(args.trials):
-            run_name = group_name + f"_trial_{trial}"
-            experiment = create_experiment_from_cli(
-                args,
-                make_train_env=make_env,
-                make_val_env=make_env,
-                max_seq_len=args.max_seq_len,
-                traj_save_len=args.max_seq_len * 20,
-                run_name=run_name,
-                group_name=group_name,
-                val_timesteps_per_epoch=args.eval_timesteps,
-                grad_clip=2.0,
-                l2_coeff=1e-4,
-                save_trajs_as="npz-compressed",
-            )
-            experiment = switch_async_mode(experiment, args)
+        experiment = switch_async_mode(experiment, args)
+        amago_device = experiment.DEVICE.index or torch.cuda.current_device()
+        env_device = jax.devices("gpu")[amago_device]
+        with jax.default_device(env_device):
             experiment.start()
             if args.ckpt is not None:
                 experiment.load_checkpoint(args.ckpt)

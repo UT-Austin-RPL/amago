@@ -91,7 +91,7 @@ class Experiment:
     l2_coeff: float = 1e-3
     mixed_precision: str = "no"
 
-    def start(self):
+    def __post_init__(self):
         self.accelerator = Accelerator(
             gradient_accumulation_steps=self.batches_per_update,
             device_placement=True,
@@ -101,6 +101,8 @@ class Experiment:
             ],
             mixed_precision=self.mixed_precision,
         )
+
+    def start(self):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             warnings.filterwarnings("always", category=utils.AmagoWarning)

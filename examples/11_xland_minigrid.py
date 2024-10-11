@@ -1,5 +1,9 @@
 from argparse import ArgumentParser
+import os
 
+os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
+
+import jax
 import wandb
 import torch
 from torch import nn
@@ -9,7 +13,7 @@ import gin
 
 import amago
 from amago.envs import AMAGOEnv
-from amago.envs.builtin.xland_minigrid import XLandMiniGridEnv
+from amago.envs.builtin.xland_minigrid import XLandMinigridVectorizedGym
 from amago.nets.utils import add_activation_log, symlog
 from amago.cli_utils import *
 
@@ -21,7 +25,6 @@ def add_cli(parser):
         default="small-1m",
         choices=["trivial-1m", "small-1m", "medium-1m", "high-1m", "high-3m"],
     )
-    parser.add_argument("--xland_device", type=int, default=None)
     parser.add_argument("--k_shots", type=int, default=15)
     parser.add_argument("--rooms", type=int, default=1)
     parser.add_argument("--grid_size", type=int, default=9)
@@ -30,8 +33,8 @@ def add_cli(parser):
 
 
 class XLandMiniGridAMAGO(AMAGOEnv):
-    def __init__(self, env: XLandMiniGridEnv):
-        assert isinstance(env, XLandMiniGridEnv)
+    def __init__(self, env: XLandMinigridVectorizedGym):
+        assert isinstance(env, XLandMinigridVectorizedGym)
         super().__init__(
             env=env,
             env_name=f"XLandMiniGrid-{env.ruleset_benchmark}-R{env.rooms}-{env.grid_size}x{env.grid_size}",
@@ -145,17 +148,17 @@ if __name__ == "__main__":
         "grid_size": args.grid_size,
         "k_shots": args.k_shots,
         "ruleset_benchmark": args.benchmark,
-        "jax_device": args.xland_device,
     }
 
     args.env_mode = "already_vectorized"
     make_train_env = lambda: XLandMiniGridAMAGO(
-        XLandMiniGridEnv(**xland_kwargs, train_test_split="train"),
+        XLandMinigridVectorizedGym(**xland_kwargs, train_test_split="train"),
     )
     make_val_env = lambda: XLandMiniGridAMAGO(
-        XLandMiniGridEnv(**xland_kwargs, train_test_split="test"),
+        XLandMinigridVectorizedGym(**xland_kwargs, train_test_split="test"),
     )
-    traj_len = make_train_env().suggested_max_seq_len
+    with jax.default_device(jax.devices("cpu")[0]):
+        traj_len = make_train_env().suggested_max_seq_len
 
     group_name = f"{args.run_name}_xlandmg_{args.benchmark}_R{args.rooms}_{args.grid_size}x{args.grid_size}"
     args.start_learning_at_epoch = traj_len // args.timesteps_per_epoch
@@ -177,10 +180,13 @@ if __name__ == "__main__":
             grad_clip=2.0,
         )
         switch_async_mode(experiment, args)
-        experiment.start()
-        if args.ckpt is not None:
-            experiment.load_checkpoint(args.ckpt)
-        experiment.learn()
-        experiment.evaluate_test(make_val_env, timesteps=20_000, render=False)
-        experiment.delete_buffer_from_disk()
-        wandb.finish()
+        amago_device = experiment.DEVICE.index or torch.cuda.current_device()
+        env_device = jax.devices("gpu")[amago_device]
+        with jax.default_device(env_device):
+            experiment.start()
+            if args.ckpt is not None:
+                experiment.load_checkpoint(args.ckpt)
+            experiment.learn()
+            experiment.evaluate_test(make_val_env, timesteps=20_000, render=False)
+            experiment.delete_buffer_from_disk()
+            wandb.finish()

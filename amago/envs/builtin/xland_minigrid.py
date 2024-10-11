@@ -1,6 +1,5 @@
 import random
 from collections import defaultdict
-from typing import Optional
 
 import gymnasium as gym
 import numpy as np
@@ -13,7 +12,6 @@ except ImportError:
     xminigrid = None
 else:
     import jax.numpy as jnp
-    from jax import device_put as dp
     from xminigrid.wrappers import (
         DirectionObservationWrapper,
         DmEnvAutoResetWrapper,
@@ -52,7 +50,6 @@ class XLandMinigridVectorizedGym(gym.Env):
         train_test_split: str = "train",
         train_test_split_key: int = 0,
         train_test_split_pct: float = 0.8,
-        jax_device: Optional[int] = None,
     ):
         assert (
             jax is not None and xminigrid is not None
@@ -62,14 +59,6 @@ class XLandMinigridVectorizedGym(gym.Env):
         self.k_shots = k_shots
         self.ruleset_benchmark = ruleset_benchmark
         self.parallel_envs = parallel_envs
-        self.jax_device = (
-            jax.devices()[jax_device]
-            if jax_device is not None
-            else jax.devices("cpu")[0]
-        )
-        print(f"Using JAX device {self.jax_device} for XLandMiniGridEnv")
-
-        # this always uses cuda memory for some reason?
         benchmark = xminigrid.load_benchmark(name=ruleset_benchmark)
         train, test = benchmark.shuffle(key=jax.random.key(train_test_split_key)).split(
             prop=train_test_split_pct
@@ -80,27 +69,17 @@ class XLandMinigridVectorizedGym(gym.Env):
         env, self.env_params = xminigrid.make(
             f"XLand-MiniGrid-R{rooms}-{grid_size}x{grid_size}"
         )
-        self.env_params = dp(self.env_params, self.jax_device)
         self.x_env = RulesAndGoalsObservationWrapper(
             DirectionObservationWrapper(DmEnvAutoResetWrapper(env))
         )
         key = jax.random.key(random.randint(0, 1_000_000))
         self._reset_key, self._ruleset_key = jax.random.split(key)
 
-        # according to gymnax, jit(vmap()) is faster than vmap(jit())... seems to be true here
-        self.x_sample = jax.jit(
-            jax.vmap(self.benchmark.sample_ruleset, in_axes=(0,)),
-            device=self.jax_device,
-        )
-        self.x_reset = jax.jit(
-            jax.vmap(self.x_env.reset, in_axes=(0, 0)), device=self.jax_device
-        )
-        self.x_step = jax.jit(
-            jax.vmap(self.x_env.step, in_axes=(0, 0, 0)), device=self.jax_device
-        )
-        self.x_swap_rules = jax.jit(_swap_rules, device=self.jax_device)
-        self.x_swap_tsteps = jax.jit(_swap_trees, device=self.jax_device)
-        self.x_swap_tsteps_new = jax.jit(_swap_trees, device=self.jax_device)
+        self.x_sample = jax.jit(jax.vmap(self.benchmark.sample_ruleset, in_axes=(0,)))
+        self.x_reset = jax.jit(jax.vmap(self.x_env.reset, in_axes=(0, 0)))
+        self.x_step = jax.jit(jax.vmap(self.x_env.step, in_axes=(0, 0, 0)))
+        self.x_swap_rules = jax.jit(_swap_rules)
+        self.x_swap_tsteps = jax.jit(_swap_trees)
 
         obs_shapes = self.x_env.observation_shape(self.env_params)
         self.max_steps_per_episode = self.env_params.max_steps
@@ -122,29 +101,17 @@ class XLandMinigridVectorizedGym(gym.Env):
         ruleset = self.x_sample(self.new_ruleset_keys())
         self.env_params = self.env_params.replace(ruleset=ruleset)
         self.x_timestep = self.x_reset(self.env_params, self.new_reset_keys())
-        self.current_episode = jnp.zeros(
-            self.parallel_envs, dtype=jnp.int32, device=self.jax_device
-        )
-        self.episode_return = jnp.zeros(
-            self.parallel_envs, dtype=jnp.float32, device=self.jax_device
-        )
-        self.episode_steps = jnp.zeros(
-            self.parallel_envs, dtype=jnp.int32, device=self.jax_device
-        )
+        self.current_episode = jnp.zeros(self.parallel_envs, dtype=jnp.int32)
+        self.episode_return = jnp.zeros(self.parallel_envs, dtype=jnp.float32)
+        self.episode_steps = jnp.zeros(self.parallel_envs, dtype=jnp.int32)
 
     def new_reset_keys(self):
-        keys = dp(
-            jax.random.split(self._reset_key, num=self.parallel_envs + 1),
-            self.jax_device,
-        )
+        keys = jax.random.split(self._reset_key, num=self.parallel_envs + 1)
         self._reset_key = keys[0]
         return keys[1:]
 
     def new_ruleset_keys(self):
-        keys = dp(
-            jax.random.split(self._ruleset_key, num=self.parallel_envs + 1),
-            self.jax_device,
-        )
+        keys = jax.random.split(self._ruleset_key, num=self.parallel_envs + 1)
         self._ruleset_key = keys[0]
         return keys[1:]
 
@@ -158,9 +125,6 @@ class XLandMinigridVectorizedGym(gym.Env):
         direction_done = np.concatenate(
             (obs["direction"], done[:, np.newaxis]), axis=-1
         )
-        # it seems more in the spirit of AdA's XLand to give the "goal" as an observation
-        # but let the agent meta-learn the "rules"... though it's not clear if that
-        # makes xland minigrid easier than it was meant to be...
         return {
             "grid": np.array(obs["img"], dtype=np.uint8),
             "direction_done": direction_done,
@@ -169,7 +133,7 @@ class XLandMinigridVectorizedGym(gym.Env):
 
     def reset(self, *args, **kwargs):
         # set all done, then reset if done
-        is_done = jnp.ones(self.parallel_envs, dtype=jnp.bool_, device=self.jax_device)
+        is_done = jnp.ones(self.parallel_envs, dtype=jnp.bool_)
         return self.reset_if_done(is_done)
 
     def reset_if_done(self, is_done):
@@ -209,7 +173,7 @@ class XLandMinigridVectorizedGym(gym.Env):
         return self.get_obs(), {}
 
     def step(self, action):
-        action = jnp.array(action, device=self.jax_device)
+        action = jnp.array(action)
         assert action.shape == (self.parallel_envs,)
 
         self.episode_steps += 1
@@ -258,41 +222,42 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     from amago.envs import AMAGOEnv, SequenceWrapper
 
-    env = XLandMinigridVectorizedGym(
-        parallel_envs=4,
-        rooms=1,
-        grid_size=9,
-        ruleset_benchmark="trivial-1m",
-        train_test_split="train",
-        train_test_split_key=0,
-        k_shots=2,
-        jax_device=6,
-    )
-    env = AMAGOEnv(env, env_name="XLandMiniGridEnv", batched_envs=4)
-    env = SequenceWrapper(env)
+    PARALLEL_ENVS = 4
+    RENDER = False
 
-    render_idxs = None
+    with jax.default_device(jax.devices("cpu")[0]):
+        env = XLandMinigridVectorizedGym(
+            parallel_envs=PARALLEL_ENVS,
+            rooms=1,
+            grid_size=9,
+            ruleset_benchmark="trivial-1m",
+            train_test_split="train",
+            train_test_split_key=0,
+            k_shots=2,
+        )
+        env = AMAGOEnv(env, env_name="XLandMiniGridEnv", batched_envs=PARALLEL_ENVS)
+        env = SequenceWrapper(env)
 
-    if render_idxs is not None:
-        fig, axs = plt.subplots(1, len(render_idxs))
-
-    env.reset()
-    steps = 3_000
-    start = time.time()
-    for step in tqdm.tqdm(range(steps)):
-        print(env.current_episode)
-        action = np.array(
-            [env.action_space.sample() for _ in range(env.parallel_envs)]
-        )[:, np.newaxis]
-        next_state, reward, terminated, truncated, info = env.step(action)
-
+        render_idxs = None if not RENDER else list(range(PARALLEL_ENVS))
         if render_idxs is not None:
-            for _i, ax in zip(render_idxs, axs):
-                ax.clear()
-                img = env.unwrapped.render(env_idx=_i)
-                ax.imshow(img)
-            plt.pause(0.01)
-            fig.canvas.draw()
+            fig, axs = plt.subplots(1, len(render_idxs))
 
-    end = time.time()
-    print(f"FPS: {steps / (end - start)}")
+        env.reset()
+        steps = 3_000
+        start = time.time()
+        for step in tqdm.tqdm(range(steps)):
+            action = np.array(
+                [env.action_space.sample() for _ in range(env.parallel_envs)]
+            )[:, np.newaxis]
+            next_state, reward, terminated, truncated, info = env.step(action)
+
+            if render_idxs is not None:
+                for _i, ax in zip(render_idxs, axs):
+                    ax.clear()
+                    img = env.unwrapped.render(env_idx=_i)
+                    ax.imshow(img)
+                plt.pause(0.01)
+                fig.canvas.draw()
+
+        end = time.time()
+        print(f"FPS: {steps / (end - start)}")
