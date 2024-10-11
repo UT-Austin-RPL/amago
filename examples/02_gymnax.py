@@ -1,4 +1,7 @@
 from argparse import ArgumentParser
+import os
+
+os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
 import math
 from functools import partial
 
