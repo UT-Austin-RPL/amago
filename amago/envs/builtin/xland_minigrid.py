@@ -1,7 +1,5 @@
 import random
 from collections import defaultdict
-import tqdm
-from typing import Optional
 
 import gymnasium as gym
 import numpy as np
@@ -61,8 +59,6 @@ class XLandMinigridVectorizedGym(gym.Env):
         self.k_shots = k_shots
         self.ruleset_benchmark = ruleset_benchmark
         self.parallel_envs = parallel_envs
-
-        # this always uses cuda memory for some reason?
         benchmark = xminigrid.load_benchmark(name=ruleset_benchmark)
         train, test = benchmark.shuffle(key=jax.random.key(train_test_split_key)).split(
             prop=train_test_split_pct
@@ -79,7 +75,6 @@ class XLandMinigridVectorizedGym(gym.Env):
         key = jax.random.key(random.randint(0, 1_000_000))
         self._reset_key, self._ruleset_key = jax.random.split(key)
 
-        # according to gymnax, jit(vmap()) is faster than vmap(jit())... seems to be true here
         self.x_sample = jax.jit(jax.vmap(self.benchmark.sample_ruleset, in_axes=(0,)))
         self.x_reset = jax.jit(jax.vmap(self.x_env.reset, in_axes=(0, 0)))
         self.x_step = jax.jit(jax.vmap(self.x_env.step, in_axes=(0, 0, 0)))
@@ -227,9 +222,12 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     from amago.envs import AMAGOEnv, SequenceWrapper
 
-    with jax.default_device(jax.devices("gpu")[0]):
+    PARALLEL_ENVS = 4
+    RENDER = False
+
+    with jax.default_device(jax.devices("cpu")[0]):
         env = XLandMinigridVectorizedGym(
-            parallel_envs=4,
+            parallel_envs=PARALLEL_ENVS,
             rooms=1,
             grid_size=9,
             ruleset_benchmark="trivial-1m",
@@ -237,11 +235,10 @@ if __name__ == "__main__":
             train_test_split_key=0,
             k_shots=2,
         )
-        env = AMAGOEnv(env, env_name="XLandMiniGridEnv", batched_envs=4)
+        env = AMAGOEnv(env, env_name="XLandMiniGridEnv", batched_envs=PARALLEL_ENVS)
         env = SequenceWrapper(env)
 
-        render_idxs = None
-
+        render_idxs = None if not RENDER else list(range(PARALLEL_ENVS))
         if render_idxs is not None:
             fig, axs = plt.subplots(1, len(render_idxs))
 
@@ -249,7 +246,6 @@ if __name__ == "__main__":
         steps = 3_000
         start = time.time()
         for step in tqdm.tqdm(range(steps)):
-            print(env.current_episode)
             action = np.array(
                 [env.action_space.sample() for _ in range(env.parallel_envs)]
             )[:, np.newaxis]
