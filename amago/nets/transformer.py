@@ -211,7 +211,6 @@ class SigmaReparamLegacyInit(nn.Module):
         return out
 
 
-@gin.configurable(allowlist=["head_scaling", "sigma_reparam"])
 class AttentionLayer(nn.Module):
     def __init__(
         self,
@@ -254,7 +253,6 @@ class AttentionLayer(nn.Module):
         return out
 
 
-@gin.configurable(denylist=["activation", "norm", "dropout_ff"])
 class TransformerLayer(nn.Module):
     """
     Pre-Norm Self-Attention
