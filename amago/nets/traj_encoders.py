@@ -124,25 +124,40 @@ class TformerTrajEncoder(TrajEncoder):
         dropout_qkv: float = 0.00,
         activation: str = "leaky_relu",
         norm: str = "layer",
-        attention_type: type[transformer.SelfAttention] = transformer.SelfAttention,
+        causal: bool = True,
+        attention_type: type[transformer.SelfAttention] = transformer.FlashAttention,
     ):
         super().__init__(tstep_dim, max_seq_len)
-        self.tformer = transformer.Transformer(
-            inp_dim=tstep_dim,
-            d_model=d_model,
-            d_ff=d_ff,
-            n_heads=n_heads,
-            layers=n_layers,
-            dropout_emb=dropout_emb,
-            dropout_ff=dropout_ff,
-            dropout_attn=dropout_attn,
-            dropout_qkv=dropout_qkv,
-            activation=activation,
-            attention_type=attention_type,
-            norm=norm,
-        )
+        self.head_dim = d_model // n_heads
+        self.n_heads = n_heads
+        self.n_layers = n_layers
         self.attention_type = attention_type
         self.d_model = d_model
+
+        def make_layer():
+            return transformer.TransformerLayer(
+                attention_layer=transformer.AttentionLayer(
+                    self_attention=attention_type(causal=causal, dropout=dropout_attn),
+                    d_model=self.d_model,
+                    d_qkv=self.head_dim,
+                    n_heads=self.n_heads,
+                    dropout_qkv=dropout_qkv,
+                ),
+                d_model=self.d_model,
+                d_ff=d_ff,
+                dropout_ff=dropout_ff,
+                activation=activation,
+                norm=norm,
+            )
+
+        layers = [make_layer() for _ in range(self.n_layers)]
+        self.tformer = transformer.Transformer(
+            inp_dim=tstep_dim,
+            d_model=self.d_model,
+            layers=layers,
+            dropout_emb=dropout_emb,
+            norm=norm,
+        )
 
     def init_hidden_state(self, batch_size: int, device: torch.device):
         def make_cache():
@@ -154,11 +169,11 @@ class TformerTrajEncoder(TrajEncoder):
             return transformer.Cache(
                 device=device,
                 dtype=dtype,
-                layers=self.tformer.n_layers,
+                layers=self.n_layers,
                 batch_size=batch_size,
                 max_seq_len=self.max_seq_len,
-                n_heads=self.tformer.n_heads,
-                head_dim=self.tformer.head_dim,
+                n_heads=self.n_heads,
+                head_dim=self.head_dim,
             )
 
         hidden_state = transformer.TformerHiddenState(

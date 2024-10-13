@@ -1,5 +1,5 @@
 import math
-from typing import Optional
+from typing import Optional, Iterable
 from abc import ABC, abstractmethod
 
 import torch
@@ -291,6 +291,7 @@ class TransformerLayer(nn.Module):
         )
         self.dropout_ff = nn.Dropout(dropout_ff)
         self.activation = activation_switch(activation)
+        self.d_model = d_model
 
     @torch.compile
     def forward(self, self_seq, key_cache=None, val_cache=None, cache_seqlens=None):
@@ -394,18 +395,10 @@ class Transformer(nn.Module):
     def __init__(
         self,
         inp_dim: int,
-        d_model: int = 128,
-        d_ff: int = 512,
-        n_heads: int = 4,
-        layers: int = 3,
+        d_model: int,
+        layers: Iterable[nn.Module],
         dropout_emb: float = 0.05,
-        dropout_ff: float = 0.05,
-        dropout_attn: float = 0.00,
-        dropout_qkv: float = 0.00,
-        attention_type: type[SelfAttention] = FlashAttention,
-        activation: str = "leaky_relu",
         norm: str = "layer",
-        causal: bool = True,
     ):
         super().__init__()
         # embedding
@@ -413,28 +406,9 @@ class Transformer(nn.Module):
         self.inp = nn.Linear(inp_dim, d_model)
         self.dropout = nn.Dropout(dropout_emb)
 
-        self.head_dim = d_model // n_heads
-        assert self.head_dim in range(8, 129, 8)
-        self.n_heads = n_heads
-        self.n_layers = layers
-
-        def make_layer():
-            return TransformerLayer(
-                attention_layer=AttentionLayer(
-                    self_attention=attention_type(causal=causal, dropout=dropout_attn),
-                    d_model=d_model,
-                    d_qkv=self.head_dim,
-                    n_heads=self.n_heads,
-                    dropout_qkv=dropout_qkv,
-                ),
-                d_model=d_model,
-                d_ff=d_ff,
-                dropout_ff=dropout_ff,
-                activation=activation,
-                norm=norm,
-            )
-
-        self.layers = nn.ModuleList([make_layer() for _ in range(layers)])
+        assert all(l.d_model == d_model for l in layers)
+        self.n_layers = len(layers)
+        self.layers = nn.ModuleList(layers)
         self.norm = Normalization(method=norm, d_model=d_model)
         self.d_model = d_model
         self._blank_hidden_state = [[None, None, None] for _ in range(self.n_layers)]
