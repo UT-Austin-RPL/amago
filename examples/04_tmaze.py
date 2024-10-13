@@ -106,7 +106,7 @@ if __name__ == "__main__":
             run_name=run_name,
             val_timesteps_per_epoch=args.horizon + 1,
             sample_actions=False,  # even softmax prob .999 isn't good enough for this env...
-            exploration_wrapper_Cls=TMazeExploration,
+            exploration_wrapper_type=TMazeExploration,
         )
         switch_async_mode(experiment, args)
         experiment.start()

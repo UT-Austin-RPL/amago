@@ -164,7 +164,7 @@ if __name__ == "__main__":
 
     config = {
         "amago.agent.Agent.reward_multiplier": 1000.0,
-        "amago.agent.Agent.tstep_encoder_Cls": partial(
+        "amago.agent.Agent.tstep_encoder_type": partial(
             BabyTstepEncoder, obs_kind=args.obs_kind
         ),
         "amago.nets.actor_critic.NCriticsTwoHot.min_return": None,

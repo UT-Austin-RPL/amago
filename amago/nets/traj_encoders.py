@@ -124,7 +124,7 @@ class TformerTrajEncoder(TrajEncoder):
         dropout_qkv: float = 0.00,
         activation: str = "leaky_relu",
         norm: str = "layer",
-        attention: str = "flash",
+        attention_type: type[transformer.SelfAttention] = transformer.SelfAttention,
     ):
         super().__init__(tstep_dim, max_seq_len)
         self.tformer = transformer.Transformer(
@@ -138,17 +138,22 @@ class TformerTrajEncoder(TrajEncoder):
             dropout_attn=dropout_attn,
             dropout_qkv=dropout_qkv,
             activation=activation,
-            attention=attention,
+            attention_type=attention_type,
             norm=norm,
         )
-        self.attention = attention
+        self.attention_type = attention_type
         self.d_model = d_model
 
     def init_hidden_state(self, batch_size: int, device: torch.device):
         def make_cache():
+            dtype = (
+                torch.bfloat16
+                if self.attention_type == transformer.FlashAttention
+                else torch.float32
+            )
             return transformer.Cache(
                 device=device,
-                dtype=torch.bfloat16 if self.attention == "flash" else torch.float32,
+                dtype=dtype,
                 layers=self.tformer.n_layers,
                 batch_size=batch_size,
                 max_seq_len=self.max_seq_len,

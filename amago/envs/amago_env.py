@@ -348,7 +348,7 @@ class SequenceWrapper(gym.Wrapper):
 @dataclass
 class EnvCreator:
     make_env: Callable
-    exploration_wrapper_Cls: Type[ExplorationWrapper]
+    exploration_wrapper_type: Type[ExplorationWrapper]
     make_dset: bool
     dset_root: str
     dset_name: str
@@ -373,8 +373,8 @@ class EnvCreator:
     def __call__(self):
         env = self.make_env()
         self.already_vectorized = env.batched_envs > 1
-        if self.exploration_wrapper_Cls is not None:
-            env = self.exploration_wrapper_Cls(env)
+        if self.exploration_wrapper_type is not None:
+            env = self.exploration_wrapper_type(env)
         env = SequenceWrapper(
             env,
             save_every=(self.save_every_low, self.save_every_high),

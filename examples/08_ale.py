@@ -64,7 +64,7 @@ if __name__ == "__main__":
     elif args.cnn == "impala":
         cnn_type = IMPALAishCNN
 
-    switch_tstep_encoder(config, arch="cnn", cnn_Cls=cnn_type, channels_first=True)
+    switch_tstep_encoder(config, arch="cnn", cnn_type=cnn_type, channels_first=True)
     use_config(config, args.configs)
 
     # Episode lengths in Atari vary widely across games, so we manually set actors

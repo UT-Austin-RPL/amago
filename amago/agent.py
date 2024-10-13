@@ -43,8 +43,8 @@ class Agent(nn.Module):
         rl2_space: gym.spaces.Box,
         action_space: gym.spaces.Space,
         max_seq_len: int,
-        tstep_encoder_Cls: Type[TstepEncoder] = FFTstepEncoder,
-        traj_encoder_Cls: Type[TrajEncoder] = TformerTrajEncoder,
+        tstep_encoder_type: Type[TstepEncoder] = FFTstepEncoder,
+        traj_encoder_type: Type[TrajEncoder] = TformerTrajEncoder,
         num_critics: int = 4,
         num_critics_td: int = 2,
         online_coeff: float = 1.0,
@@ -86,11 +86,11 @@ class Agent(nn.Module):
         self.use_target_actor = use_target_actor
         self.max_seq_len = max_seq_len
 
-        self.tstep_encoder = tstep_encoder_Cls(
+        self.tstep_encoder = tstep_encoder_type(
             obs_space=obs_space,
             rl2_space=rl2_space,
         )
-        self.traj_encoder = traj_encoder_Cls(
+        self.traj_encoder = traj_encoder_type(
             tstep_dim=self.tstep_encoder.emb_dim,
             max_seq_len=max_seq_len,
         )

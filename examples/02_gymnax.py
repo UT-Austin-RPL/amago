@@ -87,7 +87,7 @@ def simple_switch_tstep_encoder(config, obs_shape):
         switch_tstep_encoder(
             config,
             "cnn",
-            cnn_Cls=GridworldCNN,
+            cnn_type=GridworldCNN,
             channels_first=channels_first,
             drqv2_aug=False,
         )

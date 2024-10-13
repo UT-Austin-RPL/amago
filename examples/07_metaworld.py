@@ -68,7 +68,7 @@ if __name__ == "__main__":
             val_timesteps_per_epoch=10 * args.k * 500 + 1,
             learning_rate=5e-4,
             grad_clip=2.0,
-            exploration_wrapper_Cls=BilevelEpsilonGreedy,
+            exploration_wrapper_type=BilevelEpsilonGreedy,
         )
 
         experiment = switch_async_mode(experiment, args)

@@ -12,6 +12,14 @@ from .utils import activation_switch
 from amago.utils import amago_warning
 from amago.nets.ff import Normalization
 
+
+try:
+    from torch.nn.attention.flex_attention import create_block_mask, flex_attention
+except ImportError:
+    amago_warning("Missing FlexAttention (torch >= 2.5)")
+    create_block_mask = None
+    flex_attention = None
+
 try:
     import flash_attn
 except ImportError:
@@ -394,14 +402,12 @@ class Transformer(nn.Module):
         dropout_ff: float = 0.05,
         dropout_attn: float = 0.00,
         dropout_qkv: float = 0.00,
-        attention: str = "flash",
+        attention_type: type[SelfAttention] = FlashAttention,
         activation: str = "leaky_relu",
         norm: str = "layer",
         causal: bool = True,
     ):
         super().__init__()
-        assert attention in ["flash", "vanilla"]
-
         # embedding
         self.position_embedding = FixedPosEmb(d_model)
         self.inp = nn.Linear(inp_dim, d_model)
@@ -411,12 +417,11 @@ class Transformer(nn.Module):
         assert self.head_dim in range(8, 129, 8)
         self.n_heads = n_heads
         self.n_layers = layers
-        Attn = FlashAttention if attention == "flash" else VanillaAttention
 
         def make_layer():
             return TransformerLayer(
                 attention_layer=AttentionLayer(
-                    self_attention=Attn(causal=causal, dropout=dropout_attn),
+                    self_attention=attention_type(causal=causal, dropout=dropout_attn),
                     d_model=d_model,
                     d_qkv=self.head_dim,
                     n_heads=self.n_heads,
