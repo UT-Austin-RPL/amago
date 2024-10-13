@@ -220,42 +220,6 @@ def switch_traj_encoder(config: dict, arch: str, memory_size: int, layers: int):
     return config
 
 
-def naive(config: dict, turn_off_fbc: bool = False):
-    config.update(
-        {
-            "amago.nets.traj_encoders.TformerTrajEncoder.activation": "gelu",
-            "amago.nets.actor_critic.NCritics.activation": "relu",
-            "amago.nets.actor_critic.Actor.activation": "relu",
-            "amago.nets.tstep_encoders.FFTstepEncoder.activation": "relu",
-            "amago.nets.tstep_encoders.CNNTstepEncoder.activation": "relu",
-            "amago.nets.transformer.TransformerLayer.normformer_norms": False,
-            "amago.nets.transformer.TransformerLayer.sigma_reparam": False,
-            "amago.nets.transformer.AttentionLayer.sigma_reparam": False,
-            "amago.nets.transformer.AttentionLayer.head_scaling": False,
-            "amago.agent.Agent.num_critics": 2,
-            "amago.agent.Agent.gamma": 0.99,
-            "amago.agent.Agent.use_multigamma": False,
-        }
-    )
-
-    if turn_off_fbc:
-        config.update({"amago.agent.Agent.offline_coeff": 0.0})
-
-    return config
-
-
-def adaptive(config: dict):
-    config.update(
-        {
-            "amago.nets.traj_encoders.TformerTrajEncoder.activation": "adaptive",
-            "amago.nets.actor_critic.NCritics.activation": "adaptive",
-            "amago.nets.actor_critic.Actor.activation": "adaptive",
-            "amago.nets.tstep_encoders.FFTstepEncoder.activation": "adaptive",
-            "amago.nets.tstep_encoders.CNNTstepEncoder.activation": "adaptive",
-        }
-    )
-
-
 def use_config(
     custom_params: dict, gin_configs: list[str] | None = None, finalize: bool = True
 ):

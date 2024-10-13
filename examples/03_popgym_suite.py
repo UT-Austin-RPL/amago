@@ -14,7 +14,6 @@ def add_cli(parser):
         action="store_true",
         help="Activate 'MultiDomain' POPGym, where agents play 27 POPGym games at the same time in 1-shot format (2 episodes, second one counts).",
     )
-    parser.add_argument("--naive", action="store_true")
     return parser
 
 
@@ -45,8 +44,6 @@ if __name__ == "__main__":
         layers=args.memory_layers,
     )
     switch_tstep_encoder(config, arch="ff", n_layers=2, d_hidden=512, d_output=200)
-    if args.naive:
-        naive(config)
     use_config(config, args.configs)
 
     group_name = f"{args.run_name}_{args.env}"

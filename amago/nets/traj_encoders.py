@@ -125,6 +125,9 @@ class TformerTrajEncoder(TrajEncoder):
         activation: str = "leaky_relu",
         norm: str = "layer",
         causal: bool = True,
+        sigma_reparam: bool = True,
+        normformer_norms: bool = True,
+        head_scaling: bool = True,
         attention_type: type[transformer.SelfAttention] = transformer.FlashAttention,
     ):
         super().__init__(tstep_dim, max_seq_len)
@@ -142,12 +145,16 @@ class TformerTrajEncoder(TrajEncoder):
                     d_qkv=self.head_dim,
                     n_heads=self.n_heads,
                     dropout_qkv=dropout_qkv,
+                    head_scaling=head_scaling,
+                    sigma_reparam=sigma_reparam,
                 ),
                 d_model=self.d_model,
                 d_ff=d_ff,
                 dropout_ff=dropout_ff,
                 activation=activation,
                 norm=norm,
+                sigma_reparam=sigma_reparam,
+                normformer_norms=normformer_norms,
             )
 
         layers = [make_layer() for _ in range(self.n_layers)]
