@@ -1,5 +1,6 @@
 import math
 from typing import Optional
+from abc import ABC, abstractmethod
 
 import torch
 from torch import nn
@@ -11,20 +12,30 @@ from .utils import activation_switch
 from amago.utils import amago_warning
 from amago.nets.ff import Normalization
 
-
 try:
     import flash_attn
 except ImportError:
     amago_warning("Missing FlashAttention (2.0) Install")
+    flash_attn = None
 else:
     torch.set_float32_matmul_precision("high")
 
 
-class VanillaAttention(nn.Module):
-    def __init__(self, causal: bool = True, attention_dropout: float = 0.0):
+class SelfAttention(nn.Module, ABC):
+    def __init__(self, causal: bool = True, dropout: float = 0.0):
         super().__init__()
-        self.dropout = nn.Dropout(attention_dropout)
         self.causal = causal
+        self.dropout = dropout
+
+    @abstractmethod
+    def forward(self, qkv, key_cache=None, val_cache=None, cache_seqlens=None):
+        raise NotImplementedError
+
+
+class VanillaAttention(SelfAttention):
+    def __init__(self, causal: bool = True, dropout: float = 0.0):
+        super().__init__(causal=causal, dropout=dropout)
+        self.dropout = nn.Dropout(self.dropout)
         self._mask = None
 
     @torch.compile
@@ -51,6 +62,7 @@ class VanillaAttention(nn.Module):
         # fmt: on
         return V
 
+    @torch.compiler.disable
     def _forward_without_cache(self, qkv):
         queries, keys, values = torch.unbind(qkv, dim=2)
         B, L, H, E = queries.shape
@@ -77,16 +89,15 @@ class VanillaAttention(nn.Module):
 
 
 @gin.configurable(allowlist=["window_size"])
-class FlashAttention(nn.Module):
+class FlashAttention(SelfAttention):
     def __init__(
         self,
         causal: bool = True,
-        attention_dropout: float = 0.0,
+        dropout: float = 0.0,
         window_size: tuple[int, int] = (-1, -1),
     ):
-        super().__init__()
-        self.dropout = attention_dropout
-        self.causal = causal
+        assert flash_attn is not None, "Missing flash attention 2 install."
+        super().__init__(causal=causal, dropout=dropout)
         self.window_size = window_size
 
     @torch.compiler.disable
@@ -196,16 +207,17 @@ class SigmaReparamLegacyInit(nn.Module):
 class AttentionLayer(nn.Module):
     def __init__(
         self,
-        attention,
-        d_model,
-        d_qkv,
-        n_heads,
-        dropout_qkv=0.0,
+        self_attention: SelfAttention,
+        d_model: int,
+        d_qkv: int,
+        n_heads: int,
+        dropout_qkv: float = 0.0,
         head_scaling: bool = True,
         sigma_reparam: bool = True,
     ):
         super().__init__()
-        self.attention = attention
+        assert isinstance(self_attention, SelfAttention)
+        self.self_attention = self_attention
         FF = SigmaReparam if sigma_reparam else nn.Linear
         self.qkv_projection = FF(d_model, 3 * d_qkv * n_heads, bias=False)
         self.dropout_qkv = nn.Dropout(dropout_qkv)
@@ -223,7 +235,7 @@ class AttentionLayer(nn.Module):
             heads=self.n_heads,
             three=3,
         )
-        out = self.head_scaler * self.attention(
+        out = self.head_scaler * self.self_attention(
             qkv=qkv,
             key_cache=key_cache,
             val_cache=val_cache,
@@ -242,7 +254,7 @@ class TransformerLayer(nn.Module):
 
     def __init__(
         self,
-        self_attention,
+        attention_layer: AttentionLayer,
         d_model: int,
         d_ff: int,
         dropout_ff: float = 0.1,
@@ -252,7 +264,8 @@ class TransformerLayer(nn.Module):
         normformer_norms: bool = True,
     ):
         super().__init__()
-        self.self_attention = self_attention
+        assert isinstance(attention_layer, AttentionLayer)
+        self.attention_layer = attention_layer
         FF = SigmaReparam if sigma_reparam else nn.Linear
         self.ff1 = FF(d_model, d_ff)
         self.ff2 = FF(d_ff, d_model)
@@ -274,7 +287,7 @@ class TransformerLayer(nn.Module):
     @torch.compile
     def forward(self, self_seq, key_cache=None, val_cache=None, cache_seqlens=None):
         q1 = self.norm1(self_seq)  # pre-norm
-        q1 = self.self_attention(
+        q1 = self.attention_layer(
             q1, key_cache=key_cache, val_cache=val_cache, cache_seqlens=cache_seqlens
         )
         q1 = self.norm2(q1)  # normformer extra norm 1
@@ -402,8 +415,8 @@ class Transformer(nn.Module):
 
         def make_layer():
             return TransformerLayer(
-                self_attention=AttentionLayer(
-                    attention=Attn(causal=causal, attention_dropout=dropout_attn),
+                attention_layer=AttentionLayer(
+                    self_attention=Attn(causal=causal, dropout=dropout_attn),
                     d_model=d_model,
                     d_qkv=self.head_dim,
                     n_heads=self.n_heads,
