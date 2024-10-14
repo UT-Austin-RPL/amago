@@ -1,4 +1,6 @@
 import math
+import copy
+from functools import lru_cache
 from typing import Optional, Iterable
 from abc import ABC, abstractmethod
 
@@ -14,11 +16,14 @@ from amago.nets.ff import Normalization
 
 
 try:
-    from torch.nn.attention.flex_attention import create_block_mask, flex_attention
+    from torch.nn.attention.flex_attention import (
+        create_block_mask,
+        flex_attention,
+        and_masks,
+    )
 except ImportError:
-    amago_warning("Missing FlexAttention (torch >= 2.5)")
-    create_block_mask = None
     flex_attention = None
+    amago_warning("Missing FlexAttention (torch >= 2.5)")
 
 try:
     import flash_attn
@@ -132,6 +137,101 @@ class FlashAttention(SelfAttention):
                 window_size=self.window_size,
             )
         return out
+
+
+class CustomAttention(SelfAttention, ABC):
+    def __init__(
+        self,
+        causal: bool = True,
+        dropout: float = 0.0,
+    ):
+        assert flex_attention is not None, "FlexAttention requires pytorch >= 2.5"
+        super().__init__(causal=causal, dropout=dropout)
+
+        def causal_mask(b, h, q_idx, kv_idx):
+            return (q_idx >= kv_idx) if causal else True
+
+        self.causal_mask = causal_mask
+        self._train_mask = None
+        self._inf_mask = None
+
+    @lru_cache
+    def cached_block_mask(self, q_len: int, kv_len: int):
+        return create_block_mask(
+            and_masks(self.mask_mod, self.causal_mask),
+            B=None,
+            H=None,
+            Q_LEN=q_len,
+            KV_LEN=kv_len,
+        )
+
+    @staticmethod
+    @abstractmethod
+    def score_mod(score, b, h, q_idx, kv_idx):
+        raise NotImplementedError
+
+    @staticmethod
+    @abstractmethod
+    def mask_mod(b, h, q_idx, kv_idx):
+        raise NotImplementedError
+
+    @torch.compile
+    def flex_attention(self, q, k, v, score_mod, block_mask):
+        return flex_attention(q, k, v, score_mod, block_mask)
+
+    @torch.compile
+    def flex_attention_inf(self, q, k, v, score_mod):
+        # pretend this is a different function than training to keep
+        # torch's compilation separate.
+        return flex_attention(q, k, v, score_mod)
+
+    @torch.compiler.disable
+    def forward(self, qkv, key_cache=None, val_cache=None, cache_seqlens=None):
+        if key_cache is None or val_cache is None or cache_seqlens is None:
+            assert self.training
+            qkv = rearrange(qkv, "b l three h e -> b h three l e")
+            *_, L, _ = qkv.shape
+            q, k, v = torch.unbind(qkv, dim=2)
+            # if self._train_mask is None or self._train_mask.shape[-1] < L:
+            self._train_mask = self.cached_block_mask(L, L)
+            out = self.flex_attention(
+                q, k, v, score_mod=self.score_mod, block_mask=self._train_mask
+            )
+            out = rearrange(out, "b h l e -> b l h e")
+            return out
+        else:
+            assert not self.training
+            q, k, v = torch.unbind(qkv, dim=2)
+            key_cache[:, cache_seqlens] = k
+            val_cache[:, cache_seqlens] = v
+            max_len = cache_seqlens.max() + 1
+            q = rearrange(q, "b l h e -> b h l e")
+            k_cache = rearrange(key_cache[:, :max_len], "b l h e -> b h l e")
+            v_cache = rearrange(val_cache[:, :max_len], "b l h e -> b h l e")
+
+            def score_mod_uneven_lengths(score, b, h, q_idx, kv_idx):
+                q_idx = q_idx + cache_seqlens[b]
+                base = self.score_mod(score, b, h, q_idx, kv_idx)
+                counts = kv_idx <= cache_seqlens[b]
+                if self.causal:
+                    counts = counts & (q_idx >= kv_idx)
+                return torch.where(counts, base, -float("inf"))
+
+            # if self._inf_mask is None or self._inf_mask.shape[-1] < max_len:
+            # self._inf_mask = self.cached_block_mask(1, max_len)
+            out = self.flex_attention_inf(q, k_cache, v_cache, score_mod_uneven_lengths)
+            return rearrange(out, "b h l e -> b l h e")
+
+
+class VanillaFlexAttention(CustomAttention):
+
+    @staticmethod
+    def score_mod(score, b, h, q_idx, kv_idx):
+        return score
+
+    @staticmethod
+    def mask_mod(b, h, q_idx, kv_idx):
+        return True
 
 
 class SigmaReparam(nn.Linear):
