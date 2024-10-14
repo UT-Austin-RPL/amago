@@ -1,5 +1,4 @@
 import math
-import copy
 from functools import lru_cache
 from typing import Optional, Iterable
 from abc import ABC, abstractmethod
@@ -14,7 +13,7 @@ from .utils import activation_switch
 from amago.utils import amago_warning
 from amago.nets.ff import Normalization
 
-
+# Flex Attention
 try:
     from torch.nn.attention.flex_attention import (
         create_block_mask,
@@ -23,8 +22,8 @@ try:
     )
 except ImportError:
     flex_attention = None
-    amago_warning("Missing FlexAttention (torch >= 2.5)")
 
+# Flash Attention 2
 try:
     import flash_attn
 except ImportError:
@@ -75,27 +74,29 @@ class VanillaAttention(SelfAttention):
         # fmt: on
         return V
 
-    @torch.compiler.disable
-    def _forward_without_cache(self, qkv):
+    @torch.compile
+    def _forward_without_cache(self, qkv, mask):
         queries, keys, values = torch.unbind(qkv, dim=2)
         B, L, H, E = queries.shape
         _, S, _, D = values.shape
         scale = 1.0 / math.sqrt(E)
         scores = torch.einsum("blhe,bshe->bhls", queries, keys)
-        if self._mask is None or self._mask.shape != (B, 1, L, L):
-            self._mask = torch.triu(
-                torch.ones((B, 1, L, L), dtype=torch.bool, device=qkv.device),
-                diagonal=1,
-            )
         if self.causal:
-            scores.masked_fill_(self._mask, -torch.inf)
+            scores.masked_fill_(mask, -torch.inf)
         A = self.dropout(torch.softmax(scale * scores, dim=-1))
         V = torch.einsum("bhls,bshd->blhd", A, values)
         return V
 
+    @torch.compiler.disable
     def forward(self, qkv, key_cache=None, val_cache=None, cache_seqlens=None):
         if key_cache is None and val_cache is None or cache_seqlens is None:
-            return self._forward_without_cache(qkv)
+            B, L, *_ = qkv.shape
+            if self._mask is None or self._mask.shape != (B, 1, L, L):
+                self._mask = torch.triu(
+                    torch.ones((B, 1, L, L), dtype=torch.bool, device=qkv.device),
+                    diagonal=1,
+                )
+            return self._forward_without_cache(qkv, self._mask)
         else:
             assert not self.training
             return self._inference_with_cache(qkv, key_cache, val_cache, cache_seqlens)
@@ -221,15 +222,15 @@ class FlexAttention(SelfAttention):
             q = rearrange(q, "b l h e -> b h l e")
             k_cache = rearrange(key_cache[:, :max_len], "b l h e -> b h l e")
             v_cache = rearrange(val_cache[:, :max_len], "b l h e -> b h l e")
-            # this is very slow but i am not sure how to avoid it
+            # TODO: custom constructor as potential speedup?
+            # https://pytorch.org/blog/flexattention/#q-how-can-we-compute-blockmask-quicker
             inf_mask = create_block_mask(
                 self.kv_cache_mask_mod(cache_seqlens),
-                B=None,
+                B=q.shape[0],
                 H=None,
                 Q_LEN=1,
                 KV_LEN=max_len,
             )
-            # would be fast without recomputing the mask
             out = self.flex_attention_inf(
                 q, k_cache, v_cache, self.kv_cache_score_mod(cache_seqlens), inf_mask
             )
@@ -250,8 +251,14 @@ class VanillaFlexAttention(FlexAttention):
 @gin.configurable(allowlist=["window_size"])
 class SlidingWindowFlexAttention(FlexAttention):
     def __init__(
-        self, window_size: int = 128, causal: bool = True, dropout: float = 0.0
+        self, window_size: int = None, causal: bool = True, dropout: float = 0.0
     ):
+        if window_size is None:
+            window_size = 128
+            amago_warning(
+                f"SlidingWindowFlexAttention `window_size` has not been configured. Defaulting to {window_size}"
+            )
+
         def sliding_window_mask_mod(b, h, q_idx, kv_idx):
             window_mask = q_idx - kv_idx <= window_size
             return window_mask
