@@ -139,18 +139,26 @@ class FlashAttention(SelfAttention):
         return out
 
 
-class CustomAttention(SelfAttention, ABC):
+class FlexAttention(SelfAttention):
     def __init__(
         self,
+        score_mod: callable,
+        mask_mod: callable,
         causal: bool = True,
         dropout: float = 0.0,
     ):
         assert flex_attention is not None, "FlexAttention requires pytorch >= 2.5"
-        super().__init__(causal=causal, dropout=dropout)
+        if dropout > 0.0:
+            amago_warning(
+                "FlexAttention does not support attention dropout. Setting to 0."
+            )
+        super().__init__(causal=causal, dropout=0.0)
 
         def causal_mask(b, h, q_idx, kv_idx):
             return (q_idx >= kv_idx) if causal else True
 
+        self.score_mod = score_mod
+        self.mask_mod = mask_mod
         self.causal_mask = causal_mask
 
     @lru_cache
@@ -162,16 +170,6 @@ class CustomAttention(SelfAttention, ABC):
             Q_LEN=q_len,
             KV_LEN=kv_len,
         )
-
-    @staticmethod
-    @abstractmethod
-    def score_mod(score, b, h, q_idx, kv_idx):
-        raise NotImplementedError
-
-    @staticmethod
-    @abstractmethod
-    def mask_mod(b, h, q_idx, kv_idx):
-        raise NotImplementedError
 
     def kv_cache_score_mod(self, cache_seqlens):
 
@@ -240,15 +238,32 @@ class CustomAttention(SelfAttention, ABC):
             return rearrange(out, "b h l e -> b l h e")
 
 
-class VanillaFlexAttention(CustomAttention):
+class VanillaFlexAttention(FlexAttention):
+    def __init__(self, causal: bool = True, dropout: float = 0.0):
+        super().__init__(
+            score_mod=lambda score, b, h, q_idx, kv_idx: score,
+            mask_mod=lambda b, h, q_idx, kv_idx: True,
+            causal=causal,
+            dropout=dropout,
+        )
 
-    @staticmethod
-    def score_mod(score, b, h, q_idx, kv_idx):
-        return score
 
-    @staticmethod
-    def mask_mod(b, h, q_idx, kv_idx):
-        return True
+@gin.configurable(allowlist=["window_size"])
+class SlidingWindowFlexAttention(FlexAttention):
+    def __init__(
+        self, window_size: int = 128, causal: bool = True, dropout: float = 0.0
+    ):
+
+        def sliding_window_mask_mod(b, h, q_idx, kv_idx):
+            window_mask = q_idx - kv_idx <= window_size
+            return window_mask
+
+        super().__init__(
+            score_mod=lambda score, b, h, q_idx, kv_idx: score,
+            mask_mod=sliding_window_mask_mod,
+            causal=causal,
+            dropout=dropout,
+        )
 
 
 class SigmaReparam(nn.Linear):
