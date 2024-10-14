@@ -174,8 +174,8 @@ class FlexAttention(SelfAttention):
     def kv_cache_score_mod(self, cache_seqlens):
 
         def _kv_cache_score_mod(score, b, h, q_idx, kv_idx):
-            q_idx = q_idx + cache_seqlens[b]
-            base = self.score_mod(score, b, h, q_idx, kv_idx)
+            q_idx_rel = q_idx + cache_seqlens[b]
+            base = self.score_mod(score, b, h, q_idx_rel, kv_idx)
             return base
 
         return _kv_cache_score_mod
@@ -183,11 +183,11 @@ class FlexAttention(SelfAttention):
     def kv_cache_mask_mod(self, cache_seqlens):
 
         def _kv_cache_mask_mod(b, h, q_idx, kv_idx):
-            q_idx = q_idx + cache_seqlens[b]
-            base = self.mask_mod(b, h, q_idx, kv_idx)
+            q_idx_rel = q_idx + cache_seqlens[b]
+            base = self.mask_mod(b, h, q_idx_rel, kv_idx)
             base = base & (kv_idx <= cache_seqlens[b])
             if self.causal:
-                return base & (q_idx >= kv_idx)
+                return base & (q_idx_rel >= kv_idx)
             return base
 
         return _kv_cache_mask_mod
@@ -212,7 +212,6 @@ class FlexAttention(SelfAttention):
             mask = self.cached_block_mask(L, L)
             out = self.flex_attention(q, k, v, self.score_mod, mask)
             out = rearrange(out, "b h l e -> b l h e")
-            return out
         else:
             assert not self.training
             q, k, v = torch.unbind(qkv, dim=2)
@@ -222,7 +221,6 @@ class FlexAttention(SelfAttention):
             q = rearrange(q, "b l h e -> b h l e")
             k_cache = rearrange(key_cache[:, :max_len], "b l h e -> b h l e")
             v_cache = rearrange(val_cache[:, :max_len], "b l h e -> b h l e")
-
             # this is very slow but i am not sure how to avoid it
             inf_mask = create_block_mask(
                 self.kv_cache_mask_mod(cache_seqlens),
@@ -235,7 +233,8 @@ class FlexAttention(SelfAttention):
             out = self.flex_attention_inf(
                 q, k_cache, v_cache, self.kv_cache_score_mod(cache_seqlens), inf_mask
             )
-            return rearrange(out, "b h l e -> b l h e")
+            out = rearrange(out, "b h l e -> b l h e")
+        return out
 
 
 class VanillaFlexAttention(FlexAttention):
@@ -253,7 +252,6 @@ class SlidingWindowFlexAttention(FlexAttention):
     def __init__(
         self, window_size: int = 128, causal: bool = True, dropout: float = 0.0
     ):
-
         def sliding_window_mask_mod(b, h, q_idx, kv_idx):
             window_mask = q_idx - kv_idx <= window_size
             return window_mask
