@@ -156,9 +156,9 @@ class CustomAttention(SelfAttention, ABC):
         self._inf_mask = None
 
     @lru_cache
-    def cached_block_mask(self, q_len: int, kv_len: int):
+    def cached_block_mask(self, mask_mod, q_len: int, kv_len: int):
         return create_block_mask(
-            and_masks(self.mask_mod, self.causal_mask),
+            mask_mod,
             B=None,
             H=None,
             Q_LEN=q_len,
@@ -180,10 +180,10 @@ class CustomAttention(SelfAttention, ABC):
         return flex_attention(q, k, v, score_mod, block_mask)
 
     @torch.compile
-    def flex_attention_inf(self, q, k, v, score_mod):
+    def flex_attention_inf(self, q, k, v, score_mod, block_mask):
         # pretend this is a different function than training to keep
         # torch's compilation separate.
-        return flex_attention(q, k, v, score_mod)
+        return flex_attention(q, k, v, score_mod, block_mask)
 
     @torch.compiler.disable
     def forward(self, qkv, key_cache=None, val_cache=None, cache_seqlens=None):
@@ -193,7 +193,9 @@ class CustomAttention(SelfAttention, ABC):
             *_, L, _ = qkv.shape
             q, k, v = torch.unbind(qkv, dim=2)
             # if self._train_mask is None or self._train_mask.shape[-1] < L:
-            self._train_mask = self.cached_block_mask(L, L)
+            self._train_mask = self.cached_block_mask(
+                and_masks(self.mask_mod, self.causal_mask), L, L
+            )
             out = self.flex_attention(
                 q, k, v, score_mod=self.score_mod, block_mask=self._train_mask
             )
@@ -213,13 +215,26 @@ class CustomAttention(SelfAttention, ABC):
                 q_idx = q_idx + cache_seqlens[b]
                 base = self.score_mod(score, b, h, q_idx, kv_idx)
                 counts = kv_idx <= cache_seqlens[b]
-                if self.causal:
-                    counts = counts & (q_idx >= kv_idx)
                 return torch.where(counts, base, -float("inf"))
 
+            def mask_mod_uneven_lenths(b, h, q_idx, kv_idx):
+                q_idx = q_idx + cache_seqlens[b]
+                base = self.mask_mod(b, h, q_idx, kv_idx)
+                if self.causal:
+                    return base & (q_idx >= kv_idx)
+                return base
+
             # if self._inf_mask is None or self._inf_mask.shape[-1] < max_len:
-            # self._inf_mask = self.cached_block_mask(1, max_len)
-            out = self.flex_attention_inf(q, k_cache, v_cache, score_mod_uneven_lengths)
+            inf_mask = create_block_mask(
+                mask_mod_uneven_lenths,
+                B=None,
+                H=None,
+                Q_LEN=1,
+                KV_LEN=max_len,
+            )
+            out = self.flex_attention_inf(
+                q, k_cache, v_cache, score_mod_uneven_lengths, inf_mask
+            )
             return rearrange(out, "b h l e -> b l h e")
 
 
