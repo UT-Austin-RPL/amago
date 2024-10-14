@@ -173,6 +173,27 @@ class CustomAttention(SelfAttention, ABC):
     def mask_mod(b, h, q_idx, kv_idx):
         raise NotImplementedError
 
+    def kv_cache_score_mod(self, cache_seqlens):
+
+        def _kv_cache_score_mod(score, b, h, q_idx, kv_idx):
+            q_idx = q_idx + cache_seqlens[b]
+            base = self.score_mod(score, b, h, q_idx, kv_idx)
+            return base
+
+        return _kv_cache_score_mod
+
+    def kv_cache_mask_mod(self, cache_seqlens):
+
+        def _kv_cache_mask_mod(b, h, q_idx, kv_idx):
+            q_idx = q_idx + cache_seqlens[b]
+            base = self.mask_mod(b, h, q_idx, kv_idx)
+            base = base & (kv_idx <= cache_seqlens[b])
+            if self.causal:
+                return base & (q_idx >= kv_idx)
+            return base
+
+        return _kv_cache_mask_mod
+
     @torch.compile
     def flex_attention(self, q, k, v, score_mod, block_mask):
         return flex_attention(q, k, v, score_mod, block_mask)
@@ -204,29 +225,17 @@ class CustomAttention(SelfAttention, ABC):
             k_cache = rearrange(key_cache[:, :max_len], "b l h e -> b h l e")
             v_cache = rearrange(val_cache[:, :max_len], "b l h e -> b h l e")
 
-            def kv_cache_score_mod(score, b, h, q_idx, kv_idx):
-                q_idx = q_idx + cache_seqlens[b]
-                base = self.score_mod(score, b, h, q_idx, kv_idx)
-                return base
-
-            def kv_cache_mask_mod(b, h, q_idx, kv_idx):
-                q_idx = q_idx + cache_seqlens[b]
-                base = self.mask_mod(b, h, q_idx, kv_idx)
-                base = base & (kv_idx <= cache_seqlens[b])
-                if self.causal:
-                    return base & (q_idx >= kv_idx)
-                return base
-
             # this is very slow but i am not sure how to avoid it
             inf_mask = create_block_mask(
-                kv_cache_mask_mod,
+                self.kv_cache_mask_mod(cache_seqlens),
                 B=None,
                 H=None,
                 Q_LEN=1,
                 KV_LEN=max_len,
             )
+            # would be fast without recomputing the mask
             out = self.flex_attention_inf(
-                q, k_cache, v_cache, kv_cache_score_mod, inf_mask
+                q, k_cache, v_cache, self.kv_cache_score_mod(cache_seqlens), inf_mask
             )
             return rearrange(out, "b h l e -> b l h e")
 
