@@ -141,6 +141,17 @@ class FlashAttention(SelfAttention):
 
 
 class FlexAttention(SelfAttention):
+    """
+    Experimental support for flash_attention (coming to pytorch 2.5)
+
+    Allows custom sparse attention patterns using score_mod and mask_mod function.
+    (https://pytorch.org/blog/flexattention/)
+    (https://github.com/pytorch-labs/attention-gym)
+
+    The main benefit of flash_attention for our purposes is a unified implementation
+    of key/value cache inference for more complex attention patterns.
+    """
+
     def __init__(
         self,
         score_mod: callable,
@@ -163,7 +174,7 @@ class FlexAttention(SelfAttention):
         self.causal_mask = causal_mask
 
     @lru_cache
-    def cached_block_mask(self, q_len: int, kv_len: int):
+    def cached_training_mask(self, q_len: int, kv_len: int):
         return create_block_mask(
             and_masks(self.mask_mod, self.causal_mask),
             B=None,
@@ -210,7 +221,7 @@ class FlexAttention(SelfAttention):
             qkv = rearrange(qkv, "b l three h e -> b h three l e")
             *_, L, _ = qkv.shape
             q, k, v = torch.unbind(qkv, dim=2)
-            mask = self.cached_block_mask(L, L)
+            mask = self.cached_training_mask(L, L)
             out = self.flex_attention(q, k, v, self.score_mod, mask)
             out = rearrange(out, "b h l e -> b l h e")
         else:
@@ -239,6 +250,10 @@ class FlexAttention(SelfAttention):
 
 
 class VanillaFlexAttention(FlexAttention):
+    """
+    A sanity-check test of FlexAttention that should be equivalent to VanillaAttention.
+    """
+
     def __init__(self, causal: bool = True, dropout: float = 0.0):
         super().__init__(
             score_mod=lambda score, b, h, q_idx, kv_idx: score,
@@ -349,6 +364,10 @@ class SigmaReparamLegacyInit(nn.Module):
 
 
 class AttentionLayer(nn.Module):
+    """
+    Query, Key, Value --> Self-Attention --> Output Projection
+    """
+
     def __init__(
         self,
         self_attention: SelfAttention,
@@ -392,7 +411,7 @@ class AttentionLayer(nn.Module):
 
 class TransformerLayer(nn.Module):
     """
-    Pre-Norm Self-Attention
+    Pre-Norm Self-Attention Layer
     """
 
     def __init__(
@@ -536,11 +555,9 @@ class Transformer(nn.Module):
         norm: str = "layer",
     ):
         super().__init__()
-        # embedding
         self.position_embedding = FixedPosEmb(d_model)
         self.inp = nn.Linear(inp_dim, d_model)
         self.dropout = nn.Dropout(dropout_emb)
-
         assert all(l.d_model == d_model for l in layers)
         self.n_layers = len(layers)
         self.layers = nn.ModuleList(layers)
