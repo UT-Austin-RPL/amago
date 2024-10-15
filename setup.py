@@ -9,7 +9,7 @@ setup(
     packages=find_packages(include=["amago"]),
     python_requires=">=3.10",
     install_requires=[
-        "gymnasium>=0.26",
+        "gymnasium>=0.26,<=0.29.1",
         "torch>=2.4",
         "numpy>=2.0",
         "gin-config",
@@ -22,19 +22,16 @@ setup(
         "huggingface_hub",
     ],
     extras_require={
-        "metaworld_env": [
+        "envs": [
             "metaworld @ git+https://github.com/Farama-Foundation/Metaworld.git@04be337a12305e393c0caf0cbf5ec7755c7c8feb",
             # fix common metaworld install bug
             "cython<3",
-        ],
-        "basic_envs": [
             "popgym",
             "minigrid",
+            "stable-retro",
             # deepmind alchemy
             "dm_env",
             "dm_alchemy @ git+https://github.com/deepmind/dm_alchemy.git",
-        ],
-        "jax_envs": [
             "xminigrid",
             "gymnax",
         ],

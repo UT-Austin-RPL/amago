@@ -113,9 +113,7 @@ class BabyTstepEncoder(amago.nets.tstep_encoders.TstepEncoder):
             channels_first=False,
             activation="leaky_relu",
         )
-        img_out_dim = self.img_processor(
-            torch.zeros((1, 1) + obs_space["image"].shape, dtype=torch.uint8)
-        ).shape[-1]
+        img_out_dim = self.img_processor(self.img_processor.blank_img).shape[-1]
 
         low_token = obs_space["mission"].low.min()
         high_token = obs_space["mission"].high.max()

@@ -58,9 +58,8 @@ class XLandMGTstepEncoder(amago.nets.tstep_encoders.TstepEncoder):
         super().__init__(obs_space=obs_space, rl2_space=rl2_space)
 
         # grid world embedding
-        low_token = lambda space: space.low.max().item()
-        high_token = lambda space: space.high.max().item()
-        grid_tokens = high_token(obs_space["grid"]) - low_token(obs_space["grid"]) + 1
+        num_tokens = lambda space: (space.high.max() - space.low.min() + 1).item()
+        grid_tokens = num_tokens(obs_space["grid"])
         self.grid_embedding = nn.Embedding(grid_tokens, embedding_dim=grid_id_dim)
         self.grid_processor = amago.nets.cnn.GridworldCNN(
             img_shape=obs_space["grid"].shape,
@@ -68,13 +67,11 @@ class XLandMGTstepEncoder(amago.nets.tstep_encoders.TstepEncoder):
             activation="leaky_relu",
             channels=[32, 48, 64],
         )
-        grid_out_dim = self.grid_processor(
-            torch.zeros((1, 1) + obs_space["grid"].shape, dtype=torch.uint8)
-        ).shape[-1]
+        grid_out_dim = self.grid_processor(self.grid_processor.blank_img).shape[-1]
         self.grid_rep_ff = nn.Linear(grid_out_dim, grid_emb_dim)
 
         # goal token embedding
-        goal_tokens = high_token(obs_space["goal"]) - low_token(obs_space["goal"]) + 1
+        goal_tokens = num_tokens(obs_space["goal"])
         self.goal_embedding = nn.Embedding(goal_tokens, embedding_dim=goal_id_dim)
         goal_inp_dim = goal_id_dim * obs_space["goal"].shape[0]
         self.goal_rep_ff = nn.Sequential(
@@ -86,7 +83,7 @@ class XLandMGTstepEncoder(amago.nets.tstep_encoders.TstepEncoder):
         # merge grid, goal, and other array features
         self.merge = nn.Sequential(
             nn.Linear(
-                grid_emb_dim + goal_emb_dim + 4 + 1 + self.rl2_space.shape[-1], ff_dim
+                grid_emb_dim + goal_emb_dim + 5 + self.rl2_space.shape[-1], ff_dim
             ),
             nn.LeakyReLU(),
             nn.Linear(ff_dim, out_dim),

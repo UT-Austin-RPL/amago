@@ -40,6 +40,10 @@ class CNN(nn.Module, ABC):
     def conv_forward(self, imgs):
         pass
 
+    @property
+    def blank_img(self):
+        return torch.zeros((1, 1) + self.img_shape, dtype=torch.uint8)
+
     @torch.compile
     def forward(self, obs, from_float: bool = False, flatten: bool = True):
         assert obs.ndim == 5
