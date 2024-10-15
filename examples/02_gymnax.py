@@ -1,19 +1,28 @@
-from argparse import ArgumentParser
+"""
+Support for gymnax is experimental and mainly meant to test the already_vectorized 
+env API used by XLand MiniGrid (an unsolved environment) with classic gym envs. 
+Many of the gymnax envs appear to be broken by recent versions of jax.
+There are a couple memory/meta-RL bsuite envs where AMAGO+Transformer
+is significantly better than the gymnax reference scores though.
+"""
+
 import os
 
+# stop jax from stealing pytorch's memory, since we're only using it for the envs
 os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
+
+from argparse import ArgumentParser
 import math
 from functools import partial
 
 import gymnax
-from gymnax.wrappers import GymnaxToVectorGymWrapper
 import torch
 import jax
-import jax.numpy as jnp
 import wandb
 import numpy as np
 
 from amago.envs import AMAGOEnv
+from amago.envs.builtin.gymnax_envs import GymnaxCompatibility
 from amago.nets.cnn import GridworldCNN
 from amago.cli_utils import *
 
@@ -23,47 +32,6 @@ def add_cli(parser):
     parser.add_argument("--max_seq_len", type=int, default=128)
     parser.add_argument("--eval_timesteps", type=int, default=1000)
     return parser
-
-
-class GymnaxCompatibility(GymnaxToVectorGymWrapper):
-    """
-    Convert gymnax Gym wrapper to the expected AMAGO interface.
-
-        - Gymnax wants to give us the batched observation and action spaces,
-          but AMAGO is expecting unbatched spaces.
-        - It's also going to send out jax arrays, but we need numpy.
-
-    A key point is that this only works because gymnax envs automatically reset.
-    The "already_vectorized" mode in AMAGO relies on auto-resets because we cannot
-    reset specific indices of the vectorized enviornment from the highest wrapper level.
-
-    Many of the gymnax envs appear to be broken by recent versions of jax.
-    This script mainly serves as a way to test the already_vectorized env API used by
-    XLand MiniGrid (an unsolved environment) with easy gymnax envs like
-    Pendulum-v1. There are a couple memory/meta-RL bsuite envs where AMAGO+Transformer
-    is significantly better than the gymnax reference scores though.
-    """
-
-    @property
-    def observation_space(self):
-        return self.single_observation_space
-
-    @property
-    def action_space(self):
-        return self.single_action_space
-
-    def reset(self, *args, **kwargs):
-        obs, info = super().reset()
-        obs = np.array(obs)
-        return obs, info
-
-    def step(self, action):
-        obs, rewards, te, tr, info = super().step(jnp.array(action))
-        obs = np.array(obs)
-        rewards = np.array(rewards)
-        te = np.array(te)
-        tr = np.array(tr)
-        return obs, rewards, te, tr, info
 
 
 def make_gymnax_amago(env_name, parallel_envs):
