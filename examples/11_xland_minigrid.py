@@ -126,12 +126,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     config = {
-        "amago.agent.Agent.reward_multiplier": 100.0,
-        "amago.agent.Agent.tstep_encoder_Cls": XLandMGTstepEncoder,
+        "amago.agent.Agent.reward_multiplier": 10.0,
+        "amago.agent.Agent.tstep_encoder_type": XLandMGTstepEncoder,
         "amago.envs.exploration.EpsilonGreedy.steps_anneal": 1_000_000,
-        "amago.nets.actor_critic.NCriticsTwoHot.min_return": -25_000,
-        "amago.nets.actor_critic.NCriticsTwoHot.max_return": 25_000,
-        "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 64,
+        "amago.nets.actor_critic.NCriticsTwoHot.min_return": -args.k_shots * 10.0 * 10,
+        "amago.nets.actor_critic.NCriticsTwoHot.max_return": args.k_shots * 10.0 * 10,
+        "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 32,
     }
 
     switch_traj_encoder(

@@ -87,7 +87,7 @@ class CNNTstepEncoder(TstepEncoder):
         self,
         obs_space,
         rl2_space,
-        cnn_Cls=cnn.NatureishCNN,
+        cnn_type=cnn.NatureishCNN,
         channels_first: bool = False,
         img_features: int = 384,
         rl2_features: int = 12,
@@ -103,7 +103,7 @@ class CNNTstepEncoder(TstepEncoder):
             cnn.DrQv2Aug(4, channels_first=channels_first) if drqv2_aug else lambda x: x
         )
         obs_shape = self.obs_space["observation"].shape
-        self.cnn = cnn_Cls(
+        self.cnn = cnn_type(
             img_shape=obs_shape,
             channels_first=channels_first,
             activation=activation,

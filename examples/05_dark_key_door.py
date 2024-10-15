@@ -85,7 +85,7 @@ if __name__ == "__main__":
             # the fancier exploration schedule mentioned in the appendix can help
             # when the domain is a true meta-RL problem and the "horizon" time limit
             # (above) is actually relevant for resetting the task.
-            exploration_wrapper_Cls=BilevelEpsilonGreedy,
+            exploration_wrapper_type=BilevelEpsilonGreedy,
         )
         switch_async_mode(experiment, args)
         experiment.start()

@@ -159,13 +159,13 @@ def switch_tstep_encoder(config: dict, arch: str, **kwargs):
     """
     assert arch in ["ff", "cnn"]
     if arch == "ff":
-        config["amago.agent.Agent.tstep_encoder_Cls"] = (
+        config["amago.agent.Agent.tstep_encoder_type"] = (
             amago.nets.tstep_encoders.FFTstepEncoder
         )
         ff_config = "amago.nets.tstep_encoders.FFTstepEncoder"
         config.update({f"{ff_config}.{key}": val for key, val in kwargs.items()})
     elif arch == "cnn":
-        config["amago.agent.Agent.tstep_encoder_Cls"] = (
+        config["amago.agent.Agent.tstep_encoder_type"] = (
             amago.nets.tstep_encoders.CNNTstepEncoder
         )
         cnn_config = "amago.nets.tstep_encoders.CNNTstepEncoder"
@@ -182,7 +182,7 @@ def switch_traj_encoder(config: dict, arch: str, memory_size: int, layers: int):
         tformer_config = "amago.nets.traj_encoders.TformerTrajEncoder"
         config.update(
             {
-                "amago.agent.Agent.traj_encoder_Cls": amago.nets.traj_encoders.TformerTrajEncoder,
+                "amago.agent.Agent.traj_encoder_type": amago.nets.traj_encoders.TformerTrajEncoder,
                 f"{tformer_config}.d_model": memory_size,
                 f"{tformer_config}.d_ff": memory_size * 4,
                 f"{tformer_config}.n_layers": layers,
@@ -192,7 +192,7 @@ def switch_traj_encoder(config: dict, arch: str, memory_size: int, layers: int):
         gru_config = "amago.nets.traj_encoders.GRUTrajEncoder"
         config.update(
             {
-                "amago.agent.Agent.traj_encoder_Cls": amago.nets.traj_encoders.GRUTrajEncoder,
+                "amago.agent.Agent.traj_encoder_type": amago.nets.traj_encoders.GRUTrajEncoder,
                 f"{gru_config}.n_layers": layers,
                 f"{gru_config}.d_output": memory_size,
                 f"{gru_config}.d_hidden": memory_size,
@@ -203,7 +203,7 @@ def switch_traj_encoder(config: dict, arch: str, memory_size: int, layers: int):
         ff_config = "amago.nets.traj_encoders.FFTrajEncoder"
         config.update(
             {
-                "amago.agent.Agent.traj_encoder_Cls": amago.nets.traj_encoders.FFTrajEncoder,
+                "amago.agent.Agent.traj_encoder_type": amago.nets.traj_encoders.FFTrajEncoder,
                 f"{ff_config}.d_model": memory_size,
                 f"{ff_config}.n_layers": layers,
             }
@@ -212,48 +212,12 @@ def switch_traj_encoder(config: dict, arch: str, memory_size: int, layers: int):
         mamba_config = "amago.nets.traj_encoders.MambaTrajEncoder"
         config.update(
             {
-                "amago.agent.Agent.traj_encoder_Cls": amago.nets.traj_encoders.MambaTrajEncoder,
+                "amago.agent.Agent.traj_encoder_type": amago.nets.traj_encoders.MambaTrajEncoder,
                 f"{mamba_config}.d_model": memory_size,
                 f"{mamba_config}.n_layers": layers,
             }
         )
     return config
-
-
-def naive(config: dict, turn_off_fbc: bool = False):
-    config.update(
-        {
-            "amago.nets.traj_encoders.TformerTrajEncoder.activation": "gelu",
-            "amago.nets.actor_critic.NCritics.activation": "relu",
-            "amago.nets.actor_critic.Actor.activation": "relu",
-            "amago.nets.tstep_encoders.FFTstepEncoder.activation": "relu",
-            "amago.nets.tstep_encoders.CNNTstepEncoder.activation": "relu",
-            "amago.nets.transformer.TransformerLayer.normformer_norms": False,
-            "amago.nets.transformer.TransformerLayer.sigma_reparam": False,
-            "amago.nets.transformer.AttentionLayer.sigma_reparam": False,
-            "amago.nets.transformer.AttentionLayer.head_scaling": False,
-            "amago.agent.Agent.num_critics": 2,
-            "amago.agent.Agent.gamma": 0.99,
-            "amago.agent.Agent.use_multigamma": False,
-        }
-    )
-
-    if turn_off_fbc:
-        config.update({"amago.agent.Agent.offline_coeff": 0.0})
-
-    return config
-
-
-def adaptive(config: dict):
-    config.update(
-        {
-            "amago.nets.traj_encoders.TformerTrajEncoder.activation": "adaptive",
-            "amago.nets.actor_critic.NCritics.activation": "adaptive",
-            "amago.nets.actor_critic.Actor.activation": "adaptive",
-            "amago.nets.tstep_encoders.FFTstepEncoder.activation": "adaptive",
-            "amago.nets.tstep_encoders.CNNTstepEncoder.activation": "adaptive",
-        }
-    )
 
 
 def use_config(
@@ -283,12 +247,12 @@ def create_experiment_from_cli(
     traj_save_len: int,
     group_name: str,
     run_name: str,
-    experiment_Cls=amago.Experiment,
+    experiment_type=amago.Experiment,
     **extra_experiment_kwargs,
 ):
     cli = command_line_args
 
-    experiment = experiment_Cls(
+    experiment = experiment_type(
         agent_type=(
             amago.agent.Agent
             if cli.agent_type == "agent"

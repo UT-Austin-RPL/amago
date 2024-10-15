@@ -46,7 +46,7 @@ class Experiment:
     make_val_env: callable | Iterable[callable]
     parallel_actors: int = 10
     env_mode: str = "async"
-    exploration_wrapper_Cls: Optional[type[ExplorationWrapper]] = EpsilonGreedy
+    exploration_wrapper_type: Optional[type[ExplorationWrapper]] = EpsilonGreedy
     sample_actions: bool = True
     force_reset_train_envs_every: Optional[int] = None
 
@@ -62,7 +62,7 @@ class Experiment:
     dset_name: str = None
     dset_max_size: int = 15_000
     dset_filter_pct: Optional[float] = 0.1
-    relabel_Cls: type[Relabeler] = Relabeler
+    relabel_type: type[Relabeler] = Relabeler
     goal_importance_sampling: bool = False
     stagger_traj_file_lengths: bool = True
     save_trajs_as: str = "npz"
@@ -174,11 +174,11 @@ class Experiment:
         else:
             raise ValueError(f"Invalid `env_mode` {self.env_mode}")
 
-        if self.exploration_wrapper_Cls is not None and not issubclass(
-            self.exploration_wrapper_Cls, ExplorationWrapper
+        if self.exploration_wrapper_type is not None and not issubclass(
+            self.exploration_wrapper_type, ExplorationWrapper
         ):
             utils.amago_warning(
-                f"Implement exploration strategies by subclassing `ExplorationWrapper` and setting the `Experiment.exploration_wrapper_Cls`"
+                f"Implement exploration strategies by subclassing `ExplorationWrapper` and setting the `Experiment.exploration_wrapper_type`"
             )
 
         # wrap environments to save trajectories to replay buffer
@@ -197,7 +197,7 @@ class Experiment:
                 make_dset=True,
                 dset_split="train",
                 # adds exploration noise
-                exploration_wrapper_Cls=self.exploration_wrapper_Cls,
+                exploration_wrapper_type=self.exploration_wrapper_type,
                 **shared_env_kwargs,
             )
             for env_func in make_train_envs
@@ -209,7 +209,7 @@ class Experiment:
                 make_dset=False,
                 dset_split="val",
                 # no exploration noise
-                exploration_wrapper_Cls=None,
+                exploration_wrapper_type=None,
                 **shared_env_kwargs,
             )
             for env_func in make_val_envs
@@ -300,7 +300,7 @@ class Experiment:
 
     def init_dsets(self):
         self.train_dset = TrajDset(
-            relabeler=self.relabel_Cls(),
+            relabeler=self.relabel_type(),
             dset_root=self.dset_root,
             dset_name=self.dset_name,
             dset_split="train",

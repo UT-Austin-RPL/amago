@@ -55,7 +55,9 @@ if __name__ == "__main__":
         layers=args.memory_layers,
     )
 
-    switch_tstep_encoder(config, arch="cnn", cnn_Cls=IMPALAishCNN, channels_first=False)
+    switch_tstep_encoder(
+        config, arch="cnn", cnn_type=IMPALAishCNN, channels_first=False
+    )
     use_config(config, args.configs)
 
     procgen_kwargs = PROCGEN_SETTINGS[args.distribution]
