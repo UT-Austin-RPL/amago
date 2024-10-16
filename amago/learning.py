@@ -35,60 +35,121 @@ from .agent import Agent
 @gin.configurable
 @dataclass
 class Experiment:
-    # General
+    #############
+    ## General ##
+    #############
+    # the name of the experiment. used to create a directory in `dset_root` to store checkpoints and logs. used for logging to wandb.
     run_name: str
+    # the most important hyperparameter: the maximum sequence length that the model will be trained on.
     max_seq_len: int
+    # trajectories are saved to disk on `terminated or truncated` or after this many steps have passed since the last save (whichever comes first)
     traj_save_len: int
+    # the type of agent to use. must be a subclass of `Agent`
     agent_type: type[Agent]
 
-    # Environment
+    #################
+    ## Environment ##
+    #################
+    # a function that takes no args and returns an AMAGOEnv. If this isn't a list, it will be repeated `parallel_actors` times.
+    # You can create the list yourself if you want to manually assign different envs across the parallel actors.
     make_train_env: callable | Iterable[callable]
+    # same as `make_train_env`, but these environments are only used for evaluation and their trajectories are not saved to disk.
     make_val_env: callable | Iterable[callable]
+    # spawns multiple envs in parallel to speed up data collection with batched inference.
     parallel_actors: int = 10
+    # two main options: "async" and "already_vectorized".
+    # "async" is the default and wraps individual gym environments in a pool of async processes using `gymnasium.vector.AsyncVectorEnv`.
+    # "already_vectorized" is an alternate mode designed for jax / gpu-accelerated envs that handle parallelization with a batch dimension on the lowest wrapper level.
+    # "sync" is the same as "async" but doesn't actually run the environment in parallel, which is helpful for debugging or when the env is so fast that this overhead isn't worth it.
     env_mode: str = "async"
+    # exploration is implemented with a gym wrapper that is only applied to training environments.
     exploration_wrapper_type: Optional[type[ExplorationWrapper]] = EpsilonGreedy
+    # whether to sample from the stochastic actor during eval, or take the argmax action.
     sample_actions: bool = True
+    # a safety measure that forces a call to `reset` every _ epochs for cases when `reset` is otherwise never called (already_vectorized).
     force_reset_train_envs_every: Optional[int] = None
 
-    # Logging
+    #############
+    ## Logging ##
+    #############
+    # enable/disable wandb logging
     log_to_wandb: bool = False
+    # your wandb project
     wandb_project: str = os.environ.get("AMAGO_WANDB_PROJECT")
+    # your wandb entity (username or team name)
     wandb_entity: str = os.environ.get("AMAGO_WANDB_ENTITY")
+    # group different runs on the wandb dashboard
     wandb_group_name: str = None
+    # prints tqdm progress bars and some high-level info to the console
     verbose: bool = True
 
-    # Replay
+    ############
+    ## Replay ##
+    ############
+    # path to the root directory where your datasets (and checkpoints) are stored
     dset_root: str = None
+    # stores all the trajectories in `dset_root/dset_name/train`. You can use this to reuse the same dataset across multiple experiments.
     dset_name: str = None
+    # maximum number of .traj files to keep in the replay buffer before we start deleting the oldest files
     dset_max_size: int = 15_000
+    # percentage of the oldest .traj files to delete when the buffer exceeds `dset_max_size`
     dset_filter_pct: Optional[float] = 0.1
+    # an object that can edit trajectory data before it is sent to the agent. useful for hindsight relabeling (temporarily removed) and data augmentation.
     relabel_type: type[Relabeler] = Relabeler
-    goal_importance_sampling: bool = False
+    # randomizes trajectory file lengths when saving snippets from a much longer rollout. please refer to a longer explanation in `amago.envs.amago_env.EnvCreator`
     stagger_traj_file_lengths: bool = True
+    # how to save trajectory .traj files. three options:
+    # "npz" saves data as numpy arrays.
+    # "npz-compressed" trades time for disk space by compressing large files.
+    # "traj" pickles the full `Trajectory` object.
     save_trajs_as: str = "npz"
+    # number of workers to use for the DataLoader that loads trajectories from disk. increase when using npz-compressed or when loading very long trajs from pixel envs.
     dloader_workers: int = 6
 
-    # Learning Schedule
+    #######################
+    ## Learning Schedule ##
+    #######################
+    # each epoch has one round of data collection and one round of training.
     epochs: int = 1000
+    # skip the first _ epochs before beginning gradient updates. can be used to imitate the "replay buffer warmup" common to most off-policy impelmentations.
     start_learning_at_epoch: int = 0
+    # skip the first _ epochs of data collection. can be used for offline --> online finetuning or to avoid online interaction entirely.
     start_collecting_at_epoch: int = 0
+    # how many `steps` to take in each parallel environment each epoch.
     train_timesteps_per_epoch: int = 1000
+    # how many batches to load from disk for training each epoch. gradient updates per epoch is train_batches_per_epoch // batches_per_update
     train_batches_per_epoch: int = 1000
+    #  how many epochs to wait between evaluation rollouts
     val_interval: Optional[int] = 10
+    # how many `steps to take in each parallel environment for evaluation. determines the sample size of the evaluation metrics.
     val_timesteps_per_epoch: int = 10_000
+    # how many batches between forward/backward passes that spend time computing extra metrics for wandb logging.
     log_interval: int = 250
+    # how many epochs to wait between saving checkpoints
     ckpt_interval: Optional[int] = 20
+    # always_save_latest and always_load_latest are used to communicate the latest policy weights between multiple processes.
+    # A learning-only thread would always_save, while an actor-only thread would always_load.
     always_save_latest: bool = True
     always_load_latest: bool = False
 
-    # Optimization
+    ##################
+    ## Optimization ##
+    ##################
+    # training batch size *per gpu*
     batch_size: int = 24
+    # number of batches to accumulate gradients over before updating the model
     batches_per_update: int = 1
+    # learning rate for the optimizer
     learning_rate: float = 1e-4
+    # coefficient that balances the actor and critic loss for the TstepEncoder and TrajEncoder -- which optimize both. The actor loss weight is fixed to 1.
     critic_loss_weight: float = 10.0
+    # linear warmup steps for the learning rate scheduler
     lr_warmup_steps: int = 500
+    # gradient clipping (by norm)
     grad_clip: float = 1.0
+    # l2 regularization coefficient (note that we default to AdamW)
     l2_coeff: float = 1e-3
+    # mixed precision mode. this is passed directly to `accelerate` and follows its options ("no", "fp16", "bf16").
     mixed_precision: str = "no"
 
     def __post_init__(self):
@@ -611,9 +672,9 @@ class Experiment:
             masked_critic_loss = 0.0
 
         return {
-            "critic_loss": masked_critic_loss,
-            "actor_loss": masked_actor_loss,
-            "seq_len": L_1 + 1,
+            "Critic Loss": masked_critic_loss,
+            "Actor Loss": masked_actor_loss,
+            "Seq Length": L_1 + 1,
             "mask": state_mask,
         } | update_info
 

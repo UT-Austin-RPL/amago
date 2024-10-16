@@ -318,17 +318,14 @@ class SigmaReparam(nn.Linear):
 
 class SigmaReparamLegacyInit(nn.Module):
     """
-    When I implemented SigmaReparam for AMAGOv1, the code had not been open-sourced and I only
-    had https://arxiv.org/pdf/2303.06296.pdf to go on. This code follows the pseudocode in
-    Appendix C. The initialization strategy results in unusually large initial output values.
-    I assumed this was fine because it worked so well empirically (w/ flash attention).
-    Finally looked into this for VanillaAttention, and the official code release clearly goes out
-    of its way to fix this problem with a specific init...
+    Legacy version of SigmaReparam with the original initialization strategy.
+    This is the version used in the paper results, and is based on
+    pseudocode in https://arxiv.org/pdf/2303.06296.pdf Appendix C.
+    Results in large initial output values, which are covered up by the LR
+    warmup and other stability measures in flash attention.
 
-    Leaving this original version here in case the large init happens to be helpful in some cases.
-    It is not realistic to re-run all the experiments in both papers to find out for sure. Between
-    the clear emphasis on numerical stability in the official code and my own experience with (rare)
-    policy NaNs at init, I think the updated version should be the default.
+    The initialization has been updated to follow tricks from an official code
+    release that came out later.
     """
 
     def __init__(self, d_in, d_out, bias: bool = True):
@@ -563,7 +560,6 @@ class Transformer(nn.Module):
         self.layers = nn.ModuleList(layers)
         self.norm = Normalization(method=norm, d_model=d_model)
         self.d_model = d_model
-        self._blank_hidden_state = [[None, None, None] for _ in range(self.n_layers)]
 
     @property
     def emb_dim(self):
