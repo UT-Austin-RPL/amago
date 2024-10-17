@@ -24,37 +24,29 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     config = {
-        # bins are hard to tune in POPGym. The paper left the settings wide open, but it's actually
-        # better to tighten the return limits and set a lower bin count because these envs have rapid
-        # swings in Q vals. We don't think it really matters whether you do e.g. rewards x100, returns in [-100, 100] or
-        # rewards x1, returns in [-1, 1], but the symlog mapping technically makes these different.
-        "amago.agent.Agent.reward_multiplier": (
-            1.0 if args.agent_type == "multitask" else 100.0
-        ),  # paper: always 100
         "amago.nets.actor_critic.NCriticsTwoHot.min_return": -1.0,  # paper: None
         "amago.nets.actor_critic.NCriticsTwoHot.max_return": 1.0,  # paper: None
         "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 32,  # paper: 64
     }
-    switch_traj_encoder(
+    traj_encoder_type = switch_traj_encoder(
         config,
         arch=args.traj_encoder,
-        # NOTE: paper (and original POPGym results) use `memory_size=256`
-        memory_size=args.memory_size,
-        # NOTE: paper used layers=3
-        layers=args.memory_layers,
+        memory_size=args.memory_size,  # paper: 256
+        layers=args.memory_layers,  # paper: 3
     )
-    switch_tstep_encoder(config, arch="ff", n_layers=2, d_hidden=512, d_output=200)
+    tstep_encoder_type = switch_tstep_encoder(
+        config, arch="ff", n_layers=2, d_hidden=512, d_output=200
+    )
+    agent_type = switch_agent(config, args.agent_type, reward_multiplier=100.0)
     use_config(config, args.configs)
 
     group_name = f"{args.run_name}_{args.env}"
     for trial in range(args.trials):
         run_name = group_name + f"_trial_{trial}"
-
         if args.multidomain:
             make_train_env = lambda: MultiDomainPOPGymAMAGO()
         else:
             make_train_env = lambda: POPGymAMAGO(f"popgym-{args.env}-v0")
-
         experiment = create_experiment_from_cli(
             args,
             make_train_env=make_train_env,
@@ -63,6 +55,9 @@ if __name__ == "__main__":
             traj_save_len=2000,
             group_name=group_name,
             run_name=run_name,
+            tstep_encoder_type=tstep_encoder_type,
+            traj_encoder_type=traj_encoder_type,
+            agent_type=agent_type,
             val_timesteps_per_epoch=2000,
         )
         experiment = switch_async_mode(experiment, args)

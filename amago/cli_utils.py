@@ -4,6 +4,7 @@ from typing import Optional
 import gin
 
 import amago
+from amago import TrajEncoder, TstepEncoder, Agent
 
 
 def add_common_cli(parser: ArgumentParser) -> ArgumentParser:
@@ -150,7 +151,7 @@ Switch between the most common configurations without needing `.gin` config file
 """
 
 
-def switch_tstep_encoder(config: dict, arch: str, **kwargs):
+def switch_tstep_encoder(config: dict, arch: str, **kwargs) -> type[TstepEncoder]:
     """
     Convenient way to switch between TstepEncoders without gin config files
 
@@ -159,40 +160,51 @@ def switch_tstep_encoder(config: dict, arch: str, **kwargs):
     """
     assert arch in ["ff", "cnn"]
     if arch == "ff":
-        config["amago.agent.Agent.tstep_encoder_type"] = (
-            amago.nets.tstep_encoders.FFTstepEncoder
-        )
+        tstep_encoder_type = amago.nets.tstep_encoders.FFTstepEncoder
         ff_config = "amago.nets.tstep_encoders.FFTstepEncoder"
         config.update({f"{ff_config}.{key}": val for key, val in kwargs.items()})
     elif arch == "cnn":
-        config["amago.agent.Agent.tstep_encoder_type"] = (
-            amago.nets.tstep_encoders.CNNTstepEncoder
-        )
+        tstep_encoder_type = amago.nets.tstep_encoders.CNNTstepEncoder
         cnn_config = "amago.nets.tstep_encoders.CNNTstepEncoder"
         config.update({f"{cnn_config}.{key}": val for key, val in kwargs.items()})
-    return config
+    return tstep_encoder_type
 
 
-def switch_traj_encoder(config: dict, arch: str, memory_size: int, layers: int):
+def switch_agent(config: dict, agent: str, **kwargs) -> type[Agent]:
+    assert agent in ["agent", "multitask"]
+    if agent == "agent":
+        agent_type = amago.agent.Agent
+        agent_config = "amago.agent.Agent"
+        config.update({f"{agent_config}.{key}": val for key, val in kwargs.items()})
+    elif agent == "multitask":
+        agent_type = amago.agent.MultiTaskAgent
+        agent_config = "amago.agent.MultiTaskAgent"
+        config.update({f"{agent_config}.{key}": val for key, val in kwargs.items()})
+    return agent_type
+
+
+def switch_traj_encoder(
+    config: dict, arch: str, memory_size: int, layers: int
+) -> type[TrajEncoder]:
     """
     Convenient way to switch between TrajEncoders of different sizes without gin config files.
     """
     assert arch in ["ff", "rnn", "transformer", "mamba"]
     if arch == "transformer":
+        traj_encoder_type = amago.nets.traj_encoders.TformerTrajEncoder
         tformer_config = "amago.nets.traj_encoders.TformerTrajEncoder"
         config.update(
             {
-                "amago.agent.Agent.traj_encoder_type": amago.nets.traj_encoders.TformerTrajEncoder,
                 f"{tformer_config}.d_model": memory_size,
                 f"{tformer_config}.d_ff": memory_size * 4,
                 f"{tformer_config}.n_layers": layers,
             }
         )
     elif arch == "rnn":
+        traj_encoder_type = amago.nets.traj_encoders.GRUTrajEncoder
         gru_config = "amago.nets.traj_encoders.GRUTrajEncoder"
         config.update(
             {
-                "amago.agent.Agent.traj_encoder_type": amago.nets.traj_encoders.GRUTrajEncoder,
                 f"{gru_config}.n_layers": layers,
                 f"{gru_config}.d_output": memory_size,
                 f"{gru_config}.d_hidden": memory_size,
@@ -200,24 +212,24 @@ def switch_traj_encoder(config: dict, arch: str, memory_size: int, layers: int):
         )
 
     elif arch == "ff":
+        traj_encoder_type = amago.nets.traj_encoders.FFTrajEncoder
         ff_config = "amago.nets.traj_encoders.FFTrajEncoder"
         config.update(
             {
-                "amago.agent.Agent.traj_encoder_type": amago.nets.traj_encoders.FFTrajEncoder,
                 f"{ff_config}.d_model": memory_size,
                 f"{ff_config}.n_layers": layers,
             }
         )
     elif arch == "mamba":
+        traj_encoder_type = amago.nets.traj_encoders.MambaTrajEncoder
         mamba_config = "amago.nets.traj_encoders.MambaTrajEncoder"
         config.update(
             {
-                "amago.agent.Agent.traj_encoder_type": amago.nets.traj_encoders.MambaTrajEncoder,
                 f"{mamba_config}.d_model": memory_size,
                 f"{mamba_config}.n_layers": layers,
             }
         )
-    return config
+    return traj_encoder_type
 
 
 def use_config(
@@ -247,17 +259,18 @@ def create_experiment_from_cli(
     traj_save_len: int,
     group_name: str,
     run_name: str,
+    agent_type: type[Agent],
+    tstep_encoder_type: type[TstepEncoder],
+    traj_encoder_type: type[TrajEncoder],
     experiment_type=amago.Experiment,
     **extra_experiment_kwargs,
 ):
     cli = command_line_args
 
     experiment = experiment_type(
-        agent_type=(
-            amago.agent.Agent
-            if cli.agent_type == "agent"
-            else amago.agent.MultiTaskAgent
-        ),
+        agent_type=agent_type,
+        tstep_encoder_type=tstep_encoder_type,
+        traj_encoder_type=traj_encoder_type,
         make_train_env=make_train_env,
         make_val_env=make_val_env,
         max_seq_len=max_seq_len,

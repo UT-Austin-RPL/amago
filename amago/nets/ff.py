@@ -64,8 +64,6 @@ class RMSNorm(nn.Module):
         return self.scale * x_normed
 
 
-# caution: this is probably too low of a level to be using gin-config
-@gin.configurable
 class FFBlock(nn.Module):
     def __init__(self, d_model, d_ff, dropout=0.00, activation="leaky_relu"):
         super().__init__()
@@ -81,8 +79,6 @@ class FFBlock(nn.Module):
         return x + x1
 
 
-# caution: this is probably too low of a level to be using gin-config
-@gin.configurable
 class MLP(nn.Module):
     def __init__(
         self,

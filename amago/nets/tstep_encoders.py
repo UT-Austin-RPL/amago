@@ -12,7 +12,6 @@ from amago.nets.utils import InputNorm, add_activation_log, symlog
 from amago.nets import ff, cnn
 
 
-@gin.configurable
 class TstepEncoder(nn.Module, ABC):
     def __init__(self, obs_space, rl2_space):
         super().__init__()

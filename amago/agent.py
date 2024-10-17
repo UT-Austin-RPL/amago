@@ -43,8 +43,8 @@ class Agent(nn.Module):
         rl2_space: gym.spaces.Box,
         action_space: gym.spaces.Space,
         max_seq_len: int,
-        tstep_encoder_type: Type[TstepEncoder] = FFTstepEncoder,
-        traj_encoder_type: Type[TrajEncoder] = TformerTrajEncoder,
+        tstep_encoder_type: Type[TstepEncoder],
+        traj_encoder_type: Type[TrajEncoder],
         num_critics: int = 4,
         num_critics_td: int = 2,
         online_coeff: float = 1.0,
@@ -499,7 +499,6 @@ class MultiTaskAgent(Agent):
             **kwargs,
         )
         self.fbc_filter_k = fbc_filter_k
-
         critic_kwargs = {
             "state_dim": self.traj_encoder.emb_dim,
             "action_dim": self.action_dim,

@@ -13,7 +13,7 @@ def add_cli(parser):
     parser.add_argument("--games", nargs="+", default=None)
     parser.add_argument("--max_seq_len", type=int, default=80)
     parser.add_argument(
-        "--cnn", type=str, choices=["nature", "impala"], default="nature"
+        "--cnn", type=str, choices=["nature", "impala"], default="impala"
     )
     return parser
 
@@ -52,7 +52,7 @@ if __name__ == "__main__":
             1.0 if args.agent_type == "multitask" else 0.0
         ),
     }
-    switch_traj_encoder(
+    traj_encoder_type = switch_traj_encoder(
         config,
         arch=args.traj_encoder,
         memory_size=args.memory_size,
@@ -63,8 +63,11 @@ if __name__ == "__main__":
         cnn_type = NatureishCNN
     elif args.cnn == "impala":
         cnn_type = IMPALAishCNN
+    tstep_encoder_type = switch_tstep_encoder(
+        config, arch="cnn", cnn_type=cnn_type, channels_first=True
+    )
 
-    switch_tstep_encoder(config, arch="cnn", cnn_type=cnn_type, channels_first=True)
+    agent_type = switch_agent(config, args.agent_type, reward_multiplier=1.0)
     use_config(config, args.configs)
 
     # Episode lengths in Atari vary widely across games, so we manually set actors
@@ -88,6 +91,9 @@ if __name__ == "__main__":
             max_seq_len=args.max_seq_len,
             traj_save_len=args.max_seq_len * 3,
             run_name=run_name,
+            tstep_encoder_type=tstep_encoder_type,
+            traj_encoder_type=traj_encoder_type,
+            agent_type=agent_type,
             group_name=group_name,
             val_timesteps_per_epoch=ATARI_TIME_LIMIT,
             save_trajs_as="npz-compressed",

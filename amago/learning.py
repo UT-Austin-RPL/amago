@@ -30,6 +30,7 @@ from .envs import SequenceWrapper, ReturnHistory, SpecialMetricHistory, EnvCreat
 from .loading import Batch, TrajDset, RLData_pad_collate, MAGIC_PAD_VAL
 from .hindsight import Relabeler
 from .agent import Agent
+from .nets import TstepEncoder, TrajEncoder
 
 
 @gin.configurable
@@ -44,6 +45,8 @@ class Experiment:
     max_seq_len: int
     # trajectories are saved to disk on `terminated or truncated` or after this many steps have passed since the last save (whichever comes first)
     traj_save_len: int
+    tstep_encoder_type: type[TstepEncoder]
+    traj_encoder_type: type[TrajEncoder]
     # the type of agent to use. must be a subclass of `Agent`
     agent_type: type[Agent]
 
@@ -96,7 +99,7 @@ class Experiment:
     dset_filter_pct: Optional[float] = 0.1
     # an object that can edit trajectory data before it is sent to the agent. useful for hindsight relabeling (temporarily removed) and data augmentation.
     relabel_type: type[Relabeler] = Relabeler
-    # randomizes trajectory file lengths when saving snippets from a much longer rollout. please refer to a longer explanation in `amago.envs.amago_env.EnvCreator`
+    # randomizes trajectory file lengths when saving snippets from a much longer rollout. please refer to a longer explanation in `amago.Experiment.init_envs`.
     stagger_traj_file_lengths: bool = True
     # how to save trajectory .traj files. three options:
     # "npz" saves data as numpy arrays.
@@ -242,14 +245,30 @@ class Experiment:
                 f"Implement exploration strategies by subclassing `ExplorationWrapper` and setting the `Experiment.exploration_wrapper_type`"
             )
 
+        if self.max_seq_len < self.traj_save_len and self.stagger_traj_file_lengths:
+            """
+            If the rollout length of the environment is much longer than the `traj_save_len`,
+            almost every datapoint will be exactly `traj_save_len` long and spaced `traj_save_len` apart.
+            For example if the `traj_save_len` is 100 the trajectory files will all be snippets from
+            [0, 100], [100, 200], [200, 300], etc. This can lead to a problem at test-time because the model
+            has never seen a sequence from timesteps [50, 150] or [150, 250], etc. We can mitigate this by
+            randomizing the trajectory lengths in a range around `traj_save_len`.
+            """
+            save_every_low = self.traj_save_len - self.max_seq_len
+            save_every_high = self.traj_save_len + self.max_seq_len
+            utils.amago_warning(
+                f"Note: Partial Context Mode. Randomizing trajectory file lengths in [{save_every_low}, {save_every_high}]"
+            )
+        else:
+            save_every_low = save_every_high = self.traj_save_len
+
         # wrap environments to save trajectories to replay buffer
         shared_env_kwargs = dict(
             dset_root=self.dset_root,
             dset_name=self.dset_name,
             save_trajs_as=self.save_trajs_as,
-            traj_save_len=self.traj_save_len,
-            max_seq_len=self.max_seq_len,
-            stagger_traj_file_lengths=self.stagger_traj_file_lengths,
+            save_every_low=save_every_low,
+            save_every_high=save_every_high,
         )
         make_train = [
             EnvCreator(
@@ -410,6 +429,8 @@ class Experiment:
     def init_model(self):
         # build initial policy based on observation shapes
         policy_kwargs = {
+            "tstep_encoder_type": self.tstep_encoder_type,
+            "traj_encoder_type": self.traj_encoder_type,
             "obs_space": self.rl2_space["obs"],
             "rl2_space": self.rl2_space["rl2"],
             "action_space": self.train_envs.single_action_space,
@@ -672,9 +693,9 @@ class Experiment:
             masked_critic_loss = 0.0
 
         return {
-            "Critic Loss": masked_critic_loss,
-            "Actor Loss": masked_actor_loss,
-            "Seq Length": L_1 + 1,
+            "critic_loss": masked_critic_loss,
+            "actor_loss": masked_actor_loss,
+            "seq_len": L_1 + 1,
             "mask": state_mask,
         } | update_info
 

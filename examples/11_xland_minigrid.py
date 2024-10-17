@@ -123,20 +123,19 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     config = {
-        "amago.agent.Agent.reward_multiplier": 10.0,
-        "amago.agent.Agent.tstep_encoder_type": XLandMGTstepEncoder,
         "amago.envs.exploration.EpsilonGreedy.steps_anneal": 1_000_000,
         "amago.nets.actor_critic.NCriticsTwoHot.min_return": -args.k_shots * 10.0 * 10,
         "amago.nets.actor_critic.NCriticsTwoHot.max_return": args.k_shots * 10.0 * 10,
         "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 32,
     }
 
-    switch_traj_encoder(
+    traj_encoder_type = switch_traj_encoder(
         config,
         arch=args.traj_encoder,
         memory_size=args.memory_size,
         layers=args.memory_layers,
     )
+    agent_type = switch_agent(config, args.agent_type, reward_multiplier=10.0)
     use_config(config, args.configs)
 
     xland_kwargs = {
@@ -171,6 +170,9 @@ if __name__ == "__main__":
             traj_save_len=traj_len,
             stagger_traj_file_lengths=False,
             run_name=run_name,
+            tstep_encoder_type=XLandMGTstepEncoder,
+            traj_encoder_type=traj_encoder_type,
+            agent_type=agent_type,
             group_name=group_name,
             val_timesteps_per_epoch=traj_len,
             save_trajs_as="npz-compressed",

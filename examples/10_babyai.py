@@ -103,6 +103,7 @@ class BabyTstepEncoder(amago.nets.tstep_encoders.TstepEncoder):
         emb_dim: int = 300,
     ):
         super().__init__(obs_space=obs_space, rl2_space=rl2_space)
+        breakpoint()
         self.obs_kind = obs_kind
         if obs_kind in ["partial-image", "full-image"]:
             cnn_type = amago.nets.cnn.NatureishCNN
@@ -161,20 +162,17 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     config = {
-        "amago.agent.Agent.reward_multiplier": 1000.0,
-        "amago.agent.Agent.tstep_encoder_type": partial(
-            BabyTstepEncoder, obs_kind=args.obs_kind
-        ),
         "amago.nets.actor_critic.NCriticsTwoHot.min_return": None,
         "amago.nets.actor_critic.NCriticsTwoHot.max_return": None,
         "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 64,
     }
-    switch_traj_encoder(
+    traj_encoder_type = switch_traj_encoder(
         config,
         arch=args.traj_encoder,
         memory_size=args.memory_size,
         layers=args.memory_layers,
     )
+    agent_type = switch_agent(config, args.agent_type, reward_multiplier=1000.0)
     use_config(config, args.configs)
 
     make_train_env = lambda: BabyAIAMAGOEnv(
@@ -206,6 +204,9 @@ if __name__ == "__main__":
             traj_save_len=args.max_seq_len * 3,
             stagger_traj_file_lengths=True,
             run_name=run_name,
+            tstep_encoder_type=partial(BabyTstepEncoder, obs_kind=args.obs_kind),
+            traj_encoder_type=traj_encoder_type,
+            agent_type=agent_type,
             group_name=group_name,
             val_timesteps_per_epoch=6000,
             save_trajs_as="npz",

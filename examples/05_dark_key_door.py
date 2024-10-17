@@ -47,17 +47,19 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     config = {
-        "amago.agent.Agent.reward_multiplier": 100.0,
         "BilevelEpsilonGreedy.steps_anneal": 500_000,
         "BilevelEpsilonGreedy.rollout_horizon": args.meta_horizon,
     }
-    switch_tstep_encoder(config, arch="ff", n_layers=2, d_hidden=128, d_output=64)
-    switch_traj_encoder(
+    tstep_encoder_type = switch_tstep_encoder(
+        config, arch="ff", n_layers=2, d_hidden=128, d_output=64
+    )
+    traj_encoder_type = switch_traj_encoder(
         config,
         arch=args.traj_encoder,
         memory_size=args.memory_size,
         layers=args.memory_layers,
     )
+    agent_type = switch_agent(config, args.agent_type, reward_multiplier=100.0)
     use_config(config, args.configs)
 
     group_name = f"{args.run_name}_dark_key_door"

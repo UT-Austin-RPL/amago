@@ -195,7 +195,7 @@ def DiscreteActionDist(vec):
     return safe_dist
 
 
-@gin.configurable(denylist=["state_dim", "action_dim", "discrete"])
+@gin.configurable
 class Actor(nn.Module):
     def __init__(
         self,
@@ -315,9 +315,7 @@ class _EinMixEnsemble(nn.Module):
         return outputs, phis
 
 
-@gin.configurable(
-    denylist=["state_dim", "action_dim", "discrete", "gammas", "num_critics"]
-)
+@gin.configurable
 class NCritics(nn.Module):
     def __init__(
         self,
@@ -379,7 +377,7 @@ class NCritics(nn.Module):
         return outputs, phis
 
 
-@gin.configurable(denylist=["state_dim", "action_dim", "gammas", "num_critics"])
+@gin.configurable
 class NCriticsTwoHot(nn.Module):
     def __init__(
         self,

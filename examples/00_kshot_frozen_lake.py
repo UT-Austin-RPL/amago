@@ -6,8 +6,9 @@ from amago.cli_utils import *
 
 def add_cli(parser):
     parser.add_argument(
-        "--experiment",
-        choices=["no-memory", "memory-rnn", "memory-transformer", "memory-mamba"],
+        "--seq_model",
+        type=str,
+        choices=["ff", "transformer", "rnn", "mamba"],
         required=True,
     )
     parser.add_argument("--run_name", type=str, required=True)
@@ -33,27 +34,19 @@ if __name__ == "__main__":
 
     config = {}
     # configure trajectory encoder (seq2seq memory model)
-    if args.experiment == "memory-rnn":
-        traj_encoder = "rnn"
-    elif args.experiment == "memory-transformer":
-        traj_encoder = "transformer"
-    elif args.experiment == "memory-mamba":
-        traj_encoder = "mamba"
-    else:
-        traj_encoder = "ff"
-    switch_traj_encoder(
+    traj_encoder_type = switch_traj_encoder(
         config,
-        arch=traj_encoder,
+        arch=args.seq_model,
         memory_size=128,
         layers=3,
     )
     # configure timestep encoder
-    switch_tstep_encoder(
+    tstep_encoder_type = switch_tstep_encoder(
         config, arch="ff", n_layers=1, d_hidden=128, d_output=64, normalize_inputs=False
     )
     use_config(config)
 
-    group_name = f"{args.run_name}_{args.experiment}"
+    group_name = f"{args.run_name}_{args.seq_model}"
     for trial in range(args.trials):
         run_name = group_name + f"_trial_{trial}"
 
@@ -77,6 +70,8 @@ if __name__ == "__main__":
             max_seq_len=args.max_seq_len,
             traj_save_len=args.max_rollout_length,
             agent_type=amago.agent.Agent,
+            tstep_encoder_type=tstep_encoder_type,
+            traj_encoder_type=traj_encoder_type,
             dset_max_size=12_500,
             run_name=run_name,
             dset_name=run_name,

@@ -48,16 +48,16 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     config = {}
-    switch_traj_encoder(
+    traj_encoder_type = switch_traj_encoder(
         config,
         arch=args.traj_encoder,
         memory_size=args.memory_size,
         layers=args.memory_layers,
     )
-
-    switch_tstep_encoder(
+    tstep_encoder_type = switch_tstep_encoder(
         config, arch="cnn", cnn_type=IMPALAishCNN, channels_first=False
     )
+    agent_type = switch_agent(config, args.agent_type)
     use_config(config, args.configs)
 
     procgen_kwargs = PROCGEN_SETTINGS[args.distribution]
@@ -81,6 +81,9 @@ if __name__ == "__main__":
             max_seq_len=args.max_seq_len,
             traj_save_len=args.max_seq_len * 4,
             run_name=run_name,
+            tstep_encoder_type=tstep_encoder_type,
+            traj_encoder_type=traj_encoder_type,
+            agent_type=agent_type,
             group_name=group_name,
             val_timesteps_per_epoch=5 * horizon + 1,
         )

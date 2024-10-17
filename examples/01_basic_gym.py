@@ -26,11 +26,15 @@ if __name__ == "__main__":
         # see https://github.com/google/gin-config for more information. For example:
         # "amago.nets.traj_encoders.TformerTrajEncoder.attention_type": amago.nets.transformer.FlashAttention,
     }
-    switch_traj_encoder(
+    traj_encoder_type = switch_traj_encoder(
         config,
         arch=args.traj_encoder,
         memory_size=args.memory_size,
         layers=args.memory_layers,
+    )
+    agent_type = switch_agent(
+        config,
+        args.agent_type,
     )
     use_config(config, args.configs)
 
@@ -49,6 +53,9 @@ if __name__ == "__main__":
             max_seq_len=args.max_seq_len,
             traj_save_len=args.max_seq_len * 4,
             run_name=run_name,
+            tstep_encoder_type=amago.nets.tstep_encoders.FFTstepEncoder,
+            traj_encoder_type=traj_encoder_type,
+            agent_type=agent_type,
             group_name=group_name,
             val_timesteps_per_epoch=args.eval_timesteps,
         )

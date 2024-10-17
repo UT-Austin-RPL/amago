@@ -3,6 +3,7 @@ from argparse import ArgumentParser
 import wandb
 
 from amago.envs.builtin.metaworld_ml import Metaworld
+from amago.nets.tstep_encoders import FFTstepEncoder
 from amago.envs.exploration import BilevelEpsilonGreedy
 from amago.cli_utils import *
 
@@ -34,18 +35,20 @@ if __name__ == "__main__":
         "BilevelEpsilonGreedy.steps_anneal": 2_000_000,
         "BilevelEpsilonGreedy.rollout_horizon": args.k * 500,
         "amago.nets.tstep_encoders.FFTstepEncoder.hide_rl2s": args.hide_rl2s,
-        "amago.agent.Agent.reward_multiplier": 1.0,
         # delete the next three lines to use the paper settings, which were
         # intentionally left wide open to avoid reward-specific tuning.
         "amago.nets.actor_critic.NCriticsTwoHot.min_return": -100.0,
         "amago.nets.actor_critic.NCriticsTwoHot.max_return": 5000 * args.k,
         "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 96,
     }
-    switch_traj_encoder(
+    traj_encoder_type = switch_traj_encoder(
         config,
         arch=args.traj_encoder,
         memory_size=args.memory_size,
         layers=args.memory_layers,
+    )
+    agent_type = switch_agent(
+        config, args.agent_type, reward_multiplier=1.0, num_critics=4
     )
     use_config(config, args.configs)
 
@@ -65,6 +68,9 @@ if __name__ == "__main__":
             traj_save_len=min(500 * args.k + 1, args.max_seq_len * 4),
             group_name=group_name,
             run_name=run_name,
+            tstep_encoder_type=FFTstepEncoder,
+            traj_encoder_type=traj_encoder_type,
+            agent_type=agent_type,
             val_timesteps_per_epoch=10 * args.k * 500 + 1,
             learning_rate=5e-4,
             grad_clip=2.0,

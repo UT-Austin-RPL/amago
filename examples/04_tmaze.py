@@ -65,25 +65,24 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     config = {
-        # improve PopArt numerical stability
-        "amago.agent.Agent.reward_multiplier": 100.0,
-        # high discount
-        "amago.agent.Agent.gamma": 0.9999,
         "TMazeExploration.horizon": args.horizon,
     }
-    switch_traj_encoder(
+    traj_encoder_type = switch_traj_encoder(
         config,
         arch=args.traj_encoder,
         memory_size=args.memory_size,
         layers=args.memory_layers,
     )
-    switch_tstep_encoder(
+    tstep_encoder_type = switch_tstep_encoder(
         config,
         arch="ff",
         n_layers=2,
         d_hidden=128,
         d_output=128,
         normalize_inputs=False,
+    )
+    agent_type = switch_agent(
+        config, args.agent_type, reward_multiplier=100.0, gamma=0.9999
     )
     use_config(config, args.configs)
 
@@ -104,6 +103,9 @@ if __name__ == "__main__":
             traj_save_len=args.horizon + 1,
             group_name=group_name,
             run_name=run_name,
+            tstep_encoder_type=tstep_encoder_type,
+            traj_encoder_type=traj_encoder_type,
+            agent_type=agent_type,
             val_timesteps_per_epoch=args.horizon + 1,
             sample_actions=False,  # even softmax prob .999 isn't good enough for this env...
             exploration_wrapper_type=TMazeExploration,

@@ -23,7 +23,6 @@ def weight_init(m):
         nn.init.orthogonal_(m.weight.data[:, :, mid, mid], gain)
 
 
-@gin.configurable
 class CNN(nn.Module, ABC):
     def __init__(
         self,
@@ -128,14 +127,14 @@ class DrQCNN(CNN):
         return x
 
 
-@gin.configurable(allowlist=["channels"])
+@gin.configurable
 class GridworldCNN(CNN):
     def __init__(
         self,
         img_shape: tuple[int],
         channels_first: bool,
         activation: str,
-        channels=[16, 32, 48],
+        channels: list[int] = [16, 32, 48],
     ):
         super().__init__(
             img_shape, channels_first=channels_first, activation=activation
@@ -152,7 +151,7 @@ class GridworldCNN(CNN):
         return x
 
 
-@gin.configurable(allowlist=["channels", "kernels", "strides"])
+@gin.configurable
 class NatureishCNN(CNN):
     def __init__(
         self,
@@ -186,7 +185,7 @@ class NatureishCNN(CNN):
         return x
 
 
-@gin.configurable(allowlist=["cnn_block_depths", "post_group_norm"])
+@gin.configurable
 class IMPALAishCNN(CNN):
     def __init__(
         self,

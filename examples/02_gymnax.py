@@ -43,7 +43,7 @@ def make_gymnax_amago(env_name, parallel_envs):
     )
 
 
-def simple_switch_tstep_encoder(config, obs_shape):
+def guess_tstep_encoder(config, obs_shape):
     """
     We'll move past the somewhat random collection of gymnax envs by making up a simple
     timestep encoder based on a few hacks. If we really cared about gymnax performance we
@@ -52,7 +52,7 @@ def simple_switch_tstep_encoder(config, obs_shape):
     if len(obs_shape) == 3:
         print(f"Guessing CNN for observation of shape {obs_shape}")
         channels_first = np.argmin(obs_shape).item() == 0
-        switch_tstep_encoder(
+        return switch_tstep_encoder(
             config,
             "cnn",
             cnn_type=GridworldCNN,
@@ -62,14 +62,13 @@ def simple_switch_tstep_encoder(config, obs_shape):
     else:
         print(f"Guessing MLP for observation of shape {obs_shape}")
         dim = math.prod(obs_shape)  # FFTstepEncoder will flatten the obs on input
-        switch_tstep_encoder(
+        return switch_tstep_encoder(
             config,
             "ff",
             d_hidden=max(dim // 3, 128),
             n_layers=2,
             d_output=max(dim // 4, 96),
         )
-    return config
 
 
 if __name__ == "__main__":
@@ -83,7 +82,7 @@ if __name__ == "__main__":
 
     # config
     config = {}
-    switch_traj_encoder(
+    traj_encoder_type = switch_traj_encoder(
         config,
         arch=args.traj_encoder,
         memory_size=args.memory_size,
@@ -92,7 +91,8 @@ if __name__ == "__main__":
     with jax.default_device(jax.devices("cpu")[0]):
         test_env, env_params = gymnax.make(args.env)
         test_obs_shape = test_env.observation_space(env_params).shape
-    simple_switch_tstep_encoder(config, test_obs_shape)
+    tstep_encoder_type = guess_tstep_encoder(config, test_obs_shape)
+    agent_type = switch_agent(config, args.agent_type)
 
     use_config(config, args.configs)
     make_env = partial(
@@ -108,6 +108,9 @@ if __name__ == "__main__":
             max_seq_len=args.max_seq_len,
             traj_save_len=args.max_seq_len * 20,
             run_name=run_name,
+            agent_type=agent_type,
+            tstep_encoder_type=tstep_encoder_type,
+            traj_encooder_type=traj_encoder_type,
             group_name=group_name,
             val_timesteps_per_epoch=args.eval_timesteps,
             grad_clip=2.0,

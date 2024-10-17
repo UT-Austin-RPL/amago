@@ -42,7 +42,7 @@ def add_activation_log(
         log_dict[f"activation-{root_key}-mean"] = activation.mean()
 
 
-@gin.configurable
+@gin.configurable(denylist=["skip"])
 class InputNorm(nn.Module):
     def __init__(self, dim, beta=1e-4, init_nu=1.0, skip: bool = False):
         super().__init__()
