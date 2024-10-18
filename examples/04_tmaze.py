@@ -110,7 +110,7 @@ if __name__ == "__main__":
             sample_actions=False,  # even softmax prob .999 isn't good enough for this env...
             exploration_wrapper_type=TMazeExploration,
         )
-        switch_async_mode(experiment, args)
+        switch_async_mode(experiment, args.mode)
         experiment.start()
         if args.ckpt is not None:
             experiment.load_checkpoint(args.ckpt)

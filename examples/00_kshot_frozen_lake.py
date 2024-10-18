@@ -44,6 +44,16 @@ if __name__ == "__main__":
     tstep_encoder_type = switch_tstep_encoder(
         config, arch="ff", n_layers=1, d_hidden=128, d_output=64, normalize_inputs=False
     )
+
+    # we're using the default exploration strategy but being overly verbose about it for the example
+    exploration_wrapper_type = switch_exploration(
+        config,
+        strategy="egreedy",
+        eps_start=1.0,
+        eps_end=0.05,
+        steps_anneal=1_000_000,
+        randomize_eps=True,
+    )
     use_config(config)
 
     group_name = f"{args.run_name}_{args.seq_model}"
@@ -70,6 +80,7 @@ if __name__ == "__main__":
             max_seq_len=args.max_seq_len,
             traj_save_len=args.max_rollout_length,
             agent_type=amago.agent.Agent,
+            exploration_wrapper_type=exploration_wrapper_type,
             tstep_encoder_type=tstep_encoder_type,
             traj_encoder_type=traj_encoder_type,
             dset_max_size=12_500,

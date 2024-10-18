@@ -45,7 +45,7 @@ class SelfAttention(nn.Module, ABC):
 
 
 class VanillaAttention(SelfAttention):
-    def __init__(self, causal: bool = True, dropout: float = 0.0):
+    def __init__(self, causal: bool, dropout: float):
         super().__init__(causal=causal, dropout=dropout)
         self.dropout = nn.Dropout(self.dropout)
         self._mask = None
@@ -102,12 +102,12 @@ class VanillaAttention(SelfAttention):
             return self._inference_with_cache(qkv, key_cache, val_cache, cache_seqlens)
 
 
-@gin.configurable(allowlist=["window_size"])
+@gin.configurable
 class FlashAttention(SelfAttention):
     def __init__(
         self,
-        causal: bool = True,
-        dropout: float = 0.0,
+        causal: bool,
+        dropout: float,
         window_size: tuple[int, int] = (-1, -1),
     ):
         assert flash_attn is not None, "Missing flash attention 2 install."
@@ -263,17 +263,14 @@ class VanillaFlexAttention(FlexAttention):
         )
 
 
-@gin.configurable(allowlist=["window_size"])
+@gin.configurable
 class SlidingWindowFlexAttention(FlexAttention):
     def __init__(
-        self, window_size: int = None, causal: bool = True, dropout: float = 0.0
+        self,
+        causal: bool = True,
+        dropout: float = 0.0,
+        window_size: int = gin.REQUIRED,
     ):
-        if window_size is None:
-            window_size = 128
-            amago_warning(
-                f"SlidingWindowFlexAttention `window_size` has not been configured. Defaulting to {window_size}"
-            )
-
         def sliding_window_mask_mod(b, h, q_idx, kv_idx):
             window_mask = q_idx - kv_idx <= window_size
             return window_mask

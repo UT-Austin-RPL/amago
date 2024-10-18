@@ -95,7 +95,7 @@ class CNNTstepEncoder(TstepEncoder):
         activation: str = "leaky_relu",
         skip_rl2_norm: bool = False,
         hide_rl2s: bool = False,
-        drqv2_aug: bool = True,
+        drqv2_aug: bool = False,
     ):
         super().__init__(obs_space=obs_space, rl2_space=rl2_space)
         self.data_aug = (

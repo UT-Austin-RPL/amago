@@ -45,7 +45,7 @@ if __name__ == "__main__":
             agent_type=agent_type,
             val_timesteps_per_epoch=2000,
         )
-        switch_async_mode(experiment, args)
+        switch_async_mode(experiment, args.mode)
         experiment.start()
         if args.ckpt is not None:
             experiment.load_checkpoint(args.ckpt)

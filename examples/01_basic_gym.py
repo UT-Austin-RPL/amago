@@ -59,7 +59,7 @@ if __name__ == "__main__":
             group_name=group_name,
             val_timesteps_per_epoch=args.eval_timesteps,
         )
-        experiment = switch_async_mode(experiment, args)
+        experiment = switch_async_mode(experiment, args.mode)
         experiment.start()
         if args.ckpt is not None:
             experiment.load_checkpoint(args.ckpt)

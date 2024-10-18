@@ -57,7 +57,6 @@ def guess_tstep_encoder(config, obs_shape):
             "cnn",
             cnn_type=GridworldCNN,
             channels_first=channels_first,
-            drqv2_aug=False,
         )
     else:
         print(f"Guessing MLP for observation of shape {obs_shape}")
@@ -117,7 +116,7 @@ if __name__ == "__main__":
             l2_coeff=1e-4,
             save_trajs_as="npz-compressed",
         )
-        experiment = switch_async_mode(experiment, args)
+        experiment = switch_async_mode(experiment, args.mode)
         amago_device = experiment.DEVICE.index or torch.cuda.current_device()
         env_device = jax.devices("gpu")[amago_device]
         with jax.default_device(env_device):

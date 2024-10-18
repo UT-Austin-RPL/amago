@@ -64,7 +64,11 @@ if __name__ == "__main__":
     elif args.cnn == "impala":
         cnn_type = IMPALAishCNN
     tstep_encoder_type = switch_tstep_encoder(
-        config, arch="cnn", cnn_type=cnn_type, channels_first=True
+        config,
+        arch="cnn",
+        cnn_type=cnn_type,
+        channels_first=True,
+        drqv2_aug=True,
     )
 
     agent_type = switch_agent(config, args.agent_type, reward_multiplier=1.0)
@@ -98,7 +102,7 @@ if __name__ == "__main__":
             val_timesteps_per_epoch=ATARI_TIME_LIMIT,
             save_trajs_as="npz-compressed",
         )
-        switch_async_mode(experiment, args)
+        switch_async_mode(experiment, args.mode)
         experiment.start()
         if args.ckpt is not None:
             experiment.load_checkpoint(args.ckpt)

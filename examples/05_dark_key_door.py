@@ -46,10 +46,7 @@ if __name__ == "__main__":
     add_cli(parser)
     args = parser.parse_args()
 
-    config = {
-        "BilevelEpsilonGreedy.steps_anneal": 500_000,
-        "BilevelEpsilonGreedy.rollout_horizon": args.meta_horizon,
-    }
+    config = {}
     tstep_encoder_type = switch_tstep_encoder(
         config, arch="ff", n_layers=2, d_hidden=128, d_output=64
     )
@@ -60,6 +57,12 @@ if __name__ == "__main__":
         layers=args.memory_layers,
     )
     agent_type = switch_agent(config, args.agent_type, reward_multiplier=100.0)
+    # the fancier exploration schedule mentioned in the appendix can help
+    # when the domain is a true meta-RL problem and the "horizon" time limit
+    # (above) is actually relevant for resetting the task.
+    exploration_type = switch_exploration(
+        config, "bilevel", steps_anneal=500_000, rollout_horizon=args.meta_horizon
+    )
     use_config(config, args.configs)
 
     group_name = f"{args.run_name}_dark_key_door"
@@ -84,12 +87,9 @@ if __name__ == "__main__":
             group_name=group_name,
             run_name=run_name,
             val_timesteps_per_epoch=args.meta_horizon * 4,
-            # the fancier exploration schedule mentioned in the appendix can help
-            # when the domain is a true meta-RL problem and the "horizon" time limit
-            # (above) is actually relevant for resetting the task.
-            exploration_wrapper_type=BilevelEpsilonGreedy,
+            exploration_wrapper_type=exploration_type,
         )
-        switch_async_mode(experiment, args)
+        switch_async_mode(experiment, args.mode)
         experiment.start()
         if args.ckpt is not None:
             experiment.load_checkpoint(args.ckpt)

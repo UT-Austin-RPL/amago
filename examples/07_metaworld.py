@@ -20,7 +20,7 @@ def add_cli(parser):
     parser.add_argument(
         "--hide_rl2s",
         action="store_true",
-        help="hides the 'rl2 info' (previous actions, rewards, current time)",
+        help="hides the 'rl2 info' (previous actions, rewards)",
     )
     return parser
 
@@ -32,8 +32,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     config = {
-        "BilevelEpsilonGreedy.steps_anneal": 2_000_000,
-        "BilevelEpsilonGreedy.rollout_horizon": args.k * 500,
         "amago.nets.tstep_encoders.FFTstepEncoder.hide_rl2s": args.hide_rl2s,
         # delete the next three lines to use the paper settings, which were
         # intentionally left wide open to avoid reward-specific tuning.
@@ -49,6 +47,9 @@ if __name__ == "__main__":
     )
     agent_type = switch_agent(
         config, args.agent_type, reward_multiplier=1.0, num_critics=4
+    )
+    exploration_type = switch_exploration(
+        config, "bilevel", steps_anneal=2_000_000, rollout_horizon=args.k * 500
     )
     use_config(config, args.configs)
 
@@ -74,10 +75,10 @@ if __name__ == "__main__":
             val_timesteps_per_epoch=10 * args.k * 500 + 1,
             learning_rate=5e-4,
             grad_clip=2.0,
-            exploration_wrapper_type=BilevelEpsilonGreedy,
+            exploration_wrapper_type=exploration_type,
         )
 
-        experiment = switch_async_mode(experiment, args)
+        experiment = switch_async_mode(experiment, args.mode)
         experiment.start()
         if args.ckpt is not None:
             experiment.load_checkpoint(args.ckpt)

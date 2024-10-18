@@ -178,7 +178,7 @@ if __name__ == "__main__":
             save_trajs_as="npz-compressed",
             grad_clip=2.0,
         )
-        switch_async_mode(experiment, args)
+        switch_async_mode(experiment, args.mode)
         amago_device = experiment.DEVICE.index or torch.cuda.current_device()
         env_device = jax.devices("gpu")[amago_device]
         with jax.default_device(env_device):

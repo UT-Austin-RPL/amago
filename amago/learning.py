@@ -193,15 +193,18 @@ class Experiment:
         self.accelerator.print(
             f"""\n\n \t\t {colored('AMAGO v3', 'green')}
             \t -------------------------
+            \t TstepEncoder Type: {self.tstep_encoder_type.__name__}
+            \t TrajEncoder Type: {self.traj_encoder_type.__name__}
             \t Agent Type: {self.policy.__class__.__name__}
-            \t Environment: {env_summary}
-            \t Accelerate Processes: {self.accelerator.num_processes}
+            \t Total Parameters: {total_params:,d}
+            \t Environment Type: {env_summary}
+            \t Exploration Type: {self.exploration_wrapper_type.__name__}
             \t Policy Max Sequence Length: {self.max_seq_len}
             \t Trajectory File Sequence Length: {self.traj_save_len}
             \t Mixed Precision: {self.mixed_precision.upper()}
             \t Offline Loss Weight: {self.policy.offline_coeff}
             \t Online Loss Weight: {self.policy.online_coeff}
-            \t Total Parameters: {total_params:,d} \n\n"""
+            \t Accelerate Processes: {self.accelerator.num_processes} \n\n"""
         )
 
     def init_envs(self):
@@ -576,6 +579,7 @@ class Experiment:
             )
         # validation metrics are averaged over all processes
         logs_global = utils.avg_over_accelerate(logs_per_process)
+        # TODO: fix distributed frame counts.
         self.log(logs_global, key="val")
 
     def evaluate_test(

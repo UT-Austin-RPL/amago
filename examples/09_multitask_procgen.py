@@ -55,7 +55,11 @@ if __name__ == "__main__":
         layers=args.memory_layers,
     )
     tstep_encoder_type = switch_tstep_encoder(
-        config, arch="cnn", cnn_type=IMPALAishCNN, channels_first=False
+        config,
+        arch="cnn",
+        cnn_type=IMPALAishCNN,
+        channels_first=False,
+        drqv2_aug=True,
     )
     agent_type = switch_agent(config, args.agent_type)
     use_config(config, args.configs)
@@ -87,7 +91,7 @@ if __name__ == "__main__":
             group_name=group_name,
             val_timesteps_per_epoch=5 * horizon + 1,
         )
-        switch_async_mode(experiment, args)
+        switch_async_mode(experiment, args.mode)
         experiment.start()
         if args.ckpt is not None:
             experiment.load_checkpoint(args.ckpt)
