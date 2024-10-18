@@ -20,7 +20,7 @@ from .env_utils import (
 )
 from .exploration import ExplorationWrapper
 from amago.hindsight import Timestep, Trajectory, split_batched_timestep
-from amago.utils import amago_warning
+from amago.loading import get_path_to_trajs
 
 
 class AMAGOEnv(gym.Wrapper):
@@ -190,13 +190,12 @@ class SequenceWrapper(gym.Wrapper):
 
     def __init__(
         self,
-        env,
-        save_every: tuple[int, int] | None = None,
+        env: gym.Env,
+        save_every: Optional[tuple[int, int]] = None,
         make_dset: bool = False,
         dset_root: str = None,
         dset_name: str = None,
-        dset_split: str = None,
-        save_trajs_as: str = "trajectory",
+        save_trajs_as: str = "npz",
     ):
         super().__init__(env)
 
@@ -205,15 +204,13 @@ class SequenceWrapper(gym.Wrapper):
         if make_dset:
             assert dset_root is not None
             assert dset_name is not None
-            assert dset_split in ["train", "val", "test"]
-            self.dset_write_dir = os.path.join(dset_root, dset_name, dset_split)
+            self.dset_write_dir = get_path_to_trajs(dset_root, dset_name)
             if not os.path.exists(self.dset_write_dir):
                 os.makedirs(self.dset_write_dir)
         else:
             self.dset_write_dir = None
         self.dset_root = dset_root
         self.dset_name = dset_name
-        self.dset_split = dset_split
         self.save_every = save_every
         self.save_trajs_as = save_trajs_as
         self._total_frames = 0
@@ -353,7 +350,6 @@ class EnvCreator:
     make_dset: bool
     dset_root: str
     dset_name: str
-    dset_split: str
     save_every_low: int
     save_every_high: int
     save_trajs_as: str
@@ -373,7 +369,6 @@ class EnvCreator:
             make_dset=self.make_dset,
             dset_root=self.dset_root,
             dset_name=self.dset_name,
-            dset_split=self.dset_split,
             save_trajs_as=self.save_trajs_as,
         )
         self.rl2_space = env.rl2_space

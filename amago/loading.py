@@ -30,6 +30,10 @@ def load_traj_from_disk(path: str) -> Trajectory | FrozenTraj:
         )
 
 
+def get_path_to_trajs(dset_root: str, dset_name: str) -> str:
+    return os.path.join(dset_root, dset_name, "buffer")
+
+
 class TrajDset(Dataset):
     """
     Load trajectory files from disk in parallel with pytorch Dataset/DataLoader
@@ -41,17 +45,12 @@ class TrajDset(Dataset):
         relabeler: Relabeler,
         dset_root: str = None,
         dset_name: str = None,
-        dset_split: str = "train",
         items_per_epoch: int = None,
         max_seq_len: int = None,
     ):
-        assert dset_split in ["train", "val", "test"]
         assert dset_root is not None and os.path.exists(dset_root)
         self.max_seq_len = max_seq_len
-        self.dset_split = dset_split
-        self.dset_path = (
-            os.path.join(dset_root, dset_name, dset_split) if dset_name else None
-        )
+        self.dset_path = get_path_to_trajs(dset_root, dset_name) if dset_name else None
         self.length = items_per_epoch if dset_name else None
         self.filenames = []
         self.refresh_files()

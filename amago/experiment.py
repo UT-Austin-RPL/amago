@@ -279,7 +279,6 @@ class Experiment:
                 make_env=env_func,
                 # save trajectories to disk
                 make_dset=True,
-                dset_split="train",
                 # adds exploration noise
                 exploration_wrapper_type=self.exploration_wrapper_type,
                 **shared_env_kwargs,
@@ -291,7 +290,6 @@ class Experiment:
                 make_env=env_func,
                 # do not save trajectories to disk
                 make_dset=False,
-                dset_split="val",
                 # no exploration noise
                 exploration_wrapper_type=None,
                 **shared_env_kwargs,
@@ -387,7 +385,6 @@ class Experiment:
             relabeler=self.relabel_type(),
             dset_root=self.dset_root,
             dset_name=self.dset_name,
-            dset_split="train",
             items_per_epoch=self.train_batches_per_epoch
             * self.batch_size
             * self.accelerator.num_processes,
