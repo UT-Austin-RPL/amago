@@ -49,7 +49,8 @@ class BilevelEpsilonGreedy(ExplorationWrapper):
         eps_start_end: float = 0.05,  # end of training, start of rollout
         eps_end_start: float = 0.8,  # start of training, end of rollout
         eps_end_end: float = 0.01,  # end of training, end of rollout
-        steps_anneal: int = 1_000_000,
+        steps_anneal: int = 1_000_000,  # linear schedule end point (in terms of steps taken *in each actor process*)
+        randomize_eps: bool = True,  # treat the schedule as the max and sample uniform [0, max] for each actor
     ):
         super().__init__(amago_env)
         self.eps_start_start = eps_start_start
@@ -57,6 +58,7 @@ class BilevelEpsilonGreedy(ExplorationWrapper):
         self.eps_end_start = eps_end_start
         self.eps_end_end = eps_end_end
         self.rollout_horizon = rollout_horizon
+        self.randomize_eps = randomize_eps
 
         self.start_global_slope = (eps_start_start - eps_start_end) / steps_anneal
         self.end_global_slope = (eps_end_start - eps_end_end) / steps_anneal
@@ -70,7 +72,8 @@ class BilevelEpsilonGreedy(ExplorationWrapper):
     def reset(self, *args, **kwargs):
         out = super().reset(*args, **kwargs)
         np.random.seed(random.randint(0, 1e6))
-        self.global_multiplier = np.random.rand(self.batched_envs)
+        if self.randomize_eps:
+            self.global_multiplier = np.random.rand(self.batched_envs)
         return out
 
     def current_eps(self, local_step: np.ndarray):
@@ -135,6 +138,7 @@ class EpsilonGreedy(BilevelEpsilonGreedy):
         eps_start: float = 1.0,
         eps_end: float = 0.05,
         steps_anneal: int = 1_000_000,
+        randomize_eps: bool = True,
     ):
         super().__init__(
             amago_env,
@@ -144,4 +148,5 @@ class EpsilonGreedy(BilevelEpsilonGreedy):
             eps_end_start=eps_start,
             eps_end_end=eps_end,
             steps_anneal=steps_anneal,
+            randomize_eps=randomize_eps,
         )

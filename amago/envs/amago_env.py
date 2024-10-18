@@ -354,33 +354,13 @@ class EnvCreator:
     dset_root: str
     dset_name: str
     dset_split: str
+    save_every_low: int
+    save_every_high: int
     save_trajs_as: str
-    traj_save_len: int
-    max_seq_len: int
-    stagger_traj_file_lengths: bool
 
     def __post_init__(self):
-        self.set_traj_stagger()
         self.rl2_space = None
         self.already_vectorized = False
-
-    def set_traj_stagger(self):
-        if self.max_seq_len < self.traj_save_len and self.stagger_traj_file_lengths:
-            """
-            If the rollout length of the environment is much longer than the `traj_save_len`,
-            almost every datapoint will be exactly `traj_save_len` long and spaced `traj_save_len` apart.
-            For example if the `traj_save_len` is 100 the trajectory files will all be snippets from
-            [0, 100], [100, 200], [200, 300], etc. This can lead to a problem at test-time because the model
-            has never seen a sequence from timesteps [50, 150] or [150, 250], etc. We can mitigate this by
-            randomizing the trajectory lengths in a range around `traj_save_len`.
-            """
-            self.save_every_low = self.traj_save_len - self.max_seq_len
-            self.save_every_high = self.traj_save_len + self.max_seq_len
-            amago_warning(
-                f"Note: Partial Context Mode. Randomizing trajectory file lengths in [{self.save_every_low}, {self.save_every_high}]"
-            )
-        else:
-            self.save_every_low = self.save_every_high = self.traj_save_len
 
     def __call__(self):
         env = self.make_env()

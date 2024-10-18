@@ -7,6 +7,7 @@ from torch import nn
 import gymnasium as gym
 
 import amago
+from amago import TstepEncoder
 from amago.envs.builtin.babyai import MultitaskMetaBabyAI, ALL_BABYAI_TASKS
 from amago.envs import AMAGOEnv
 from amago.nets.utils import add_activation_log, symlog
@@ -92,7 +93,7 @@ class BabyAIAMAGOEnv(AMAGOEnv):
         return self.env.current_task
 
 
-class BabyTstepEncoder(amago.nets.tstep_encoders.TstepEncoder):
+class BabyTstepEncoder(TstepEncoder):
     def __init__(
         self,
         obs_kind: str,
@@ -103,7 +104,6 @@ class BabyTstepEncoder(amago.nets.tstep_encoders.TstepEncoder):
         emb_dim: int = 300,
     ):
         super().__init__(obs_space=obs_space, rl2_space=rl2_space)
-        breakpoint()
         self.obs_kind = obs_kind
         if obs_kind in ["partial-image", "full-image"]:
             cnn_type = amago.nets.cnn.NatureishCNN

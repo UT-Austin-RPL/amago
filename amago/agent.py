@@ -11,8 +11,8 @@ import gin
 import gymnasium as gym
 
 from amago.loading import Batch, MAGIC_PAD_VAL
-from amago.nets.tstep_encoders import TstepEncoder, FFTstepEncoder
-from amago.nets.traj_encoders import TrajEncoder, TformerTrajEncoder
+from amago.nets.tstep_encoders import TstepEncoder
+from amago.nets.traj_encoders import TrajEncoder
 from amago.nets import actor_critic
 from amago import utils
 

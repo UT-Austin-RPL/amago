@@ -45,9 +45,10 @@ class FFTstepEncoder(TstepEncoder):
         activation: str = "leaky_relu",
         hide_rl2s: bool = False,
         normalize_inputs: bool = True,
+        obs_key: str = "observation",
     ):
         super().__init__(obs_space=obs_space, rl2_space=rl2_space)
-        flat_obs_shape = math.prod(self.obs_space["observation"].shape)
+        flat_obs_shape = math.prod(self.obs_space[obs_key].shape)
         in_dim = flat_obs_shape + self.rl2_space.shape[-1]
         self.in_norm = InputNorm(in_dim, skip=not normalize_inputs)
         self.base = ff.MLP(
@@ -60,10 +61,11 @@ class FFTstepEncoder(TstepEncoder):
         self.out_norm = ff.Normalization(norm, d_output)
         self._emb_dim = d_output
         self.hide_rl2s = hide_rl2s
+        self.obs_key = obs_key
 
     def inner_forward(self, obs, rl2s, log_dict: Optional[dict] = None):
         # multi-modal envs that do not use the default `observation` key need their own custom encoders.
-        obs = obs["observation"]
+        obs = obs[self.obs_key]
         B, L, *_ = obs.shape
         if self.hide_rl2s:
             rl2s = rl2s * 0
@@ -96,12 +98,13 @@ class CNNTstepEncoder(TstepEncoder):
         skip_rl2_norm: bool = False,
         hide_rl2s: bool = False,
         drqv2_aug: bool = False,
+        obs_key: str = "observation",
     ):
         super().__init__(obs_space=obs_space, rl2_space=rl2_space)
         self.data_aug = (
             cnn.DrQv2Aug(4, channels_first=channels_first) if drqv2_aug else lambda x: x
         )
-        obs_shape = self.obs_space["observation"].shape
+        obs_shape = self.obs_space[obs_key].shape
         self.cnn = cnn_type(
             img_shape=obs_shape,
             channels_first=channels_first,
@@ -119,11 +122,12 @@ class CNNTstepEncoder(TstepEncoder):
         self.merge = nn.Linear(mlp_in, d_output)
         self.out_norm = ff.Normalization(out_norm, d_output)
         self.hide_rl2s = hide_rl2s
+        self.obs_key = obs_key
         self._emb_dim = d_output
 
     def inner_forward(self, obs, rl2s, log_dict: Optional[dict] = None):
         # multi-modal envs that do not use the default `observation` key need their own custom encoders.
-        img = obs["observation"].float()
+        img = obs[self.obs_key].float()
         B, L, *_ = img.shape
         if self.training:
             og_split = max(min(math.ceil(B * 0.25), B - 1), 0)

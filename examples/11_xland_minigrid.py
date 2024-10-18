@@ -43,7 +43,7 @@ class XLandMiniGridAMAGO(AMAGOEnv):
 
 
 @gin.configurable
-class XLandMGTstepEncoder(amago.nets.tstep_encoders.TstepEncoder):
+class XLandMGTstepEncoder(amago.TstepEncoder):
     def __init__(
         self,
         obs_space,
