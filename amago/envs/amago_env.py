@@ -196,6 +196,7 @@ class SequenceWrapper(gym.Wrapper):
         dset_root: str = None,
         dset_name: str = None,
         save_trajs_as: str = "npz",
+        save_to_protected: bool = False,
     ):
         super().__init__(env)
 
@@ -204,7 +205,9 @@ class SequenceWrapper(gym.Wrapper):
         if make_dset:
             assert dset_root is not None
             assert dset_name is not None
-            self.dset_write_dir = get_path_to_trajs(dset_root, dset_name)
+            self.dset_write_dir = get_path_to_trajs(
+                dset_root, dset_name, fifo=not save_to_protected
+            )
             if not os.path.exists(self.dset_write_dir):
                 os.makedirs(self.dset_write_dir)
         else:

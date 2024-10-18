@@ -374,11 +374,9 @@ class Experiment:
         else:
             utils.amago_warning("Latest policy checkpoint was not loaded.")
 
-    def delete_buffer_from_disk(self):
-        # convenience method to delete the replay buffer to prevent users from accidentally filling their disk.
-        buffer_dir = os.path.join(self.dset_root, self.dset_name, "train")
-        if os.path.exists(buffer_dir) and self.accelerator.is_main_process:
-            shutil.rmtree(buffer_dir)
+    def delete_buffer_from_disk(self, delete_protected: bool = False):
+        if self.accelerator.is_main_process:
+            self.train_dset.clear(delete_protected=delete_protected)
 
     def init_dsets(self):
         self.train_dset = TrajDset(
@@ -392,7 +390,6 @@ class Experiment:
         )
 
     def init_dloaders(self):
-        self.train_dset.refresh_files()  # we only find new .traj files at the start of each epoch
         train_dloader = DataLoader(
             self.train_dset,
             batch_size=self.batch_size,
@@ -736,20 +733,22 @@ class Experiment:
             return contextlib.suppress()
 
     def manage_replay_buffer(self):
+        self.train_dset.refresh_files()
+        old_size = self.train_dset.count_trajectories()
+        if self.accelerator.is_main_process:
+            self.train_dset.filter(new_size=self.dset_max_size)
+        self.accelerator.wait_for_everyone()
         dset_size = self.train_dset.count_trajectories()
+        fifo_size = self.train_dset.count_deletable_trajectories()
+        protected_size = self.train_dset.count_protected_trajectories()
         dset_gb = self.train_dset.disk_usage
-        needs_filter = (
-            dset_size > self.dset_max_size and self.dset_filter_pct is not None
-        )
-        if needs_filter:
-            pct_to_filter = max(
-                self.dset_filter_pct, (dset_size - self.dset_max_size) / dset_size
-            )
-            self.train_dset.filter(pct_to_filter)
         self.log(
             {
-                "Trajectory Files Saved in Replay Buffer": dset_size,
-                "Train Buffer Disk Space (GB)": dset_gb,
+                "Trajectory Files Saved in FIFO Replay Buffer": fifo_size,
+                "Trajectory Files Saved in Protected Replay Buffer": protected_size,
+                "Total Trajectory Files in Replay Buffer": dset_size,
+                "Trajectory Files Deleted": old_size - dset_size,
+                "Buffer Disk Space (GB)": dset_gb,
             },
             key="buffer",
         )
@@ -784,6 +783,9 @@ class Experiment:
                 and self.train_timesteps_per_epoch > 0
             ):
                 self.collect_new_training_data()
+
+            # delete excess trajectories from disk
+            self.manage_replay_buffer()
             self.accelerator.wait_for_everyone()
 
             # refresh dataset with newly collected trajectories
@@ -805,11 +807,6 @@ class Experiment:
                     loss_dict = self.train_step(batch, log_step=log_step)
                     if log_step:
                         self.log(loss_dict, key="train-update")
-            self.accelerator.wait_for_everyone()
-
-            # delete excess trajectories from disk
-            if self.accelerator.is_main_process:
-                self.manage_replay_buffer()
             self.accelerator.wait_for_everyone()
 
             # end epoch

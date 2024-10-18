@@ -5,6 +5,7 @@ import pickle
 from dataclasses import dataclass
 from operator import itemgetter
 from functools import partial
+from typing import Optional
 
 import torch
 from torch.nn.utils.rnn import pad_sequence
@@ -30,8 +31,8 @@ def load_traj_from_disk(path: str) -> Trajectory | FrozenTraj:
         )
 
 
-def get_path_to_trajs(dset_root: str, dset_name: str) -> str:
-    return os.path.join(dset_root, dset_name, "buffer")
+def get_path_to_trajs(dset_root: str, dset_name: str, fifo: bool) -> str:
+    return os.path.join(dset_root, dset_name, "buffer", "fifo" if fifo else "protected")
 
 
 class TrajDset(Dataset):
@@ -43,18 +44,20 @@ class TrajDset(Dataset):
     def __init__(
         self,
         relabeler: Relabeler,
-        dset_root: str = None,
-        dset_name: str = None,
-        items_per_epoch: int = None,
-        max_seq_len: int = None,
+        dset_root: str,
+        dset_name: str,
+        items_per_epoch: Optional[int] = None,
+        max_seq_len: Optional[int] = None,
     ):
         assert dset_root is not None and os.path.exists(dset_root)
-        self.max_seq_len = max_seq_len
-        self.dset_path = get_path_to_trajs(dset_root, dset_name) if dset_name else None
-        self.length = items_per_epoch if dset_name else None
-        self.filenames = []
-        self.refresh_files()
         self.relabeler = relabeler
+        self.fifo_path = get_path_to_trajs(dset_root, dset_name, fifo=True)
+        self.protected_path = get_path_to_trajs(dset_root, dset_name, fifo=False)
+        os.makedirs(self.fifo_path, exist_ok=True)
+        os.makedirs(self.protected_path, exist_ok=True)
+        self.length = items_per_epoch
+        self.max_seq_len = max_seq_len
+        self.refresh_files()
 
     def __len__(self):
         # this length is used by DataLoaders to end an epoch
@@ -65,53 +68,74 @@ class TrajDset(Dataset):
 
     @property
     def disk_usage(self):
-        bytes = sum(
-            os.path.getsize(os.path.join(self.dset_path, f)) for f in self.filenames
-        )
+        bytes = sum(os.path.getsize(f) for f in self.all_filenames)
         return bytes * 1e-9
 
-    def clear(self):
+    def clear(self, delete_protected: bool = False):
         # remove files on disk
-        if os.path.exists(self.dset_path):
-            shutil.rmtree(self.dset_path)
-            os.makedirs(self.dset_path)
+        if os.path.exists(self.fifo_path):
+            shutil.rmtree(self.fifo_path)
+            self.fifo_filenames = set()
+        if os.path.exists(self.protected_path) and delete_protected:
+            shutil.rmtree(self.protected_path)
+            self.protected_filenames = set()
+        self.all_filenames = list(self.fifo_filenames | self.protected_filenames)
+
+    def _list_abs_path_to_files(self, dir: str):
+        names = []
+        for ext in [".traj", ".npz"]:
+            names.extend(
+                [os.path.join(dir, f) for f in os.listdir(dir) if f.endswith(ext)]
+            )
+        return set(names)
 
     def refresh_files(self):
         # find the new .traj files from the previous rollout
-        if self.dset_path is not None and os.path.exists(self.dset_path):
-            self.filenames = os.listdir(self.dset_path)
+        self.fifo_filenames = self._list_abs_path_to_files(self.fifo_path)
+        self.protected_filenames = self._list_abs_path_to_files(self.protected_path)
+        self.all_filenames = list(self.fifo_filenames | self.protected_filenames)
 
     def count_trajectories(self) -> int:
-        # get the real dataset size
-        return len(self.filenames)
+        return len(self.all_filenames)
 
-    def filter(self, delete_pct: float):
-        """
-        Imitates fixed-size replay buffers by clearing .traj files on disk.
-        """
-        assert delete_pct <= 1.0 and delete_pct >= 0.0
+    def count_deletable_trajectories(self) -> int:
+        return len(self.fifo_filenames)
 
+    def count_protected_trajectories(self) -> int:
+        return len(self.protected_filenames)
+
+    def filter(self, new_size: int):
+        """
+        Imitates fixed-size FIFO replay buffers by clearing .traj files on disk in time order.
+        """
+        if len(self.fifo_filenames) <= new_size:
+            # skip the sort
+            return
+
+        path_to_name = lambda path: os.path.basename(os.path.splitext(path)[0])
         traj_infos = []
-        for traj_filename in self.filenames:
-            env_name, rand_id, unix_time = os.path.splitext(traj_filename)[0].split("_")
-            time, _ = unix_time.split(".")
+        for traj_filename in self.fifo_filenames:
+            env_name, rand_id, unix_time = path_to_name(traj_filename).split("_")
             traj_infos.append(
                 {
                     "env": env_name,
                     "rand": rand_id,
-                    "time": int(time),
+                    "time": float(unix_time),
                     "filename": traj_filename,
                 }
             )
         traj_infos = sorted(traj_infos, key=lambda d: d["time"])
-        num_to_remove = round(len(traj_infos) * delete_pct)
+        num_to_remove = max(len(traj_infos) - new_size, 0)
         to_delete = list(map(itemgetter("filename"), traj_infos[:num_to_remove]))
         for file_to_delete in to_delete:
-            os.remove(os.path.join(self.dset_path, file_to_delete))
+            os.remove(file_to_delete)
+            self.fifo_filenames.discard(file_to_delete)
+        self.all_filenames = list(self.fifo_filenames | self.protected_filenames)
 
     def __getitem__(self, i):
-        filename = random.choice(self.filenames)
-        traj = load_traj_from_disk(os.path.join(self.dset_path, filename))
+        filename = random.choice(self.all_filenames)
+        print(len(self.all_filenames))
+        traj = load_traj_from_disk(filename)
         if isinstance(traj, Trajectory):
             traj = self.relabeler(traj)
         data = RLData(traj)
