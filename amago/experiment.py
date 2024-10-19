@@ -49,11 +49,11 @@ class Experiment:
     max_seq_len: int
     # trajectories are saved to disk on `terminated or truncated` or after this many steps have passed since the last save (whichever comes first)
     traj_save_len: int
-    # TstepEncoder is created by calling this with default kwargs (use `functools.partial` or gin)
+    # TstepEncoder is created by calling this with default kwargs (use gin)
     tstep_encoder_type: type[TstepEncoder]
-    # TrajEncoder is created by calling this with default kwargs (use `functools.partial` or gin)
+    # TrajEncoder is created by calling this with default kwargs (use gin)
     traj_encoder_type: type[TrajEncoder]
-    # Agent is created by calling this with default kwargs (use `functools.partial` or gin)
+    # Agent is created by calling this with default kwargs (use gin)
     agent_type: type[Agent]
 
     #################

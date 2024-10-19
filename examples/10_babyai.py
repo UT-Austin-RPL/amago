@@ -5,6 +5,7 @@ import wandb
 import torch
 from torch import nn
 import gymnasium as gym
+import gin
 
 import amago
 from amago import TstepEncoder
@@ -93,12 +94,13 @@ class BabyAIAMAGOEnv(AMAGOEnv):
         return self.env.current_task
 
 
+@gin.configurable
 class BabyTstepEncoder(TstepEncoder):
     def __init__(
         self,
-        obs_kind: str,
         obs_space,
         rl2_space,
+        obs_kind: str = "partial-grid",
         extras_dim: int = 16,
         mission_dim: int = 48,
         emb_dim: int = 300,
@@ -165,6 +167,7 @@ if __name__ == "__main__":
         "amago.nets.actor_critic.NCriticsTwoHot.min_return": None,
         "amago.nets.actor_critic.NCriticsTwoHot.max_return": None,
         "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 64,
+        "BabyTstepEncoder.obs_kind": args.obs_kind,
     }
     traj_encoder_type = switch_traj_encoder(
         config,
@@ -204,7 +207,7 @@ if __name__ == "__main__":
             traj_save_len=args.max_seq_len * 3,
             stagger_traj_file_lengths=True,
             run_name=run_name,
-            tstep_encoder_type=partial(BabyTstepEncoder, obs_kind=args.obs_kind),
+            tstep_encoder_type=BabyTstepEncoder,
             traj_encoder_type=traj_encoder_type,
             agent_type=agent_type,
             group_name=group_name,
