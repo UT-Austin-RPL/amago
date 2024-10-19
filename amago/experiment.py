@@ -1,6 +1,5 @@
 import os
 import time
-import shutil
 import warnings
 import contextlib
 from dataclasses import dataclass
@@ -27,7 +26,12 @@ from .envs.exploration import (
     EpsilonGreedy,
 )
 from .envs import SequenceWrapper, ReturnHistory, SpecialMetricHistory, EnvCreator
-from .loading import Batch, TrajDset, RLData_pad_collate, MAGIC_PAD_VAL
+from .loading import (
+    Batch,
+    TrajDset,
+    RLData_pad_collate,
+    MAGIC_PAD_VAL,
+)
 from .hindsight import Relabeler
 from .agent import Agent
 from .nets import TstepEncoder, TrajEncoder
@@ -45,9 +49,11 @@ class Experiment:
     max_seq_len: int
     # trajectories are saved to disk on `terminated or truncated` or after this many steps have passed since the last save (whichever comes first)
     traj_save_len: int
+    # TstepEncoder is created by calling this with default kwargs (use `functools.partial` or gin)
     tstep_encoder_type: type[TstepEncoder]
+    # TrajEncoder is created by calling this with default kwargs (use `functools.partial` or gin)
     traj_encoder_type: type[TrajEncoder]
-    # the type of agent to use. must be a subclass of `Agent`
+    # Agent is created by calling this with default kwargs (use `functools.partial` or gin)
     agent_type: type[Agent]
 
     #################
@@ -85,18 +91,18 @@ class Experiment:
     wandb_group_name: str = None
     # prints tqdm progress bars and some high-level info to the console
     verbose: bool = True
+    # how many batches between forward/backward passes that spend time computing extra metrics for wandb logging.
+    log_interval: int = 300
 
     ############
     ## Replay ##
     ############
     # path to the root directory where your datasets (and checkpoints) are stored
     dset_root: str = None
-    # stores all the trajectories in `dset_root/dset_name/train`. You can use this to reuse the same dataset across multiple experiments.
+    # stores all the trajectories in `dset_root/dset_name/buffer`. You can use this to reuse the same dataset across multiple experiments.
     dset_name: str = None
     # maximum number of .traj files to keep in the replay buffer before we start deleting the oldest files
     dset_max_size: int = 15_000
-    # percentage of the oldest .traj files to delete when the buffer exceeds `dset_max_size`
-    dset_filter_pct: Optional[float] = 0.1
     # an object that can edit trajectory data before it is sent to the agent. useful for hindsight relabeling (temporarily removed) and data augmentation.
     relabel_type: type[Relabeler] = Relabeler
     # randomizes trajectory file lengths when saving snippets from a much longer rollout. please refer to a longer explanation in `amago.Experiment.init_envs`.
@@ -126,8 +132,6 @@ class Experiment:
     val_interval: Optional[int] = 10
     # how many `steps to take in each parallel environment for evaluation. determines the sample size of the evaluation metrics.
     val_timesteps_per_epoch: int = 10_000
-    # how many batches between forward/backward passes that spend time computing extra metrics for wandb logging.
-    log_interval: int = 250
     # how many epochs to wait between saving checkpoints
     ckpt_interval: Optional[int] = 20
     # always_save_latest and always_load_latest are used to communicate the latest policy weights between multiple processes.
@@ -201,10 +205,16 @@ class Experiment:
             \t\t Offline Loss Weight: {self.policy.offline_coeff}
             \t\t Online Loss Weight: {self.policy.online_coeff}
             \t\t Mixed Precision: {self.mixed_precision.upper()}
+            \t\t Checkpoint Path: {self.ckpt_dir}
             \t Environment:
             \t\t {env_summary}
             \t\t Exploration Type: {self.exploration_wrapper_type.__name__}
-            \t\t Trajectory File Sequence Length: {self.traj_save_len}
+            \t Buffer:
+            \t\t Buffer Path: {os.path.join(self.dset_root, self.dset_name, "buffer")}
+            \t\t FIFO Buffer Max Size: {self.dset_max_size}
+            \t\t FIFO Buffer Initial Size: {self.train_dset.count_trajectories()}
+            \t\t Protected Buffer Initial Size: {self.train_dset.count_protected_trajectories()}
+            \t\t Trajectory File Max Sequence Length: {self.traj_save_len}
             \t Accelerate Processes: {self.accelerator.num_processes} \n\n"""
         )
 
@@ -574,7 +584,6 @@ class Experiment:
             )
         # validation metrics are averaged over all processes
         logs_global = utils.avg_over_accelerate(logs_per_process)
-        # TODO: fix distributed frame counts.
         self.log(logs_global, key="val")
 
     def evaluate_test(
@@ -606,6 +615,25 @@ class Experiment:
         test_envs.close()
         return logs
 
+    def x_axis_metrics(self):
+        # overall total frames per process
+        total_frames = sum(utils.call_async_env(self.train_envs, "total_frames"))
+        # total frames by env_name per process
+        frames_by_env_name = utils.call_async_env(
+            self.train_envs, "total_frames_by_env_name"
+        )
+        total_frames_by_env_name = defaultdict(int)
+        for env_frames in frames_by_env_name:
+            for env_name, frames in env_frames.items():
+                total_frames_by_env_name[f"total_frames-{env_name}"] += frames
+        total_frames_by_env_name = dict(total_frames_by_env_name)
+        total_frames_by_env_name["total_frames"] = total_frames
+        # sum over processes
+        total_frames_global = utils.sum_over_accelerate(total_frames_by_env_name)
+        # add epoch
+        total_frames_global["Epoch"] = self.epoch
+        return total_frames_global
+
     def log(self, metrics_dict, key):
         log_dict = {}
         for k, v in metrics_dict.items():
@@ -615,24 +643,11 @@ class Experiment:
             else:
                 log_dict[k] = v
 
-        # lets any metric be plotted against epoch and total_frames
-        total_frames = sum(utils.call_async_env(self.train_envs, "total_frames"))
-        frames_by_env_name = utils.call_async_env(
-            self.train_envs, "total_frames_by_env_name"
-        )
-        total_frames_by_env_name = defaultdict(int)
-        for env_frames in frames_by_env_name:
-            for env_name, frames in env_frames.items():
-                total_frames_by_env_name[f"total_frames-{env_name}"] += frames
         if self.log_to_wandb:
-            progress = {
-                "Epoch": self.epoch,
-                "Total Frames": total_frames,
-            }
             self.accelerator.log(
                 {f"{key}/{subkey}": val for subkey, val in log_dict.items()}
-                | progress
-                | dict(total_frames_by_env_name)
+                # lets any metric be plotted against epoch and total_frames
+                | self.x_axis_metrics()
             )
 
     def policy_metrics(
@@ -735,9 +750,11 @@ class Experiment:
     def manage_replay_buffer(self):
         self.train_dset.refresh_files()
         old_size = self.train_dset.count_trajectories()
+        self.accelerator.wait_for_everyone()
         if self.accelerator.is_main_process:
             self.train_dset.filter(new_size=self.dset_max_size)
         self.accelerator.wait_for_everyone()
+        self.train_dset.refresh_files()
         dset_size = self.train_dset.count_trajectories()
         fifo_size = self.train_dset.count_deletable_trajectories()
         protected_size = self.train_dset.count_protected_trajectories()

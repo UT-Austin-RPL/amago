@@ -17,7 +17,7 @@ setup(
         "einops",
         "tqdm",
         "gym",
-        "accelerate>=0.33",
+        "accelerate",
         "termcolor",
         "huggingface_hub",
     ],

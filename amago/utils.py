@@ -53,7 +53,7 @@ def split_dict(dict_: dict[str, np.ndarray], axis=0):
     return out
 
 
-def avg_over_accelerate(data: dict[str, int | float]):
+def _func_over_accelerate(data: dict[str, int | float], func: callable):
     merged_stats = gather_object([data])
     output = {}
     for device in merged_stats:
@@ -64,8 +64,16 @@ def avg_over_accelerate(data: dict[str, int | float]):
                 output[k].extend(v)
             else:
                 output[k].append(v)
-    output = {k: np.array(v).mean() for k, v in output.items()}
+    output = {k: func(v) for k, v in output.items()}
     return output
+
+
+def avg_over_accelerate(data: dict[str, int | float]):
+    return _func_over_accelerate(data, lambda x: np.array(x).mean())
+
+
+def sum_over_accelerate(data: dict[str, int | float]):
+    return _func_over_accelerate(data, lambda x: np.array(x).sum())
 
 
 def masked_avg(tensor: torch.Tensor, mask: torch.Tensor):

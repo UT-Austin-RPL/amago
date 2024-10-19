@@ -134,7 +134,6 @@ class TrajDset(Dataset):
 
     def __getitem__(self, i):
         filename = random.choice(self.all_filenames)
-        print(len(self.all_filenames))
         traj = load_traj_from_disk(filename)
         if isinstance(traj, Trajectory):
             traj = self.relabeler(traj)

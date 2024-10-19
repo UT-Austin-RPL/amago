@@ -330,7 +330,8 @@ def make_experiment_collect_only(experiment: amago.Experiment) -> amago.Experime
     experiment.always_load_latest = True
     # run "forever"; terminate manually (when learning process is done)
     experiment.epochs = max(experiment.epochs, 1_000_000)
-    experiment.dset_filter_pct = None
+    # do not delete anything from the collection process
+    experiment.dset_max_size = float("inf")
     return experiment
 
 
