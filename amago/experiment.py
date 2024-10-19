@@ -171,6 +171,9 @@ class Experiment:
         )
 
     def start(self):
+        """
+        Manually initialization after __init__ to give time for gin configuration.
+        """
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             warnings.filterwarnings("always", category=utils.AmagoWarning)
@@ -188,6 +191,9 @@ class Experiment:
         return self.accelerator.device
 
     def summary(self, env_summary: str):
+        """
+        Print key hparams to the console for reference.
+        """
         total_params = utils.count_params(self.policy)
 
         assert (
@@ -219,6 +225,9 @@ class Experiment:
         )
 
     def init_envs(self):
+        """
+        Construct parallel training and validation environments.
+        """
         assert self.traj_save_len >= self.max_seq_len
 
         if self.env_mode in ["async", "sync"]:
@@ -323,7 +332,9 @@ class Experiment:
         return _desc
 
     def init_checkpoints(self):
-        # creates ckpts/training_states and ckpts/policy_weights dirs
+        """
+        Create ckpts/training_states and ckpts/policy_weights dirs
+        """
         self.ckpt_dir = os.path.join(
             self.dset_root, self.dset_name, self.run_name, "ckpts"
         )
@@ -333,6 +344,15 @@ class Experiment:
         self.epoch = 0
 
     def load_checkpoint(self, epoch: int, resume_training_state: bool = True):
+        """
+        Load a historical checkpoint from the `ckpts` directory of this experiment.
+
+        `resume_training_state = True` perfectly resumes the entire training process
+        (optimizer, grad scaler, etc.), but will probably only work on the exact same
+        accelerate configuration.
+
+        `resume_training_state = False` only loads the policy weights.
+        """
         if not resume_training_state:
             # load the weights without worrrying about resuming the accelerate state
             ckpt = utils.retry_load_checkpoint(
@@ -351,6 +371,9 @@ class Experiment:
         self.epoch = epoch
 
     def save_checkpoint(self):
+        """
+        Save both the training state and the policy weights to the ckpt_dir.
+        """
         ckpt_name = f"{self.run_name}_epoch_{self.epoch}"
         self.accelerator.save_state(
             os.path.join(self.ckpt_dir, "training_states", ckpt_name),
@@ -366,14 +389,18 @@ class Experiment:
             )
 
     def write_latest_policy(self):
-        # write absolute latest policy to a hardcoded location used by `read_latest_policy`
+        """
+        Write absolute latest policy to a hardcoded location used by `read_latest_policy`
+        """
         ckpt_name = os.path.join(
             self.dset_root, self.dset_name, self.run_name, "policy.pt"
         )
         torch.save(self.policy.state_dict(), ckpt_name)
 
     def read_latest_policy(self):
-        # read the latest policy -- used to communicate weight updates between learning/collecting processes
+        """
+        Read the latest policy -- used to communicate weight updates between learning/collecting processes
+        """
         ckpt_name = os.path.join(
             self.dset_root, self.dset_name, self.run_name, "policy.pt"
         )
@@ -385,10 +412,16 @@ class Experiment:
             utils.amago_warning("Latest policy checkpoint was not loaded.")
 
     def delete_buffer_from_disk(self, delete_protected: bool = False):
+        """
+        Clear the replay buffer from disk (mainly for `examples/`).
+        """
         if self.accelerator.is_main_process:
             self.train_dset.clear(delete_protected=delete_protected)
 
     def init_dsets(self):
+        """
+        Create a pytorch dataset to load trajectories from disk.
+        """
         self.train_dset = TrajDset(
             relabeler=self.relabel_type(),
             dset_root=self.dset_root,
@@ -398,8 +431,12 @@ class Experiment:
             * self.accelerator.num_processes,
             max_seq_len=self.max_seq_len,
         )
+        return self.train_dset
 
     def init_dloaders(self):
+        """
+        Create pytorch dataloaders to batch trajectories in parallel.
+        """
         train_dloader = DataLoader(
             self.train_dset,
             batch_size=self.batch_size,
@@ -408,8 +445,12 @@ class Experiment:
             pin_memory=True,
         )
         self.train_dloader = self.accelerator.prepare(train_dloader)
+        return self.train_dloader
 
     def init_logger(self):
+        """
+        Configure log dir and wandb compatibility.
+        """
         gin_config = gin.operative_config_str()
         config_path = os.path.join(
             self.dset_root, self.dset_name, self.run_name, "config.txt"
@@ -435,7 +476,9 @@ class Experiment:
             )
 
     def init_model(self):
-        # build initial policy based on observation shapes
+        """
+        Build an initial policy based on observation shapes
+        """
         policy_kwargs = {
             "tstep_encoder_type": self.tstep_encoder_type,
             "traj_encoder_type": self.traj_encoder_type,
@@ -544,6 +587,10 @@ class Experiment:
         return hidden_state, (return_history, special_history)
 
     def collect_new_training_data(self):
+        """
+        Generates train_timesteps_per_epoch * parallel_actors timesteps of new environment interaction that
+        will be saved to the replay buffer when the rollouts finishes.
+        """
         if (
             self.force_reset_train_envs_every is not None
             and self.epoch % self.force_reset_train_envs_every == 0
@@ -558,6 +605,10 @@ class Experiment:
         utils.call_async_env(self.train_envs, "save_finished_trajs")
 
     def evaluate_val(self):
+        """
+        Evaluates the current policy without exploration noise on the validation environments, and averages
+        the performance metrics across `accelerate` processes.
+        """
         # reset envs first
         self.val_envs.reset()
         start_time = time.time()
@@ -589,6 +640,9 @@ class Experiment:
     def evaluate_test(
         self, make_test_env: callable, timesteps: int, render: bool = False
     ):
+        """
+        One-off evaluation of a new environment callable for testing.
+        """
         make = lambda: SequenceWrapper(
             make_test_env(), save_every=None, make_dset=False
         )
@@ -616,6 +670,10 @@ class Experiment:
         return logs
 
     def x_axis_metrics(self):
+        """
+        Accumulate x-axis metrics for plotting (total frames by environment name and the current epoch)
+        across accelerate processes.
+        """
         # overall total frames per process
         total_frames = sum(utils.call_async_env(self.train_envs, "total_frames"))
         # total frames by env_name per process
@@ -635,6 +693,9 @@ class Experiment:
         return total_frames_global
 
     def log(self, metrics_dict, key):
+        """
+        Log a dict of metrics to the `key` panel of the wandb console, and record the current epoch and total frames.
+        """
         log_dict = {}
         for k, v in metrics_dict.items():
             if isinstance(v, torch.Tensor):
@@ -655,6 +716,9 @@ class Experiment:
         returns: ReturnHistory,
         specials: SpecialMetricHistory,
     ) -> dict:
+        """
+        Gather policy performance metrics across parallel environments and then average over accelerate processes.
+        """
         returns_by_env_name = defaultdict(list)
         specials_by_env_name = defaultdict(lambda: defaultdict(list))
 
@@ -691,6 +755,9 @@ class Experiment:
         )
 
     def compute_loss(self, batch: Batch, log_step: bool):
+        """
+        Core computation of the actor and critic RL loss terms from a `Batch` of data.
+        """
         critic_loss, actor_loss = self.policy_aclr(batch, log_step=log_step)
         update_info = self.policy.update_info
         B, L_1, G, _ = actor_loss.shape
@@ -725,6 +792,11 @@ class Experiment:
         return grads
 
     def train_step(self, batch: Batch, log_step: bool):
+        """
+        Take a single training step on a `batch` of data.
+
+        `log_step = True` computes (many) extra metrics for wandb logging.
+        """
         with self.accelerator.accumulate(self.policy_aclr):
             self.optimizer.zero_grad()
             l = self.compute_loss(batch, log_step=log_step)
@@ -748,13 +820,19 @@ class Experiment:
             return contextlib.suppress()
 
     def manage_replay_buffer(self):
-        self.train_dset.refresh_files()
+        """
+        Find new trajectory files saved to disk and delete old ones to imitate a fixed-size replay buffer.
+        Also logs buffer stats to wandb.
+        """
+        self.train_dset.refresh_files()  # notice new files that may have been logged this epoch
         old_size = self.train_dset.count_trajectories()
         self.accelerator.wait_for_everyone()
         if self.accelerator.is_main_process:
+            # the main process edits its file list during the filter but this is currently
+            # wasted effort because the other processes don't see the changes...
             self.train_dset.filter(new_size=self.dset_max_size)
         self.accelerator.wait_for_everyone()
-        self.train_dset.refresh_files()
+        self.train_dset.refresh_files()  # ... so check the current files again
         dset_size = self.train_dset.count_trajectories()
         fifo_size = self.train_dset.count_deletable_trajectories()
         protected_size = self.train_dset.count_protected_trajectories()
@@ -771,6 +849,10 @@ class Experiment:
         )
 
     def learn(self):
+        """
+        Main training loop for the experiment.
+        """
+
         def make_pbar(loader, epoch_num):
             if self.verbose:
                 return tqdm(
