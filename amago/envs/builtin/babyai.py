@@ -51,10 +51,13 @@ class MultitaskMetaBabyAI(gym.Env):
 
         self.action_space = gym.spaces.Discrete(7)
         if observation_type == "partial-grid":
-            img_space = gym.spaces.Box(low=0, high=255, shape=(7, 7, 3), dtype=np.int32)
+            img_space = gym.spaces.Box(low=0, high=255, shape=(7, 7, 3), dtype=np.uint8)
         elif observation_type == "full-grid":
             img_space = gym.spaces.Box(
-                low=0, high=255, shape=(22, 22, 3), dtype=np.int32
+                low=0,
+                high=255,
+                shape=(22, 22, 3),
+                dtype=np.uint8,
             )
         elif observation_type == "partial-image":
             img_space = gym.spaces.Box(
@@ -136,7 +139,7 @@ class MultitaskMetaBabyAI(gym.Env):
         elif self.observation_type == "full-grid":
             # pad to 22x22
             x, y, _ = raw.shape
-            img = np.zeros((22, 22, 3), dtype=np.int32)
+            img = np.zeros((22, 22, 3), dtype=np.uint8)
             img[:x, :y] = raw
         elif self.observation_type == "partial-image":
             img = raw
