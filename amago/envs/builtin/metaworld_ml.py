@@ -12,7 +12,7 @@ import gymnasium as gym
 import numpy as np
 
 from amago.envs.env_utils import space_convert
-from amago.envs import AMAGOEnv
+from amago.envs import AMAGOEnv, AMAGO_ENV_LOG_PREFIX
 
 
 class Metaworld(AMAGOEnv):
@@ -81,12 +81,16 @@ class KShotMetaworld(gym.Env):
 
     def step(self, action):
         next_obs, reward, done, info = self.env.step(action)
+        metrics = {}
         self.trial_success = max(info["success"], self.trial_success)
         self.current_time += 1
 
         soft_reset = False
         if self.current_time >= 500 or done:
             soft_reset = True
+            metrics[f"{AMAGO_ENV_LOG_PREFIX} Trial {self.current_trial} Success"] = (
+                self.trial_success
+            )
             self.current_time = 0
             self.successes += self.trial_success
             self.trial_success = 0.0
@@ -94,6 +98,8 @@ class KShotMetaworld(gym.Env):
             self.current_trial += 1
 
         truncated = terminated = self.current_trial >= self.k_shots
+        if truncated or terminated:
+            metrics[f"{AMAGO_ENV_LOG_PREFIX} Total Successes"] = self.successes
 
         if self.task_name in self.reward_scales:
             reward *= self.reward_scales[self.task_name]
@@ -103,5 +109,5 @@ class KShotMetaworld(gym.Env):
             reward,
             terminated,
             truncated,
-            {"success": self.successes},
+            metrics,
         )

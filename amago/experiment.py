@@ -200,6 +200,11 @@ class Experiment:
             self.traj_save_len >= self.max_seq_len
         ), "Save longer trajectories than the model can process"
 
+        expl_str = (
+            self.exploration_wrapper_type.__name__
+            if self.exploration_wrapper_type is not None
+            else "None"
+        )
         self.accelerator.print(
             f"""\n\n \t\t {colored('AMAGO v3', 'green')}
             \t -------------------------
@@ -214,8 +219,8 @@ class Experiment:
             \t\t Checkpoint Path: {self.ckpt_dir}
             \t Environment:
             \t\t {env_summary}
-            \t\t Exploration Type: {self.exploration_wrapper_type.__name__}
-            \t Buffer:
+            \t\t Exploration Type: {expl_str}
+            \t Replay Buffer:
             \t\t Buffer Path: {os.path.join(self.dset_root, self.dset_name, "buffer")}
             \t\t FIFO Buffer Max Size: {self.dset_max_size}
             \t\t FIFO Buffer Initial Size: {self.train_dset.count_trajectories()}
@@ -836,14 +841,12 @@ class Experiment:
         dset_size = self.train_dset.count_trajectories()
         fifo_size = self.train_dset.count_deletable_trajectories()
         protected_size = self.train_dset.count_protected_trajectories()
-        dset_gb = self.train_dset.disk_usage
         self.log(
             {
                 "Trajectory Files Saved in FIFO Replay Buffer": fifo_size,
                 "Trajectory Files Saved in Protected Replay Buffer": protected_size,
                 "Total Trajectory Files in Replay Buffer": dset_size,
                 "Trajectory Files Deleted": old_size - dset_size,
-                "Buffer Disk Space (GB)": dset_gb,
             },
             key="buffer",
         )

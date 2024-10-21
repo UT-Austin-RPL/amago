@@ -109,7 +109,7 @@ if __name__ == "__main__":
             run_name=run_name,
             agent_type=agent_type,
             tstep_encoder_type=tstep_encoder_type,
-            traj_encooder_type=traj_encoder_type,
+            traj_encoder_type=traj_encoder_type,
             group_name=group_name,
             val_timesteps_per_epoch=args.eval_timesteps,
             grad_clip=2.0,
