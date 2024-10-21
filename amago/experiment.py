@@ -101,6 +101,8 @@ class Experiment:
     dset_root: str = None
     # stores all the trajectories in `dset_root/dset_name/buffer`. You can use this to reuse the same dataset across multiple experiments.
     dset_name: str = None
+    # turn this off for collect-only runs where we need to assume the replay buffer is being managed by another learner process.
+    has_replay_buffer_rights: bool = True
     # maximum number of .traj files to keep in the replay buffer before we start deleting the oldest files
     dset_max_size: int = 15_000
     # an object that can edit trajectory data before it is sent to the agent. useful for hindsight relabeling (temporarily removed) and data augmentation.
@@ -829,7 +831,9 @@ class Experiment:
         Find new trajectory files saved to disk and delete old ones to imitate a fixed-size replay buffer.
         Also logs buffer stats to wandb.
         """
-        self.train_dset.refresh_files()  # notice new files that may have been logged this epoch
+        self.train_dset.refresh_files()
+        if not self.has_replay_buffer_rights:
+            return
         old_size = self.train_dset.count_trajectories()
         self.accelerator.wait_for_everyone()
         if self.accelerator.is_main_process:
@@ -847,6 +851,7 @@ class Experiment:
                 "Trajectory Files Saved in Protected Replay Buffer": protected_size,
                 "Total Trajectory Files in Replay Buffer": dset_size,
                 "Trajectory Files Deleted": old_size - dset_size,
+                "Buffer Disk Space (GB)": self.train_dset.disk_usage,
             },
             key="buffer",
         )
@@ -885,12 +890,9 @@ class Experiment:
                 and self.train_timesteps_per_epoch > 0
             ):
                 self.collect_new_training_data()
-
-            # delete excess trajectories from disk
-            self.manage_replay_buffer()
             self.accelerator.wait_for_everyone()
 
-            # refresh dataset with newly collected trajectories
+            self.manage_replay_buffer()
             self.init_dloaders()
             if self.train_dset.count_trajectories() == 0:
                 utils.amago_warning(

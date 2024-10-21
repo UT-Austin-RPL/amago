@@ -315,9 +315,11 @@ def make_experiment_learn_only(experiment: amago.Experiment) -> amago.Experiment
     experiment.train_timesteps_per_epoch = 0
     experiment.val_interval = 10
     experiment.val_timesteps_per_epoch = 0
-    experiment.parallel_actors = 2
+    # might throw warnings but cuts overhead of building envs we'll never use
+    experiment.parallel_actors = 1
     experiment.always_save_latest = True
     experiment.always_load_latest = False
+    experiment.has_replay_buffer_rights = True
     return experiment
 
 
@@ -331,7 +333,7 @@ def make_experiment_collect_only(experiment: amago.Experiment) -> amago.Experime
     # run "forever"; terminate manually (when learning process is done)
     experiment.epochs = max(experiment.epochs, 1_000_000)
     # do not delete anything from the collection process
-    experiment.dset_max_size = float("inf")
+    experiment.has_replay_buffer_rights = False
     return experiment
 
 
@@ -341,5 +343,4 @@ def switch_async_mode(experiment: amago.Experiment, mode: str) -> amago.Experime
         experiment = make_experiment_collect_only(experiment)
     elif mode == "learn":
         experiment = make_experiment_learn_only(experiment)
-    elif mode == "both":
-        return experiment
+    return experiment

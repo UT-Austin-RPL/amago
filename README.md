@@ -5,16 +5,32 @@
 
 
 AMAGO follows a simple and scalable recipe for building RL agents that can generalize:
-1. Reduce meta-learning to a memory problem (aka "in-context learning") .
-2. Put all of our effort into making memory+RL work really well.
-3. Treat everything else as a special case of meta-learning.
-4. Then, we can use the same in-context meta-learning method to solve a wide range of problems!
+1. Turn meta-learning into a *memory* problem (a.k.a "in-context learning") .
+2. Put all of our effort into learning effective memory with end-to-end RL.
+3. Treat zero-shot generalization and multi-task RL as special cases of meta-learning.
+4. Then, we can use one method to solve a wide range of problems!
 
-This perspective goes by many different names including [implicit partial observability](https://arxiv.org/abs/2107.06277), [context-based meta-learning](https://arxiv.org/abs/2301.08028), or [contextual MDPs](https://arxiv.org/abs/2111.09794). AMAGO is basically a high-powered version of [RL^2](https://arxiv.org/abs/1611.02779) for training policies on large datasets of long sequences. Please refer to our [paper](https://arxiv.org/abs/2310.09971) for a detailed explanation. Some highlights:
+AMAGO is basically a high-powered version of [RL^2](https://arxiv.org/abs/1611.02779) for training large policies on long sequences. Please refer to our [paper](https://arxiv.org/abs/2310.09971) for a detailed explanation. Some highlights:
 
 - **Broadly Applicable**. Classic single-task control, goal-conditioning, long-term memory, meta-learning, multi-task RL, and zero-shot generalization are all special cases of its POMDP format. Supports discrete and continuous actions.
-- **Scalable**. Designed for training large policies on long sequences across multiple GPUs with parallel actors, asynchronous learning/rollouts, and large replay buffers (stored on disk).
-- **Easy to Use**. Quickstart experiments on a wide range of environments with example training scripts (`examples/`). Technical details are easy to customize but are designed to require little hyperparameter tuning.
+- **Scalable**. Train large policies on long context sequences across multiple GPUs with parallel actors, asynchronous learning/rollouts, and large replay buffers stored on disk.
+- **Easy to Use**. Quickstart experiments on a broad range of environments with example training scripts (`examples/`). Technical details are easy to customize but designed to require little hyperparameter tuning.
+
+
+## Background: What is In-Context RL?
+
+<p align="center">
+<img src="media/in_context_rl.png" alt="icrl_diagram" width="900"/>
+</p>
+
+
+<p align="center">
+<img src="media/frozen_lake_success_rates_by_episode.png" alt="icrl_diagram" width="400"/>
+</p>
+
+
+
+This perspective goes by many different names including [implicit partial observability](https://arxiv.org/abs/2107.06277), [context-based meta-learning](https://arxiv.org/abs/2301.08028), and [contextual MDPs](https://arxiv.org/abs/2111.09794). 
 
 
 <br>
@@ -36,7 +52,7 @@ There are some optional installs for additional features:
 
 - `pip install -e amago[mamba]`: Enables [Mamba](https://arxiv.org/abs/2312.00752) sequence model policies. 
 
-- `pip install -e amago[envs]`: AMAGO comes with built-in support for a wide range of existing and novel meta-RL/generalization/memory domains (`amago/envs/builtin`). This command installs most of the environments you'd need to run the [`examples/`](examples/).
+- `pip install -e amago[envs]`: AMAGO comes with built-in support for a wide range of existing and custom meta-RL/generalization/memory domains (`amago/envs/builtin`) used in our experiments. This command installs (most of) the dependencies you'd need to run the [`examples/`](examples/).
 
 This is an active long-term research project. Please be warned that the codebase is not stable and we make breaking changes frequently. 
 
@@ -53,7 +69,8 @@ This is an active long-term research project. Please be warned that the codebase
 <br>
 
 ### **1. Setup the Environment**
-Standard `gymnasium` envs simulate a single instance of an environment. We'll be collecting data in parallel by creating multiple independent instances. All we need to do is define a function that creates an `AMAGOEnv`, for example:
+AMAGO follows the `gymnasium` environment API.
+A typical `gymnasium.Env` simulates a single instance of an environment. We'll be collecting data in parallel by creating multiple independent instances. All we need to do is define a function that creates an `AMAGOEnv`, for example:
 
 ```python
 import gymnasium
@@ -159,7 +176,7 @@ An important limitation of this is that **while AMAGO will automatically organiz
 
 ### **2. Pick a Sequence Embedding (`TstepEncoder`)**
 
-Each timestep provides a dict observation along with meta-RL data like the previous action and reward. AMAGO standardizes its training process by creating a `TstepEncoder` to map timesteps to a fixed size representation. After this, the rest of the network can be environment-agnostic. We include customizable defaults for the two most common cases of images (`nets.tstep_encoders.CNNTstepEncoder`) and state arrays (`nets.tstep_encoders.FFTstepEncoder`). All we need to do is tell the `Experiment` which type to use:
+Each timestep provides a dict observation along with the previous action and reward. AMAGO standardizes its training process by creating a `TstepEncoder` to map timesteps to a fixed size representation. After this, the rest of the network can be environment-agnostic. We include customizable defaults for the two most common cases of images (`nets.tstep_encoders.CNNTstepEncoder`) and state arrays (`nets.tstep_encoders.FFTstepEncoder`). All we need to do is tell the `Experiment` which type to use:
 
 ```python
 from amago.nets.tstep_encoders import CNNTstepEncoder
@@ -236,7 +253,7 @@ The `TrajEncoder` is a seq2seq model that enables long-term memory and in-contex
 
 1. `FFTrajEncoder`: processes each timestep independently with a residual feedforward block. It has no memory! This is a useful sanity-check that isolates the impact of memory on performance.
 
-2. `GRUTrajEncoder`: a recurrent model. Long-term recall is challenging because we need to learn what to remember or forget at each timestep, and it may a while before new info is relevant to decision-making. However, inference speed is constant over long rollouts.
+2. `GRUTrajEncoder`: a recurrent model. Long-term recall is challenging because we need to learn what to remember or forget at each timestep, and it may awhile before new info is relevant to decision-making. However, inference speed is constant over long rollouts.
 
 3. `MambaTrajEncoder`: [Mamba](https://arxiv.org/abs/2312.00752) is a state-space model with similar conceptual strengths and weaknesses as an RNN. However, it runs significantly faster during training.
 
@@ -253,7 +270,7 @@ experiment = amago.Experiment(
 )
 ```
 
-If we wanted to try out a new sequence model we could subclass `amago.TrajEncoder`like the `TstepEncoder` example above.
+If we wanted to try out a new sequence model we could subclass `amago.TrajEncoder` like the `TstepEncoder` example above.
 
 
 <br>
@@ -261,9 +278,9 @@ If we wanted to try out a new sequence model we could subclass `amago.TrajEncode
 ### **4. Pick an `Agent`**
 The `Agent` puts everything together and handles actor-critic RL training ontop of the outputs of the `TrajEncoder`. There are two high-level options:
 
-1. `Agent`: the default learning update is described in Appendix A of the paper. It's an off-policy actor-critic (think [DDPG](https://spinningup.openai.com/en/latest/algorithms/ddpg.html)) with some stability tricks like random critic ensembling and training over multiple discount factors in parallel.
+1. `Agent`: the default learning update described in Appendix A of the paper. It's an off-policy actor-critic (think [DDPG](https://spinningup.openai.com/en/latest/algorithms/ddpg.html)) with some stability tricks like random critic ensembling and training over multiple discount factors in parallel.
 
-2. `MultiTaskAgent`: The `Agent` training objectives depend on the scale of returns (`Q(s, a)`) across our dataset, which might be a problem when those returns vary widely... like when we're training on multiple tasks at the same time. `MultiTaskAgent` replaces critic regression with two-hot classification, and throws out the policy gradient in favor of filtered behavior cloning. This update is much better in hybrid meta-RL/multi-task problems where we're optimizing multiple reward functions (like Meta-World ML45, Multi-Game Procgen, or Multi-Task BabyAI). We wrote a whole second paper about it (coming soon NeurIPS 24)! 
+2. `MultiTaskAgent`: The `Agent` training objectives depend on the scale of returns (`Q(s, a)`) across our dataset, which might be a problem when those returns vary widely, like when we're training on multiple tasks at the same time. `MultiTaskAgent` replaces critic regression with two-hot classification (as in [DreamerV3](https://arxiv.org/abs/2301.04104)), and throws out the policy gradient in favor of filtered behavior cloning. This update is much better in hybrid meta-RL/multi-task problems where we're optimizing multiple reward functions (like Meta-World ML45, Multi-Game Procgen, or Multi-Task BabyAI). We wrote a whole second paper about it (coming soon NeurIPS 24)! 
 
 We can switch between them with:
 ```python
@@ -283,7 +300,7 @@ The `Experiment` has lots of other kwargs to control things like the ratio of da
 <br>
 
 ### **6. Configure Anything Else**
-We try to keep the settings of each `Experiment` under control by using [`gin`](https://github.com/google/gin-config) to configure individual pieces like the `TstepEncoder`, `TrajEncoder`, `Agent`, and actor/critic heads. You can read more about `gin` [here](https://github.com/google/gin-config/blob/master/docs/index.md), but hopefully won't need to. We try to make this easy: our code follows a simple rule that, if something is marked `@gin.configruable`, none of its `kwargs` are set, meaning that the default value always gets used. `gin` lets you change that default value without editing the source code, and keeps track of the settings you used on `wandb` and in a `config.txt` file saved with your model checkpoints.
+We try to keep the settings of each `Experiment` under control by using [`gin`](https://github.com/google/gin-config) to configure individual pieces like the `TstepEncoder`, `TrajEncoder`, `Agent`, and actor/critic heads. You can read more about `gin` [here](https://github.com/google/gin-config/blob/master/docs/index.md)... but hopefully won't need to. We try to make this easy: our code follows a simple rule that, if something is marked `@gin.configruable`, none of its `kwargs` are set, meaning that the default value always gets used. `gin` lets you change that default value without editing the source code, and keeps track of the settings you used on `wandb` and in a `config.txt` file saved with your model checkpoints.
 
 The `examples/` show how almost every application of AMAGO looks the same aside from some minor `gin` configuration.
 
@@ -393,7 +410,7 @@ class SlidingWindowFlexAttention(FlexAttention):
     ):
 ```
 
-`gin.REQUIRED` is reserved for settings that are not commonly used but would be so important and task-specific that it makes no sense to set a default. You'll get an error if you use one but forget to configure it.
+`gin.REQUIRED` is reserved for settings that are not commonly used but would be so important and task-specific that there is no good default. You'll get an error if you use one but forget to configure it.
 
 ```python
 from amago.nets.traj_encoders import TformerTrajEncoder
@@ -401,7 +418,7 @@ from amago.nets.transformer import SlidingWindowFlexAttention
 from amago.cli_utils import use_config
 
 config = {
- "TformerTrajEncoder.num_heads" : 16,
+ "TformerTrajEncoder.n_heads" : 16,
  "TformerTrajEncoder.d_model" 512,
  "TformerTrajEncoder.d_ff" : 2048,
  "TformerTrajEncoder.attention_type": SlidingWindowFlexAttention,
@@ -420,7 +437,7 @@ experiment = Experiment(
 
 <details>
 
-Explorative action noise is implemented by `gym.Wrapper`s (`amago.envs.exploration`). Env creation automatically wraps the training envs in `Experiment.exploration_wrapper_type`, and these wrappers are `gin.configurable`. One thing to note that is that if the current exploration noise parameter is `epsilon_t`, the default behavior is for each actor to sample a value `multiplier` in [0, 1] on each `reset` and set the exploration noise to `multiplier * epsilon_t`. In other words the exploration schedule defines the maximum possible value and AMAGO is randomizing over all the settings beneath it to reduce tuning. This can be disabled by `randomize_eps=False`.
+Explorative action noise is implemented by `gymasium.Wrapper`s (`amago.envs.exploration`). Env creation automatically wraps the training envs in `Experiment.exploration_wrapper_type`, and these wrappers are `gin.configurable`. One thing to note that is that if the current exploration noise parameter is `epsilon_t`, the default behavior is for each actor to sample a `multiplier` in [0, 1] on each `reset` and set the exploration noise to `multiplier * epsilon_t`. In other words the exploration schedule defines the maximum possible value and we're randomizing over all the settings beneath it to reduce tuning. This can be disabled by `randomize_eps=False`.
 
 ```python
 from amago.envs.exploration import EpsilonGreedy
@@ -461,7 +478,7 @@ config = {
   "amago.nets.cnn.IMPALAishCNN.cnn_block_depths" : [32, 64, 64],
 }
 tstep_encoder_type = switch_step_encoder(config, arch="cnn", cnn_type=IMPALAishCNN)
-traj_encoder_type = switch_traj_encoder(config, arch="transformer", d_model=512, d_ff=2048, num_heads=16, attention_type=SlidingWindowFlexAttention)
+traj_encoder_type = switch_traj_encoder(config, arch="transformer", d_model=512, d_ff=2048, n_heads=16, attention_type=SlidingWindowFlexAttention)
 exploration_wrapper_type = switch_exploration(config, strategy="egreedy", eps_start=1.0, eps_end=.01, steps_anneal=200_000)
 # also customize random RL details as an example
 agent_type = switch_agent(config, agent="multitask", num_critics=6, gamma=.998)
@@ -481,7 +498,7 @@ If we want to combine hardcoded changes like these with genuine `.gin` files, `u
 
 ```python
 # these changes are applied in order from left to right. if we override the same param
-# in multiple configs the final one will count. making gin this complicated is a bad idea.
+# in multiple configs the final one will count. making gin this complicated is usually a bad idea.
 use_config(config, gin_configs=["environment_config.gin", "rl_config.gin"])
 ```
 
@@ -534,14 +551,13 @@ Aside from the `wandb` logging metrics, AMAGO generates output files in the foll
 
 Each `epoch`, we:
 1. Interact with the training envs for `train_timesteps_per_epoch`, creating a total of `parallel_actors * train_timesteps_per_epoch` new timesteps.
-2. Save any training sequences that have finished to `dset_root/dset_name/buffer/fifo`.
-3. Delete the oldest sequences in `dset_root/dset_name/buffer/fifo` until the buffer is `<= dset_max_size`.
-4. Compute the RL training objectives on `train_batches_per_epoch` batches sampled uniformly from all the files saved in `dset_root/dset_name/buffer/fifo` and `dset_root/dset_name/buffer/protected`.  Gradient steps are taken every `batches_per_update` batches.
+2. Save any training sequences that have finished to `dset_root/dset_name/buffer/`.
+4. Compute the RL training objectives on `train_batches_per_epoch` batches sampled uniformly from all the files saved in `dset_root/dset_name/buffer`.  Gradient steps are taken every `batches_per_update` batches.
 
 #### Offline RL and Replay Across Experiments
 <details>
 
-The path to the dataset (aka replay buffer) is determined by `dset_root/dset_name`, not by the `run_name`: we can share the same replay buffer across multiple experiments or initialize the buffer to the result of a previous experiment. The buffer is divided into two partitions `fifo`  and `protected`. `fifo` imitates a standard replay buffer by deleting the oldest data when full. `protected` data is sampled but never deleted. The best way to do offline RL is to move the offline dataset into `dset_root/dset_name/protected` and set `start_collecting_at_epoch = float("inf")`. Any online fine-tuning after `start_collecting_at_epoch` would follow the [DQfD](https://arxiv.org/abs/1704.03732) style of preserving the expert dataset while collecting our own online dataset in `fifo` and sampling uniformly from both.
+The path to the replay buffer is determined by `dset_root/dset_name`, not by the `run_name`: we can share the same replay buffer across multiple experiments or initialize the buffer to the result of a previous experiment. The buffer is divided into two partitions `fifo`  and `protected`. `fifo` imitates a standard replay buffer by deleting the oldest data when full. `protected` data is sampled but never deleted. The best way to do offline RL is to move the offline dataset into `dset_root/dset_name/buffer/protected` and set `start_collecting_at_epoch = float("inf")`. Any online fine-tuning after `start_collecting_at_epoch` would follow the [DQfD](https://arxiv.org/abs/1704.03732) style of preserving the initial dataset while collecting our own online dataset in `fifo` and sampling uniformly from both.
 
 </details>
 
@@ -556,7 +572,7 @@ The path to the dataset (aka replay buffer) is determined by `dset_root/dset_nam
 
 <details>
 
-AMAGO can replicate the same (rollout --> learn) on multiple GPUs in `DistributedDataParallel` (DDP) mode. We simplify DDP setup with [`huggingface/accelerate`](https://huggingface.co/docs/accelerate/en/index). To use accelerate, run `accelerate config` and answer the questions. `accelerate` is mainly used for distributed LLM training and many of its features don't apply here. For our purposes, if the answer isn't obvious the answer is "NO", (e.g. "Do you use Megatron-LLM? NO").
+AMAGO can replicate the same (rollout --> learn) loop on multiple GPUs in `DistributedDataParallel` (DDP) mode. We simplify DDP setup with [`huggingface/accelerate`](https://huggingface.co/docs/accelerate/en/index). To use accelerate, run `accelerate config` and answer the questions. `accelerate` is mainly used for distributed LLM training and many of its features don't apply here. For our purposes, if the answer isn't obvious the answer is "NO", (e.g. "Do you use Megatron-LLM? NO").
 
 Then, to use the GPUs you requested during `accelerate config`, we'd replace a command that noramlly looks like this:
 
@@ -579,7 +595,7 @@ And that's it! Let's say our `Experiment.parallel_actors=32`, `Experiment.train_
 #### Asynchronous Training/Rollouts
 <details>
 
-Each `epoch` alternates between rollouts --> gradient updates. AMAGO saves environment data and checkpoints to disk, so changing some `amago.learning.Experiment` kwargs would let these two steps be completely separate. After we create an `experiment = Experiment()`, but before `experiment.start()`, `cli_utils.switch_async_mode` can override settings to `"learn"`, `"collect"` or do `"both"` (the default). This leads to a very hacky but fun way to add extra data collection or do training/learning asychronously. For example, we can `accelerate launch` a multi-gpu script that only does gradient updates, and collect data for that model to train on with as many collect-only processes as we want. All we need to do is make sure the `dset_root`, `dset_name`, `run_name` are the same (so that checkpoints and buffers are being shared), and the network architecture settings are the same (so that checkpoints load correctly). For example:
+Each `epoch` alternates between rollouts --> gradient updates. AMAGO saves environment data and checkpoints to disk, so changing some `amago.learning.Experiment` kwargs would let these two steps be completely separate. After we create an `experiment = Experiment()`, but before `experiment.start()`, `cli_utils.switch_async_mode` can override settings to `"learn"`, `"collect"` or do `"both"` (the default). This leads to a very hacky but fun way to add extra data collection or do training/learning asychronously. For example, we can `accelerate launch` a multi-gpu script that only does gradient updates, and collect data for that model to train on with as many collect-only processes as we want. All we need to do is make sure the `dset_root`, `dset_name`, `run_name` are the same (so that all the experiments are working from the same directory), and the network architecture settings are the same (so that checkpoints load correctly). For example:
 
 ```python
 #  my_training_script.py
@@ -599,7 +615,7 @@ use_config(config)
 experiment = Experiment(
   dset_root="~/amago_dsets",
   dset_name="agi_training_data",
-  run_name="first_big_run",
+  run_name="v1",
   tstep_encoder_type=FFTstepEncoder,
   traj_encoder_type=TformerTrajEncoder,
   agent_type=MultiTaskAgent,
@@ -625,7 +641,7 @@ And now we're collecting data on 1 gpu and doing DDP gradient updates on 4 other
 
 <br>
 
-## Examples: TODO
+## Examples
 
 To follow most of the examples you'll need to install the benchmark environments with `pip install amago[envs]`.
 
@@ -638,6 +654,9 @@ export AMAGO_WANDB_ENTITY="wandb username"
 For basic single-GPU agents, use the `CUDA_VISIBLE_DEVICES` environment variable to assign learning to a specific GPU index (`CUDA_VISIBLE_DEVICES=7 python train.py ...`).
 
 Environment setup is the main step in applying our agent to a new problem. The example environments are usually *not* included in the scripts themselves but can be found in `amago/envs/builtin/`.
+
+### 0. **Intro to In-Context RL: Meta Frozen Lake**
+[Example `wandb`]
 
 ### 1. **Regular MDPs (Classic Gym)**
    
