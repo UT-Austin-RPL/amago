@@ -1,7 +1,7 @@
-# AMAGO: Adaptive RL
-### Memory is All You Need
+# AMAGO 
+### Adaptive RL with Long-Context Sequence Models
 
-<img src="media/amago_logo_2.png" alt="amagologo" width="200" align="right"/>
+<img src="media/amago_logo_2.png" alt="amagologo" width="175" align="right"/>
 
 
 AMAGO follows a simple and scalable recipe for building RL agents that can generalize:
@@ -12,9 +12,9 @@ AMAGO follows a simple and scalable recipe for building RL agents that can gener
 
 AMAGO is essentially a high-powered off-policy version of [RL^2](https://arxiv.org/abs/1611.02779) for training large policies on long sequences. Please refer to our [paper](https://arxiv.org/abs/2310.09971) for a detailed explanation. Some highlights:
 
-- **Broadly Applicable**. Classic single-task control, goal-conditioning, long-term memory, meta-learning, multi-task RL, and zero-shot generalization are all special cases of its POMDP format. Supports discrete and continuous actions.
+- **Broadly Applicable**. Long-term memory, meta-learning, multi-task RL, and zero-shot generalization are all special cases of its POMDP format. Supports discrete and continuous actions. See examples below!
 - **Scalable**. Train large policies on long context sequences across multiple GPUs with parallel actors, asynchronous learning/rollouts, and large replay buffers stored on disk.
-- **Easy to Use**. Quickstart experiments on a broad range of environments with example training scripts (`examples/`). Technical details are easy to customize but designed to require little hyperparameter tuning.
+- **Easy to Use**. Quickstart experiments on a broad range of environments. Technical details are easy to customize but designed to require little hyperparameter tuning.
 
 
 
@@ -32,8 +32,8 @@ Standard RL agents can only generalize to aspects of their environment that *1) 
 
 However, it has two main disadvantages:
 
-1. Memory in RL is hard, so reducing adaptation to memory may not actually get us very far. 
-2. Sample inefficiency. This is the price of making so few assumptions.
+1. **Memory in RL is hard**, so reducing adaptation to memory may not actually get us very far. 
+2. **Sample inefficiency**. This is the price of making so few assumptions.
 
 ICRL is not a new idea, but these challenges have limited adoption and prompted research on many alternative approaches. But they are just RL engineering problems. AMAGO is an effort to improve them and push meta-RL beyond toy research problems.
 
@@ -780,7 +780,7 @@ Multi-Game [Procgen](https://arxiv.org/abs/1912.01588) has a similar feel to Ata
 ### 10. **Multi-Task BabyAI**
 **`10_babyai.py`**
 
-[BabyAI](https://arxiv.org/abs/1810.08272) is a collection of procedurally generated gridworld tasks with simple lanugage instructions. We create a fun multi-task variant for two-episode adaptation.
+[BabyAI](https://arxiv.org/abs/1810.08272) is a collection of procedurally generated gridworld tasks with simple lanugage instructions. We create a fun multi-task variant for adaptive agents.
 
 [Example `wandb`](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/vjgzlxpk?nw=nwuserjakegrigsby) and [multi-seed report](https://wandb.ai/jakegrigsby/amago-v3-reference/reports/Multi-Task-BabyAI-AMAGOv2--Vmlldzo5ODAxNjc1) (which uses an outdated version of AMAGO).
 
@@ -790,7 +790,7 @@ Multi-Game [Procgen](https://arxiv.org/abs/1912.01588) has a similar feel to Ata
 ### **11. XLand MiniGrid**
 **`11_xland_minigrid.py`**
 
-<img src="media/xland.png" alt="icrl_diagram" width="80" align="left" />
+<img src="media/xland.png" alt="icrl_diagram" width="100" align="left" />
 
 
 [XLand-MiniGrid](https://arxiv.org/abs/2312.12044) is a `jax`-accelerated environment that brings the task diversity of [AdA](https://arxiv.org/abs/2301.07608) to [Minigrid](https://arxiv.org/abs/2306.13831)/BabyAI-style gridworlds.
