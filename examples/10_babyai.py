@@ -166,7 +166,7 @@ if __name__ == "__main__":
     config = {
         "amago.nets.actor_critic.NCriticsTwoHot.min_return": None,
         "amago.nets.actor_critic.NCriticsTwoHot.max_return": None,
-        "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 64,
+        "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 32,
         "BabyTstepEncoder.obs_kind": args.obs_kind,
     }
     traj_encoder_type = switch_traj_encoder(
@@ -175,6 +175,7 @@ if __name__ == "__main__":
         memory_size=args.memory_size,
         layers=args.memory_layers,
     )
+    exploration_type = switch_exploration(config, "egreedy", steps_anneal=500_000)
     agent_type = switch_agent(config, args.agent_type, reward_multiplier=1000.0)
     use_config(config, args.configs)
 
@@ -209,6 +210,7 @@ if __name__ == "__main__":
             run_name=run_name,
             tstep_encoder_type=BabyTstepEncoder,
             traj_encoder_type=traj_encoder_type,
+            exploration_wrapper_type=exploration_type,
             agent_type=agent_type,
             group_name=group_name,
             val_timesteps_per_epoch=6000,
