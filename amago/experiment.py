@@ -482,6 +482,16 @@ class Experiment:
                 },
             )
 
+    def init_optimizer(self, params):
+        """
+        Override to switch from AdamW
+        """
+        return torch.optim.AdamW(
+            params,
+            lr=self.learning_rate,
+            weight_decay=self.l2_coeff,
+        )
+
     def init_model(self):
         """
         Build an initial policy based on observation shapes
@@ -496,12 +506,7 @@ class Experiment:
         }
         policy = self.agent_type(**policy_kwargs)
         assert isinstance(policy, Agent)
-        # AdamW with linear warmup
-        optimizer = torch.optim.AdamW(
-            policy.trainable_params,
-            lr=self.learning_rate,
-            weight_decay=self.l2_coeff,
-        )
+        optimizer = self.init_optimizer(policy.trainable_params)
         lr_schedule = utils.get_constant_schedule_with_warmup(
             optimizer=optimizer, num_warmup_steps=self.lr_warmup_steps
         )
