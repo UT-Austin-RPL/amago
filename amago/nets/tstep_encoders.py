@@ -45,10 +45,16 @@ class FFTstepEncoder(TstepEncoder):
         activation: str = "leaky_relu",
         hide_rl2s: bool = False,
         normalize_inputs: bool = True,
-        obs_key: str = "observation",
+        specify_obs_keys: Optional[list[str]] = None,
     ):
         super().__init__(obs_space=obs_space, rl2_space=rl2_space)
-        flat_obs_shape = math.prod(self.obs_space[obs_key].shape)
+        if specify_obs_keys is None:
+            self.obs_keys = sorted(list(obs_space.keys()))
+        else:
+            self.obs_keys = specify_obs_keys
+        flat_obs_shape = sum(
+            math.prod(self.obs_space[key].shape) for key in self.obs_keys
+        )
         in_dim = flat_obs_shape + self.rl2_space.shape[-1]
         self.in_norm = InputNorm(in_dim, skip=not normalize_inputs)
         self.base = ff.MLP(
@@ -61,15 +67,23 @@ class FFTstepEncoder(TstepEncoder):
         self.out_norm = ff.Normalization(norm, d_output)
         self._emb_dim = d_output
         self.hide_rl2s = hide_rl2s
-        self.obs_key = obs_key
+
+    def _cat_flattened_obs(self, obs):
+        # B, L, dim_0, ... -> B L D; in fixed order
+        arrs = []
+        for key in self.obs_keys:
+            a = obs[key]
+            if a.ndim == 2:
+                a = a.unsqueeze(-1)
+            arrs.append(a.flatten(start_dim=2))
+        return torch.cat(arrs, dim=-1)
 
     def inner_forward(self, obs, rl2s, log_dict: Optional[dict] = None):
         # multi-modal envs that do not use the default `observation` key need their own custom encoders.
-        obs = obs[self.obs_key]
-        B, L, *_ = obs.shape
         if self.hide_rl2s:
             rl2s = rl2s * 0
-        flat_obs_rl2 = torch.cat((obs.view(B, L, -1).float(), rl2s), dim=-1)
+        flat_obs = self._cat_flattened_obs(obs)
+        flat_obs_rl2 = torch.cat((flat_obs.float(), rl2s), dim=-1)
         if self.training:
             self.in_norm.update_stats(flat_obs_rl2)
         flat_obs_rl2 = self.in_norm(flat_obs_rl2)

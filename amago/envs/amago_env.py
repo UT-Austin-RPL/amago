@@ -29,7 +29,7 @@ class AMAGOEnv(gym.Wrapper):
     ):
         super().__init__(env)
         self.batched_envs = batched_envs
-        self._env_name = env_name
+        self._env_name = env_name.replace("/", "_") if env_name is not None else None
 
         # action space conversion
         self.discrete = isinstance(space_convert(env.action_space), gym.spaces.Discrete)

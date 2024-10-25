@@ -9,9 +9,18 @@ from amago.cli_utils import *
 
 
 def add_cli(parser):
-    parser.add_argument("--env", type=str, required=True)
-    parser.add_argument("--max_seq_len", type=int, default=128)
-    parser.add_argument("--eval_timesteps", type=int, default=1000)
+    parser.add_argument(
+        "--env", type=str, required=True, help="Environment name for `gym.make`"
+    )
+    parser.add_argument(
+        "--max_seq_len", type=int, default=128, help="Policy sequence length."
+    )
+    parser.add_argument(
+        "--eval_timesteps",
+        type=int,
+        default=1000,
+        help="Timesteps per actor per evaluation. Tune based on the episode length of the environment (to be at least one full episode).",
+    )
     return parser
 
 
@@ -21,31 +30,34 @@ if __name__ == "__main__":
     add_cli(parser)
     args = parser.parse_args()
 
+    # setup environment
+    env_name = args.env.replace("/", "_")
+    make_train_env = lambda: AMAGOEnv(
+        gym.make(args.env),
+        env_name=env_name,
+    )
     config = {
         # dictionary that sets default value for kwargs of classes that are marked as `gin.configurable`
-        # see https://github.com/google/gin-config for more information. For example:
+        # see `tutorial.md` for more information. For example:
         # "amago.nets.traj_encoders.TformerTrajEncoder.attention_type": amago.nets.transformer.VanillaAttention,
     }
+    # switch sequence model
     traj_encoder_type = switch_traj_encoder(
         config,
         arch=args.traj_encoder,
         memory_size=args.memory_size,
         layers=args.memory_layers,
     )
+    # switch agent
     agent_type = switch_agent(
         config,
         args.agent_type,
     )
     use_config(config, args.configs)
 
-    group_name = f"{args.run_name}_{args.env}"
+    group_name = f"{args.run_name}_{env_name}"
     for trial in range(args.trials):
         run_name = group_name + f"_trial_{trial}"
-
-        make_train_env = lambda: AMAGOEnv(
-            gym.make(args.env),
-            env_name=args.env,
-        )
         experiment = create_experiment_from_cli(
             args,
             make_train_env=make_train_env,
