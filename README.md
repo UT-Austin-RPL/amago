@@ -168,9 +168,9 @@ Symbolic version of the [DeepMind Alchemy](https://arxiv.org/abs/2102.02926) met
 ### 8. **Multi-Task RL: Atari**
 **[`08_ale.py`](examples/08_ale.py)**
 
-<img src="media/space_invaders.png" alt="icrl_diagram" width="110" align="left"/>
+<img src="media/gopher.png" alt="icrl_diagram" width="110" align="left"/>
 
-Multi-Task RL is a special case of meta-RL where the identity of each task is either directly provided or so obvious that it doesn't take any memory to distinguish. We focus on the uncommon setting of learning from *unclipped* rewards because it isolates the challenge of optimizing distinct reward functions. See the NeurIPS 2024 paper for more.
+Multi-Task RL is a special case of meta-RL where the identity of each task is directly provided or can be inferred without memory. We focus on the uncommon setting of learning from *unclipped* rewards because it isolates the challenge of optimizing distinct reward functions. See the NeurIPS 2024 paper for more.
 
 [Example `wandb` for an easy 4-game variant](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/gzgdshjb?nw=nwuserjakegrigsby)
 
