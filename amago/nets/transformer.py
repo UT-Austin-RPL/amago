@@ -302,12 +302,13 @@ class SigmaReparam(nn.Linear):
 
     def forward(self, x):
         if self.training:
-            with torch.no_grad():
-                u = (self.weight @ self.v).float()
-                self.u.data = F.normalize(u, dim=0)
-                v = (self.weight.T @ self.u).float()
-                self.v.data = F.normalize(v, dim=0)
-        sigma = einsum(self.u, self.weight, self.v, "d, d c , c->")
+            # with torch.no_grad(): # does not compile w/ accelerate 1.0 DDP torch 2.5
+            u = (self.weight @ self.v).float()
+            self.u.data = F.normalize(u, dim=0)
+            v = (self.weight.T @ self.u).float()
+            self.v.data = F.normalize(v, dim=0)
+        # detach instead...
+        sigma = einsum(self.u.detach(), self.weight, self.v.detach(), "d, d c , c->")
         W_hat = self.gamma / sigma * self.weight
         out = F.linear(x, W_hat, self.bias)
         return out

@@ -203,7 +203,7 @@ The `TrajEncoder` is a seq2seq model that enables long-term memory and in-contex
 
 3. `MambaTrajEncoder`: [Mamba](https://arxiv.org/abs/2312.00752) is a state-space model with similar conceptual strengths and weaknesses as an RNN. However, it runs significantly faster during training.
 
-4. `TformerTrajEncoder`: a Transformer model with a number of tricks for stability in RL. Transformers are great at RL memory problems because they don't "forget" anything and only need to learn to *retrieve* info at timesteps where it is immediately useful. There are several choices of self-attention mechanism. We recommend [flash_attn](https://github.com/Dao-AILab/flash-attention) if it will run on your GPU. If not, we'll fall back to a slower pytorch version. There is experimental support for [`flex_attention`](https://pytorch.org/blog/flexattention/) --- a cool feature coming to pytorch 2.5. See the "Customize Anything Else" section for how to switch defaults.
+4. `TformerTrajEncoder`: a Transformer model with a number of tricks for stability in RL. Transformers are great at RL memory problems because they don't "forget" anything and only need to learn to *retrieve* info at timesteps where it is immediately useful. There are several choices of self-attention mechanism. We recommend [flash_attn](https://github.com/Dao-AILab/flash-attention) if it will run on your GPU. If not, we'll fall back to a slower pytorch version. There is experimental support for [`flex_attention`](https://pytorch.org/blog/flexattention/) (pytorch >= 2.5). See the "Customize Anything Else" section for how to switch defaults.
 
 We can select a `TrajEncoder` just like a `TstepEncoder`:
 

@@ -100,7 +100,7 @@ Learn more about in-context RL with help from an intuitive meta-RL problem. Trai
 ### 1. **Basic Gymnasium**
 **[`01_basic_gym.py`](examples/01_basic_gym.py)**
 
-Typical RL benchmarks are MDPs and can be treated as a simple special case of the full agent. Memory is often redundant but these tasks are easy and good for debugging.
+Typical RL benchmarks are MDPs and can be treated as a simple special case of the full agent. Memory is often redundant but these tasks can be helpful for testing.
 
 [Example `wandb` for LunarLander-v2 with a Transformer](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/30ndyo2l?nw=nwuserjakegrigsby)
 
@@ -111,7 +111,7 @@ Typical RL benchmarks are MDPs and can be treated as a simple special case of th
 
 <img src="media/gymnax_logo.png" alt="icrl_diagram" width="110" align="left"/>
 
-Like `gymnasium`, but 1000x faster! Use `jax` to add more `--parallel_actors` and speedup experiments. `gymnax` includes several interesting memory problems that are well suited to AMAGO.
+Like `gymnasium`, but 1000x faster! Use `jax` to add more `--parallel_actors` and speedup experiments. [`gymnax`](https://github.com/RobertTLange/gymnax) includes several interesting memory problems.
 
 [Example `wandb` for MemoryChain-bsuite](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/7qe1pu41/workspace?nw=nwuserjakegrigsby)
 
@@ -120,7 +120,7 @@ Like `gymnasium`, but 1000x faster! Use `jax` to add more `--parallel_actors` an
 ### 3. **POMDPs: POPGym**
 **[`03_popgym_suite.py`](examples/03_popgym_suite.py)**
 
-[POPGym](https://arxiv.org/abs/2303.01859) is a collection of memory unit-tests for RL agents. AMAGO is really good at POPGym, and turns most of these tasks into quick experiments for fast prototyping. Our `MultiDomainPOPGym` env concatenates POPGym domains into a harder one-shot multi-task problem discussed in the followup paper.
+[POPGym](https://arxiv.org/abs/2303.01859) is a collection of memory unit-tests for RL agents. AMAGO is really good at POPGym and turns most of these tasks into quick experiments for fast prototyping. Our `MultiDomainPOPGym` env concatenates POPGym domains into a harder one-shot multi-task problem discussed in the followup paper.
 
 [Example `wandb`](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/nhyxu2g1?nw=nwuserjakegrigsby).
 
@@ -170,7 +170,7 @@ Symbolic version of the [DeepMind Alchemy](https://arxiv.org/abs/2102.02926) met
 
 <img src="media/space_invaders.png" alt="icrl_diagram" width="110" align="left"/>
 
-Multi-Task RL is a special case of meta-RL where the identity of each task is either directly provided or so obvious that it doesn't take any memory to distinguish. We focus on the uncommon setting of learning from *unclipped* rewards because it isolates the challenge of optimizing wildly different reward functions. See the NeurIPS 2024 paper for more.
+Multi-Task RL is a special case of meta-RL where the identity of each task is either directly provided or so obvious that it doesn't take any memory to distinguish. We focus on the uncommon setting of learning from *unclipped* rewards because it isolates the challenge of optimizing distinct reward functions. See the NeurIPS 2024 paper for more.
 
 [Example `wandb` for an easy 4-game variant](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/gzgdshjb?nw=nwuserjakegrigsby)
 

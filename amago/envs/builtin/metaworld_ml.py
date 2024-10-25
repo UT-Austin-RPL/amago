@@ -5,9 +5,7 @@ from amago.utils import amago_warning
 try:
     import metaworld
 except:
-    amago_warning(
-        "Missing metaworld Install: `pip install amago[metaworld_env]` or `pip install git+https://github.com/Farama-Foundation/Metaworld.git@04be337a12305e393c0caf0cbf5ec7755c7c8feb`"
-    )
+    amago_warning("Missing metaworld Install: `pip install amago[envs]`")
 import gymnasium as gym
 import numpy as np
 

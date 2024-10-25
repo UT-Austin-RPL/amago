@@ -8,7 +8,7 @@ try:
     from dm_env import specs
     from dm_alchemy import symbolic_alchemy
 except ImportError:
-    amago_warning("Missing dm_env / dm_alchemy Install: `pip install amago[basic_envs]")
+    amago_warning("Missing dm_env / dm_alchemy Install: `pip install amago[envs]")
 
 
 class GymFromDMEnv(gym.Env):

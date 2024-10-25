@@ -24,7 +24,7 @@ if __name__ == "__main__":
     config = {
         # dictionary that sets default value for kwargs of classes that are marked as `gin.configurable`
         # see https://github.com/google/gin-config for more information. For example:
-        # "amago.nets.traj_encoders.TformerTrajEncoder.attention_type": amago.nets.transformer.FlashAttention,
+        # "amago.nets.traj_encoders.TformerTrajEncoder.attention_type": amago.nets.transformer.VanillaAttention,
     }
     traj_encoder_type = switch_traj_encoder(
         config,

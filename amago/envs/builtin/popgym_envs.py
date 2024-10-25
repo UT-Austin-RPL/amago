@@ -10,7 +10,7 @@ try:
     from popgym.wrappers import Flatten, DiscreteAction
 except ImportError:
     amago_warning(
-        "Missing popgym Install: `pip install amago[basic_envs]` or `pip install popgym`"
+        "Missing popgym Install: `pip install amago[envs]` or `pip install popgym`"
     )
 
 from amago.envs import AMAGOEnv
