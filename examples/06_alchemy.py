@@ -19,9 +19,12 @@ if __name__ == "__main__":
         memory_size=args.memory_size,
         layers=args.memory_layers,
     )
-    agent_type = switch_agent(config, args.agent_type)
+    exploration_wrapper_type = switch_exploration(
+        config, "bilevel", rollout_horizon=200, steps_anneal=2_500_000
+    )
+    agent_type = switch_agent(config, args.agent_type, reward_multiplier=100.0)
     tstep_encoder_type = switch_tstep_encoder(
-        config, arch="ff", n_layers=2, d_hidden=256, d_output=128
+        config, arch="ff", n_layers=2, d_hidden=256, d_output=256
     )
 
     use_config(config, args.configs)
@@ -42,6 +45,7 @@ if __name__ == "__main__":
             run_name=run_name,
             tstep_encoder_type=tstep_encoder_type,
             traj_encoder_type=traj_encoder_type,
+            exploration_wrapper_type=exploration_wrapper_type,
             agent_type=agent_type,
             val_timesteps_per_epoch=2000,
         )

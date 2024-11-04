@@ -293,7 +293,6 @@ class SigmaReparam(nn.Linear):
     def __init__(self, d_in, d_out, bias: bool = True):
         super().__init__(d_in, d_out, bias=bias)
         nn.init.trunc_normal_(self.weight, std=0.02)
-        # init can be quite slow...
         u = torch.linalg.svd(self.weight.T, full_matrices=False)[-1][0].detach()
         v = torch.linalg.svd(self.weight, full_matrices=False)[-1][0].detach()
         self.register_buffer("u", u)
