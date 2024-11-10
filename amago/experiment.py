@@ -225,7 +225,7 @@ class Experiment:
             \t Replay Buffer:
             \t\t Buffer Path: {os.path.join(self.dset_root, self.dset_name, "buffer")}
             \t\t FIFO Buffer Max Size: {self.dset_max_size}
-            \t\t FIFO Buffer Initial Size: {self.train_dset.count_trajectories()}
+            \t\t FIFO Buffer Initial Size: {self.train_dset.count_deletable_trajectories()}
             \t\t Protected Buffer Initial Size: {self.train_dset.count_protected_trajectories()}
             \t\t Trajectory File Max Sequence Length: {self.traj_save_len}
             \t Accelerate Processes: {self.accelerator.num_processes} \n\n"""
