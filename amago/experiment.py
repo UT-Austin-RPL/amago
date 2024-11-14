@@ -638,15 +638,14 @@ class Experiment:
         )
         logs_per_process = self.policy_metrics(returns, specials=specials)
         logs_per_process["Env FPS (per_process)"] = fps
-        cur_return = logs_per_process["Average Total Return (Across All Env Names)"]
+        # validation metrics are averaged over all processes
+        logs_global = utils.avg_over_accelerate(logs_per_process)
         if self.verbose:
+            cur_return = logs_global["Average Total Return (Across All Env Names)"]
             self.accelerator.print(f"Average Return : {cur_return}")
-            # print FPS as the total over accelerate processes
             self.accelerator.print(
                 f"Env FPS : {fps * self.accelerator.num_processes:.2f}"
             )
-        # validation metrics are averaged over all processes
-        logs_global = utils.avg_over_accelerate(logs_per_process)
         self.log(logs_global, key="val")
 
     def evaluate_test(
@@ -679,6 +678,9 @@ class Experiment:
         logs_global = utils.avg_over_accelerate(logs)
         self.log(logs_global, key="test")
         test_envs.close()
+        if self.verbose:
+            cur_return = logs_global["Average Total Return (Across All Env Names)"]
+            self.accelerator.print(f"Test Average Return : {cur_return}")
         return logs
 
     def x_axis_metrics(self):
@@ -717,11 +719,10 @@ class Experiment:
                 log_dict[k] = v
 
         if self.log_to_wandb:
-            self.accelerator.log(
-                {f"{key}/{subkey}": val for subkey, val in log_dict.items()}
-                # lets any metric be plotted against epoch and total_frames
-                | self.x_axis_metrics()
-            )
+            wandb_dict = {
+                f"{key}/{subkey}": val for subkey, val in log_dict.items()
+            } | self.x_axis_metrics()
+            self.accelerator.log(wandb_dict)
 
     def policy_metrics(
         self,
