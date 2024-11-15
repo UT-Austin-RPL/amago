@@ -51,7 +51,7 @@ class FFTstepEncoder(TstepEncoder):
         if specify_obs_keys is None:
             self.obs_keys = sorted(list(obs_space.keys()))
         else:
-            self.obs_keys = specify_obs_keys
+            self.obs_keys = sorted(specify_obs_keys)
         flat_obs_shape = sum(
             math.prod(self.obs_space[key].shape) for key in self.obs_keys
         )
