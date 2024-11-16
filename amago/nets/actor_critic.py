@@ -422,7 +422,9 @@ class NCriticsTwoHot(nn.Module):
         self.invert_bins = symexp if use_symlog else lambda x: x
         assert min_return < max_return
         self.bin_vals = torch.linspace(
-            symlog(min_return), symlog(max_return), output_bins
+            self.transform_values(min_return),
+            self.transform_values(max_return),
+            output_bins,
         )
         self.net = _EinMixEnsemble(
             ensemble_size=num_critics,
