@@ -39,7 +39,9 @@ class Metaworld(AMAGOEnv):
 class KShotMetaworld(gym.Env):
     reward_scales = {}
 
-    def __init__(self, benchmark, split: str, k_shots: int):
+    def __init__(
+        self, benchmark, split: str, k_shots: int, max_episode_length: int = 500
+    ):
         assert split in ["train", "test"]
         self.benchmark = benchmark
         self.split = split
@@ -47,6 +49,7 @@ class KShotMetaworld(gym.Env):
         self._envs = self.get_env_funcs(benchmark, train_set=split == "train")
         self.reset()
         self.action_space = space_convert(self.env.action_space)
+        self.max_episode_length = max_episode_length
         og_obs = space_convert(self.env.observation_space)
         self.observation_space = gym.spaces.Box(
             low=np.asarray(og_obs.low.tolist() + [0]),
@@ -84,7 +87,7 @@ class KShotMetaworld(gym.Env):
         self.current_time += 1
 
         soft_reset = False
-        if self.current_time >= 500 or done:
+        if self.current_time >= self.max_episode_length or done:
             soft_reset = True
             metrics[f"{AMAGO_ENV_LOG_PREFIX} Trial {self.current_trial} Success"] = (
                 self.trial_success
