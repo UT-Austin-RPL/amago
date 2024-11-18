@@ -127,7 +127,7 @@ Like `gymnasium`, but 1000x faster! Use `jax` to add more `--parallel_actors` an
 
 [Example `wandb` for MemoryChain-bsuite](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/7qe1pu41/workspace?nw=nwuserjakegrigsby)
 
-**[:bar_chart: Experimental :bar_chart:]**. Support for `gymnax` is a new feature.
+**📊 Experimental 📊**. Support for `gymnax` is a new feature.
 
 <br>
 
@@ -169,7 +169,7 @@ A common meta-RL problem where the environment resets for a fixed number of time
 
 Symbolic version of the [DeepMind Alchemy](https://arxiv.org/abs/2102.02926) meta-RL domain.
 
-**[:fire: Challenging :fire:]**. Alchemy has a hard local max strategy that can take many samples to break. We've found this domain to be very expensive and hard to tune, though we can usually match the pure-RL (VMPO) baseline from the original paper. We've never used Alchemy in our published results but maintain this script as a starting point.
+**🔥 Challenging 🔥**. Alchemy has a hard local max strategy that can take many samples to break. We've found this domain to be very expensive and hard to tune, though we can usually match the pure-RL (VMPO) baseline from the original paper. We've never used Alchemy in our published results but maintain this script as a starting point.
 
 Example `wandb` from a recent large-scale attempt with the Multi-Task agent: [Actor Process](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/s85fw2kn?nw=nwuserjakegrigsby) or [Learner Process](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/1ic57f70?nw=nwuserjakegrigsby).
 
@@ -229,7 +229,7 @@ Multi-Game [Procgen](https://arxiv.org/abs/1912.01588) has a similar feel to Ata
 
 [XLand-MiniGrid](https://arxiv.org/abs/2312.12044) is a `jax`-accelerated environment that brings the task diversity of [AdA](https://arxiv.org/abs/2301.07608) to [Minigrid](https://arxiv.org/abs/2306.13831)/BabyAI-style gridworlds.
 
-**[:bar_chart: Experimental :bar_chart:]**. Support for XLand MiniGrid is a new feature. 
+**📊 Experimental 📊**. Support for XLand MiniGrid is a new feature. 
 
 
 <br>
