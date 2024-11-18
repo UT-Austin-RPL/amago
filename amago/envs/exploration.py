@@ -50,7 +50,7 @@ class BilevelEpsilonGreedy(ExplorationWrapper):
         eps_end_start: float = 0.8,  # start of training, end of rollout
         eps_end_end: float = 0.01,  # end of training, end of rollout
         steps_anneal: int = 1_000_000,  # linear schedule end point (in terms of steps taken *in each actor process*)
-        randomize_eps: bool = True,  # treat the schedule as the max and sample uniform [0, max] for each actor
+        randomize_eps: bool = True,  # treat the schedule as the max and sample uniform [0, max) for each actor
     ):
         super().__init__(amago_env)
         self.eps_start_start = eps_start_start
@@ -71,9 +71,9 @@ class BilevelEpsilonGreedy(ExplorationWrapper):
 
     def reset(self, *args, **kwargs):
         out = super().reset(*args, **kwargs)
-        np.random.seed(random.randint(0, 1e6))
+        self.rng = np.random.default_rng()
         if self.randomize_eps:
-            self.global_multiplier = np.random.rand(self.batched_envs)
+            self.global_multiplier = self.rng.random(self.batched_envs)
         return out
 
     def current_eps(self, local_step: np.ndarray):
@@ -96,7 +96,7 @@ class BilevelEpsilonGreedy(ExplorationWrapper):
         done = np.logical_or(terminated, truncated)
         if done.any():
             # handle auto-resets by resetting the global multiplier
-            new_global_multiplier = np.random.rand(self.batched_envs)
+            new_global_multiplier = self.rng.random(self.batched_envs)
             self.global_multiplier[done] = new_global_multiplier[done]
         return obs, rew, terminated, truncated, info
 
@@ -108,17 +108,21 @@ class BilevelEpsilonGreedy(ExplorationWrapper):
         if self.discrete:
             # epsilon greedy (DQN-style)
             num_actions = self.env.action_space.n
-            random_action = np.random.randint(
+            random_action = self.rng.integers(
                 0, num_actions, size=(self.batched_envs, 1)
             )
-            use_random = np.expand_dims(np.random.rand(self.batched_envs) <= noise, 1)
+            use_random = np.expand_dims(
+                self.rng.standard_normal(self.batched_envs) <= noise, 1
+            )
             expl_action = (
                 use_random * random_action + (1 - use_random) * action
             ).astype(np.uint8)
             assert expl_action.shape == (self.batched_envs, 1)
         else:
             # random noise (TD3-style)
-            expl_action = action + noise[:, np.newaxis] * np.random.randn(*action.shape)
+            expl_action = action + noise[:, np.newaxis] * self.rng.standard_normal(
+                action.shape
+            )
             expl_action = np.clip(expl_action, -1.0, 1.0).astype(np.float32)
             assert expl_action.dtype == np.float32
             assert expl_action.shape == (self.batched_envs, action.shape[1])
