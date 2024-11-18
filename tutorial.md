@@ -1,5 +1,5 @@
 # AMAGO Tutorial
-#### Last Updated: 10/23/24
+#### Last Updated: 11/18/24
 
 Applying AMAGO to any new environment involves 7 basic steps. The `examples/` folder includes helpful starting points for common cases.
 
@@ -228,7 +228,7 @@ The `Agent` puts everything together and handles actor-critic RL training ontop 
 
 1. `Agent`: the default learning update described in Appendix A of the paper. It's an off-policy actor-critic (think [DDPG](https://spinningup.openai.com/en/latest/algorithms/ddpg.html)) with some stability tricks like random critic ensembling and training over multiple discount factors in parallel.
 
-2. `MultiTaskAgent`: The `Agent` training objectives depend on the scale of returns (`Q(s, a)`) across our dataset, which might be a problem when those returns vary widely, like when we're training on multiple tasks at the same time. `MultiTaskAgent` replaces critic regression with two-hot classification (as in [DreamerV3](https://arxiv.org/abs/2301.04104)), and throws out the policy gradient in favor of filtered behavior cloning. This update is much better in hybrid meta-RL/multi-task problems where we're optimizing multiple reward functions (like Meta-World ML45, Multi-Game Procgen, or Multi-Task BabyAI). We wrote a whole second paper about it (coming soon NeurIPS 24)! 
+2. `MultiTaskAgent`: The `Agent` training objectives depend on the scale of returns (`Q(s, a)`) across our dataset, which might be a problem when those returns vary widely, like when we're training on multiple tasks at the same time. `MultiTaskAgent` replaces critic regression with two-hot classification (as in [DreamerV3](https://arxiv.org/abs/2301.04104)), and throws out the policy gradient in favor of filtered behavior cloning. This update is much better in hybrid meta-RL/multi-task problems where we're optimizing multiple reward functions (like Meta-World ML45, Multi-Game Procgen, or Multi-Task BabyAI). We wrote a [second paper](https://openreview.net/pdf?id=OSHaRf4TVU) about it.
 
 We can switch between them with:
 ```python
@@ -244,7 +244,7 @@ experiment = amago.Experiment(
 
 ### **5. Configure the `Experiment`**
 
-The `Experiment` has lots of other kwargs to control things like the ratio of data collection to learning updates, optimization, and logging. We might set up formal documentation at some point. For now, you can find an explanation of each setting in the comments at the top of `amago/experiment.py`
+The `Experiment` has lots of other kwargs to control things like the ratio of data collection to learning updates, optimization, and logging. Formal documentation for `Experiment` and the rest of the modules is coming soon. For now, you can find an explanation of each setting in the comments at the top of `amago/experiment.py`
 
 
 <br>
@@ -370,7 +370,7 @@ from amago.cli_utils import use_config
 
 config = {
  "TformerTrajEncoder.n_heads" : 16,
- "TformerTrajEncoder.d_model" 512,
+ "TformerTrajEncoder.d_model" : 512,
  "TformerTrajEncoder.d_ff" : 2048,
  "TformerTrajEncoder.attention_type": SlidingWindowFlexAttention,
  "SlidingWindowFlexAttention.window_size" : 128,
@@ -388,7 +388,7 @@ experiment = Experiment(
 
 <details>
 
-Explorative action noise is implemented by `gymasium.Wrapper`s (`amago.envs.exploration`). Env creation automatically wraps the training envs in `Experiment.exploration_wrapper_type`, and these wrappers are `gin.configurable`. One thing to note that is that if the current exploration noise parameter is `epsilon_t`, the default behavior is for each actor to sample a `multiplier` in [0, 1] on each `reset` and set the exploration noise to `multiplier * epsilon_t`. In other words the exploration schedule defines the maximum possible value and we're randomizing over all the settings beneath it to reduce tuning. This can be disabled by `randomize_eps=False`.
+Explorative action noise is implemented by `gymasium.Wrapper`s (`amago.envs.exploration`). Env creation automatically wraps the training envs in `Experiment.exploration_wrapper_type`, and these wrappers are `gin.configurable`. One thing to note that is that if the current exploration noise parameter is `epsilon_t`, the default behavior is for each actor to sample a `multiplier` in [0, 1) on each `reset` and set the exploration noise to `multiplier * epsilon_t`. In other words the exploration schedule defines the maximum possible value and we're randomizing over all the settings beneath it to reduce tuning. This can be disabled by `randomize_eps=False`.
 
 ```python
 from amago.envs.exploration import EpsilonGreedy
@@ -509,7 +509,7 @@ Each `epoch`, we:
 #### Offline RL and Replay Across Experiments
 <details>
 
-The path to the replay buffer is determined by `dset_root/dset_name`, not by the `run_name`: we can share the same replay buffer across multiple experiments or initialize the buffer to the result of a previous experiment. The buffer is divided into two partitions `fifo`  and `protected`. `fifo` imitates a standard replay buffer by deleting the oldest data when full. `protected` data is sampled but never deleted. The best way to do offline RL is to move the offline dataset into `dset_root/dset_name/buffer/protected` and set `start_collecting_at_epoch = float("inf")`. Any online fine-tuning after `start_collecting_at_epoch` would follow the [DQfD](https://arxiv.org/abs/1704.03732) style of preserving the initial dataset while collecting our own online dataset in `fifo` and sampling uniformly from both.
+The path to the replay buffer is determined by `dset_root/dset_name`, not by the `run_name`: we can share the same replay buffer across multiple experiments or initialize the buffer to the result of a previous experiment. The buffer is divided into two partitions `fifo`  and `protected`. `fifo` imitates a standard replay buffer by deleting the oldest data when full. `protected` data is sampled but never deleted. The best way to do offline RL is to move the offline dataset into `dset_root/dset_name/buffer/protected` and set `start_collecting_at_epoch = float("inf")`. This will likely involve converting your offline RL dataset to `hindsight.Trajectory`s and saving them to disk (examples coming soon). Any online fine-tuning after `start_collecting_at_epoch` would follow the [DQfD](https://arxiv.org/abs/1704.03732) style of preserving the initial dataset while collecting our own online dataset in `fifo` and sampling uniformly from both.
 
 </details>
 
@@ -526,7 +526,7 @@ AMAGO can replicate the same (rollout --> learn) loop on multiple GPUs in `Distr
 
 <details>
 
-To use accelerate, run `accelerate config` and answer the questions. `accelerate` is mainly used for distributed LLM training and many of its features don't apply here. For our purposes, if the answer isn't obvious the answer is "NO", (e.g. "Do you use Megatron-LLM? NO").
+To use accelerate, run `accelerate config` and answer the questions. `accelerate` is mainly used for distributed LLM training and many of its features don't apply here. For our purposes, the answer to most questions is "NO", unless we're being asked about the GPU count, IDs, or float precision.
 
 Then, to use the GPUs you requested during `accelerate config`, we'd replace a command that noramlly looks like this:
 

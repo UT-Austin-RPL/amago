@@ -170,5 +170,5 @@ class Trajectory:
 
 
 class Relabeler:
-    def __call__(self, traj: Trajectory) -> Trajectory:
+    def __call__(self, traj: Trajectory | FrozenTraj) -> FrozenTraj:
         return traj

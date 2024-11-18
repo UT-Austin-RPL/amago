@@ -1,6 +1,8 @@
 # AMAGO 
 ### Adaptive RL with Long-Term Memory
 
+#### [[ICLR 2024](https://openreview.net/pdf?id=M6XWoEdmwf)] [[NeurIPS 2024](https://openreview.net/pdf?id=OSHaRf4TVU)]
+
 <img src="media/amago_logo_2.png" alt="amagologo" width="175" align="right"/>
 
 
@@ -14,7 +16,7 @@ AMAGO follows a simple and scalable recipe for building RL agents that can gener
 
 AMAGO is a high-powered off-policy version of [RL^2](https://arxiv.org/abs/1611.02779) for training large policies on long sequences. Please refer to our [paper](https://arxiv.org/abs/2310.09971) for a detailed explanation. Some highlights:
 
-- **Broadly Applicable**. Long-term memory, meta-learning, multi-task RL, and zero-shot generalization are all special cases of its POMDP format. Supports discrete and continuous actions. See examples below!
+- **Broadly Applicable**. Long-term memory, meta-learning, multi-task RL, and zero-shot generalization are all special cases of its POMDP format. Supports discrete, continuous, and multi-binary actions. See examples below!
 - **Scalable**. Train large policies on long context sequences across multiple GPUs with parallel actors, asynchronous learning/rollouts, and large replay buffers stored on disk.
 - **Easy to Use**. Quickstart experiments on a broad range of environments. Technical details are easy to customize but designed to require little hyperparameter tuning.
 
@@ -68,27 +70,34 @@ This is an active long-term research project. Please be warned that the codebase
 
 <br>
 
+## Tutorial
+You can read a detailed tutorial [here](tutorial.md). Full documentation coming soon.
+
+
+<br>
+
 ## Examples
 
-The [`examples/`](examples/) folder includes helpful starting points for common cases, and **you can read a detailed tutorial [here](tutorial.md)**.
+The [`examples/`](examples/) folder includes helpful starting points for common cases.
 
-To follow most of the examples you'll need to install the benchmark environments with `pip install amago[envs]`.
 
-If you want to log to `wandb`, you can configure the project and account with environment variables:
+To follow most of the examples you'll need to install the benchmark environments with `pip install amago[envs]`. If you want to log to `wandb`, you can configure the project and account with environment variables:
 
 ```bash
 export AMAGO_WANDB_PROJECT="wandb project name"
 export AMAGO_WANDB_ENTITY="wandb username"
 ```
 
-Use the `CUDA_VISIBLE_DEVICES` environment variable to assign basic single-GPU examples to a specific GPU index.
+Use the `CUDA_VISIBLE_DEVICES` environment variable to assign basic single-GPU examples to a specific GPU index. Most of the examples share a command line interface. Use `--help` for more information.
 
-Most of the examples share a command line interface. Use `--help` for more information.
+
+The public `wandb` links include example commands (click the "Overview" tab). Building this set of public examples with the new version of AMAGO is an active work in progress.
+
 
 ### 0. **Intro to In-Context RL: Meta-Frozen Lake**
 **[`00_kshot_frozen_lake.py`](examples/00_kshot_frozen_lake.py)**
 
-<img src="media/robot.png" alt="icrl_diagram" width="110" align="left"/>
+<img src="media/robot.png" alt="frozen_lake_icon" width="110" align="left"/>
 
 Learn more about in-context RL with help from an intuitive meta-RL problem. Train an agent to adapt over multiple episodes by learning to avoid its previous mistakes.
 
@@ -104,32 +113,41 @@ Typical RL benchmarks are MDPs and can be treated as a simple special case of th
 
 [Example `wandb` for LunarLander-v2 with a Transformer](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/30ndyo2l?nw=nwuserjakegrigsby)
 
+[Example `wandb` for DM Control Suite Cheetah Run](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/0znibfm2?nw=nwuserjakegrigsby)
+
 <br>
 
 ### 2. **GPU-Accelerated Envs: Gymnax**
 **[`02_gymnax.py`](examples/02_gymnax.py)**
 
-<img src="media/gymnax_logo.png" alt="icrl_diagram" width="110" align="left"/>
+
+<img src="media/gymnax_logo.png" alt="gymnax_logo" width="110" align="left"/>
 
 Like `gymnasium`, but 1000x faster! Use `jax` to add more `--parallel_actors` and speedup experiments. [`gymnax`](https://github.com/RobertTLange/gymnax) includes several interesting memory problems.
 
 [Example `wandb` for MemoryChain-bsuite](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/7qe1pu41/workspace?nw=nwuserjakegrigsby)
+
+**[:bar_chart: Experimental :bar_chart:]**. Support for `gymnax` is a new feature.
 
 <br>
 
 ### 3. **POMDPs: POPGym**
 **[`03_popgym_suite.py`](examples/03_popgym_suite.py)**
 
+<img src="media/popgym.png" alt="popgym_diagram" width="180" align="left"/>
+
 [POPGym](https://arxiv.org/abs/2303.01859) is a collection of memory unit-tests for RL agents. AMAGO is really good at POPGym and turns most of these tasks into quick experiments for fast prototyping. Our `MultiDomainPOPGym` env concatenates POPGym domains into a harder one-shot multi-task problem discussed in the followup paper.
 
-[Example `wandb`](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/nhyxu2g1?nw=nwuserjakegrigsby).
+[Example `wandb`](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/nhyxu2g1?nw=nwuserjakegrigsby). These settings can be copied across every task in the ICLR paper.
 
 <br>
 
 ### 4. **Super Long-Term Recall: T-Maze**
 **[`04_tmaze.py`](examples/04_tmaze.py)**
 
-T-Maze is a modified version of the problem featured in [Ni et al., 2023](https://arxiv.org/abs/2307.03864). T-Maze answers the question: RL issues (mostly) aside, what is the most distant memory our sequence model can recall? When using Transformers, the answer is whatever we can fit on the GPU...
+<img src="media/tmaze.png" alt="tmaze_diagram" width="160" align="left"/>
+
+T-Maze is a modified version of the problem featured in [Ni et al., 2023](https://arxiv.org/abs/2307.03864). T-Maze answers the question: RL issues (mostly) aside, what is the most distant memory our sequence model can recall? When using Transformers, the answer is usually whatever we can fit on the GPU...
 
 [Example `wandb`](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/8t5bdqmu?nw=nwuserjakegrigsby)
 
@@ -150,6 +168,12 @@ A common meta-RL problem where the environment resets for a fixed number of time
 
 
 Symbolic version of the [DeepMind Alchemy](https://arxiv.org/abs/2102.02926) meta-RL domain.
+
+**[:fire: Challenging :fire:]**. Alchemy has a hard local max strategy that can take many samples to break. We've found this domain to be very expensive and hard to tune, though we can usually match the pure-RL (VMPO) baseline from the original paper. We've never used Alchemy in our published results but maintain this script as a starting point.
+
+Example `wandb` from a recent large-scale attempt with the Multi-Task agent: [Actor Process](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/s85fw2kn?nw=nwuserjakegrigsby) or [Learner Process](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/1ic57f70?nw=nwuserjakegrigsby).
+
+
 
 <br>
 
@@ -192,7 +216,7 @@ Multi-Game [Procgen](https://arxiv.org/abs/1912.01588) has a similar feel to Ata
 
 [BabyAI](https://arxiv.org/abs/1810.08272) is a collection of procedurally generated gridworld tasks with simple lanugage instructions. We create a fun multi-task variant for adaptive agents.
 
-[Example `wandb`](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/vjgzlxpk?nw=nwuserjakegrigsby) and [multi-seed report](https://wandb.ai/jakegrigsby/amago-v3-reference/reports/Multi-Task-BabyAI-AMAGOv2--Vmlldzo5ODAxNjc1) (which uses an outdated version of AMAGO).
+[Example multi-seed report](https://wandb.ai/jakegrigsby/amago-v3-reference/reports/Multi-Task-BabyAI-AMAGOv2--Vmlldzo5ODAxNjc1) (which uses an outdated version of AMAGO).
 
 
 <br>
@@ -205,6 +229,8 @@ Multi-Game [Procgen](https://arxiv.org/abs/1912.01588) has a similar feel to Ata
 
 [XLand-MiniGrid](https://arxiv.org/abs/2312.12044) is a `jax`-accelerated environment that brings the task diversity of [AdA](https://arxiv.org/abs/2301.07608) to [Minigrid](https://arxiv.org/abs/2306.13831)/BabyAI-style gridworlds.
 
+**[:bar_chart: Experimental :bar_chart:]**. Support for XLand MiniGrid is a new feature. 
+
 
 <br>
 
@@ -214,25 +240,27 @@ Multi-Game [Procgen](https://arxiv.org/abs/1912.01588) has a similar feel to Ata
 
 
 
-## Reference and Acknowledgements
+## Citation
 ```
-@article{grigsby2023amago,
-  title={AMAGO: Scalable In-Context Reinforcement Learning for Adaptive Agents},
+@inproceedings{
+  grigsby2024amago,
+  title={{AMAGO}: Scalable In-Context Reinforcement Learning for Adaptive Agents},
   author={Jake Grigsby and Linxi Fan and Yuke Zhu},
-  year={2023},
-  eprint={2310.09971},
-  archivePrefix={arXiv},
-  primaryClass={cs.LG}
+  booktitle={The Twelfth International Conference on Learning Representations},
+  year={2024},
+  url={https://openreview.net/forum?id=M6XWoEdmwf}
 }
+
 ```
 
 ```
-@article{grigsby2024amago2,
-  title={AMAGO-2: Breaking the Multi-Task Barrier in Meta-Reinforcement Learning with Transformers},
+@inproceedings{
+  grigsby2024amago,
+  title={{AMAGO}-2: Breaking the Multi-Task Barrier in Meta-Reinforcement Learning with Transformers},
   author={Jake Grigsby and Justin Sasek and Samyak Parajuli and Daniel Adebi and Amy Zhang and Yuke Zhu},
+  booktitle={The Thirty-eighth Annual Conference on Neural Information Processing Systems},
   year={2024},
-  archivePrefix={arXiv},
-  primaryClass={cs.LG}
+  url={https://openreview.net/forum?id=OSHaRf4TVU}
 }
 ```
 
