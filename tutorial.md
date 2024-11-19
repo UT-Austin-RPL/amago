@@ -12,7 +12,7 @@ Applying AMAGO to any new environment involves 7 basic steps. The `examples/` fo
 ### **1. Setup the Environment**
 
 
-AMAGO follows the `gymnasium` environment API.
+AMAGO follows the `gymnasium` (0.26 < version < 0.30) environment API.
 A typical `gymnasium.Env` simulates a single instance of an environment. We'll be collecting data in parallel by creating multiple independent instances. All we need to do is define a function that creates an `AMAGOEnv`, for example:
 
 ```python
@@ -251,7 +251,7 @@ The `Experiment` has lots of other kwargs to control things like the ratio of da
 
 ### **6. Configure Anything Else**
 
-We try to keep the settings of each `Experiment` under control by using [`gin`](https://github.com/google/gin-config) to configure individual pieces like the `TstepEncoder`, `TrajEncoder`, `Agent`, and actor/critic heads. You can read more about `gin` [here](https://github.com/google/gin-config/blob/master/docs/index.md)... but hopefully won't need to. We try to make this easy: our code follows a simple rule that, if something is marked `@gin.configruable`, none of its `kwargs` are set, meaning that the default value always gets used. `gin` lets you change that default value without editing the source code, and keeps track of the settings you used on `wandb` and in a `config.txt` file saved with your model checkpoints.
+We try to keep the settings of each `Experiment` under control by using [`gin`](https://github.com/google/gin-config) to configure individual pieces like the `TstepEncoder`, `TrajEncoder`, `Agent`, and actor/critic heads. You can read more about `gin` [here](https://github.com/google/gin-config/blob/master/docs/index.md)... but hopefully won't need to. We try to make this easy: our code follows a simple rule that, if something is marked `@gin.configruable`, none of its `kwargs` are set, meaning that the default value always gets used. `gin` lets you change that default value without editing the source code, and keeps track of the settings you used on `wandb`. 
 
 The `examples/` show how almost every application of AMAGO looks the same aside from some minor `gin` configuration.
 
@@ -510,7 +510,7 @@ Each `epoch`, we:
 #### Offline RL and Replay Across Experiments
 <details>
 
-The path to the replay buffer is determined by `dset_root/dset_name`, not by the `run_name`: we can share the same replay buffer across multiple experiments or initialize the buffer to the result of a previous experiment. The buffer is divided into two partitions `fifo`  and `protected`. `fifo` imitates a standard replay buffer by deleting the oldest data when full. `protected` data is sampled but never deleted. The best way to do offline RL is to move the offline dataset into `dset_root/dset_name/buffer/protected` and set `start_collecting_at_epoch = float("inf")`. This will likely involve converting your offline RL dataset to `hindsight.Trajectory`s and saving them to disk (examples coming soon). Any online fine-tuning after `start_collecting_at_epoch` would follow the [DQfD](https://arxiv.org/abs/1704.03732) style of preserving the initial dataset while collecting our own online dataset in `fifo` and sampling uniformly from both.
+The path to the replay buffer is determined by `dset_root/dset_name`, not by the `run_name`: we can share the same replay buffer across multiple experiments or initialize the buffer to the result of a previous experiment. The buffer is divided into two partitions `fifo`  and `protected`. `fifo` imitates a standard replay buffer by deleting the oldest data when full. `protected` data is sampled but never deleted. The best way to do offline RL is to move the offline dataset into `dset_root/dset_name/buffer/protected` and set `start_collecting_at_epoch = float("inf")`. This will likely involve converting our offline RL dataset to `hindsight.Trajectory`s and saving them to disk (examples coming soon). Any online fine-tuning after `start_collecting_at_epoch` would follow the [DQfD](https://arxiv.org/abs/1704.03732) style of preserving the initial dataset while collecting our own online dataset in `fifo` and sampling uniformly from both.
 
 </details>
 
@@ -518,7 +518,7 @@ The path to the replay buffer is determined by `dset_root/dset_name`, not by the
 
 ### Track the Results
 
-AMAGO uses [Weights and Biases](https://wandb.ai/site/) to track experiments. Each run is tracked on a webpage you can view from any browser. Configure your experiment with:
+AMAGO uses [Weights and Biases](https://wandb.ai/site/) to track experiments. Each run is tracked on a webpage we can view from any browser. Configure `wandb` experiment with:
 
 ```python
 
@@ -530,6 +530,8 @@ experiment = Experiment(
   ...,
 )
 ```
+
+Or leave `wandb_project` and `wandb_entity` blank and set the environment variables `AMAGO_WANDB_PROJECT` and `AMAGO_WANDB_ENTITY`.
 
 Once training or evaluation begins, this run would appear at `https://wandb.ai/my_wandb_username/my_project_name/` under the name `my_run_name`.
 
@@ -543,7 +545,7 @@ Data is organized into sections. From top to bottom:
 2. `buffer/`: A short section tracking the size of the replay buffer on disk.
 3. `Charts/`: These are your x-axis options. More on this in a moment.
 4. `train/`: RL training metrics for debugging. Many of the metrics will be familiar but others are unique to AMAGO implementation details. You can probably ignore this section unless training is not going well and you want to dig into why that is. Most of this data is generated during [`Agent.forward`](https://github.com/UT-Austin-RPL/amago/blob/c06844bd38d02a47f13989b03ebe41c3ad2e54e9/amago/agent.py#L203).
-5. **`val/`: Contains the policy evaluation metrics**. This section will always include `"Average Total Return (Across All Env Names)"` -- this is the default average return that you're expecting from an RL experiment. The return is also broken down by "environment name". The environment name is set by the `AMAGOEnv` (see the top section of this tutorial) and is used to track results for each task in multi-task experiments. For example, a 2-game Atari experiment might have "Average Total Return in Breakout" and "Average Total Return in Gopher" while "Average Total Return (Across All Env Names)" would be the average across those two games. We also log the "Bottom Quintile" return by environment name. There might be many more metrics here depending on the environment/experiment. For example, some envs track a "success rate" and some meta-RL envs record stats by episode/attempt.
+5. **`val/`: Contains the policy evaluation metrics**. `"Average Total Return (Across All Env Names)"` is the default average return that we'd be expecting from an RL experiment. The return is also broken down by "environment name". The environment name is set by the `AMAGOEnv` (see the top section of this tutorial) and is used to track results for each task in multi-task experiments. We also log the "Bottom Quintile" return by environment name. There might be many more metrics here depending on the environment/experiment. For example, some envs track a "success rate" and some meta-RL envs record stats by episode/attempt.
 
 ![Screen Shot 2024-11-18 at 1 37 55 PM](https://github.com/user-attachments/assets/723bff6b-f6f9-48c7-9a39-20d021be4e38)
 
@@ -553,12 +555,12 @@ Data is organized into sections. From top to bottom:
 
 ![Screen Shot 2024-11-18 at 1 36 27 PM](https://github.com/user-attachments/assets/5c97d978-0366-41ea-a24d-79440aefd3ec)
 
-**The default `wandb` x-axis ("Step") isn't very useful --- it's the number of times `wandb.log` has been called.** You can change the x-axis in the top right corner. `"Wall Time"` is available by default and you can plot any train/val metric by the names in the `Charts/` section. **`total_frames` is the typical RL learning curve x-axis showing the total number of times we've called `env.step` to collect data**. Yes, it should've been named total_timesteps 😄... there used to be a reason for this. In multi-task settings you will also find the total frames collected in each individual "environment name". You can also plot metrics by the training `"Epoch"`. 
+**The default `wandb` x-axis ("Step") isn't very useful --- it's the number of times `wandb.log` has been called.** We can change the x-axis in the top right corner. `"Wall Time"` is available by default and we can plot any train/val metric by the names in the `Charts/` section. **`total_frames` is the typical RL learning curve x-axis showing the total number of times we've called `env.step` to collect data**. Yes, it should've been named total_timesteps 😄... there used to be a reason for this. In multi-task settings we will also find the total frames collected in each individual "environment name". You can also plot metrics by the training `Epoch` or `gradient_steps`. 
 
 </details>
 
 #### Command and Configuration
-If you click on "Overview" (in the top left corner), you'll find a record of the command that was used to launch the experiment. You'll also find a "Config" section that lists all of the `gin` settings for this run. 
+If we click on "Overview" (in the top left corner), we'll find a record of the command that was used to launch the experiment. We'll also find a "Config" section that lists all of the `gin` settings for this run. 
 
 #### Examples
 Here is a link to a single-task gym run with the simplest eval metrics: [Click Here](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/30ndyo2l?nw=nwuserjakegrigsby)
