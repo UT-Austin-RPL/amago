@@ -82,17 +82,9 @@ You can read a detailed tutorial in [here](tutorial.md). Full documentation comi
 The [`examples/`](examples/) folder includes helpful starting points for common cases.
 
 
-To follow most of the examples you'll need to install the benchmark environments with `pip install amago[envs]`. If you want to log to `wandb`, you can configure the project and account with environment variables:
-
-```bash
-export AMAGO_WANDB_PROJECT="wandb project name"
-export AMAGO_WANDB_ENTITY="wandb username"
-```
+To follow most of the examples you'll need to install the benchmark environments with `pip install amago[envs]`. If you want to log to `wandb` or check out some of the example results, it's worth reading [this section of the tutorial](https://github.com/UT-Austin-RPL/amago/blob/main/tutorial.md#track-the-results). The public `wandb` links include example commands (click the "Overview" tab). Building this set of public examples with the new version of AMAGO is an active work in progress.
 
 Use the `CUDA_VISIBLE_DEVICES` environment variable to assign basic single-GPU examples to a specific GPU index. Most of the examples share a command line interface. Use `--help` for more information.
-
-
-The public `wandb` links include example commands (click the "Overview" tab). Building this set of public examples with the new version of AMAGO is an active work in progress.
 
 
 ### 0. **Intro to In-Context RL: Meta-Frozen Lake**
