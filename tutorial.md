@@ -531,9 +531,7 @@ experiment = Experiment(
 )
 ```
 
-Or leave `wandb_project` and `wandb_entity` blank and set the environment variables `AMAGO_WANDB_PROJECT` and `AMAGO_WANDB_ENTITY`.
-
-Once training or evaluation begins, this run would appear at `https://wandb.ai/my_wandb_username/my_project_name/` under the name `my_run_name`.
+Or set the environment variables `AMAGO_WANDB_PROJECT` and `AMAGO_WANDB_ENTITY`. Once training or evaluation begins, this run would appear at `https://wandb.ai/my_wandb_username/my_project_name/` under the name `my_run_name`.
 
 
 #### Interpreting the `wandb` Metrics 
@@ -541,11 +539,11 @@ Once training or evaluation begins, this run would appear at `https://wandb.ai/m
 <details>
 
 Data is organized into sections. From top to bottom:
-1. `test/`: If the run has already finished and called `Experiment.evaluate_test`, the test metrics would be here. Test metrics are usually the same as `val/` (see below).
+1. `test/`: If the run has finished and called `Experiment.evaluate_test`, the test metrics would be here. Test metrics are usually the same as `val/` (see below).
 2. `buffer/`: A short section tracking the size of the replay buffer on disk.
 3. `Charts/`: These are your x-axis options. More on this in a moment.
 4. `train/`: RL training metrics for debugging. Many of the metrics will be familiar but others are unique to AMAGO implementation details. You can probably ignore this section unless training is not going well and you want to dig into why that is. Most of this data is generated during [`Agent.forward`](https://github.com/UT-Austin-RPL/amago/blob/c06844bd38d02a47f13989b03ebe41c3ad2e54e9/amago/agent.py#L203).
-5. **`val/`: Contains the policy evaluation metrics**. `"Average Total Return (Across All Env Names)"` is the default average return that we'd be expecting from an RL experiment. The return is also broken down by "environment name". The environment name is set by the `AMAGOEnv` (see the top section of this tutorial) and is used to track results for each task in multi-task experiments. We also log the "Bottom Quintile" return by environment name. There might be many more metrics here depending on the environment/experiment. For example, some envs track a "success rate" and some meta-RL envs record stats by episode/attempt.
+5. **`val/`: Contains the policy evaluation metrics**. `"Average Total Return (Across All Env Names)"` is the typical average return during eval rollouts. The return is also broken down by "environment name". The environment name is set by the `AMAGOEnv` (see the top section of this tutorial) and is used to track results for each task in multi-task experiments. We also log the "Bottom Quintile" return by environment name. There might be many more metrics here depending on the environment/experiment. For example, some envs track a "success rate" and some meta-RL envs record stats by episode/attempt.
 
 ![Screen Shot 2024-11-18 at 1 37 55 PM](https://github.com/user-attachments/assets/723bff6b-f6f9-48c7-9a39-20d021be4e38)
 
