@@ -1,20 +1,12 @@
-import warnings
-import copy
 import random
-from typing import Iterable, Tuple, List
+from typing import Tuple, List
 
 import numpy as np
 import gymnasium as gym
 import cv2
 import minigrid
 
-from amago.envs import AMAGOEnv
-from amago.hindsight import GoalSeq
-from amago.envs.env_utils import (
-    space_convert,
-    DiscreteActionWrapper,
-    AMAGO_ENV_LOG_PREFIX,
-)
+from amago.envs import AMAGO_ENV_LOG_PREFIX
 
 
 BANNED_BABYAI_TASKS = [
@@ -59,10 +51,13 @@ class MultitaskMetaBabyAI(gym.Env):
 
         self.action_space = gym.spaces.Discrete(7)
         if observation_type == "partial-grid":
-            img_space = gym.spaces.Box(low=0, high=255, shape=(7, 7, 3), dtype=np.int32)
+            img_space = gym.spaces.Box(low=0, high=255, shape=(7, 7, 3), dtype=np.uint8)
         elif observation_type == "full-grid":
             img_space = gym.spaces.Box(
-                low=0, high=255, shape=(22, 22, 3), dtype=np.int32
+                low=0,
+                high=255,
+                shape=(22, 22, 3),
+                dtype=np.uint8,
             )
         elif observation_type == "partial-image":
             img_space = gym.spaces.Box(
@@ -87,6 +82,7 @@ class MultitaskMetaBabyAI(gym.Env):
                 "extra": extra_space,
             }
         )
+        self.reset()
 
     def sample_new_env(self, env_name: str):
         env = gym.make(f"BabyAI-{env_name}")
@@ -143,7 +139,7 @@ class MultitaskMetaBabyAI(gym.Env):
         elif self.observation_type == "full-grid":
             # pad to 22x22
             x, y, _ = raw.shape
-            img = np.zeros((22, 22, 3), dtype=np.int32)
+            img = np.zeros((22, 22, 3), dtype=np.uint8)
             img[:x, :y] = raw
         elif self.observation_type == "partial-image":
             img = raw

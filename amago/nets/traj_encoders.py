@@ -4,15 +4,20 @@ import torch
 from torch import nn
 import gin
 
+try:
+    import flash_attn
+except ImportError:
+    flash_attn = None
+
 from amago.nets import ff, transformer, utils
+from amago.utils import amago_warning
 
 
 class TrajEncoder(nn.Module, ABC):
-    def __init__(self, tstep_dim: int, max_seq_len: int, horizon: int):
+    def __init__(self, tstep_dim: int, max_seq_len: int):
         super().__init__()
         self.tstep_dim = tstep_dim
         self.max_seq_len = max_seq_len
-        self.horzion = horizon
 
     def reset_hidden_state(self, hidden_state, dones):
         return hidden_state
@@ -35,7 +40,6 @@ class FFTrajEncoder(TrajEncoder):
         self,
         tstep_dim,
         max_seq_len,
-        horizon,
         d_model: int = 256,
         d_ff: int | None = None,
         n_layers: int = 1,
@@ -43,7 +47,7 @@ class FFTrajEncoder(TrajEncoder):
         activation="leaky_relu",
         norm="layer",
     ):
-        super().__init__(tstep_dim, max_seq_len, horizon)
+        super().__init__(tstep_dim, max_seq_len)
         d_ff = d_ff or d_model * 4
         self.traj_emb = nn.Linear(tstep_dim, d_model)
         self.traj_blocks = nn.ModuleList(
@@ -57,11 +61,6 @@ class FFTrajEncoder(TrajEncoder):
         self.activation = utils.activation_switch(activation)
         self.dropout = nn.Dropout(dropout)
         self._emb_dim = d_model
-
-    def init_hidden_state(self, batch_size: int, device: torch.device):
-        # easy trick that will make the Agent chop off previous timesteps
-        # from the sequence.
-        return True
 
     def forward(self, seq, time_idxs=None, hidden_state=None):
         traj_emb = self.dropout(self.activation(self.traj_emb(seq)))
@@ -82,14 +81,12 @@ class GRUTrajEncoder(TrajEncoder):
         self,
         tstep_dim: int,
         max_seq_len: int,
-        horizon: int,
         d_hidden: int = 256,
         n_layers: int = 2,
         d_output: int = 256,
         norm: str = "layer",
     ):
-        super().__init__(tstep_dim, max_seq_len, horizon)
-
+        super().__init__(tstep_dim, max_seq_len)
         self.rnn = nn.GRU(
             input_size=tstep_dim,
             hidden_size=d_hidden,
@@ -123,7 +120,6 @@ class TformerTrajEncoder(TrajEncoder):
         self,
         tstep_dim: int,
         max_seq_len: int,
-        horizon: int,
         d_model: int = 256,
         n_heads: int = 8,
         d_ff: int = 1024,
@@ -134,43 +130,74 @@ class TformerTrajEncoder(TrajEncoder):
         dropout_qkv: float = 0.00,
         activation: str = "leaky_relu",
         norm: str = "layer",
-        attention: str = "flash",
-        pos_emb: str = "learnable",
+        causal: bool = True,
+        sigma_reparam: bool = True,
+        normformer_norms: bool = True,
+        head_scaling: bool = True,
+        attention_type: type[transformer.SelfAttention] = transformer.FlashAttention,
     ):
-        super().__init__(tstep_dim, max_seq_len, horizon)
+        super().__init__(tstep_dim, max_seq_len)
+        self.head_dim = d_model // n_heads
+        self.n_heads = n_heads
+        self.n_layers = n_layers
+        if flash_attn is None and attention_type == transformer.FlashAttention:
+            amago_warning(
+                f"`flash_attn` is not installed; falling back to VanillaAttention"
+            )
+            attention_type = transformer.VanillaAttention
+        self.attention_type = attention_type
+        self.d_model = d_model
+
+        def make_layer():
+            return transformer.TransformerLayer(
+                attention_layer=transformer.AttentionLayer(
+                    self_attention=attention_type(causal=causal, dropout=dropout_attn),
+                    d_model=self.d_model,
+                    d_qkv=self.head_dim,
+                    n_heads=self.n_heads,
+                    dropout_qkv=dropout_qkv,
+                    head_scaling=head_scaling,
+                    sigma_reparam=sigma_reparam,
+                ),
+                d_model=self.d_model,
+                d_ff=d_ff,
+                dropout_ff=dropout_ff,
+                activation=activation,
+                norm=norm,
+                sigma_reparam=sigma_reparam,
+                normformer_norms=normformer_norms,
+            )
+
+        layers = [make_layer() for _ in range(self.n_layers)]
         self.tformer = transformer.Transformer(
             inp_dim=tstep_dim,
-            max_pos_idx=horizon,
-            d_model=d_model,
-            d_ff=d_ff,
-            n_heads=n_heads,
-            layers=n_layers,
+            d_model=self.d_model,
+            layers=layers,
             dropout_emb=dropout_emb,
-            dropout_ff=dropout_ff,
-            dropout_attn=dropout_attn,
-            dropout_qkv=dropout_qkv,
-            activation=activation,
-            attention=attention,
             norm=norm,
-            pos_emb=pos_emb,
         )
-        self.d_model = d_model
 
     def init_hidden_state(self, batch_size: int, device: torch.device):
         def make_cache():
+            dtype = (
+                torch.bfloat16
+                if self.attention_type == transformer.FlashAttention
+                else torch.float32
+            )
             return transformer.Cache(
                 device=device,
-                dtype=torch.bfloat16,
+                dtype=dtype,
+                layers=self.n_layers,
                 batch_size=batch_size,
                 max_seq_len=self.max_seq_len,
-                n_heads=self.tformer.n_heads,
-                head_dim=self.tformer.head_dim,
+                n_heads=self.n_heads,
+                head_dim=self.head_dim,
             )
 
         hidden_state = transformer.TformerHiddenState(
-            key_cache=[make_cache() for _ in range(self.tformer.n_layers)],
-            val_cache=[make_cache() for _ in range(self.tformer.n_layers)],
-            timesteps=torch.zeros((batch_size,), dtype=torch.int32, device=device),
+            key_cache=make_cache(),
+            val_cache=make_cache(),
+            seq_lens=torch.zeros((batch_size,), dtype=torch.int32, device=device),
         )
         return hidden_state
 
@@ -250,7 +277,6 @@ class MambaTrajEncoder(TrajEncoder):
         self,
         tstep_dim: int,
         max_seq_len: int,
-        horizon: int,
         d_model: int = 256,
         d_state: int = 16,
         d_conv: int = 4,
@@ -258,7 +284,7 @@ class MambaTrajEncoder(TrajEncoder):
         n_layers: int = 3,
         norm: str = "layer",
     ):
-        super().__init__(tstep_dim, max_seq_len, horizon)
+        super().__init__(tstep_dim, max_seq_len)
 
         assert (
             Mamba is not None

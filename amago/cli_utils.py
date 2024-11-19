@@ -4,6 +4,19 @@ from typing import Optional
 import gin
 
 import amago
+from amago import TrajEncoder, TstepEncoder, Agent
+from amago.envs.exploration import (
+    ExplorationWrapper,
+    EpsilonGreedy,
+    BilevelEpsilonGreedy,
+)
+
+
+"""
+Convenience functions that create a generic CLI for `Experiment`s and handle the most common gin configurations.
+
+These mostly exist to make the `examples/` easier to maintain with less boilerplate.
+"""
 
 
 def add_common_cli(parser: ArgumentParser) -> ArgumentParser:
@@ -24,9 +37,10 @@ def add_common_cli(parser: ArgumentParser) -> ArgumentParser:
         help="Quick switch between default `agent.Agent` and `agent.MultiTaskAgent`. MultiTaskAgent is useful when training on mixed environments with multiple rewards functions.",
     )
     parser.add_argument(
-        "--no_async",
-        action="store_true",
-        help="Run the 'parallel' actors in one thread. Saves resources when environments are already fast.",
+        "--env_mode",
+        choices=["async", "sync", "already_vectorized"],
+        default="async",
+        help="`async` runs single-threaded environments in parallel, `sync` imitates the same parallel API but runs each step sequentially to save overhead, `already_vectorized` should be used for environments that are already parallelized at the lowest wrapper level (e.g. they're jax accelerated and have a batch dimension).",
     )
     parser.add_argument(
         "--no_log",
@@ -115,11 +129,6 @@ def add_common_cli(parser: ArgumentParser) -> ArgumentParser:
         help="Skip learning updates for this many epochs at the beginning of training (if worried about overfitting to a small dataset)",
     )
     parser.add_argument(
-        "--slow_inference",
-        action="store_true",
-        help="Turn OFF fast-inference mode (key-value caching for Transformer, hidden state caching for RNN)",
-    )
-    parser.add_argument(
         "--mixed_precision",
         choices=["no", "bf16"],
         default="no",
@@ -147,132 +156,90 @@ def add_common_cli(parser: ArgumentParser) -> ArgumentParser:
     return parser
 
 
-"""
-Gin convenience functions.
-
-Switch between the most common configurations without needing `.gin` config files.
-"""
-
-
-def switch_tstep_encoder(config: dict, arch: str, **kwargs):
-    """
-    Convenient way to switch between TstepEncoders without gin config files
-
-    `kwargs` should be the names and new defaults of kwargs in the TstepEncoder we
-    are using (either `FFTstepEncoder` if arch == "ff", or `CNNTstepEncoder` if arch == "cnn")
-    """
+def switch_tstep_encoder(config: dict, arch: str, **kwargs) -> type[TstepEncoder]:
     assert arch in ["ff", "cnn"]
     if arch == "ff":
-        config[
-            "amago.agent.Agent.tstep_encoder_Cls"
-        ] = amago.nets.tstep_encoders.FFTstepEncoder
+        tstep_encoder_type = amago.nets.tstep_encoders.FFTstepEncoder
         ff_config = "amago.nets.tstep_encoders.FFTstepEncoder"
         config.update({f"{ff_config}.{key}": val for key, val in kwargs.items()})
     elif arch == "cnn":
-        config[
-            "amago.agent.Agent.tstep_encoder_Cls"
-        ] = amago.nets.tstep_encoders.CNNTstepEncoder
+        tstep_encoder_type = amago.nets.tstep_encoders.CNNTstepEncoder
         cnn_config = "amago.nets.tstep_encoders.CNNTstepEncoder"
         config.update({f"{cnn_config}.{key}": val for key, val in kwargs.items()})
-    return config
+    return tstep_encoder_type
 
 
-def turn_off_goal_conditioning(config: dict):
-    """
-    Make the goal embedding network redundant when the environment is not goal-conditioned.
-    This applies to most environments that do not use hindsight relabeling.
-    """
-    config.update(
-        {
-            "amago.nets.tstep_encoders.TstepEncoder.goal_emb_Cls": amago.nets.goal_embedders.FFGoalEmb,
-            "amago.nets.goal_embedders.FFGoalEmb.zero_embedding": True,
-            "amago.nets.goal_embedders.FFGoalEmb.goal_emb_dim": 1,
-        }
-    )
-    return config
+def switch_agent(config: dict, agent: str, **kwargs) -> type[Agent]:
+    assert agent in ["agent", "multitask"]
+    if agent == "agent":
+        agent_type = amago.agent.Agent
+        agent_config = "amago.agent.Agent"
+    elif agent == "multitask":
+        agent_type = amago.agent.MultiTaskAgent
+        agent_config = "amago.agent.MultiTaskAgent"
+    config.update({f"{agent_config}.{key}": val for key, val in kwargs.items()})
+    return agent_type
 
 
-def switch_traj_encoder(config: dict, arch: str, memory_size: int, layers: int):
-    """
-    Convenient way to switch between TrajEncoders of different sizes without gin config files.
-    """
+def switch_exploration(
+    config: dict, strategy: str, **kwargs
+) -> type[ExplorationWrapper]:
+    assert strategy in ["egreedy", "bilevel"]
+    if strategy == "egreedy":
+        strategy_type = EpsilonGreedy
+        strategy_config = "amago.envs.exploration.EpsilonGreedy"
+    elif strategy == "bilevel":
+        strategy_type = BilevelEpsilonGreedy
+        strategy_config = "amago.envs.exploration.BilevelEpsilonGreedy"
+    config.update({f"{strategy_config}.{key}": val for key, val in kwargs.items()})
+    return strategy_type
+
+
+def switch_traj_encoder(
+    config: dict, arch: str, memory_size: int, layers: int, **kwargs
+) -> type[TrajEncoder]:
     assert arch in ["ff", "rnn", "transformer", "mamba"]
     if arch == "transformer":
-        tformer_config = "amago.nets.traj_encoders.TformerTrajEncoder"
+        traj_encoder_type = amago.nets.traj_encoders.TformerTrajEncoder
+        model_config = "amago.nets.traj_encoders.TformerTrajEncoder"
         config.update(
             {
-                "amago.agent.Agent.traj_encoder_Cls": amago.nets.traj_encoders.TformerTrajEncoder,
-                f"{tformer_config}.d_model": memory_size,
-                f"{tformer_config}.d_ff": memory_size * 4,
-                f"{tformer_config}.n_layers": layers,
+                f"{model_config}.d_model": memory_size,
+                f"{model_config}.d_ff": memory_size * 4,
+                f"{model_config}.n_layers": layers,
             }
         )
     elif arch == "rnn":
-        gru_config = "amago.nets.traj_encoders.GRUTrajEncoder"
+        traj_encoder_type = amago.nets.traj_encoders.GRUTrajEncoder
+        model_config = "amago.nets.traj_encoders.GRUTrajEncoder"
         config.update(
             {
-                "amago.agent.Agent.traj_encoder_Cls": amago.nets.traj_encoders.GRUTrajEncoder,
-                f"{gru_config}.n_layers": layers,
-                f"{gru_config}.d_output": memory_size,
-                f"{gru_config}.d_hidden": memory_size,
+                f"{model_config}.n_layers": layers,
+                f"{model_config}.d_output": memory_size,
+                f"{model_config}.d_hidden": memory_size,
             }
         )
 
     elif arch == "ff":
-        ff_config = "amago.nets.traj_encoders.FFTrajEncoder"
+        traj_encoder_type = amago.nets.traj_encoders.FFTrajEncoder
+        model_config = "amago.nets.traj_encoders.FFTrajEncoder"
         config.update(
             {
-                "amago.agent.Agent.traj_encoder_Cls": amago.nets.traj_encoders.FFTrajEncoder,
-                f"{ff_config}.d_model": memory_size,
-                f"{ff_config}.n_layers": layers,
+                f"{model_config}.d_model": memory_size,
+                f"{model_config}.n_layers": layers,
             }
         )
     elif arch == "mamba":
-        mamba_config = "amago.nets.traj_encoders.MambaTrajEncoder"
+        traj_encoder_type = amago.nets.traj_encoders.MambaTrajEncoder
+        model_config = "amago.nets.traj_encoders.MambaTrajEncoder"
         config.update(
             {
-                "amago.agent.Agent.traj_encoder_Cls": amago.nets.traj_encoders.MambaTrajEncoder,
-                f"{mamba_config}.d_model": memory_size,
-                f"{mamba_config}.n_layers": layers,
+                f"{model_config}.d_model": memory_size,
+                f"{model_config}.n_layers": layers,
             }
         )
-    return config
-
-
-def naive(config: dict, turn_off_fbc: bool = False):
-    config.update(
-        {
-            "amago.nets.traj_encoders.TformerTrajEncoder.activation": "gelu",
-            "amago.nets.actor_critic.NCritics.activation": "relu",
-            "amago.nets.actor_critic.Actor.activation": "relu",
-            "amago.nets.tstep_encoders.FFTstepEncoder.activation": "relu",
-            "amago.nets.tstep_encoders.CNNTstepEncoder.activation": "relu",
-            "amago.nets.transformer.TransformerLayer.normformer_norms": False,
-            "amago.nets.transformer.TransformerLayer.sigma_reparam": False,
-            "amago.nets.transformer.AttentionLayer.sigma_reparam": False,
-            "amago.nets.transformer.AttentionLayer.head_scaling": False,
-            "amago.agent.Agent.num_critics": 2,
-            "amago.agent.Agent.gamma": 0.99,
-            "amago.agent.Agent.use_multigamma": False,
-        }
-    )
-
-    if turn_off_fbc:
-        config.update({"amago.agent.Agent.offline_coeff": 0.0})
-
-    return config
-
-
-def adaptive(config: dict):
-    config.update(
-        {
-            "amago.nets.traj_encoders.TformerTrajEncoder.activation": "adaptive",
-            "amago.nets.actor_critic.NCritics.activation": "adaptive",
-            "amago.nets.actor_critic.Actor.activation": "adaptive",
-            "amago.nets.tstep_encoders.FFTstepEncoder.activation": "adaptive",
-            "amago.nets.tstep_encoders.CNNTstepEncoder.activation": "adaptive",
-        }
-    )
+    config.update({f"{model_config}.{key}": val for key, val in kwargs.items()})
+    return traj_encoder_type
 
 
 def use_config(
@@ -302,19 +269,24 @@ def create_experiment_from_cli(
     traj_save_len: int,
     group_name: str,
     run_name: str,
-    experiment_Cls=amago.Experiment,
+    agent_type: type[Agent],
+    tstep_encoder_type: type[TstepEncoder],
+    traj_encoder_type: type[TrajEncoder],
+    exploration_wrapper_type: type[ExplorationWrapper] = EpsilonGreedy,
+    experiment_type=amago.Experiment,
     **extra_experiment_kwargs,
 ):
     cli = command_line_args
 
-    experiment = experiment_Cls(
-        agent_type=amago.agent.Agent
-        if cli.agent_type == "agent"
-        else amago.agent.MultiTaskAgent,
+    experiment = experiment_type(
+        agent_type=agent_type,
+        tstep_encoder_type=tstep_encoder_type,
+        traj_encoder_type=traj_encoder_type,
         make_train_env=make_train_env,
         make_val_env=make_val_env,
         max_seq_len=max_seq_len,
         traj_save_len=traj_save_len,
+        exploration_wrapper_type=exploration_wrapper_type,
         dset_max_size=cli.dset_max_size,
         run_name=run_name,
         dset_name=run_name,
@@ -331,8 +303,7 @@ def create_experiment_from_cli(
         val_interval=cli.val_interval,
         ckpt_interval=cli.ckpt_interval,
         mixed_precision=cli.mixed_precision,
-        fast_inference=not cli.slow_inference,
-        async_envs=not cli.no_async,
+        env_mode=cli.env_mode,
         **extra_experiment_kwargs,
     )
 
@@ -344,9 +315,11 @@ def make_experiment_learn_only(experiment: amago.Experiment) -> amago.Experiment
     experiment.train_timesteps_per_epoch = 0
     experiment.val_interval = 10
     experiment.val_timesteps_per_epoch = 0
-    experiment.val_checks_per_epoch = 0
-    experiment.parallel_actors = 2
+    # might throw warnings but cuts overhead of building envs we'll never use
+    experiment.parallel_actors = 1
     experiment.always_save_latest = True
+    experiment.always_load_latest = False
+    experiment.has_replay_buffer_rights = True
     return experiment
 
 
@@ -354,24 +327,20 @@ def make_experiment_collect_only(experiment: amago.Experiment) -> amago.Experime
     experiment.start_collecting_at_epoch = 0
     experiment.start_learning_at_epoch = float("inf")
     experiment.train_batches_per_epoch = 0
-    experiment.val_checks_per_epoch = 0
     experiment.ckpt_interval = None
     experiment.always_save_latest = False
     experiment.always_load_latest = True
     # run "forever"; terminate manually (when learning process is done)
-    experiment.epochs = 10_000_000
-    experiment.dset_filter_pct = None
+    experiment.epochs = max(experiment.epochs, 1_000_000)
+    # do not delete anything from the collection process
+    experiment.has_replay_buffer_rights = False
     return experiment
 
 
-def switch_async_mode(
-    experiment: amago.Experiment, command_line_args
-) -> amago.Experiment:
-    cli = command_line_args
-    if cli.mode == "collect":
-        assert cli.trials == 1, "Async Mode breaks `trials` loop. Set `--trials = 1`"
+def switch_async_mode(experiment: amago.Experiment, mode: str) -> amago.Experiment:
+    assert mode in ["collect", "learn", "both"]
+    if mode == "collect":
         experiment = make_experiment_collect_only(experiment)
-    elif cli.mode == "learn":
-        assert cli.trials == 1, "Async Mode breaks `trials` loop. Set `--trials = 1`"
+    elif mode == "learn":
         experiment = make_experiment_learn_only(experiment)
     return experiment

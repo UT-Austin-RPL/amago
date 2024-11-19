@@ -2,21 +2,28 @@ import warnings
 import time
 import os
 from functools import partial
-from termcolor import colored
 from typing import Iterable
 
+import gin
 import numpy as np
+import gymnasium as gym
+from termcolor import colored
+from accelerate.utils import gather_object
 import torch
 from torch import nn
 from torch.optim.lr_scheduler import LambdaLR
-import gymnasium as gym
-import gin
-
-from accelerate import Accelerator
-from accelerate.utils import gather_object
 
 
-def stack_list_array_dicts(list_: list[dict[np.ndarray]], axis=0):
+class AmagoWarning(Warning):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+def amago_warning(msg: str, category=AmagoWarning):
+    warnings.warn(colored(f"{msg}", "green"), category=category)
+
+
+def stack_list_array_dicts(list_: list[dict[np.ndarray]], axis=0, cat: bool = False):
     out = {}
     for t in list_:
         for k, v in t.items():
@@ -24,14 +31,29 @@ def stack_list_array_dicts(list_: list[dict[np.ndarray]], axis=0):
                 out[k].append(v)
             else:
                 out[k] = [v]
-    return {k: np.stack(v, axis=axis) for k, v in out.items()}
+    f = np.concatenate if cat else np.stack
+    return {k: f(v, axis=axis) for k, v in out.items()}
 
 
-def amago_warning(msg: str, category=None):
-    warnings.warn(colored(f"{msg}", "green"), category=category)
+def split_batch(arr, axis: int):
+    # this split does the same thing as `np.unstack` without requiring numpy 2.1+.
+    # split seems to be much slower than unstack if the array is not in cpu memory.
+    return np.split(np.ascontiguousarray(arr), arr.shape[axis], axis=axis)
 
 
-def avg_over_accelerate(data: dict[str, int | float]):
+def split_dict(dict_: dict[str, np.ndarray], axis=0):
+    unstacked = {k: split_batch(v, axis=axis) for k, v in dict_.items()}
+    out = None
+    for k, vs in unstacked.items():
+        if out is None:
+            out = [{k: v} for v in vs]
+        else:
+            for i, v in enumerate(vs):
+                out[i][k] = v
+    return out
+
+
+def _func_over_accelerate(data: dict[str, int | float], func: callable):
     merged_stats = gather_object([data])
     output = {}
     for device in merged_stats:
@@ -42,8 +64,16 @@ def avg_over_accelerate(data: dict[str, int | float]):
                 output[k].extend(v)
             else:
                 output[k].append(v)
-    output = {k: np.array(v).mean() for k, v in output.items()}
+    output = {k: func(v) for k, v in output.items()}
     return output
+
+
+def avg_over_accelerate(data: dict[str, int | float]):
+    return _func_over_accelerate(data, lambda x: np.array(x).mean())
+
+
+def sum_over_accelerate(data: dict[str, int | float]):
+    return _func_over_accelerate(data, lambda x: np.array(x).sum())
 
 
 def masked_avg(tensor: torch.Tensor, mask: torch.Tensor):

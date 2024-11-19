@@ -1,4 +1,7 @@
 import math
+from functools import lru_cache
+from typing import Optional, Iterable
+from abc import ABC, abstractmethod
 
 import torch
 from torch import nn
@@ -8,40 +11,110 @@ import gin
 
 from .utils import activation_switch
 from amago.utils import amago_warning
+from amago.nets.ff import Normalization
 
+# Flex Attention
+try:
+    from torch.nn.attention.flex_attention import (
+        create_block_mask,
+        flex_attention,
+        and_masks,
+    )
+except ImportError:
+    flex_attention = None
+
+# Flash Attention 2
 try:
     import flash_attn
 except ImportError:
     amago_warning("Missing FlashAttention (2.0) Install")
+    flash_attn = None
+else:
+    torch.set_float32_matmul_precision("high")
 
 
-class Normalization(nn.Module):
-    def __init__(self, method: str, d_model: int):
+class SelfAttention(nn.Module, ABC):
+    def __init__(self, causal: bool = True, dropout: float = 0.0):
         super().__init__()
-        assert method in ["layer", "none"]
-        if method == "layer":
-            self.norm = nn.LayerNorm(d_model)
-        elif method == "none":
-            self.norm = lambda x: x
-        self.method = method
+        self.causal = causal
+        self.dropout = dropout
 
-    def forward(self, x):
-        return self.norm(x)
+    @abstractmethod
+    def forward(self, qkv, key_cache=None, val_cache=None, cache_seqlens=None):
+        raise NotImplementedError
 
 
-@gin.configurable(allowlist=["window_size"])
-class FlashAttention(nn.Module):
+class VanillaAttention(SelfAttention):
+    def __init__(self, causal: bool, dropout: float):
+        super().__init__(causal=causal, dropout=dropout)
+        self.dropout = nn.Dropout(self.dropout)
+        self._mask = None
+
+    @torch.compile
+    def _inference_with_cache(self, qkv, key_cache, val_cache, cache_seqlens):
+        # fmt: off
+        queries, keys, values = torch.unbind(qkv, dim=2)
+        B, L, H, E = queries.shape
+        assert L == 1
+        scale = 1.0 / math.sqrt(E)
+        # fill cache, trim sequences
+        key_cache[:, cache_seqlens] = keys
+        val_cache[:, cache_seqlens] = values
+        end = cache_seqlens + 1
+        max_len = end.max()
+        k_cache = key_cache[:, :max_len]
+        v_cache = val_cache[:, :max_len]
+        # attention scores + masking
+        scores = torch.einsum("blhe,blhe->blh", queries, k_cache)
+        mask = torch.arange(max_len, device=cache_seqlens.device)[None, :] >= end[:, None]
+        scores.masked_fill_(mask[:, :, None], -torch.inf)
+        # output
+        A = self.dropout(torch.softmax(scale * scores, dim=1))
+        V = torch.einsum("blh,blhd->bhd", A, v_cache).unsqueeze(1)
+        # fmt: on
+        return V
+
+    @torch.compile
+    def _forward_without_cache(self, qkv, mask):
+        queries, keys, values = torch.unbind(qkv, dim=2)
+        B, L, H, E = queries.shape
+        _, S, _, D = values.shape
+        scale = 1.0 / math.sqrt(E)
+        scores = torch.einsum("blhe,bshe->bhls", queries, keys)
+        if self.causal:
+            scores.masked_fill_(mask, -torch.inf)
+        A = self.dropout(torch.softmax(scale * scores, dim=-1))
+        V = torch.einsum("bhls,bshd->blhd", A, values)
+        return V
+
+    @torch.compiler.disable
+    def forward(self, qkv, key_cache=None, val_cache=None, cache_seqlens=None):
+        if key_cache is None and val_cache is None or cache_seqlens is None:
+            B, L, *_ = qkv.shape
+            if self._mask is None or self._mask.shape != (B, 1, L, L):
+                self._mask = torch.triu(
+                    torch.ones((B, 1, L, L), dtype=torch.bool, device=qkv.device),
+                    diagonal=1,
+                )
+            return self._forward_without_cache(qkv, self._mask)
+        else:
+            assert not self.training
+            return self._inference_with_cache(qkv, key_cache, val_cache, cache_seqlens)
+
+
+@gin.configurable
+class FlashAttention(SelfAttention):
     def __init__(
         self,
-        causal: bool = True,
-        attention_dropout: float = 0.0,
+        causal: bool,
+        dropout: float,
         window_size: tuple[int, int] = (-1, -1),
     ):
-        super().__init__()
-        self.dropout = attention_dropout
-        self.causal = causal
+        assert flash_attn is not None, "Missing flash attention 2 install."
+        super().__init__(causal=causal, dropout=dropout)
         self.window_size = window_size
 
+    @torch.compiler.disable
     def forward(self, qkv, key_cache=None, val_cache=None, cache_seqlens=None):
         qkv = qkv.to(torch.bfloat16)
         if key_cache is None or val_cache is None or cache_seqlens is None:
@@ -67,9 +140,189 @@ class FlashAttention(nn.Module):
         return out
 
 
-class SigmaReparam(nn.Module):
+class FlexAttention(SelfAttention):
     """
-    https://arxiv.org/pdf/2303.06296.pdf Appendix C
+    Experimental support for flash_attention (coming to pytorch 2.5)
+
+    Allows custom sparse attention patterns using score_mod and mask_mod function.
+    (https://pytorch.org/blog/flexattention/)
+    (https://github.com/pytorch-labs/attention-gym)
+
+    The main benefit of flash_attention for our purposes is a unified implementation
+    of key/value cache inference for more complex attention patterns.
+    """
+
+    def __init__(
+        self,
+        score_mod: callable,
+        mask_mod: callable,
+        causal: bool = True,
+        dropout: float = 0.0,
+    ):
+        assert flex_attention is not None, "FlexAttention requires pytorch >= 2.5"
+        if dropout > 0.0:
+            amago_warning(
+                "FlexAttention does not support attention dropout. Setting to 0."
+            )
+        super().__init__(causal=causal, dropout=0.0)
+
+        def causal_mask(b, h, q_idx, kv_idx):
+            return (q_idx >= kv_idx) if causal else True
+
+        self.score_mod = score_mod
+        self.mask_mod = mask_mod
+        self.causal_mask = causal_mask
+
+    @lru_cache
+    def cached_training_mask(self, q_len: int, kv_len: int):
+        return create_block_mask(
+            and_masks(self.mask_mod, self.causal_mask),
+            B=None,
+            H=None,
+            Q_LEN=q_len,
+            KV_LEN=kv_len,
+        )
+
+    def kv_cache_score_mod(self, cache_seqlens):
+
+        def _kv_cache_score_mod(score, b, h, q_idx, kv_idx):
+            q_idx_rel = q_idx + cache_seqlens[b]
+            base = self.score_mod(score, b, h, q_idx_rel, kv_idx)
+            return base
+
+        return _kv_cache_score_mod
+
+    def kv_cache_mask_mod(self, cache_seqlens):
+
+        def _kv_cache_mask_mod(b, h, q_idx, kv_idx):
+            q_idx_rel = q_idx + cache_seqlens[b]
+            base = self.mask_mod(b, h, q_idx_rel, kv_idx)
+            base = base & (kv_idx <= cache_seqlens[b])
+            if self.causal:
+                return base & (q_idx_rel >= kv_idx)
+            return base
+
+        return _kv_cache_mask_mod
+
+    @torch.compile
+    def flex_attention(self, q, k, v, score_mod, block_mask):
+        return flex_attention(q, k, v, score_mod, block_mask)
+
+    @torch.compile
+    def flex_attention_inf(self, q, k, v, score_mod, block_mask):
+        # pretend this is a different function than training to keep
+        # torch's compilation separate.
+        return flex_attention(q, k, v, score_mod, block_mask)
+
+    @torch.compiler.disable
+    def forward(self, qkv, key_cache=None, val_cache=None, cache_seqlens=None):
+        if key_cache is None or val_cache is None or cache_seqlens is None:
+            assert self.training
+            qkv = rearrange(qkv, "b l three h e -> b h three l e")
+            *_, L, _ = qkv.shape
+            q, k, v = torch.unbind(qkv, dim=2)
+            mask = self.cached_training_mask(L, L)
+            out = self.flex_attention(q, k, v, self.score_mod, mask)
+            out = rearrange(out, "b h l e -> b l h e")
+        else:
+            assert not self.training
+            q, k, v = torch.unbind(qkv, dim=2)
+            key_cache[:, cache_seqlens] = k
+            val_cache[:, cache_seqlens] = v
+            max_len = cache_seqlens.max() + 1
+            q = rearrange(q, "b l h e -> b h l e")
+            k_cache = rearrange(key_cache[:, :max_len], "b l h e -> b h l e")
+            v_cache = rearrange(val_cache[:, :max_len], "b l h e -> b h l e")
+            # TODO: custom constructor as potential speedup?
+            # https://pytorch.org/blog/flexattention/#q-how-can-we-compute-blockmask-quicker
+            inf_mask = create_block_mask(
+                self.kv_cache_mask_mod(cache_seqlens),
+                B=q.shape[0],
+                H=None,
+                Q_LEN=1,
+                KV_LEN=max_len,
+            )
+            out = self.flex_attention_inf(
+                q, k_cache, v_cache, self.kv_cache_score_mod(cache_seqlens), inf_mask
+            )
+            out = rearrange(out, "b h l e -> b l h e")
+        return out
+
+
+class VanillaFlexAttention(FlexAttention):
+    """
+    A sanity-check test of FlexAttention that should be equivalent to VanillaAttention.
+    """
+
+    def __init__(self, causal: bool = True, dropout: float = 0.0):
+        super().__init__(
+            score_mod=lambda score, b, h, q_idx, kv_idx: score,
+            mask_mod=lambda b, h, q_idx, kv_idx: True,
+            causal=causal,
+            dropout=dropout,
+        )
+
+
+@gin.configurable
+class SlidingWindowFlexAttention(FlexAttention):
+    def __init__(
+        self,
+        causal: bool = True,
+        dropout: float = 0.0,
+        window_size: int = gin.REQUIRED,
+    ):
+        def sliding_window_mask_mod(b, h, q_idx, kv_idx):
+            window_mask = q_idx - kv_idx <= window_size
+            return window_mask
+
+        super().__init__(
+            score_mod=lambda score, b, h, q_idx, kv_idx: score,
+            mask_mod=sliding_window_mask_mod,
+            causal=causal,
+            dropout=dropout,
+        )
+
+
+class SigmaReparam(nn.Linear):
+    """
+    Updated version of SigmaReparam following the initialization strategy in the official code release.
+    https://github.com/apple/ml-sigma-reparam/blob/fea4e359126f812bd3e0a12234c56330fe4b5fa2/vision/layers.py#L90
+    https://github.com/ywchan2005/sigma-reparam-pytorch/blob/2a5676ac71f75567a09db4ecafc1a4d7bc135b8e/sigma_reparam.py#L5
+    """
+
+    def __init__(self, d_in, d_out, bias: bool = True):
+        super().__init__(d_in, d_out, bias=bias)
+        nn.init.trunc_normal_(self.weight, std=0.02)
+        u = torch.linalg.svd(self.weight.T, full_matrices=False)[-1][0].detach()
+        v = torch.linalg.svd(self.weight, full_matrices=False)[-1][0].detach()
+        self.register_buffer("u", u)
+        self.register_buffer("v", v)
+        self.gamma = nn.Parameter(torch.ones(1), requires_grad=True)
+
+    def forward(self, x):
+        if self.training:
+            # with torch.no_grad(): # does not compile w/ accelerate 1.0 DDP torch 2.5
+            u = (self.weight @ self.v).float()
+            self.u.data = F.normalize(u, dim=0)
+            v = (self.weight.T @ self.u).float()
+            self.v.data = F.normalize(v, dim=0)
+        # detach instead...
+        sigma = einsum(self.u.detach(), self.weight, self.v.detach(), "d, d c , c->")
+        W_hat = self.gamma / sigma * self.weight
+        out = F.linear(x, W_hat, self.bias)
+        return out
+
+
+class SigmaReparamLegacyInit(nn.Module):
+    """
+    Legacy version of SigmaReparam with the original initialization strategy.
+    This is the version used in the paper results, and is based on
+    pseudocode in https://arxiv.org/pdf/2303.06296.pdf Appendix C.
+    Results in large initial output values, which are covered up by the LR
+    warmup and other stability measures in flash attention.
+
+    The initialization has been updated to follow tricks from an official code
+    release that came out later.
     """
 
     def __init__(self, d_in, d_out, bias: bool = True):
@@ -104,50 +357,24 @@ class SigmaReparam(nn.Module):
         return out
 
 
-class VanillaAttention(nn.Module):
-    def __init__(self, causal: bool = True, attention_dropout: float = 0.0):
-        super().__init__()
-        self.dropout = nn.Dropout(attention_dropout)
-        self.causal = causal
-        self._mask = None
-
-    def forward(self, qkv, key_cache=None, val_cache=None, cache_seqlens=None):
-        assert (
-            key_cache is None and val_cache is None
-        ), "VanillaAttention does not support `fast_inference` mode"
-        queries, keys, values = torch.unbind(qkv, dim=2)
-        B, L, H, E = queries.shape
-        _, S, _, D = values.shape
-        scale = 1.0 / math.sqrt(E)
-
-        scores = torch.einsum("blhe,bshe->bhls", queries, keys)
-        if self._mask is None or self._mask.shape != (B, 1, L, L):
-            self._mask = torch.triu(
-                torch.ones((B, 1, L, L), dtype=torch.bool, device=qkv.device),
-                diagonal=1,
-            )
-        if self.causal:
-            scores.masked_fill_(self._mask, -torch.inf)
-
-        A = self.dropout(torch.softmax(scale * scores, dim=-1))
-        V = torch.einsum("bhls,bshd->blhd", A, values)
-        return V
-
-
-@gin.configurable(allowlist=["head_scaling", "sigma_reparam"])
 class AttentionLayer(nn.Module):
+    """
+    Query, Key, Value --> Self-Attention --> Output Projection
+    """
+
     def __init__(
         self,
-        attention,
-        d_model,
-        d_qkv,
-        n_heads,
-        dropout_qkv=0.0,
+        self_attention: SelfAttention,
+        d_model: int,
+        d_qkv: int,
+        n_heads: int,
+        dropout_qkv: float = 0.0,
         head_scaling: bool = True,
         sigma_reparam: bool = True,
     ):
         super().__init__()
-        self.attention = attention
+        assert isinstance(self_attention, SelfAttention)
+        self.self_attention = self_attention
         FF = SigmaReparam if sigma_reparam else nn.Linear
         self.qkv_projection = FF(d_model, 3 * d_qkv * n_heads, bias=False)
         self.dropout_qkv = nn.Dropout(dropout_qkv)
@@ -165,7 +392,7 @@ class AttentionLayer(nn.Module):
             heads=self.n_heads,
             three=3,
         )
-        out = self.head_scaler * self.attention(
+        out = self.head_scaler * self.self_attention(
             qkv=qkv,
             key_cache=key_cache,
             val_cache=val_cache,
@@ -176,15 +403,14 @@ class AttentionLayer(nn.Module):
         return out
 
 
-@gin.configurable(denylist=["activation", "norm", "dropout_ff"])
 class TransformerLayer(nn.Module):
     """
-    Pre-Norm Self-Attention
+    Pre-Norm Self-Attention Layer
     """
 
     def __init__(
         self,
-        self_attention,
+        attention_layer: AttentionLayer,
         d_model: int,
         d_ff: int,
         dropout_ff: float = 0.1,
@@ -194,7 +420,8 @@ class TransformerLayer(nn.Module):
         normformer_norms: bool = True,
     ):
         super().__init__()
-        self.self_attention = self_attention
+        assert isinstance(attention_layer, AttentionLayer)
+        self.attention_layer = attention_layer
         FF = SigmaReparam if sigma_reparam else nn.Linear
         self.ff1 = FF(d_model, d_ff)
         self.ff2 = FF(d_ff, d_model)
@@ -212,10 +439,12 @@ class TransformerLayer(nn.Module):
         )
         self.dropout_ff = nn.Dropout(dropout_ff)
         self.activation = activation_switch(activation)
+        self.d_model = d_model
 
+    @torch.compile
     def forward(self, self_seq, key_cache=None, val_cache=None, cache_seqlens=None):
         q1 = self.norm1(self_seq)  # pre-norm
-        q1 = self.self_attention(
+        q1 = self.attention_layer(
             q1, key_cache=key_cache, val_cache=val_cache, cache_seqlens=cache_seqlens
         )
         q1 = self.norm2(q1)  # normformer extra norm 1
@@ -233,55 +462,59 @@ class Cache:
         self,
         device: torch.device,
         dtype: torch.dtype,
+        layers: int,
         batch_size: int,
         max_seq_len: int,
         n_heads: int,
         head_dim: int,
     ):
         self.data = torch.zeros(
-            (batch_size, max_seq_len, n_heads, head_dim), dtype=dtype, device=device
+            (layers, batch_size, max_seq_len, n_heads, head_dim),
+            dtype=dtype,
+            device=device,
         )
+        self.max_seq_len = max_seq_len
         # make silent bugs in k/v cache... much louder
         self.data[:] = torch.nan
+        self.device = device
 
     def __len__(self):
-        return self.data.shape[1]
+        return self.data.shape[2]
 
-    def roll_back(self, idx):
-        roll = self.data[idx, 1:].clone()
-        self.data[idx, :-1] = roll
-        self.data[idx, -1] = torch.nan  # no silent bugs
+    def roll_back(self, seq_lens):
+        idxs = torch.where(seq_lens == self.max_seq_len)[0]
+        roll = self.data[:, idxs, 1:].clone()
+        self.data[:, idxs, :-1] = roll
+        self.data[:, idxs, -1] = torch.nan  # no silent bugs
+        return idxs
 
 
 class TformerHiddenState:
-    def __init__(
-        self, key_cache: list[Cache], val_cache: list[Cache], timesteps: torch.Tensor
-    ):
-        assert isinstance(key_cache, list) and len(key_cache) == len(val_cache)
-        assert timesteps.dtype == torch.int32
-        self.n_layers = len(key_cache)
+    def __init__(self, key_cache: Cache, val_cache: Cache, seq_lens: torch.Tensor):
+        assert seq_lens.dtype == torch.int32
+        assert key_cache.device == val_cache.device
+        self.n_layers = key_cache.data.shape[0]
+        assert self.n_layers == val_cache.data.shape[0]
         self.key_cache = key_cache
         self.val_cache = val_cache
-        self.timesteps = timesteps
+        self.seq_lens = seq_lens
+        self.device = key_cache.device
 
     def reset(self, idxs):
-        self.timesteps[idxs] = 0
+        self.seq_lens[idxs] = 0
 
     def update(self):
-        self.timesteps += 1
-        for i, timestep in enumerate(self.timesteps):
-            if timestep == len(self.key_cache[0]):
-                for k, v in zip(self.key_cache, self.val_cache):
-                    k.roll_back(i)
-                    v.roll_back(i)
-                self.timesteps[i] -= 1
+        self.seq_lens += 1
+        self.key_cache.roll_back(self.seq_lens)
+        idxs = self.val_cache.roll_back(self.seq_lens)
+        self.seq_lens[idxs] -= 1
 
     def __getitem__(self, layer_idx):
         assert layer_idx < self.n_layers
         return (
-            self.key_cache[layer_idx].data,
-            self.val_cache[layer_idx].data,
-            self.timesteps,
+            self.key_cache.data[layer_idx],
+            self.val_cache.data[layer_idx],
+            self.seq_lens,
         )
 
 
@@ -310,60 +543,18 @@ class Transformer(nn.Module):
     def __init__(
         self,
         inp_dim: int,
-        max_pos_idx: int,
-        d_model: int = 128,
-        d_ff: int = 512,
-        d_emb_ff: int = None,
-        n_heads: int = 4,
-        layers: int = 3,
+        d_model: int,
+        layers: Iterable[nn.Module],
         dropout_emb: float = 0.05,
-        dropout_ff: float = 0.05,
-        dropout_attn: float = 0.00,
-        dropout_qkv: float = 0.00,
-        attention: str = "flash",
-        activation: str = "leaky_relu",
         norm: str = "layer",
-        causal: bool = True,
-        pos_emb: str = "learnable",
     ):
         super().__init__()
-        assert attention in ["flash", "vanilla"]
-        assert pos_emb in ["learnable", "fixed"]
-
-        # embedding
-        if pos_emb == "learnable":
-            self.position_embedding = nn.Embedding(
-                max_pos_idx + 1, embedding_dim=d_model
-            )
-        elif pos_emb == "fixed":
-            self.position_embedding = FixedPosEmb(d_model)
-        d_emb_ff = d_emb_ff or d_model
+        self.position_embedding = FixedPosEmb(d_model)
         self.inp = nn.Linear(inp_dim, d_model)
         self.dropout = nn.Dropout(dropout_emb)
-
-        self.head_dim = d_model // n_heads
-        assert self.head_dim in range(8, 129, 8)
-        self.n_heads = n_heads
-        self.n_layers = layers
-        Attn = FlashAttention if attention == "flash" else VanillaAttention
-
-        def make_layer():
-            return TransformerLayer(
-                self_attention=AttentionLayer(
-                    attention=Attn(causal=causal, attention_dropout=dropout_attn),
-                    d_model=d_model,
-                    d_qkv=self.head_dim,
-                    n_heads=self.n_heads,
-                    dropout_qkv=dropout_qkv,
-                ),
-                d_model=d_model,
-                d_ff=d_ff,
-                dropout_ff=dropout_ff,
-                activation=activation,
-                norm=norm,
-            )
-
-        self.layers = nn.ModuleList([make_layer() for _ in range(layers)])
+        assert all(l.d_model == d_model for l in layers)
+        self.n_layers = len(layers)
+        self.layers = nn.ModuleList(layers)
         self.norm = Normalization(method=norm, d_model=d_model)
         self.d_model = d_model
 
@@ -371,24 +562,30 @@ class Transformer(nn.Module):
     def emb_dim(self):
         return self.d_model
 
-    def forward(self, seq, pos_idxs, hidden_state: None | TformerHiddenState):
-        if self.training:
-            assert hidden_state is None
-        batch, length, dim = seq.shape
-        h = hidden_state or [[None, None, None] for _ in range(self.n_layers)]
-
-        # emedding
-        pos_emb = self.position_embedding(pos_idxs)
+    def preprocess_seq(self, seq, pos_idxs):
+        pos_emb = self.position_embedding(pos_idxs.squeeze(-1))
         traj_emb = self.inp(seq)
         traj_emb = self.dropout(traj_emb + pos_emb)
+        return traj_emb
 
-        # self-attention
+    @torch.compile
+    def training_forward(self, seq):
+        for layer in self.layers:
+            seq = layer(seq)
+        return self.norm(seq)
+
+    def inference_forward(self, seq, hidden_state):
         for i, layer in enumerate(self.layers):
-            traj_emb = layer(traj_emb, *h[i])
-        traj_emb = self.norm(traj_emb)
+            seq = layer(seq, *hidden_state[i])
+        return self.norm(seq)
 
+    def forward(self, seq, pos_idxs, hidden_state: Optional[TformerHiddenState] = None):
+        traj_emb = self.preprocess_seq(seq, pos_idxs)
         if hidden_state is not None:
-            # controls the sequence length of the k/v cache
+            assert not self.training
+            traj_emb = self.inference_forward(traj_emb, hidden_state)
             hidden_state.update()
-
+        else:
+            assert self.training
+            traj_emb = self.training_forward(traj_emb)
         return traj_emb, hidden_state

@@ -1,5 +1,6 @@
 import math
 from typing import Optional
+from functools import lru_cache
 
 import torch
 from torch import nn
@@ -195,7 +196,7 @@ def DiscreteActionDist(vec):
     return safe_dist
 
 
-@gin.configurable(denylist=["state_dim", "action_dim", "discrete"])
+@gin.configurable
 class Actor(nn.Module):
     def __init__(
         self,
@@ -315,9 +316,16 @@ class _EinMixEnsemble(nn.Module):
         return outputs, phis
 
 
-@gin.configurable(
-    denylist=["state_dim", "action_dim", "discrete", "gammas", "num_critics"]
-)
+@lru_cache
+def gammas_as_input_seq(
+    gammas: torch.Tensor, batch_size: int, length: int
+) -> torch.Tensor:
+    gammas_rep = symlog(1.0 / (1.0 - gammas).clamp(1e-6, 1.0))
+    gammas_rep = repeat(gammas_rep, "g -> (b g) l 1", b=batch_size, l=length)
+    return gammas_rep
+
+
+@gin.configurable
 class NCritics(nn.Module):
     def __init__(
         self,
@@ -365,11 +373,10 @@ class NCritics(nn.Module):
             B, L, G, D = action.shape
             state = repeat(state, "b l d -> (b g) l d", g=self.num_gammas)
             action = rearrange(action, "b l g d -> (b g) l d")
-            gammas = self.gammas.to(action.device).log() * 10.0
-            gammas = repeat(gammas, "g -> (b g) l 1", b=B, l=L)
+            gammas_rep = gammas_as_input_seq(self.gammas, B, L).to(action.device)
             # clip to remove DPG incentive to push actions to [-1, 1] border
             clip_action = action.clamp(-0.999, 0.999)
-            inp = torch.cat((state, gammas, clip_action), dim=-1)
+            inp = torch.cat((state, gammas_rep, clip_action), dim=-1)
         outputs, phis = self.net(inp)
         if self.discrete:
             outputs = rearrange(outputs, "b l c (g o) -> b l c g o", g=self.num_gammas)
@@ -379,7 +386,7 @@ class NCritics(nn.Module):
         return outputs, phis
 
 
-@gin.configurable(denylist=["state_dim", "action_dim", "gammas", "num_critics"])
+@gin.configurable
 class NCriticsTwoHot(nn.Module):
     def __init__(
         self,
@@ -391,9 +398,11 @@ class NCriticsTwoHot(nn.Module):
         n_layers: int = 2,
         dropout_p: float = 0.0,
         activation: str = "leaky_relu",
+        # see "Breaking Multi-Task Barrier.." Appendix A
         min_return: Optional[float] = None,
         max_return: Optional[float] = None,
         output_bins: int = 128,
+        use_symlog: bool = True,
     ):
         super().__init__()
         self.num_critics = num_critics
@@ -409,9 +418,13 @@ class NCriticsTwoHot(nn.Module):
             )
         min_return = min_return or -100_000
         max_return = max_return or 100_000
+        self.transform_values = symlog if use_symlog else lambda x: x
+        self.invert_bins = symexp if use_symlog else lambda x: x
         assert min_return < max_return
         self.bin_vals = torch.linspace(
-            symlog(min_return), symlog(max_return), output_bins
+            self.transform_values(min_return),
+            self.transform_values(max_return),
+            output_bins,
         )
         self.net = _EinMixEnsemble(
             ensemble_size=num_critics,
@@ -430,15 +443,10 @@ class NCriticsTwoHot(nn.Module):
         assert action.dim() == 4
         B, L, G, D = action.shape
         assert G == self.num_gammas
-
         state = repeat(state, "b l d -> (b g) l d", g=self.num_gammas)
-        action = rearrange(action.clamp(-0.995, 0.995), "b l g d -> (b g) l d")
-        gammas = (
-            torch.arange(self.num_gammas, dtype=action.dtype, device=action.device)
-            / self.num_gammas
-        )
-        gammas = repeat(gammas, "g -> (b g) l 1", b=B, l=L)
-        inp = torch.cat((state, gammas, action), dim=-1)
+        action = rearrange(action.clamp(-0.999, 0.999), "b l g d -> (b g) l d")
+        gammas_rep = gammas_as_input_seq(self.gammas, B, L).to(action.device)
+        inp = torch.cat((state, gammas_rep, action), dim=-1)
         outputs, phis = self.net(inp)
         outputs = rearrange(outputs, "(b g) l c o -> b l c g o", g=self.num_gammas)
         val_dist = pyd.Categorical(logits=outputs)
@@ -452,12 +460,12 @@ class NCriticsTwoHot(nn.Module):
         probs = bin_dist.probs
         bin_vals = self.bin_vals.to(probs.device, dtype=probs.dtype)
         exp_val = (probs * bin_vals).sum(-1, keepdims=True)
-        return symexp(exp_val)
+        return self.invert_bins(exp_val)
 
     def raw_vals_to_labels(self, raw_td_target):
         # raw scalar --> symlog --> two hot encoding
         # (github: danijar/dreamerv3/jaxutils.py)
-        symlog_td_target = symlog(raw_td_target)
+        symlog_td_target = self.transform_values(raw_td_target)
         bin_vals = self.bin_vals.to(symlog_td_target.device)
         # below and above are indices of the bins directly above and below the scaled value
         below = ((bin_vals <= symlog_td_target).sum(-1) - 1).clamp(0, self.num_bins - 1)
@@ -504,7 +512,8 @@ class PopArtLayer(nn.Module):
 
     @property
     def sigma(self):
-        return (torch.sqrt(self.nu - self.mu**2)).clamp(1e-4, 1e6)
+        inner = (self.nu - self.mu**2).clamp(1e-4, 1e8)
+        return torch.sqrt(inner).clamp(1e-4, 1e6)
 
     def normalize_values(self, val):
         if not self.enabled:

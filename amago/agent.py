@@ -1,4 +1,5 @@
 from itertools import chain
+from typing import Type
 
 import torch
 from torch import nn
@@ -10,8 +11,8 @@ import gin
 import gymnasium as gym
 
 from amago.loading import Batch, MAGIC_PAD_VAL
-from amago.nets.tstep_encoders import *
-from amago.nets.traj_encoders import *
+from amago.nets.tstep_encoders import TstepEncoder
+from amago.nets.traj_encoders import TrajEncoder
 from amago.nets import actor_critic
 from amago import utils
 
@@ -30,17 +31,20 @@ class Multigammas:
 
 
 @gin.configurable
+def binary_filter(adv, threshold: float = 0.0):
+    return adv > threshold
+
+
+@gin.configurable
 class Agent(nn.Module):
     def __init__(
         self,
         obs_space: gym.spaces.Dict,
-        goal_space: gym.spaces.Box,
         rl2_space: gym.spaces.Box,
         action_space: gym.spaces.Space,
         max_seq_len: int,
-        horizon: int,
-        tstep_encoder_Cls=FFTstepEncoder,
-        traj_encoder_Cls=TformerTrajEncoder,
+        tstep_encoder_type: Type[TstepEncoder],
+        traj_encoder_type: Type[TrajEncoder],
         num_critics: int = 4,
         num_critics_td: int = 2,
         online_coeff: float = 1.0,
@@ -49,13 +53,13 @@ class Agent(nn.Module):
         reward_multiplier: float = 10.0,
         tau: float = 0.003,
         fake_filter: bool = False,
+        fbc_filter_func: callable = binary_filter,
         popart: bool = True,
         use_target_actor: bool = True,
         use_multigamma: bool = True,
     ):
         super().__init__()
         self.obs_space = obs_space
-        self.goal_space = goal_space
         self.rl2_space = rl2_space
 
         self.action_space = action_space
@@ -75,21 +79,20 @@ class Agent(nn.Module):
         self.reward_multiplier = reward_multiplier
         self.pad_val = MAGIC_PAD_VAL
         self.fake_filter = fake_filter
+        self.fbc_filter_func = fbc_filter_func
         self.offline_coeff = offline_coeff
         self.online_coeff = online_coeff
         self.tau = tau
         self.use_target_actor = use_target_actor
         self.max_seq_len = max_seq_len
 
-        self.tstep_encoder = tstep_encoder_Cls(
+        self.tstep_encoder = tstep_encoder_type(
             obs_space=obs_space,
-            goal_space=goal_space,
             rl2_space=rl2_space,
         )
-        self.traj_encoder = traj_encoder_Cls(
+        self.traj_encoder = traj_encoder_type(
             tstep_dim=self.tstep_encoder.emb_dim,
             max_seq_len=max_seq_len,
-            horizon=horizon,
         )
         self.emb_dim = self.traj_encoder.emb_dim
 
@@ -127,21 +130,6 @@ class Agent(nn.Module):
         self.target_actor = actor_critic.Actor(**ac_kwargs)
         # full weight copy to targets
         self.hard_sync_targets()
-
-    def get_current_timestep(
-        self, sequences: torch.Tensor | dict[torch.Tensor], seq_lengths: torch.Tensor
-    ):
-        dict_based = isinstance(sequences, dict)
-        if not dict_based:
-            sequences = {"dummy": sequences}
-        timesteps = {}
-        for k, v in sequences.items():
-            missing_dims = v.ndim - seq_lengths.ndim
-            seq_lengths_ = seq_lengths.reshape(seq_lengths.shape + (1,) * missing_dims)
-            timesteps[k] = torch.take_along_dim(v, seq_lengths_ - 1, dim=1)
-        if not dict_based:
-            timesteps = timesteps["dummy"]
-        return timesteps
 
     @property
     def trainable_params(self):
@@ -184,34 +172,22 @@ class Agent(nn.Module):
 
     def get_actions(
         self,
-        obs,
-        goals,
-        rl2s,
-        seq_lengths,
-        time_idxs,
+        obs: dict[str, torch.Tensor],
+        rl2s: torch.Tensor,
+        time_idxs: torch.Tensor,
         hidden_state=None,
         sample: bool = True,
     ):
         """
         Get rollout actions from the current policy.
         """
-        using_hidden = hidden_state is not None
-        if using_hidden:
-            obs = self.get_current_timestep(obs, seq_lengths)
-            goals = self.get_current_timestep(goals, seq_lengths)
-            rl2s = self.get_current_timestep(rl2s, seq_lengths)
-            time_idxs = self.get_current_timestep(time_idxs, seq_lengths.squeeze(-1))
-        tstep_emb = self.tstep_encoder(obs=obs, goals=goals, rl2s=rl2s)
-
+        tstep_emb = self.tstep_encoder(obs=obs, rl2s=rl2s)
         # sequence model embedding [batch, length, d_emb]
         traj_emb_t, hidden_state = self.traj_encoder(
             tstep_emb, time_idxs=time_idxs, hidden_state=hidden_state
         )
-        if not using_hidden:
-            traj_emb_t = self.get_current_timestep(traj_emb_t, seq_lengths)
-
-        # generate action distribution [batch, len(self.gammas), d_action]
-        action_dists = self.actor(traj_emb_t.squeeze(1))
+        # generate action distribution [batch, length, len(self.gammas), d_action]
+        action_dists = self.actor(traj_emb_t)
         if sample:
             actions = action_dists.sample()
         else:
@@ -219,14 +195,10 @@ class Agent(nn.Module):
                 actions = torch.argmax(action_dists.probs, dim=-1, keepdim=True)
             else:
                 actions = action_dists.mean
-
         # get intended gamma distribution (always in -1 idx)
-        actions = actions[..., -1, :].cpu().float().numpy()
-        if self.discrete:
-            actions = actions.astype(np.uint8)
-        else:
-            actions = actions.astype(np.float32)
-        return actions, hidden_state
+        actions = actions[..., -1, :]
+        dtype = torch.uint8 if (self.discrete or self.multibinary) else torch.float32
+        return actions.to(dtype=dtype), hidden_state
 
     def forward(self, batch: Batch, log_step: bool):
         """
@@ -236,12 +208,12 @@ class Agent(nn.Module):
         """
         # fmt: off
         self.update_info = {}  # holds wandb stats
-        active_log_dict = self.update_info if log_step else None
 
         ##########################
         ## Step 0: Timestep Emb ##
         ##########################
-        o = self.tstep_encoder(obs=batch.obs, goals=batch.goals, rl2s=batch.rl2s, log_dict=active_log_dict)
+        active_log_dict = self.update_info if log_step else None
+        o = self.tstep_encoder(obs=batch.obs, rl2s=batch.rl2s, log_dict=active_log_dict)
 
         ###########################
         ## Step 1: Get Organized ##
@@ -282,7 +254,6 @@ class Agent(nn.Module):
         critic_loss = None
         # one actor forward pass
         a_dist = self.actor(s_rep)
-
         if self.discrete:
             a_agent = a_dist.probs
         elif self.actor.actions_differentiable:
@@ -350,8 +321,9 @@ class Agent(nn.Module):
                     critic_mask,
                     q_s_a_g,
                     self.popart(q_s_a_g, normalized=False),
-                    r,
-                    td_target,
+                    r=r / self.reward_multiplier,
+                    d=d,
+                    td_target=td_target,
                 )
                 popart_stats = self._popart_stats()
                 self.update_info.update(td_stats | popart_stats)
@@ -381,7 +353,7 @@ class Agent(nn.Module):
                     assert val_s_g.shape == (B, L - 1, G, 1)
                     advantage_a_s_g = q_s_a_g.mean(2) - val_s_g
                     assert advantage_a_s_g.shape == (B, L - 1, G, 1)
-                    filter_ = (advantage_a_s_g > 1e-3).float()
+                    filter_ = self.fbc_filter_func(advantage_a_s_g).float()
             else:
                 # Behavior Cloning
                 filter_ = torch.ones((1, 1, 1, 1), device=a.device)
@@ -404,12 +376,14 @@ class Agent(nn.Module):
         # fmt: on
         return critic_loss, actor_loss
 
-    def _td_stats(self, mask, raw_q_s_a_g, q_s_a_g, r, td_target) -> dict:
+    def _td_stats(self, mask, raw_q_s_a_g, q_s_a_g, r, d, td_target) -> dict:
         # messy data gathering for wandb console
         def masked_avg(x_, dim=0):
             return (mask[..., dim, :] * x_[..., dim, :]).sum().detach() / mask[
                 ..., dim, :
             ].sum()
+
+        where_mask = torch.where(mask.all(2, keepdims=True) > 0)
 
         stats = {}
         for i, gamma in enumerate(self.gammas):
@@ -426,18 +400,13 @@ class Agent(nn.Module):
         stats.update(
             {
                 "Q(s, a) (global std, rescaled, ignoring padding)": q_s_a_g.std(),
-                "Min TD Target": td_target[
-                    torch.where(mask.all(2, keepdims=True) > 0)
-                ].min(),
-                "Max TD Target": td_target[
-                    torch.where(mask.all(2, keepdims=True) > 0)
-                ].max(),
+                "Min TD Target": td_target[where_mask].min(),
+                "Max TD Target": td_target[where_mask].max(),
                 "TD Target (test-time gamma)": masked_avg(td_target, -1),
                 "Mean Reward (in training sequences)": masked_avg(r),
-                "real_return": torch.flip(
-                    torch.cumsum(torch.flip(mask.all(2, keepdims=True) * r, (1,)), 1),
-                    (1,),
-                ).squeeze(-1),
+                "Sequences Containing Done": d[:, :, 0, 0, 0].any(1).sum(),
+                "Min Reward (in training sequences)": r[where_mask].min(),
+                "Max Reward (in training sequences)": r[where_mask].max(),
             }
         )
         return stats
@@ -508,47 +477,28 @@ class Agent(nn.Module):
 
 
 @gin.configurable
-def binary_filter(adv, threshold: float = 0.0):
-    """
-    Many results in the second paper use a `threshold` of -1e-4 (instead of 0),
-    which sometimes helps stability in sparse reward envs, but defaulting
-    to it was a version control mistake. This would never matter when
-    using scalar output critics but *does* matter when using classification
-    two-hot critics with many bins where advantages are often close to zero.
-    """
-    return adv > threshold
-
-
-@gin.configurable
 class MultiTaskAgent(Agent):
     def __init__(
         self,
         obs_space: gym.spaces.Dict,
-        goal_space: gym.spaces.Box,
         rl2_space: gym.spaces.Box,
         action_space: gym.spaces.Space,
         max_seq_len: int,
-        horizon: int,
         online_coeff: float = 0.0,
         offline_coeff: float = 1.0,
         fbc_filter_k: int = 3,
-        fbc_filter_func: callable = binary_filter,
         **kwargs,
     ):
         super().__init__(
             obs_space=obs_space,
-            goal_space=goal_space,
             rl2_space=rl2_space,
             action_space=action_space,
             max_seq_len=max_seq_len,
-            horizon=horizon,
             online_coeff=online_coeff,
             offline_coeff=offline_coeff,
             **kwargs,
         )
         self.fbc_filter_k = fbc_filter_k
-        self.fbc_filter_func = fbc_filter_func
-
         critic_kwargs = {
             "state_dim": self.traj_encoder.emb_dim,
             "action_dim": self.action_dim,
@@ -563,13 +513,13 @@ class MultiTaskAgent(Agent):
     def forward(self, batch: Batch, log_step: bool):
         # fmt: off
         self.update_info = {}  # holds wandb stats
-        active_log_dict = self.update_info if log_step else None
 
         ##########################
         ## Step 0: Timestep Emb ##
         ##########################
+        active_log_dict = self.update_info if log_step else None
         o = self.tstep_encoder(
-            obs=batch.obs, goals=batch.goals, rl2s=batch.rl2s, log_dict=active_log_dict
+            obs=batch.obs, rl2s=batch.rl2s, log_dict=active_log_dict
         )
 
         ###########################
@@ -679,8 +629,9 @@ class MultiTaskAgent(Agent):
                     critic_mask,
                     raw_q_s_a_g_,
                     self.popart.normalize_values(raw_q_s_a_g_),
-                    r,
-                    td_target,
+                    r=r,
+                    d=d,
+                    td_target=td_target,
                     raw_q_bins=q_s_a_g.probs[:, :-1],
                 )
                 popart_stats = self._popart_stats()
@@ -741,15 +692,19 @@ class MultiTaskAgent(Agent):
                 self.maximized_critics.bin_dist_to_raw_vals(q_s_a_agent).min(2).values
             )
             actor_loss += self.online_coeff * -(q_s_a_agent[:, :-1, ...])
+        
 
         return critic_loss, actor_loss
 
-    def _td_stats(self, mask, raw_q_s_a_g, q_s_a_g, r, td_target, raw_q_bins) -> dict:
+    def _td_stats(
+        self, mask, raw_q_s_a_g, q_s_a_g, r, d, td_target, raw_q_bins
+    ) -> dict:
         stats = super()._td_stats(
             mask=mask,
             raw_q_s_a_g=raw_q_s_a_g,
             q_s_a_g=q_s_a_g,
             r=r,
+            d=d,
             td_target=td_target,
         )
         *_, Bins = raw_q_bins.shape

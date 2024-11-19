@@ -2,43 +2,39 @@ from argparse import ArgumentParser
 
 import wandb
 
-import amago
-from amago.envs.builtin.gym_envs import GymEnv
+from amago.envs import AMAGOEnv
 from amago.envs.builtin.alchemy import SymbolicAlchemy
 from amago.cli_utils import *
 
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument(
-        "--hide_rl2s",
-        action="store_true",
-        help="hides the 'rl2 info' (previous actions, rewards, current time)",
-    )
     add_common_cli(parser)
     args = parser.parse_args()
 
-    config = {"amago.nets.tstep_encoders.FFTstepEncoder.hide_rl2s": args.hide_rl2s}
-    turn_off_goal_conditioning(config)
-    switch_traj_encoder(
+    config = {}
+    traj_encoder_type = switch_traj_encoder(
         config,
         arch=args.traj_encoder,
         memory_size=args.memory_size,
         layers=args.memory_layers,
     )
+    exploration_wrapper_type = switch_exploration(
+        config, "bilevel", rollout_horizon=200, steps_anneal=2_500_000
+    )
+    agent_type = switch_agent(config, args.agent_type, reward_multiplier=100.0)
+    tstep_encoder_type = switch_tstep_encoder(
+        config, arch="ff", n_layers=2, d_hidden=256, d_output=256
+    )
+
     use_config(config, args.configs)
-    # this is another example where the environment handles the
-    # k-shot learning for us, and amago acts as if it is zero-shot.
-    make_train_env = lambda: GymEnv(
-        gym_env=SymbolicAlchemy(),
+    make_train_env = lambda: AMAGOEnv(
+        env=SymbolicAlchemy(),
         env_name="dm_symbolic_alchemy",
-        horizon=201,
-        zero_shot=True,
     )
     group_name = f"{args.run_name}_symbolic_dm_alchemy"
     for trial in range(args.trials):
         run_name = group_name + f"_trial_{trial}"
-
         experiment = create_experiment_from_cli(
             args,
             make_train_env=make_train_env,
@@ -47,10 +43,13 @@ if __name__ == "__main__":
             traj_save_len=201,
             group_name=group_name,
             run_name=run_name,
+            tstep_encoder_type=tstep_encoder_type,
+            traj_encoder_type=traj_encoder_type,
+            exploration_wrapper_type=exploration_wrapper_type,
+            agent_type=agent_type,
             val_timesteps_per_epoch=2000,
         )
-
-        switch_async_mode(experiment, args)
+        switch_async_mode(experiment, args.mode)
         experiment.start()
         if args.ckpt is not None:
             experiment.load_checkpoint(args.ckpt)

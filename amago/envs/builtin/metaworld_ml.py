@@ -1,21 +1,19 @@
 import random
-import warnings
+
+from amago.utils import amago_warning
 
 try:
     import metaworld
 except:
-    warnings.warn(
-        "Missing metaworld Install: `pip install amago[envs]` or `pip install git+https://github.com/Farama-Foundation/Metaworld.git@04be337a12305e393c0caf0cbf5ec7755c7c8feb`",
-        category=Warning,
-    )
+    amago_warning("Missing metaworld Install: `pip install amago[envs]`")
 import gymnasium as gym
 import numpy as np
 
 from amago.envs.env_utils import space_convert
-from amago.envs.builtin.gym_envs import GymEnv
+from amago.envs import AMAGOEnv, AMAGO_ENV_LOG_PREFIX
 
 
-class Metaworld(GymEnv):
+class Metaworld(AMAGOEnv):
     def __init__(self, benchmark_name: str, split: str, k_shots):
         if benchmark_name == "ml10":
             benchmark = metaworld.ML10()
@@ -29,11 +27,8 @@ class Metaworld(GymEnv):
 
         env = KShotMetaworld(benchmark, split, k_shots)
         super().__init__(
-            gym_env=env,
+            env=env,
             env_name=f"metaworld_{benchmark_name}",
-            horizon=k_shots * 500 + 1,
-            start=0,
-            zero_shot=True,
         )
 
     @property
@@ -44,7 +39,9 @@ class Metaworld(GymEnv):
 class KShotMetaworld(gym.Env):
     reward_scales = {}
 
-    def __init__(self, benchmark, split: str, k_shots: int):
+    def __init__(
+        self, benchmark, split: str, k_shots: int, max_episode_length: int = 500
+    ):
         assert split in ["train", "test"]
         self.benchmark = benchmark
         self.split = split
@@ -52,6 +49,7 @@ class KShotMetaworld(gym.Env):
         self._envs = self.get_env_funcs(benchmark, train_set=split == "train")
         self.reset()
         self.action_space = space_convert(self.env.action_space)
+        self.max_episode_length = max_episode_length
         og_obs = space_convert(self.env.observation_space)
         self.observation_space = gym.spaces.Box(
             low=np.asarray(og_obs.low.tolist() + [0]),
@@ -67,10 +65,6 @@ class KShotMetaworld(gym.Env):
             env_tasks[name] = (env_cls(), all_tasks)
         return env_tasks
 
-    def soft_reset(self):
-        self.current_time = 0
-        obs = self
-
     def get_obs(self, og_obs, soft_reset: bool):
         return np.concatenate((og_obs, [float(soft_reset)])).astype(np.float32)
 
@@ -84,17 +78,20 @@ class KShotMetaworld(gym.Env):
         self.task_name = new_task
         self.env.set_task(random.choice(tasks))
         obs = self.env.reset()
-        # print(f"Task: {self.task_name}, Target Pos: {self.env._target_pos}, Object Pos: {self.env.obj_init_pos}")
         return self.get_obs(obs, True), {}
 
     def step(self, action):
         next_obs, reward, done, info = self.env.step(action)
+        metrics = {}
         self.trial_success = max(info["success"], self.trial_success)
         self.current_time += 1
 
         soft_reset = False
-        if self.current_time >= 500 or done:
+        if self.current_time >= self.max_episode_length or done:
             soft_reset = True
+            metrics[f"{AMAGO_ENV_LOG_PREFIX} Trial {self.current_trial} Success"] = (
+                self.trial_success
+            )
             self.current_time = 0
             self.successes += self.trial_success
             self.trial_success = 0.0
@@ -102,6 +99,8 @@ class KShotMetaworld(gym.Env):
             self.current_trial += 1
 
         truncated = terminated = self.current_trial >= self.k_shots
+        if truncated or terminated:
+            metrics[f"{AMAGO_ENV_LOG_PREFIX} Total Successes"] = self.successes
 
         if self.task_name in self.reward_scales:
             reward *= self.reward_scales[self.task_name]
@@ -111,23 +110,5 @@ class KShotMetaworld(gym.Env):
             reward,
             terminated,
             truncated,
-            {"success": self.successes},
+            metrics,
         )
-
-
-if __name__ == "__main__":
-    benchmark = metaworld.ML45()
-    env = KShotMetaworld(benchmark, "train", k_shots=10)
-    for ep in range(10):
-        print(env.task_name)
-        input()
-        env.reset()
-        done = False
-        step = 0
-        while not done:
-            print(f"{ep}, {step}")
-            next_state, reward, terminated, truncated, info = env.step(
-                env.action_space.sample()
-            )
-            done = terminated or truncated
-            step += 1
