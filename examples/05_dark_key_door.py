@@ -4,7 +4,6 @@ import wandb
 
 from amago.envs.builtin.toy_gym import RoomKeyDoor
 from amago.envs import AMAGOEnv
-from amago.envs.exploration import BilevelEpsilonGreedy
 from amago.cli_utils import *
 
 
@@ -80,6 +79,9 @@ if __name__ == "__main__":
         )
         experiment = create_experiment_from_cli(
             args,
+            agent_type=agent_type,
+            tstep_encoder_type=tstep_encoder_type,
+            traj_encoder_type=traj_encoder_type,
             make_train_env=make_train_env,
             make_val_env=make_train_env,
             max_seq_len=args.meta_horizon,
