@@ -71,7 +71,7 @@ if __name__ == "__main__":
         drqv2_aug=True,
     )
 
-    agent_type = switch_agent(config, args.agent_type, reward_multiplier=1.0)
+    agent_type = switch_agent(config, args.agent_type)
     use_config(config, args.configs)
 
     # Episode lengths in Atari vary widely across games, so we manually set actors
