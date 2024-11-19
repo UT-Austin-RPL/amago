@@ -514,6 +514,7 @@ class Experiment:
             policy, optimizer, lr_schedule
         )
         self.accelerator.register_for_checkpointing(self.lr_schedule)
+        self.grad_update_counter = 0
 
     @property
     def policy(self):
@@ -704,6 +705,7 @@ class Experiment:
         total_frames_global = utils.sum_over_accelerate(total_frames_by_env_name)
         # add epoch
         total_frames_global["Epoch"] = self.epoch
+        total_frames_global["gradient_steps"] = self.grad_update_counter
         return total_frames_global
 
     def log(self, metrics_dict, key):
@@ -820,6 +822,7 @@ class Experiment:
                     self.policy_aclr.parameters(), self.grad_clip
                 )
                 self.policy.soft_sync_targets()
+                self.grad_update_counter += 1
                 if log_step:
                     l.update(self._get_grad_norms())
             self.optimizer.step()
