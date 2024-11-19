@@ -72,7 +72,7 @@ This is an active long-term research project. Please be warned that the codebase
 <br>
 
 ## Tutorial
-You can read a detailed tutorial in [here](tutorial.md). Full documentation coming soon.
+You can read a detailed tutorial in [tutorial.md](tutorial.md). Full documentation coming soon.
 
 
 <br>
@@ -94,7 +94,7 @@ Use the `CUDA_VISIBLE_DEVICES` environment variable to assign basic single-GPU e
 
 Learn more about in-context RL with help from an intuitive meta-RL problem. Train an agent to adapt over multiple episodes by learning to avoid its previous mistakes.
 
-[Example `wandb`](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/a53gh0wy?nw=nwuserjakegrigsby)
+[Example `wandb`](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/a53gh0wy)
 
 <br>
 
@@ -104,9 +104,9 @@ Learn more about in-context RL with help from an intuitive meta-RL problem. Trai
 
 Typical RL benchmarks are MDPs and can be treated as a simple special case of the full agent. Memory is often redundant but these tasks can be helpful for testing.
 
-[Example `wandb` for LunarLander-v2 with a Transformer](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/30ndyo2l?nw=nwuserjakegrigsby)
+[Example `wandb` for LunarLander-v2 with a Transformer](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/30ndyo2l)
 
-[Example `wandb` for DM Control Suite Cheetah Run](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/0znibfm2?nw=nwuserjakegrigsby)
+[Example `wandb` for DM Control Suite Cheetah Run](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/0znibfm2)
 
 <br>
 
@@ -118,7 +118,7 @@ Typical RL benchmarks are MDPs and can be treated as a simple special case of th
 
 Like `gymnasium`, but 1000x faster! Use `jax` to add more `--parallel_actors` and speedup experiments. [`gymnax`](https://github.com/RobertTLange/gymnax) includes several interesting memory problems.
 
-[Example `wandb` for MemoryChain-bsuite](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/7qe1pu41/workspace?nw=nwuserjakegrigsby)
+[Example `wandb` for MemoryChain-bsuite](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/7qe1pu41/)
 
 **📊 Experimental 📊**. Support for `gymnax` is a new feature.
 
@@ -131,7 +131,7 @@ Like `gymnasium`, but 1000x faster! Use `jax` to add more `--parallel_actors` an
 
 [POPGym](https://arxiv.org/abs/2303.01859) is a collection of memory unit-tests for RL agents. AMAGO is really good at POPGym and turns most of these tasks into quick experiments for fast prototyping. Our `MultiDomainPOPGym` env concatenates POPGym domains into a harder one-shot multi-task problem discussed in the followup paper.
 
-[Example `wandb`](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/nhyxu2g1?nw=nwuserjakegrigsby). These settings can be copied across every task in the ICLR paper.
+[Example `wandb`](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/nhyxu2g1). These settings can be copied across every task in the ICLR paper.
 
 <br>
 
@@ -142,7 +142,7 @@ Like `gymnasium`, but 1000x faster! Use `jax` to add more `--parallel_actors` an
 
 T-Maze is a modified version of the problem featured in [Ni et al., 2023](https://arxiv.org/abs/2307.03864). T-Maze answers the question: RL issues (mostly) aside, what is the most distant memory our sequence model can recall? When using Transformers, the answer is usually whatever we can fit on the GPU...
 
-[Example `wandb`](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/8t5bdqmu?nw=nwuserjakegrigsby)
+[Example `wandb`](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/8t5bdqmu)
 
 <br>
 
@@ -150,6 +150,8 @@ T-Maze is a modified version of the problem featured in [Ni et al., 2023](https:
 **[`05_dark_key_door.py`](examples/05_dark_key_door.py)**
 
 A common meta-RL problem where the environment resets for a fixed number of timesteps (rather than attempts) so that the agent is rewarded for finding a solution quickly in order to finish the task as many times as possible. Loosely based on experiments in [Algorithm Distillation](https://arxiv.org/abs/2210.14215).
+
+[Example `wandb`](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/a6adhfg3)
 
 <br>
 
@@ -164,7 +166,7 @@ Symbolic version of the [DeepMind Alchemy](https://arxiv.org/abs/2102.02926) met
 
 **🔥 Challenging 🔥**. Alchemy has a hard local max strategy that can take many samples to break. We've found this domain to be very expensive and hard to tune, though we can usually match the pure-RL (VMPO) baseline from the original paper. We've never used Alchemy in our published results but maintain this script as a starting point.
 
-Example `wandb` from a recent large-scale attempt with the Multi-Task agent: [Actor Process](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/s85fw2kn?nw=nwuserjakegrigsby) or [Learner Process](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/1ic57f70?nw=nwuserjakegrigsby).
+Example `wandb` from a recent large-scale attempt with the Multi-Task agent: [Actor Process](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/s85fw2kn) or [Learner Process](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/1ic57f70).
 
 
 
@@ -178,7 +180,7 @@ Example `wandb` from a recent large-scale attempt with the Multi-Task agent: [Ac
 
 [Meta-World](https://meta-world.github.io) creates a meta-RL benchmark out of robotic manipulation tasks. Meta-World ML45 is a great example of why we'd want to use the `MultiTaskAgent` learning update. For much more information please refer to our NeurIPS 2024 paper.
 
-[Example `wandb` (`MultiTaskAgent` on ML45!)](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/gq9s8vxs?nw=nwuserjakegrigsby).
+[Example `wandb` (`MultiTaskAgent` on ML45!)](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/gq9s8vxs).
 
 <br>
 
@@ -189,7 +191,7 @@ Example `wandb` from a recent large-scale attempt with the Multi-Task agent: [Ac
 
 Multi-Task RL is a special case of meta-RL where the identity of each task is directly provided or can be inferred without memory. We focus on the uncommon setting of learning from *unclipped* rewards because it isolates the challenge of optimizing distinct reward functions. See the NeurIPS 2024 paper for more.
 
-[Example `wandb` for an easy 4-game variant](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/gzgdshjb?nw=nwuserjakegrigsby)
+[Example `wandb` for an easy 4-game variant](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/gzgdshjb)
 
 <br>
 
