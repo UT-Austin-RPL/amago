@@ -139,6 +139,7 @@ class ContinuousActionWrapper(gym.ActionWrapper):
         return self.env.reset(*args, **kwargs)
 
     def action(self, action):
+        assert abs(action).max() <= 1.0, "Continuous action out of [-1, 1] bound"
         true_delta = self._true_action_space.high - self._true_action_space.low
         norm_delta = self.action_space.high - self.action_space.low
         action = (action - self.action_space.low) / norm_delta

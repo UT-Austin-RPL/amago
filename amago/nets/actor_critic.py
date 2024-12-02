@@ -61,11 +61,8 @@ class _TanhWrappedDistribution(pyd.Distribution):
 
     @property
     def mean(self):
-        return self.base_dist.mean
-
-    @property
-    def stddev(self):
-        return self.base_dist.stddev
+        # this property is only used to pick actions from this dist when sampling is disabled
+        return torch.tanh(self.base_dist.mean) * self.scale
 
 
 class _TanhTransform(pyd.transforms.Transform):
