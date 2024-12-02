@@ -17,6 +17,10 @@ class ExplorationWrapper(ABC, gym.ActionWrapper):
     def action(self, a: np.ndarray):
         if self.batched_envs == 1:
             a = a[np.newaxis, :]
+        if not self.env.discrete:
+            assert (
+                abs(a).max() <= 1.0
+            ), "Continuous action out of [-1, 1] bound (detected before exploration noise clipping would have covered up this problem!)"
         action = self.add_exploration_noise(a, self.env.step_count)
         if self.batched_envs == 1:
             action = np.squeeze(action, axis=0)
