@@ -368,7 +368,7 @@ class Experiment:
                 ),
                 map_location=self.DEVICE,
             )
-            self.policy_aclr.load_state_dict(ckpt)
+            self.policy.load_state_dict(ckpt)
         else:
             # loads weights and will set the epoch but otherwise resets training
             # (optimizer, grad scaler, etc.)
@@ -389,7 +389,7 @@ class Experiment:
         if self.accelerator.is_main_process:
             # create backup of raw weights unrelated to the more complex process of resuming an accelerate state
             weights_only = torch.save(
-                self.policy_aclr.state_dict(),
+                self.policy.state_dict(),
                 os.path.join(
                     self.ckpt_dir, "policy_weights", f"policy_epoch_{self.epoch}.pt"
                 ),
