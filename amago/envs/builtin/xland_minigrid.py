@@ -29,7 +29,6 @@ def _swap_rules(old_goal, old_rule, old_tile, new_goal, new_rule, new_tile, repl
 
 
 def _swap_trees(old_tree, new_tree, replace):
-
     def select_fn(old, new):
         diff = old.ndim - replace.ndim
         axes = tuple([1 + i for i in range(diff)])

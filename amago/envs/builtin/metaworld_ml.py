@@ -89,9 +89,9 @@ class KShotMetaworld(gym.Env):
         soft_reset = False
         if self.current_time >= self.max_episode_length or done:
             soft_reset = True
-            metrics[f"{AMAGO_ENV_LOG_PREFIX} Trial {self.current_trial} Success"] = (
-                self.trial_success
-            )
+            metrics[
+                f"{AMAGO_ENV_LOG_PREFIX} Trial {self.current_trial} Success"
+            ] = self.trial_success
             self.current_time = 0
             self.successes += self.trial_success
             self.trial_success = 0.0
