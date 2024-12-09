@@ -14,7 +14,7 @@ except ImportError:
     )
 
 from amago.envs import AMAGOEnv
-from amago.envs.env_utils import extend_observation_space_by
+from amago.envs.env_utils import extend_box_obs_space_by
 
 
 class _MultiDiscreteToBox(gym.ObservationWrapper):
@@ -62,8 +62,8 @@ class POPGym(gym.Wrapper):
             env = _MultiDiscreteToBox(env)
         self.truncated_is_done = truncated_is_done
         super().__init__(env)
-        self.observation_space = extend_observation_space_by(
-            env.observation_space, 1, low=0.0, high=1.0
+        self.observation_space = extend_box_obs_space_by(
+            env.observation_space, by=1, low=0.0, high=1.0
         )
 
     def reset(self, *args, **kwargs):

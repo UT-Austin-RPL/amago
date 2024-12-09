@@ -24,9 +24,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     config = {
-        "amago.nets.actor_critic.NCriticsTwoHot.min_return": -1.0,  # paper: None
-        "amago.nets.actor_critic.NCriticsTwoHot.max_return": 1.0,  # paper: None
-        "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 32,  # paper: 64
+        "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 64,
     }
     traj_encoder_type = switch_traj_encoder(
         config,
@@ -35,8 +33,9 @@ if __name__ == "__main__":
         layers=args.memory_layers,  # paper: 3
     )
     tstep_encoder_type = switch_tstep_encoder(
-        config, arch="ff", n_layers=2, d_hidden=512, d_output=200
+        config, arch="ff", n_layers=2, d_hidden=256, d_output=256
     )
+    exploration_type = switch_exploration(config, "egreedy", steps_anneal=400_000)
     agent_type = switch_agent(config, args.agent_type, reward_multiplier=100.0)
     use_config(config, args.configs)
 
@@ -57,8 +56,11 @@ if __name__ == "__main__":
             run_name=run_name,
             tstep_encoder_type=tstep_encoder_type,
             traj_encoder_type=traj_encoder_type,
+            exploration_wrapper_type=exploration_type,
             agent_type=agent_type,
             val_timesteps_per_epoch=2000,
+            learning_rate=3e-4,
+            grad_clip=2.0,
         )
         experiment = switch_async_mode(experiment, args.mode)
         experiment.start()

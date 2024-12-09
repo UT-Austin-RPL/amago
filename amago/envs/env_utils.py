@@ -2,9 +2,7 @@ import gymnasium as gym
 import numpy as np
 
 
-def extend_observation_space_by(
-    space: gym.spaces.Box, by: int, low: float, high: float
-):
+def extend_box_obs_space_by(space: gym.spaces.Box, by: int, low: float, high: float):
     assert isinstance(space, gym.spaces.Box)
     return gym.spaces.Box(
         shape=(space.shape[0] + by,),
