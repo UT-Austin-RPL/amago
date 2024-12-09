@@ -2,6 +2,15 @@ import gymnasium as gym
 import numpy as np
 
 
+def extend_box_obs_space_by(space: gym.spaces.Box, by: int, low: float, high: float):
+    assert isinstance(space, gym.spaces.Box)
+    return gym.spaces.Box(
+        shape=(space.shape[0] + by,),
+        low=np.concatenate((space.low, (low,) * by), axis=-1),
+        high=np.concatenate((space.high, (high,) * by), axis=-1),
+    )
+
+
 class AlreadyVectorizedEnv(gym.Env):
     """
     Thin wrapper imitating the Async calls of a single environment

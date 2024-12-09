@@ -14,6 +14,7 @@ except ImportError:
     )
 
 from amago.envs import AMAGOEnv
+from amago.envs.env_utils import extend_box_obs_space_by
 
 
 class _MultiDiscreteToBox(gym.ObservationWrapper):
@@ -48,8 +49,8 @@ class _DiscreteToBox(gym.ObservationWrapper):
         return arr
 
 
-class POPGymAMAGO(AMAGOEnv):
-    def __init__(self, env_name: str):
+class POPGym(gym.Wrapper):
+    def __init__(self, env_name, truncated_is_done: bool = True):
         str_to_cls = {v["id"]: k for k, v in popgym.envs.ALL.items()}
         env = str_to_cls[env_name]()
         env = Flatten(env)
@@ -59,6 +60,32 @@ class POPGymAMAGO(AMAGOEnv):
             env = _DiscreteToBox(env)
         elif isinstance(env.observation_space, gym.spaces.MultiDiscrete):
             env = _MultiDiscreteToBox(env)
+        self.truncated_is_done = truncated_is_done
+        super().__init__(env)
+        self.observation_space = extend_box_obs_space_by(
+            env.observation_space, by=1, low=0.0, high=1.0
+        )
+
+    def reset(self, *args, **kwargs):
+        obs, info = self.env.reset(*args, **kwargs)
+        self.timer = np.array([0.0])
+        return self.create_obs(obs), info
+
+    def create_obs(self, obs):
+        new_obs = np.concatenate((obs, self.timer), axis=-1)
+        return new_obs
+
+    def step(self, action):
+        self.timer += 1
+        next_obs, reward, terminated, truncated, info = self.env.step(action)
+        if self.truncated_is_done:
+            terminated = terminated or truncated
+        return self.create_obs(next_obs), reward, terminated, truncated, info
+
+
+class POPGymAMAGO(AMAGOEnv):
+    def __init__(self, env_name: str):
+        env = POPGym(env_name)
         super().__init__(env, env_name=env_name)
 
 
