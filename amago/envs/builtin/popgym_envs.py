@@ -14,6 +14,7 @@ except ImportError:
     )
 
 from amago.envs import AMAGOEnv
+from amago.envs.env_utils import extend_box_obs_space_by
 
 
 class _MultiDiscreteToBox(gym.ObservationWrapper):
@@ -48,8 +49,8 @@ class _DiscreteToBox(gym.ObservationWrapper):
         return arr
 
 
-class POPGymAMAGO(AMAGOEnv):
-    def __init__(self, env_name: str):
+class POPGym(gym.Wrapper):
+    def __init__(self, env_name, truncated_is_done: bool = True):
         str_to_cls = {v["id"]: k for k, v in popgym.envs.ALL.items()}
         env = str_to_cls[env_name]()
         env = Flatten(env)
@@ -59,6 +60,32 @@ class POPGymAMAGO(AMAGOEnv):
             env = _DiscreteToBox(env)
         elif isinstance(env.observation_space, gym.spaces.MultiDiscrete):
             env = _MultiDiscreteToBox(env)
+        self.truncated_is_done = truncated_is_done
+        super().__init__(env)
+        self.observation_space = extend_box_obs_space_by(
+            env.observation_space, by=1, low=0.0, high=1.0
+        )
+
+    def reset(self, *args, **kwargs):
+        obs, info = self.env.reset(*args, **kwargs)
+        self.timer = np.array([0.0])
+        return self.create_obs(obs), info
+
+    def create_obs(self, obs):
+        new_obs = np.concatenate((obs, self.timer), axis=-1)
+        return new_obs
+
+    def step(self, action):
+        self.timer += 1
+        next_obs, reward, terminated, truncated, info = self.env.step(action)
+        if self.truncated_is_done:
+            terminated = terminated or truncated
+        return self.create_obs(next_obs), reward, terminated, truncated, info
+
+
+class POPGymAMAGO(AMAGOEnv):
+    def __init__(self, env_name: str):
+        env = POPGym(env_name)
         super().__init__(env, env_name=env_name)
 
 
@@ -111,7 +138,7 @@ class MultiDomainPOPGym(gym.Env):
                 elif isinstance(env.observation_space, gym.spaces.MultiDiscrete):
                     env = _MultiDiscreteToBox(env)
                 self.name_to_env[raw_name] = env
-        self.observation_space = gym.spaces.Box(low=-5.0, high=5.0, shape=(26 + 3,))
+        self.observation_space = gym.spaces.Box(low=-5.0, high=5.0, shape=(26 + 4,))
         self.action_space = gym.spaces.Discrete(26)
         self.reset()
 
@@ -120,6 +147,7 @@ class MultiDomainPOPGym(gym.Env):
         self.current_env_name = env_name
         self.current_env = self.name_to_env[env_name]
         self.current_action_size = self.current_env.action_space.n
+        self.timer = 0
         self.current_episode = 0
         self.reset_next_step = False
         raw_obs, info = self.current_env.reset()
@@ -127,14 +155,18 @@ class MultiDomainPOPGym(gym.Env):
         return obs, info
 
     def make_obs(self, raw_obs, valid_action: bool, reward: float):
-        obs = np.zeros((29,), dtype=np.float32)
+        obs = np.zeros((30,), dtype=np.float32)
         obs[: len(raw_obs)] = raw_obs
+        # post paper modification adds a timer to the observation. this info
+        # was originally covered by the automatic "rl2" meta-RL inputs.
+        obs[-4] = self.timer / 1000
         obs[-3] = self.current_episode / self.warmup_episodes
         obs[-2] = valid_action
         obs[-1] = reward
         return obs
 
     def step(self, action):
+        self.timer += 1
         valid_action = action < self.current_action_size
         if not valid_action:
             action = random.randrange(0, self.current_action_size)
