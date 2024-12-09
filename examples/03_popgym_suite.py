@@ -24,9 +24,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     config = {
-        "amago.nets.actor_critic.NCriticsTwoHot.min_return": -1.0,  # paper: None
-        "amago.nets.actor_critic.NCriticsTwoHot.max_return": 1.0,  # paper: None
-        "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 32,  # paper: 64
+        "amago.nets.actor_critic.NCriticsTwoHot.min_return": None,  # paper: None
+        "amago.nets.actor_critic.NCriticsTwoHot.max_return": None,  # paper: None
+        "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 64,  # paper: 64
     }
     traj_encoder_type = switch_traj_encoder(
         config,
@@ -37,7 +37,9 @@ if __name__ == "__main__":
     tstep_encoder_type = switch_tstep_encoder(
         config, arch="ff", n_layers=2, d_hidden=512, d_output=200
     )
-    agent_type = switch_agent(config, args.agent_type, reward_multiplier=100.0)
+    agent_type = switch_agent(
+        config, args.agent_type, reward_multiplier=200.0 if args.multidomain else 100.0
+    )
     use_config(config, args.configs)
 
     group_name = f"{args.run_name}_{args.env}"

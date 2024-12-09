@@ -111,7 +111,7 @@ class MultiDomainPOPGym(gym.Env):
                 elif isinstance(env.observation_space, gym.spaces.MultiDiscrete):
                     env = _MultiDiscreteToBox(env)
                 self.name_to_env[raw_name] = env
-        self.observation_space = gym.spaces.Box(low=-5.0, high=5.0, shape=(26 + 3,))
+        self.observation_space = gym.spaces.Box(low=-5.0, high=5.0, shape=(26 + 4,))
         self.action_space = gym.spaces.Discrete(26)
         self.reset()
 
@@ -120,6 +120,7 @@ class MultiDomainPOPGym(gym.Env):
         self.current_env_name = env_name
         self.current_env = self.name_to_env[env_name]
         self.current_action_size = self.current_env.action_space.n
+        self.timer = 0
         self.current_episode = 0
         self.reset_next_step = False
         raw_obs, info = self.current_env.reset()
@@ -127,14 +128,18 @@ class MultiDomainPOPGym(gym.Env):
         return obs, info
 
     def make_obs(self, raw_obs, valid_action: bool, reward: float):
-        obs = np.zeros((29,), dtype=np.float32)
+        obs = np.zeros((30,), dtype=np.float32)
         obs[: len(raw_obs)] = raw_obs
+        # post paper modification adds a timer to the observation. this info
+        # was originally covered by the automatic "rl2" meta-RL inputs.
+        obs[-4] = self.timer / 1000
         obs[-3] = self.current_episode / self.warmup_episodes
         obs[-2] = valid_action
         obs[-1] = reward
         return obs
 
     def step(self, action):
+        self.timer += 1
         valid_action = action < self.current_action_size
         if not valid_action:
             action = random.randrange(0, self.current_action_size)
