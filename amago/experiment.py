@@ -492,10 +492,17 @@ class Experiment:
         if not self.local_time_optimizer:
             return torch.optim.AdamW(policy.trainable_params, **adamw_kwargs)
         else:
-            target_based_estimate = (
-                math.log(0.01, 1.0 - policy.tau) * self.batches_per_update
+            target_based_estimate = int(math.log(0.01, 1.0 - policy.tau))
+            collection_based_estimate = (
+                self.train_batches_per_epoch // self.batches_per_update
             )
-            reset_interval = max(target_based_estimate, self.train_batches_per_epoch)
+            if self.train_timesteps_per_epoch == 0:
+                # offline: rely on target net decay as non-stationarity comes from shifting targets
+                reset_interval = target_based_estimate
+            else:
+                # online: at least space the resets into different epochs, which cause
+                # the dataset distribution to change (slightly)
+                reset_interval = max(target_based_estimate, collection_based_estimate)
             return utils.AdamWRel(
                 policy.trainable_params, reset_interval=reset_interval, **adamw_kwargs
             )
