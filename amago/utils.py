@@ -12,6 +12,7 @@ from accelerate.utils import gather_object
 import torch
 from torch import nn
 from torch.optim.lr_scheduler import LambdaLR
+from torch.optim import AdamW
 
 
 class AmagoWarning(Warning):
@@ -21,6 +22,51 @@ class AmagoWarning(Warning):
 
 def amago_warning(msg: str, category=AmagoWarning):
     warnings.warn(colored(f"{msg}", "green"), category=category)
+
+
+class AdamWRel(AdamW):
+    """
+    A variant of AdamW based on "Adam on Local Time: Addressing Nonstationarity
+    in RL with Relative Adam Timesteps", Ellis et al., 2024.
+    (https://openreview.net/pdf?id=biAqUbAuG7)
+
+    Treats optimization of an RL policy as a sequence of stationary supervised learning stages,
+    and resets Adam's timestep variable accordingly.
+    """
+
+    def __init__(
+        self,
+        params,
+        reset_interval: int,
+        lr: float = 1e-3,
+        betas: tuple[float] = (0.9, 0.999),
+        eps: float = 1e-8,
+        weight_decay: float = 0,
+        amsgrad: bool = False,
+    ):
+        super().__init__(
+            params,
+            lr=lr,
+            betas=betas,
+            eps=eps,
+            weight_decay=weight_decay,
+            amsgrad=amsgrad,
+        )
+        self.reset_interval = int(reset_interval)
+        amago_warning(
+            f"Using AdamW with non-stationary timestep resets every {self.reset_interval} steps."
+        )
+        self.global_step = 0
+
+    def step(self, closure=None):
+        loss = super().step(closure)
+        self.global_step += 1
+        if self.global_step % self.reset_interval == 0:
+            for group in self.param_groups:
+                for p in group["params"]:
+                    if p in self.state:
+                        self.state[p]["step"] *= 0
+        return loss
 
 
 def stack_list_array_dicts(list_: list[dict[np.ndarray]], axis=0, cat: bool = False):
