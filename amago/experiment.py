@@ -5,6 +5,7 @@ import contextlib
 from dataclasses import dataclass
 from collections import defaultdict
 from typing import Optional, Iterable
+import math
 
 import gin
 from termcolor import colored
@@ -160,6 +161,8 @@ class Experiment:
     l2_coeff: float = 1e-3
     # mixed precision mode. this is passed directly to `accelerate` and follows its options ("no", "fp16", "bf16").
     mixed_precision: str = "no"
+    # experimental feature implementing the Adam timestep reset discussed in https://openreview.net/pdf?id=biAqUbAuG7 (RL optimization is non-stationary, so maybe we should stop using Adam's global timer)
+    local_time_optimizer: bool = False
 
     def __post_init__(self):
         self.accelerator = Accelerator(
@@ -174,7 +177,7 @@ class Experiment:
 
     def start(self):
         """
-        Manually initialization after __init__ to give time for gin configuration.
+        Manual initialization after __init__ to give time for gin configuration.
         """
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
@@ -482,15 +485,28 @@ class Experiment:
                 },
             )
 
-    def init_optimizer(self, params):
+    def init_optimizer(self, policy):
         """
         Override to switch from AdamW
         """
-        return torch.optim.AdamW(
-            params,
-            lr=self.learning_rate,
-            weight_decay=self.l2_coeff,
-        )
+        adamw_kwargs = dict(lr=self.learning_rate, weight_decay=self.l2_coeff)
+        if not self.local_time_optimizer:
+            return torch.optim.AdamW(policy.trainable_params, **adamw_kwargs)
+        else:
+            target_based_estimate = int(math.log(0.01, 1.0 - policy.tau))
+            collection_based_estimate = (
+                self.train_batches_per_epoch // self.batches_per_update
+            )
+            if self.train_timesteps_per_epoch == 0:
+                # offline: rely on target net decay as non-stationarity comes from shifting targets
+                reset_interval = target_based_estimate
+            else:
+                # online: at least space the resets into different epochs, which cause
+                # the dataset distribution to change (slightly)
+                reset_interval = max(target_based_estimate, collection_based_estimate)
+            return utils.AdamWRel(
+                policy.trainable_params, reset_interval=reset_interval, **adamw_kwargs
+            )
 
     def init_model(self):
         """
@@ -506,7 +522,7 @@ class Experiment:
         }
         policy = self.agent_type(**policy_kwargs)
         assert isinstance(policy, Agent)
-        optimizer = self.init_optimizer(policy.trainable_params)
+        optimizer = self.init_optimizer(policy)
         lr_schedule = utils.get_constant_schedule_with_warmup(
             optimizer=optimizer, num_warmup_steps=self.lr_warmup_steps
         )
