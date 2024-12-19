@@ -161,7 +161,8 @@ class Experiment:
     l2_coeff: float = 1e-3
     # mixed precision mode. this is passed directly to `accelerate` and follows its options ("no", "fp16", "bf16").
     mixed_precision: str = "no"
-    local_time_optimizer: bool = True
+    # experimental feature implementing the Adam timestep reset discussed in https://openreview.net/pdf?id=biAqUbAuG7 (RL optimization is non-stationary, so maybe we should stop using Adam's global timer)
+    local_time_optimizer: bool = False
 
     def __post_init__(self):
         self.accelerator = Accelerator(
@@ -176,7 +177,7 @@ class Experiment:
 
     def start(self):
         """
-        Manually initialization after __init__ to give time for gin configuration.
+        Manual initialization after __init__ to give time for gin configuration.
         """
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")

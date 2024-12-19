@@ -12,6 +12,12 @@ def add_cli(parser):
     parser.add_argument(
         "--policy_seq_len", type=int, default=32, help="Policy sequence length."
     )
+    parser.add_argument(
+        "--eval_episodes_per_actor",
+        type=int,
+        default=1,
+        help="Validation episodes per parallel actor.",
+    )
     return parser
 
 
@@ -60,7 +66,7 @@ if __name__ == "__main__":
             exploration_wrapper_type=exploration_type,
             agent_type=agent_type,
             group_name=group_name,
-            val_timesteps_per_epoch=args.eval_timesteps,
+            val_timesteps_per_epoch=args.eval_episodes_per_actor * 1001,
             grad_clip=2.0,
             learning_rate=3e-4,
         )
