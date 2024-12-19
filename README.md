@@ -226,6 +226,15 @@ Multi-Game [Procgen](https://arxiv.org/abs/1912.01588) has a similar feel to Ata
 
 **📊 Experimental 📊**. Support for XLand MiniGrid is a new feature. 
 
+### **12. Toy Meta-RL / Locomotion: HalfCheetahVelocity (w/ HalfCheetahV4)**
+**[`12_half_cheetah_vel.py`](examples/12_half_cheetah_vel.py)**
+
+<img src="media/half_cheetah.png" alt="half_cheetah_diagram" width="100" align="left" />
+
+A more modern remaster of the famous [HalfCheetahVel mujoco meta-RL benchmark](https://arxiv.org/pdf/1703.03400), where the cheetah from the [HalfCheetah-v4 gymnasium task](https://gymnasium.farama.org/environments/mujoco/half_cheetah/) needs to run at a randomly sampled (hidden) target velocity based on reward signals.
+
+[Example `wandb`](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/pmq0owe5)
+
 
 <br>
 

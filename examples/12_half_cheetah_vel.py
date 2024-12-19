@@ -18,6 +18,12 @@ def add_cli(parser):
         default=1,
         help="Validation episodes per parallel actor.",
     )
+    parser.add_argument(
+        "--task_max_velocity",
+        type=float,
+        default=3.0,
+        help="Max running velocity the cheetah needs to be capable of to solve the meta-learning problem. Original benchmark used 3. Agents in the default locomotion env (no reward randomization) reach > 10.",
+    )
     return parser
 
 
@@ -29,8 +35,8 @@ if __name__ == "__main__":
 
     # setup environment
     make_train_env = lambda: AMAGOEnv(
-        HalfCheetahV4_MetaVelocity(),
-        env_name="HalfCheetahV4_MetaVelocity",
+        HalfCheetahV4_MetaVelocity(task_max_velocity=args.task_max_velocity),
+        env_name=f"HalfCheetahV4_MetaVelocity_MaxVel={args.task_max_velocity}",
     )
     config = {}
     # switch sequence model
