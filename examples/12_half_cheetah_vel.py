@@ -10,13 +10,7 @@ from amago.cli_utils import *
 
 def add_cli(parser):
     parser.add_argument(
-        "--max_seq_len", type=int, default=32, help="Policy sequence length."
-    )
-    parser.add_argument(
-        "--eval_timesteps",
-        type=int,
-        default=1001,
-        help="Timesteps per actor per evaluation. Tune based on the episode length of the environment (to be at least one full episode).",
+        "--policy_seq_len", type=int, default=32, help="Policy sequence length."
     )
     return parser
 
@@ -46,7 +40,7 @@ if __name__ == "__main__":
         args.agent_type,
         reward_multiplier=1.0,  # gym locomotion returns are already large
         gamma=0.99,  # locomotion policies don't need long horizons - fall back to the default
-        tau=0.005,  # slightly faster value learning
+        tau=0.005,
     )
     exploration_type = switch_exploration(config, "egreedy", steps_anneal=500_000)
     use_config(config, args.configs)
@@ -58,8 +52,8 @@ if __name__ == "__main__":
             args,
             make_train_env=make_train_env,
             make_val_env=make_train_env,
-            max_seq_len=args.max_seq_len,
-            traj_save_len=args.max_seq_len * 6,
+            max_seq_len=args.policy_seq_len,
+            traj_save_len=args.policy_seq_len * 6,
             run_name=run_name,
             tstep_encoder_type=amago.nets.tstep_encoders.FFTstepEncoder,
             traj_encoder_type=traj_encoder_type,
@@ -68,7 +62,7 @@ if __name__ == "__main__":
             group_name=group_name,
             val_timesteps_per_epoch=args.eval_timesteps,
             grad_clip=2.0,
-            learning_rate=2e-4,
+            learning_rate=3e-4,
         )
         experiment.start()
         if args.ckpt is not None:
