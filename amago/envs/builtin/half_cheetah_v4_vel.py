@@ -84,6 +84,7 @@ class HalfCheetahV4_MetaVelocity(HalfCheetahV4LogVelocity):
         )
         self.task_min_velocity = task_min_velocity
         self.task_max_velocity = task_max_velocity
+        self.reset()
 
     def velocity_reward_term(self, x_velocity):
         return (
