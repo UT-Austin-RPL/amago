@@ -1,4 +1,5 @@
 from argparse import ArgumentParser
+import math
 import random
 
 import wandb
@@ -62,6 +63,23 @@ class MyCustomHalfCheetahEval(HalfCheetahV4_MetaVelocity):
         return vel
 
 
+class AMAGOEnvWithVelocityName(AMAGOEnv):
+    """
+    Every eval metric gets logged based on the current
+    `env_name`. You could use this to log metrics for
+    different tasks separately. They get averaged over
+    all the evals with the same name, so you want a discrete
+    number of names that will get sample sizes > 1.
+    """
+
+    @property
+    def env_name(self) -> str:
+        current_task_vel = self.env.unwrapped.target_velocity
+        # need to discretize this somehow; just one example
+        low, high = math.floor(current_task_vel), math.ceil(current_task_vel)
+        return f"HalfCheetahVelocity-Vel-[{low}, {high}]"
+
+
 if __name__ == "__main__":
     parser = ArgumentParser()
     add_common_cli(parser)
@@ -69,7 +87,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # setup environment
-    make_train_env = lambda: AMAGOEnv(
+    make_train_env = lambda: AMAGOEnvWithVelocityName(
         MyCustomHalfCheetahTrain(
             task_min_velocity=args.task_min_velocity,
             task_max_velocity=args.task_max_velocity,
@@ -78,11 +96,13 @@ if __name__ == "__main__":
         env_name=f"HalfCheetahV4Velocity",
     )
 
-    make_val_env = lambda: AMAGOEnv(
+    make_val_env = lambda: AMAGOEnvWithVelocityName(
         MyCustomHalfCheetahEval(
             task_min_velocity=args.task_min_velocity,
             task_max_velocity=args.task_max_velocity,
         ),
+        # this would get replaced by the env_name property
+        # defined above.
         env_name=f"HalfCheetahV4VelocityEval",
     )
 
