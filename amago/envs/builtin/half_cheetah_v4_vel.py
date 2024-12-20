@@ -73,6 +73,7 @@ class HalfCheetahV4_MetaVelocity(HalfCheetahV4LogVelocity):
         # for reference: a reasonably good policy optimizing HalfCheetah-v4
         # with the standard reward (go as fast as possible) would reach a vel > 10.
         # We can use the HalfCheetahV4LogVelocity env above to verify this.
+        task_min_velocity: float = 0.0,
         task_max_velocity: float = 3.0,
         **kwargs,
     ):
@@ -81,6 +82,7 @@ class HalfCheetahV4_MetaVelocity(HalfCheetahV4LogVelocity):
             ctrl_cost_weight=ctrl_cost_weight,
             **kwargs,
         )
+        self.task_min_velocity = task_min_velocity
         self.task_max_velocity = task_max_velocity
 
     def velocity_reward_term(self, x_velocity):
@@ -89,9 +91,16 @@ class HalfCheetahV4_MetaVelocity(HalfCheetahV4LogVelocity):
             * -np.abs(x_velocity - self.target_velocity).item()
         )
 
+    def sample_target_velocity(self):
+        # inherit & override to change the meta-task distribution.
+        # note that you can pass different training / testing envs to amago.Experiment.
+        # be sure to use `random` or be careful about np default_rng to ensure
+        # tasks are different across async parallel actors!
+        return random.uniform(self.task_min_velocity, self.task_max_velocity)
+
     def reset(self, *args, **kwargs):
         obs, info = super().reset(*args, **kwargs)
-        self.target_velocity = random.uniform(0, self.task_max_velocity)
+        self.target_velocity = self.sample_target_velocity()
         return obs, info
 
     def step(self, action):
