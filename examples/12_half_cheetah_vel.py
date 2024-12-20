@@ -1,4 +1,5 @@
 from argparse import ArgumentParser
+import random
 
 import wandb
 
@@ -19,12 +20,46 @@ def add_cli(parser):
         help="Validation episodes per parallel actor.",
     )
     parser.add_argument(
+        "--task_min_velocity",
+        type=float,
+        default=0.0,
+        help="Min running velocity the cheetah needs to be capable of to solve the meta-learning problem. Original benchmark used 0.",
+    )
+    parser.add_argument(
         "--task_max_velocity",
         type=float,
         default=3.0,
         help="Max running velocity the cheetah needs to be capable of to solve the meta-learning problem. Original benchmark used 3. Agents in the default locomotion env (no reward randomization) reach > 10.",
     )
     return parser
+
+
+"""
+Because this task is so similar to the other gymnasium examples, this example script is overly
+verbose about showing how you could customize the environment and create a train/test split.
+
+If you don't edit anything, this only becomes a longer way to train/test on the default task
+distribution (which is to sample a velocity uniformly between: [args.task_min_velocity, args.task_max_velocity])
+"""
+
+
+class MyCustomHalfCheetahTrain(HalfCheetahV4_MetaVelocity):
+
+    def sample_target_velocity(self) -> float:
+        # be sure to use `random` or be careful about np default_rng to ensure
+        # tasks are different across async parallel actors!
+        vel = super().sample_target_velocity()  # random.uniform(min_vel, max_vel)
+        return vel
+
+
+class MyCustomHalfCheetahEval(HalfCheetahV4_MetaVelocity):
+
+    def sample_target_velocity(self) -> float:
+        vel = super().sample_target_velocity()
+        # or, to create OOD eval tasks:
+        # vel = random.uniform(self.task_min_velocity, self.task_max_velocity * 10.0)
+        # or random.choice([0., 1., self.task_max_velocity * 1.2]), etc.
+        return vel
 
 
 if __name__ == "__main__":
@@ -35,9 +70,22 @@ if __name__ == "__main__":
 
     # setup environment
     make_train_env = lambda: AMAGOEnv(
-        HalfCheetahV4_MetaVelocity(task_max_velocity=args.task_max_velocity),
-        env_name=f"HalfCheetahV4_MetaVelocity_MaxVel={args.task_max_velocity}",
+        MyCustomHalfCheetahTrain(
+            task_min_velocity=args.task_min_velocity,
+            task_max_velocity=args.task_max_velocity,
+        ),
+        # the env_name is totally arbitrary and only impacts logging / data filenames
+        env_name=f"HalfCheetahV4Velocity",
     )
+
+    make_val_env = lambda: AMAGOEnv(
+        MyCustomHalfCheetahEval(
+            task_min_velocity=args.task_min_velocity,
+            task_max_velocity=args.task_max_velocity,
+        ),
+        env_name=f"HalfCheetahV4VelocityEval",
+    )
+
     config = {}
     # switch sequence model
     traj_encoder_type = switch_traj_encoder(
@@ -54,6 +102,8 @@ if __name__ == "__main__":
         gamma=0.99,  # locomotion policies don't need long horizons - fall back to the default
         tau=0.005,
     )
+    # "egreedy" exploration in continuous control is just the epsilon-scheduled random (normal)
+    # noise from most TD3/DPPG implementations.
     exploration_type = switch_exploration(config, "egreedy", steps_anneal=500_000)
     use_config(config, args.configs)
 
@@ -62,8 +112,8 @@ if __name__ == "__main__":
         run_name = group_name + f"_trial_{trial}"
         experiment = create_experiment_from_cli(
             args,
-            make_train_env=make_train_env,
-            make_val_env=make_train_env,
+            make_train_env=make_train_env,  # different train/val envs
+            make_val_env=make_val_env,
             max_seq_len=args.policy_seq_len,
             traj_save_len=args.policy_seq_len * 6,
             run_name=run_name,
@@ -80,6 +130,6 @@ if __name__ == "__main__":
         if args.ckpt is not None:
             experiment.load_checkpoint(args.ckpt)
         experiment.learn()
-        experiment.evaluate_test(make_train_env, timesteps=10_000, render=False)
+        experiment.evaluate_test(make_val_env, timesteps=10_000, render=False)
         experiment.delete_buffer_from_disk()
         wandb.finish()
