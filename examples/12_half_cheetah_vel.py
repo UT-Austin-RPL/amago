@@ -45,7 +45,7 @@ distribution (which is to sample a velocity uniformly between: [args.task_min_ve
 
 class MyCustomHalfCheetahTrain(HalfCheetahV4_MetaVelocity):
 
-    def sample_target_velocity(self):
+    def sample_target_velocity(self) -> float:
         # be sure to use `random` or be careful about np default_rng to ensure
         # tasks are different across async parallel actors!
         vel = super().sample_target_velocity()  # random.uniform(min_vel, max_vel)
@@ -54,12 +54,11 @@ class MyCustomHalfCheetahTrain(HalfCheetahV4_MetaVelocity):
 
 class MyCustomHalfCheetahEval(HalfCheetahV4_MetaVelocity):
 
-    def sample_target_velocity(self):
-        # or, for example,
+    def sample_target_velocity(self) -> float:
+        vel = super().sample_target_velocity()
+        # or, to create OOD eval tasks:
         # vel = random.uniform(self.task_min_velocity, self.task_max_velocity * 10.0)
         # or random.choice([0., 1., self.task_max_velocity * 1.2]), etc.
-        vel = random.choice([0.0, 1.0])
-        vel = super().sample_target_velocity()
         return vel
 
 
