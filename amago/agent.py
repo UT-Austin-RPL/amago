@@ -1,5 +1,5 @@
 from itertools import chain
-from typing import Type
+from typing import Type, Optional
 
 import torch
 from torch import nn
@@ -31,8 +31,34 @@ class Multigammas:
 
 
 @gin.configurable
-def binary_filter(adv, threshold: float = 0.0):
+def binary_filter(adv: torch.Tensor, threshold: float = 0.0) -> torch.Tensor:
     return adv > threshold
+
+
+@gin.configurable
+def exp_filter(
+    adv: torch.Tensor,
+    beta: float = 1.0,
+    clip_adv_low: Optional[float] = None,
+    clip_adv_high: Optional[float] = None,
+    clip_weights_low: Optional[float] = 1e-7,
+    clip_weights_high: Optional[float] = None,
+) -> torch.Tensor:
+    """
+    Weights policy regression data according to `exp(beta * adv)`.
+
+    NOTE that some papers define the beta hparam according to
+    exp( 1/beta * adv ), so check whether you need to invert the value
+    to match their setting.
+
+    Clip the raw advantages and/or the resulting weights for stability.
+    """
+    if clip_adv_low is not None or clip_adv_high is not None:
+        adv = torch.clamp(adv, min=clip_adv_low, max=clip_adv_high)
+    weights = torch.exp(beta * adv)
+    if clip_weights_low is not None or clip_weights_high is not None:
+        weights = torch.clamp(weights, min=clip_weights_low, max=clip_weights_high)
+    return weights
 
 
 @gin.configurable
@@ -45,17 +71,35 @@ class Agent(nn.Module):
         max_seq_len: int,
         tstep_encoder_type: Type[TstepEncoder],
         traj_encoder_type: Type[TrajEncoder],
+        # number of critics in the ensemble
         num_critics: int = 4,
+        # number of critics used to compute TD targets (REDQ)
         num_critics_td: int = 2,
+        # weight of the "online" aka DPG actor loss (DDPG)
         online_coeff: float = 1.0,
+        # weight of the "offline" aka advantage weighted/"filtered" regression term (CRR/AWAC)
         offline_coeff: float = 0.1,
+        # the discount factor *of the policy we sample during rollouts/evals*
         gamma: float = 0.999,
+        # scale every reward by a constant (for loss function only). This can only help to
+        # bring Q-vals into a range that is numerically stable for PopArt.
+        # If you know the return scale, edit this to stay somewhere like |Q| in [100, 10000].
         reward_multiplier: float = 10.0,
+        # standard polyak update for the target critic(s) (DDPG)
         tau: float = 0.003,
+        # skip the computation of the "offline" policy regression weights/"filter".
+        # Useful when you're doing imitation learning (all weights become 1.0)
         fake_filter: bool = False,
+        # function that takes seq of advantage estimates and outputs the regression weights.
+        # offline_loss = -fbc_filter_func(advantages) * log pi(actions | states)
+        # defaults to binary_filter, which masks negative advantage values (CRR).
         fbc_filter_func: callable = binary_filter,
+        # PopArt adaptive normalization for value network outputs
         popart: bool = True,
+        # use polyak averaged actor for TD targets
         use_target_actor: bool = True,
+        # train on multiple discount horizons in parallel.
+        # values set according to configurable `Multigammas` object above.
         use_multigamma: bool = True,
     ):
         super().__init__()
