@@ -233,7 +233,7 @@ Multi-Game [Procgen](https://arxiv.org/abs/1912.01588) has a similar feel to Ata
 
 A more modern remaster of the famous [HalfCheetahVel mujoco meta-RL benchmark](https://arxiv.org/pdf/1703.03400), where the cheetah from the [HalfCheetah-v4 gymnasium task](https://gymnasium.farama.org/environments/mujoco/half_cheetah/) needs to run at a randomly sampled (hidden) target velocity based on reward signals.
 
-[Example `wandb`](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/pmq0owe5)
+[Example `wandb`](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/jveklygo)
 
 
 <br>
