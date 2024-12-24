@@ -492,12 +492,14 @@ class Agent(nn.Module):
                 ..., dim, :
             ].sum()
 
+        binary_filter = filter_ > 0
+
         # messy data gathering for wandb console
         stats = {
             "Minimum Action Logprob": logp_a.min(),
             "Maximum Action Logprob": logp_a.max(),
             "Pct. of Actions Approved by Binary FBC Filter (All Gammas)": utils.masked_avg(
-                filter_, mask
+                binary_filter, mask
             )
             * 100.0,
         }
@@ -506,7 +508,7 @@ class Agent(nn.Module):
             for i, gamma in enumerate(self.gammas):
                 stats[
                     f"Pct. of Actions Approved by Binary FBC (gamma = {gamma : .3f})"
-                ] = (masked_avg(filter_, dim=i) * 100.0)
+                ] = (masked_avg(binary_filter, dim=i) * 100.0)
         return stats
 
     def _popart_stats(self) -> dict:
