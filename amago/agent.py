@@ -498,6 +498,9 @@ class Agent(nn.Module):
         stats = {
             "Minimum Action Logprob": logp_a.min(),
             "Maximum Action Logprob": logp_a.max(),
+            "Filter Max": filter_.max(),
+            "Filter Min": filter_.min(),
+            "Filter Mean": filter_.mean(),
             "Pct. of Actions Approved by Binary FBC Filter (All Gammas)": utils.masked_avg(
                 binary_filter, mask
             )
