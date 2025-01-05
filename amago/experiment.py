@@ -937,6 +937,7 @@ class Experiment:
                     if log_step:
                         self.log(loss_dict, key="train-update")
             self.accelerator.wait_for_everyone()
+            del self.train_dloader
 
             # end epoch
             self.epoch = epoch
