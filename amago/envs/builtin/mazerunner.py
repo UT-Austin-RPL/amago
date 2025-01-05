@@ -62,19 +62,22 @@ class MazeRunnerGymEnv(gym.Env):
         maze_dim: int,
         min_num_goals: int,
         max_num_goals: int,
-        goal_in_obs: bool,
         time_limit: int,
+        goal_in_obs: bool = False,
+        randomized_action_space: bool = False,
     ):
         self.goal_in_obs = goal_in_obs
         assert min_num_goals <= max_num_goals
         self.max_num_goals = max_num_goals
         self.min_num_goals = min_num_goals
         self.time_limit = time_limit
+        self.randomized_action_space = randomized_action_space
+        self.rng = np.random.default_rng()
 
         # mazes have odd side length
         self.maze_dim = (maze_dim // 2) * 2 + 1
         self.reset()
-        obs_dim = 6 + (int(goal_in_obs) * 2 * max_num_goals)
+        obs_dim = 7 + (int(goal_in_obs) * 2 * max_num_goals)
         self.observation_space = gym.spaces.Box(
             low=-float("inf"), high=float("inf"), shape=(obs_dim,)
         )
@@ -115,6 +118,9 @@ class MazeRunnerGymEnv(gym.Env):
         empty_locations.remove(self.start)
         num_goals = random.randint(self.min_num_goals, self.max_num_goals)
         self.goal_positions = random.sample(empty_locations, k=num_goals)
+        self.action_dirs = np.array([[0, -1], [-1, 0], [0, 1], [1, 0], [0, 0]])
+        if self.randomized_action_space:
+            self.action_dirs = self.action_dirs[self.rng.permutation(5)]
         self.active_goal_idx = 0
         self.pos = self.start
         self.timer = 0
@@ -126,9 +132,7 @@ class MazeRunnerGymEnv(gym.Env):
     def step(self, act):
         assert not self._enforce_reset, "Reset the environment with `env.reset()`"
         self.timer += 1
-        # 0 --> west, 1 --> north, 2 --> east, 3 --> south, 4 --> none
-        dirs = [[0, -1], [-1, 0], [0, 1], [1, 0], [0, 0]]
-        chosen_dir = np.array(dirs[act])
+        chosen_dir = self.action_dirs[act]
         desired_loc = tuple(self.pos + chosen_dir)
 
         valid = True
@@ -154,6 +158,8 @@ class MazeRunnerGymEnv(gym.Env):
             self.active_goal_idx += 1
 
         truncated = self.timer >= self.time_limit
+        # timer is in the observation; enforce finite horizon POMDP
+        terminated = terminated or truncated
         return obs, rew, terminated, truncated, {"success": success}
 
     def go_back_to_start(self):
@@ -207,6 +213,7 @@ class MazeRunnerGymEnv(gym.Env):
                 space_north / self.maze_dim,
                 space_east / self.maze_dim,
                 space_south / self.maze_dim,
+                self.timer / self.time_limit,
             ],
             dtype=np.float32,
         )
@@ -303,7 +310,13 @@ class GoalInObsWrapper(gym.Wrapper):
 
 
 class MazeRunnerAMAGOEnv(AMAGOEnv):
-    def __init__(self, maze_dim: int, num_goals: int, time_limit: int):
+    def __init__(
+        self,
+        maze_dim: int,
+        num_goals: int,
+        time_limit: int,
+        randomized_action_space: bool,
+    ):
         env = GoalInObsWrapper(
             MazeRunnerGymEnv(
                 maze_dim=maze_dim,
@@ -312,6 +325,8 @@ class MazeRunnerAMAGOEnv(AMAGOEnv):
                 max_num_goals=num_goals,
                 goal_in_obs=False,
                 time_limit=time_limit,
+                # appendix calls this "rewired" actions
+                randomized_action_space=randomized_action_space,
             )
         )
         super().__init__(
