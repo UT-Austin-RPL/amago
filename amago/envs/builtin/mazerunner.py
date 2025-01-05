@@ -271,7 +271,7 @@ class MazeRunnerGymEnv(gym.Env):
         self._ax = self._fig.add_subplot(111)
 
 
-class GoalInObsWrapper(gym.Wrapper):
+class RelabelInfoWrapper(gym.Wrapper):
     def __init__(self, env):
         assert isinstance(env, MazeRunnerGymEnv)
         super().__init__(env)
@@ -317,7 +317,7 @@ class MazeRunnerAMAGOEnv(AMAGOEnv):
         time_limit: int,
         randomized_action_space: bool,
     ):
-        env = GoalInObsWrapper(
+        env = RelabelInfoWrapper(
             MazeRunnerGymEnv(
                 maze_dim=maze_dim,
                 # simplification in re-implementation: every episode has the same # goals

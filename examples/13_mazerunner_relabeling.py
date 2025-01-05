@@ -1,5 +1,4 @@
 from argparse import ArgumentParser
-import copy
 import random
 from functools import partial
 
@@ -64,9 +63,6 @@ class HindsightInstructionReplay(Relabeler):
         ## LINE 2 ##
         h = k - n if self.strategy == "all" else random.randint(0, k - n)
 
-        check = traj.rews.sum() == self.k or h == 0
-        og_traj = copy.deepcopy(traj)
-
         ## LINE 4 ##
         # in this env, every timestep has an alternative goal
         alternative_tsteps = set(range(1, length))
@@ -120,26 +116,6 @@ class HindsightInstructionReplay(Relabeler):
         traj.rews = traj.rews[:t]
         traj.dones = traj.dones[:t]
         traj.actions = traj.actions[:t]
-
-        l = traj.obs["obs"].shape[0]
-        for k, v in traj.obs.items():
-            if v.shape[0] != l:
-                breakpoint()
-        if check:
-            if not np.array_equal(traj.rews, og_traj.rews):
-                breakpoint()
-            if not traj.rews.sum() == og_traj.rews.sum():
-                breakpoint()
-            if not np.array_equal(traj.rl2s, og_traj.rl2s):
-                breakpoint()
-            if not np.array_equal(traj.dones, og_traj.dones):
-                breakpoint()
-        if not traj.dones[-1] == True:
-            breakpoint()
-        if not traj.dones.sum() == 1:
-            breakpoint()
-        if traj.rews.sum() > self.k:
-            breakpoint()
         return traj
 
 
@@ -158,6 +134,7 @@ if __name__ == "__main__":
     )
     config = {
         "amago.nets.tstep_encoders.FFTstepEncoder.d_hidden": 128,
+        # observations contain {"obs", "goals", "achieved"} but "achieved" info can be discarded after relabeling
         "amago.nets.tstep_encoders.FFTstepEncoder.specify_obs_keys": ["obs", "goals"],
     }
     # switch sequence model
