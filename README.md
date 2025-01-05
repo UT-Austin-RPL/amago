@@ -235,6 +235,18 @@ A more modern remaster of the famous [HalfCheetahVel mujoco meta-RL benchmark](h
 
 [Example `wandb`](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/jveklygo)
 
+<br>
+
+
+### **13. Hindsight Relabeling: MazeRunner**
+**[`13_mazerunner_relabeling.py`](examples/13_mazerunner_relabeling.py)**
+
+<img src="media/mazerunner.png" alt="mazerunner_diagram" width="100" align="left" />
+
+Off-policy learning makes it easy to relabel old sequence data with new rewards. MazeRunner is a goal-conditioned POMDP navigation problem used to discuss & test the hindsight instruction relabeling technique in our paper. This example includes a template for using hindsight relabeling in the new version of AMAGO.
+
+[Example `wandb`](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/a728v6k0)
+
 
 <br>
 
