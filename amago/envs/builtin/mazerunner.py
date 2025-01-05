@@ -149,8 +149,6 @@ class MazeRunnerGymEnv(gym.Env):
         success = self.pos == self.goal_positions[self.active_goal_idx]
         terminated = False
         rew = float(success)
-        obs = self._get_obs()
-
         if success:
             if self.active_goal_idx == len(self.goal_positions) - 1:
                 terminated = True
@@ -160,7 +158,7 @@ class MazeRunnerGymEnv(gym.Env):
         truncated = self.timer >= self.time_limit
         # timer is in the observation; enforce finite horizon POMDP
         terminated = terminated or truncated
-        return obs, rew, terminated, truncated, {"success": success}
+        return self._get_obs(), rew, terminated, truncated, {"success": success}
 
     def go_back_to_start(self):
         self.pos = self.start
@@ -277,21 +275,15 @@ class RelabelInfoWrapper(gym.Wrapper):
         super().__init__(env)
         k = self.env.max_num_goals
         n = self.env.maze_dim
+        # fmt: off
         self.observation_space = gym.spaces.Dict(
             {
                 "obs": self.env.observation_space,
-                "achieved": gym.spaces.Box(
-                    low=0,
-                    high=n,
-                    shape=(
-                        1,
-                        2,
-                    ),
-                    dtype=np.int32,
-                ),
+                "achieved": gym.spaces.Box(low=0, high=n, shape=(1, 2), dtype=np.int32),
                 "goals": gym.spaces.Box(low=0, high=n, shape=(k, 2), dtype=np.int32),
             }
         )
+        # fmt: on
 
     def add_goal_info(self, obs):
         return {

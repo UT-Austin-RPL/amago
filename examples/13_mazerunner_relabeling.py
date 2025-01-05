@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 import random
+import copy
 from functools import partial
 
 import gymnasium as gym
@@ -51,6 +52,8 @@ class HindsightInstructionReplay(Relabeler):
             del traj.obs["achieved"]
             return traj
 
+        og_traj = copy.deepcopy(traj)
+
         ## LINE 1 ##
         k = self.k
         length = len(traj.rews)
@@ -95,15 +98,14 @@ class HindsightInstructionReplay(Relabeler):
             # traj.rl2s = {rl2_0, rl2_1, ..., rl2_length}
             # traj.rews = {r_1, r_2, ..., missing}
             # traj.dones = {d_1, d_2, ..., missing}
-            traj.obs["goals"][t][:active_goal_idx, ...] = -1
-            # -1 is "already accomplished"... would change by env, but we need some way to keep goals consistent shape
             achieved_this_turn = traj.obs["achieved"][t][0]
             # some envs might have multiple goals per timestep
             if np.array_equal(achieved_this_turn, new_goals[active_goal_idx]):
                 traj.rews[t - 1] = 1.0
                 traj.rl2s[t][0] = 1.0
                 active_goal_idx += 1
-
+            # -1 is "accomplished"... would change by env, but we need some way to keep goals consistent shape
+            traj.obs["goals"][t][:active_goal_idx, ...] = -1
             if active_goal_idx >= k:
                 traj.dones[t - 1] = True
                 break
@@ -148,7 +150,11 @@ if __name__ == "__main__":
     agent_type = switch_agent(
         config,
         args.agent_type,
+        # reward_multiplier=100.,
     )
+
+    # tstep_encoder_type = switch_tstep_encoder(config, arch="ff", n_layers=2, d_hidden=128, d_output=64, specify_obs_keys=["obs", "goals"]
+    tstep_encoder_type = amago.nets.tstep_encoders.FFTstepEncoder
 
     exploration_type = switch_exploration(
         config, strategy="egreedy", steps_anneal=500_000
@@ -171,7 +177,7 @@ if __name__ == "__main__":
                 strategy=args.relabel,
             ),
             run_name=run_name,
-            tstep_encoder_type=amago.nets.tstep_encoders.FFTstepEncoder,
+            tstep_encoder_type=tstep_encoder_type,
             traj_encoder_type=traj_encoder_type,
             exploration_wrapper_type=exploration_type,
             agent_type=agent_type,
