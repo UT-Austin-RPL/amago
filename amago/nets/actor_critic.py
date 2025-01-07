@@ -141,6 +141,7 @@ def ContinuousActionDist(
         log_std = rearrange(
             vec[..., idx : 2 * idx], "... g (m p) -> ... g m p", m=gmm_modes
         )
+        log_std = torch.tanh(log_std)
         log_std = log_std_low + 0.5 * (log_std_high - log_std_low) * (log_std + 1)
         stds = log_std.exp()
         logits = vec[..., 2 * idx :]
