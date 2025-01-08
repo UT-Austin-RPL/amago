@@ -48,6 +48,7 @@ class TrajDset(Dataset):
         dset_name: str,
         items_per_epoch: Optional[int] = None,
         max_seq_len: Optional[int] = None,
+        padded_sampling: str = "none",
     ):
         assert dset_root is not None and os.path.exists(dset_root)
         self.relabeler = relabeler
@@ -57,6 +58,8 @@ class TrajDset(Dataset):
         os.makedirs(self.protected_path, exist_ok=True)
         self.length = items_per_epoch
         self.max_seq_len = max_seq_len
+        assert padded_sampling in ["none", "right", "left", "both"]
+        self.padded_sampling = padded_sampling
         self.refresh_files()
 
     def __len__(self):
@@ -138,7 +141,9 @@ class TrajDset(Dataset):
         traj = self.relabeler(traj)
         data = RLData(traj)
         if self.max_seq_len is not None:
-            data = data.random_slice(length=self.max_seq_len)
+            data = data.random_slice(
+                length=self.max_seq_len, padded_sampling=self.padded_sampling
+            )
         return data
 
 
@@ -153,19 +158,37 @@ class RLData:
         self.rews = torch.from_numpy(traj.rews).float()
         self.dones = torch.from_numpy(traj.dones).bool()
         self.actions = torch.from_numpy(traj.actions).float()
+        self.safe_randrange = lambda l, h: random.randrange(l, max(h, l + 1))
 
     def __len__(self):
         return len(self.actions)
 
-    def random_slice(self, length: int):
-        i = random.randrange(0, max(len(self) - length + 1, 1))
+    def random_slice(self, length: int, padded_sampling: str = "none"):
+        if len(self) <= length:
+            start = 0
+        elif padded_sampling == "none":
+            start = self.safe_randrange(0, len(self) - length + 1)
+        elif padded_sampling == "both":
+            start = self.safe_randrange(-length + 1, len(self) - 1)
+        elif padded_sampling == "left":
+            start = self.safe_randrange(-length + 1, len(self) - length + 1)
+        elif padded_sampling == "right":
+            start = self.safe_randrange(0, len(self) - 1)
+        else:
+            raise ValueError(
+                f"Unrecognized `padded_sampling` mode: `{padded_sampling}`"
+            )
+        stop = start + length
+        start = max(start, 0)
         # the causal RL loss requires these off-by-one lengths
-        self.obs = {k: v[i : i + length + 1] for k, v in self.obs.items()}
-        self.rl2s = self.rl2s[i : i + length + 1]
-        self.time_idxs = self.time_idxs[i : i + length + 1]
-        self.dones = self.dones[i : i + length]
-        self.rews = self.rews[i : i + length]
-        self.actions = self.actions[i : i + length]
+        tcp = slice(start, stop + 1)
+        tc = slice(start, stop)
+        self.obs = {k: v[tcp] for k, v in self.obs.items()}
+        self.rl2s = self.rl2s[tcp]
+        self.time_idxs = self.time_idxs[tcp]
+        self.dones = self.dones[tc]
+        self.rews = self.rews[tc]
+        self.actions = self.actions[tc]
         return self
 
 
