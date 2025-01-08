@@ -164,7 +164,9 @@ class RLData:
         return len(self.actions)
 
     def random_slice(self, length: int, padded_sampling: str = "none"):
-        if padded_sampling == "none":
+        if len(self) <= length:
+            start = 0
+        elif padded_sampling == "none":
             start = self.safe_randrange(0, len(self) - length + 1)
         elif padded_sampling == "both":
             start = self.safe_randrange(-length + 1, len(self) - 1)
@@ -178,7 +180,6 @@ class RLData:
             )
         stop = start + length
         start = max(start, 0)
-
         # the causal RL loss requires these off-by-one lengths
         tcp = slice(start, stop + 1)
         tc = slice(start, stop)

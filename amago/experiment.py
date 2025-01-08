@@ -115,6 +115,14 @@ class Experiment:
     # "npz-compressed" trades time for disk space by compressing large files.
     # "traj" pickles the full `Trajectory` object.
     save_trajs_as: str = "npz"
+    # how to pad trajectory sequences if we need to sample a subsequence for training.
+    # "none" will sample the start idx in the range [0, len(traj) - max_seq_len].
+    # this samples every seq evenly but undersamples the RL data (action/rews) at the start/end of the trajectory.
+    # "left" pads the left side of the seq to sample the start timesteps more often.
+    # "right" pads the right side of the seq to sample the end timesteps more often.
+    # "both" pads the left and right sides.
+    # padding is only applicable when sequences are longer than the policy max_seq_len.
+    padded_sampling: str = "none"
     # number of workers to use for the DataLoader that loads trajectories from disk. increase when using npz-compressed or when loading very long trajs from pixel envs.
     dloader_workers: int = 6
 
@@ -231,6 +239,7 @@ class Experiment:
             \t\t FIFO Buffer Initial Size: {self.train_dset.count_deletable_trajectories()}
             \t\t Protected Buffer Initial Size: {self.train_dset.count_protected_trajectories()}
             \t\t Trajectory File Max Sequence Length: {self.traj_save_len}
+            \t\t Trajectory Padded Sampling: {self.padded_sampling}
             \t Accelerate Processes: {self.accelerator.num_processes} \n\n"""
         )
 
@@ -440,6 +449,7 @@ class Experiment:
             * self.batch_size
             * self.accelerator.num_processes,
             max_seq_len=self.max_seq_len,
+            padded_sampling=self.padded_sampling,
         )
         return self.train_dset
 
