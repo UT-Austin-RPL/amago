@@ -63,7 +63,7 @@ if __name__ == "__main__":
             make_train_env=make_train_env,
             make_val_env=make_train_env,
             max_seq_len=args.max_seq_len,
-            traj_save_len=args.max_seq_len * 4,
+            traj_save_len=args.max_seq_len * 8,
             run_name=run_name,
             tstep_encoder_type=amago.nets.tstep_encoders.FFTstepEncoder,
             traj_encoder_type=traj_encoder_type,

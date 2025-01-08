@@ -850,7 +850,13 @@ class Experiment:
                 self.policy.soft_sync_targets()
                 self.grad_update_counter += 1
                 if log_step:
-                    l.update(self._get_grad_norms())
+                    l.update(
+                        {
+                            "Batch Size (in Timesteps)": l["mask"].numel(),
+                            "Unmasked Batch Size (in Timesteps)": l["mask"].sum(),
+                        }
+                        | self._get_grad_norms()
+                    )
             self.optimizer.step()
             self.lr_schedule.step()
         return l
