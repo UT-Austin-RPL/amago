@@ -552,6 +552,7 @@ class Experiment:
         timesteps: int,
         hidden_state=None,
         render: bool = False,
+        save_on_done: bool = False,
     ) -> tuple[ReturnHistory, SpecialMetricHistory]:
         """
         Main policy loop for interacting with the environment.
@@ -616,6 +617,8 @@ class Experiment:
             done = terminated | truncated
             if done.ndim == 2:
                 done = done.squeeze(1)
+            if done.any() and save_on_done:
+                utils.call_async_env(envs, "save_finished_trajs")
             obs, rl2s, time_idxs = get_t()
             hidden_state = policy.traj_encoder.reset_hidden_state(hidden_state, done)
             if render:
@@ -676,23 +679,40 @@ class Experiment:
         self.log(logs_global, key="val")
 
     def evaluate_test(
-        self, make_test_env: callable, timesteps: int, render: bool = False
+        self,
+        make_test_env: callable | Iterable[callable],
+        timesteps: int,
+        render: bool = False,
+        save_trajs_to: Optional[str] = None,
     ):
         """
         One-off evaluation of a new environment callable for testing.
         """
-        make = lambda: SequenceWrapper(
-            make_test_env(), save_every=None, make_dset=False
-        )
+        is_saving = save_trajs_to is not None
+
+        def wrap(m):
+            return lambda: SequenceWrapper(
+                m(),
+                save_every=None,
+                make_dset=is_saving,
+                dset_root=save_trajs_to,
+                dset_name="",
+                save_trajs_as="npz",
+            )
+
         if self.env_mode == "already_vectorized":
             Par = AlreadyVectorizedEnv
-            env_list = [make]
-        elif self.env_mode == "async":
-            Par = gym.vector.AsyncVectorEnv
-            env_list = [make for _ in range(self.parallel_actors)]
-        elif self.env_mode == "sync":
-            Par = DummyAsyncVectorEnv
-            env_list = [make for _ in range(self.parallel_actors)]
+            env_list = [wrap(make_test_env)]
+        else:
+            if isinstance(make_test_env, Iterable):
+                assert len(make_test_env) == self.parallel_actors
+                env_list = [wrap(f) for f in make_test_env]
+            else:
+                env_list = [wrap(make_test_env) for _ in range(self.parallel_actors)]
+            if self.env_mode == "async":
+                Par = gym.vector.AsyncVectorEnv
+            elif self.env_mode == "sync":
+                Par = DummyAsyncVectorEnv
         test_envs = Par(env_list)
         test_envs.reset()
         _, (returns, specials) = self.interact(
@@ -700,6 +720,7 @@ class Experiment:
             timesteps,
             hidden_state=None,
             render=render,
+            save_on_done=is_saving,
         )
         logs = self.policy_metrics(returns, specials)
         logs_global = utils.avg_over_accelerate(logs)
