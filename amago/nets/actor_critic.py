@@ -44,8 +44,7 @@ class Actor(nn.Module):
         assert isinstance(self.policy_dist, PolicyDistribution)
         assert self.policy_dist.is_discrete == discrete
         self.actions_differentiable = self.policy_dist.actions_differentiable
-        d_output = self.policy_dist.input_dimension
-        d_output *= self.num_gammas
+        d_output = self.policy_dist.input_dimension * self.num_gammas
 
         # build base network
         self.base = MLP(

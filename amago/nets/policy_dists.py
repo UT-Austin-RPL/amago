@@ -67,8 +67,10 @@ class _TanhTransform(pyd.transforms.Transform):
     bijective = True
     sign = +1
 
-    def __init__(self, cache_size=1):
+    def __init__(self, clip_on_inverse: tuple[float, float], cache_size=1):
         super().__init__(cache_size=cache_size)
+        self.clip_inv_low, self.clip_inv_high = clip_on_inverse
+        assert -1.0 <= self.clip_inv_low < self.clip_inv_high <= 1.0
 
     @staticmethod
     def atanh(x):
@@ -81,7 +83,8 @@ class _TanhTransform(pyd.transforms.Transform):
         return x.tanh()
 
     def _inverse(self, y):
-        return self.atanh(y.clamp(-0.99, 0.99))
+        print(self.clip_inv_low, self.clip_inv_high)
+        return self.atanh(y.clamp(self.clip_inv_low, self.clip_inv_high))
 
     def log_abs_det_jacobian(self, x, y):
         return 2.0 * (math.log(2.0) - x - F.softplus(-2.0 * x))
@@ -89,12 +92,12 @@ class _TanhTransform(pyd.transforms.Transform):
 
 class _SquashedNormal(pyd.transformed_distribution.TransformedDistribution):
     # Credit: https://github.com/denisyarats/pytorch_sac/blob/master/agent/actor.py
-    def __init__(self, loc, scale):
+    def __init__(self, loc, scale, clip_on_tanh_inverse: tuple[float, float]):
         self.loc = loc
         self.scale = scale
 
         self.base_dist = pyd.Normal(loc, scale)
-        transforms = [_TanhTransform()]
+        transforms = [_TanhTransform(clip_on_inverse=clip_on_tanh_inverse)]
         super().__init__(self.base_dist, transforms)
 
     @property
@@ -175,11 +178,16 @@ class DiscretePolicyDistribution(PolicyDistribution):
 @gin.configurable
 class TanhGaussianPolicyDistribution(PolicyDistribution):
     def __init__(
-        self, d_action: int, log_std_low: float = -5.0, log_std_high: float = 2.0
+        self,
+        d_action: int,
+        log_std_low: float = -5.0,
+        log_std_high: float = 2.0,
+        clip_actions_on_log_prob: tuple[float, float] = (-0.99, 0.99),
     ):
         super().__init__(d_action)
         self.log_std_low = log_std_low
         self.log_std_high = log_std_high
+        self.clip_actions_on_log_prob = clip_actions_on_log_prob
 
     @property
     def actions_differentiable(self):
@@ -200,7 +208,9 @@ class TanhGaussianPolicyDistribution(PolicyDistribution):
             log_std + 1
         )
         std = log_std.exp()
-        dist = _SquashedNormal(mu, std)
+        dist = _SquashedNormal(
+            mu, std, clip_on_tanh_inverse=self.clip_actions_on_log_prob
+        )
         return dist
 
 
