@@ -1,5 +1,5 @@
 import math
-from typing import Optional
+from typing import Optional, Type
 from functools import lru_cache
 
 import torch
@@ -13,8 +13,8 @@ import gin
 from .ff import FFBlock, MLP
 from .utils import activation_switch, symlog, symexp
 from .policy_dists import (
-    DiscreteActionDist,
-    ContinuousActionDist,
+    PolicyDistribution,
+    TanhGaussianPolicyDistribution,
     DiscreteLikeContinuous,
 )
 from amago.utils import amago_warning
@@ -32,28 +32,22 @@ class Actor(nn.Module):
         d_hidden: int = 256,
         activation: str = "leaky_relu",
         dropout_p: float = 0.0,
-        # dist-specific args
-        cont_dist_kind: str = "normal",
-        log_std_low: float = -5.0,
-        log_std_high: float = 2.0,
-        gmm_modes: int = 5,
+        continuous_dist_type: Optional[
+            Type[PolicyDistribution]
+        ] = TanhGaussianPolicyDistribution,
     ):
         super().__init__()
-        if discrete:
-            d_output = action_dim
-            self.actions_differentiable = True
-        elif cont_dist_kind == "normal":
-            d_output = 2 * action_dim
-            self.actions_differentiable = True
-        elif cont_dist_kind == "gmm":
-            d_output = gmm_modes * 2 * action_dim + gmm_modes
-            self.actions_differentiable = False
-        elif cont_dist_kind == "multibinary":
-            d_output = action_dim
-            self.actions_differentiable = False
+        # determine policy output
         self.num_gammas = len(gammas)
+        dist_type = DiscretePolicyDistribution if discrete else continuous_dist_type
+        self.policy_dist = dist_type(d_action=action_dim)
+        assert isinstance(self.policy_dist, PolicyDistribution)
+        assert self.policy_dist.is_discrete == discrete
+        self.actions_differentiable = self.policy_dist.actions_differentiable
+        d_output = self.policy_dist.input_dimension
         d_output *= self.num_gammas
 
+        # build base network
         self.base = MLP(
             d_inp=state_dim,
             d_hidden=d_hidden,
@@ -64,27 +58,13 @@ class Actor(nn.Module):
         )
         self.discrete = discrete
         self.action_dim = action_dim
-        self._log_std_low = log_std_low
-        self._log_std_high = log_std_high
-        self._gmm_modes = gmm_modes
-        self._cont_dist_kind = cont_dist_kind
 
     def forward(self, state):
         dist_params = self.base(state)
         dist_params = rearrange(
             dist_params, "b ... (g f) -> b ... g f", g=self.num_gammas
         )
-        if self.discrete:
-            return DiscreteActionDist(dist_params)
-        else:
-            return ContinuousActionDist(
-                dist_params,
-                kind=self._cont_dist_kind,
-                log_std_high=self._log_std_high,
-                log_std_low=self._log_std_low,
-                d_action=self.action_dim,
-                gmm_modes=self._gmm_modes,
-            )
+        return self.policy_dist(dist_params)
 
 
 class _EinMixEnsemble(nn.Module):

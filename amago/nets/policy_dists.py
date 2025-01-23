@@ -1,5 +1,6 @@
 import math
 from typing import Optional
+from abc import ABC, abstractmethod
 
 import gin
 import torch
@@ -117,36 +118,154 @@ class _Categorical(pyd.Categorical):
         return super().sample(*args, **kwargs).unsqueeze(-1)
 
 
-def ContinuousActionDist(
-    vec,
-    kind: str,
-    log_std_low: float = -5.0,
-    log_std_high: float = 2.0,
-    d_action: Optional[int] = None,
-    gmm_modes: Optional[int] = None,
-):
-    assert kind in ["normal", "gmm", "multibinary"]
+class PolicyDistribution(nn.Module, ABC):
+    def __init__(self, d_action: int):
+        super().__init__()
+        self.d_action = d_action
 
-    if kind == "normal":
+    @property
+    @abstractmethod
+    def actions_differentiable(self) -> bool:
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def is_discrete(self) -> bool:
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def input_dimension(self) -> int:
+        raise NotImplementedError
+
+    def forward(self, vec: torch.Tensor) -> pyd.Distribution:
+        raise NotImplementedError
+
+
+@gin.configurable
+class DiscretePolicyDistribution(PolicyDistribution):
+    def __init__(
+        self, d_action: int, clip_prob_low: float = 0.001, clip_prob_high: float = 0.99
+    ):
+        super().__init__(d_action)
+        self.clip_prob_low = clip_prob_low
+        self.clip_prob_high = clip_prob_high
+
+    @property
+    def actions_differentiable(self):
+        return True
+
+    @property
+    def is_discrete(self):
+        return True
+
+    @property
+    def input_dimension(self):
+        return self.d_action
+
+    def forward(self, vec: torch.Tensor) -> pyd.Distribution:
+        dist = _Categorical(logits=vec)
+        probs = dist.probs
+        clip_probs = probs.clamp(min_prob, max_prob)
+        safe_probs = clip_probs / clip_probs.sum(-1, keepdims=True).detach()
+        safe_dist = _Categorical(probs=safe_probs)
+        return safe_dist
+
+
+@gin.configurable
+class TanhGaussianPolicyDistribution(PolicyDistribution):
+    def __init__(
+        self, d_action: int, log_std_low: float = -5.0, log_std_high: float = 2.0
+    ):
+        super().__init__(d_action)
+        self.log_std_low = log_std_low
+        self.log_std_high = log_std_high
+
+    @property
+    def actions_differentiable(self):
+        return True
+
+    @property
+    def is_discrete(self):
+        return False
+
+    @property
+    def input_dimension(self):
+        return 2 * self.d_action
+
+    def forward(self, vec: torch.Tensor) -> pyd.Distribution:
         mu, log_std = vec.chunk(2, dim=-1)
         log_std = torch.tanh(log_std)
-        log_std = log_std_low + 0.5 * (log_std_high - log_std_low) * (log_std + 1)
+        log_std = self.log_std_low + 0.5 * (self.log_std_high - self.log_std_low) * (
+            log_std + 1
+        )
         std = log_std.exp()
         dist = _SquashedNormal(mu, std)
-    elif kind == "gmm":
-        assert d_action is not None and gmm_modes is not None
-        idx = gmm_modes * d_action
-        means = rearrange(vec[..., :idx], "... g (m p) -> ... g m p", m=gmm_modes)
+        return dist
+
+
+@gin.configurable
+class GMMPolicyDistribution(PolicyDistribution):
+    def __init__(
+        self,
+        d_action: int,
+        gmm_modes: int = 5,
+        log_std_low: float = -5.0,
+        log_std_high: float = 2.0,
+    ):
+        super().__init__(d_action)
+        self.gmm_modes = gmm_modes
+        self.log_std_low = log_std_low
+        self.log_std_high = log_std_high
+
+    @property
+    def actions_differentiable(self):
+        return False
+
+    @property
+    def is_discrete(self):
+        return False
+
+    @property
+    def input_dimension(self):
+        return 2 * self.gmm_modes * self.d_action + self.gmm_modes
+
+    def forward(self, vec: torch.Tensor) -> pyd.Distribution:
+        idx = self.gmm_modes * self.d_action
+        means = rearrange(vec[..., :idx], "... g (m p) -> ... g m p", m=self.gmm_modes)
         log_std = rearrange(
-            vec[..., idx : 2 * idx], "... g (m p) -> ... g m p", m=gmm_modes
+            vec[..., idx : 2 * idx], "... g (m p) -> ... g m p", m=self.gmm_modes
         )
-        log_std = log_std_low + 0.5 * (log_std_high - log_std_low) * (log_std + 1)
+        log_std = torch.tanh(log_std)
+        log_std = self.log_std_low + 0.5 * (self.log_std_high - self.log_std_low) * (
+            log_std + 1
+        )
         stds = log_std.exp()
         logits = vec[..., 2 * idx :]
         dist = _TanhGMM(means=means, stds=stds, logits=logits)
-    elif kind == "multibinary":
+        return dist
+
+
+@gin.configurable
+class MultibinaryPolicyDistribution(PolicyDistribution):
+    def __init__(self, d_action: int):
+        super().__init__(d_action)
+
+    @property
+    def actions_differentiable(self):
+        return False
+
+    @property
+    def is_discrete(self):
+        return False
+
+    @property
+    def input_dimension(self):
+        return self.d_action
+
+    def forward(self, vec: torch.Tensor) -> pyd.Distribution:
         dist = pyd.Bernoulli(logits=vec)
-    return dist
+        return dist
 
 
 class DiscreteLikeContinuous:
@@ -173,16 +292,3 @@ class DiscreteLikeContinuous:
             F.one_hot(samples, num_classes=self.probs.shape[-1]).squeeze(-2).float()
         )
         return action
-
-
-@gin.configurable
-def DiscreteActionDist(vec, min_prob: float = 0.001, max_prob: float = 0.99):
-    dist = _Categorical(logits=vec)
-    probs = dist.probs
-    # note: this clip helps stability but is something to keep in mind,
-    # especially on some toy envs where the optimal policy is very
-    # deterministic. action sampling can be turned off in the `learning.Experiment`.
-    clip_probs = probs.clamp(min_prob, max_prob)
-    safe_probs = clip_probs / clip_probs.sum(-1, keepdims=True).detach()
-    safe_dist = _Categorical(probs=safe_probs)
-    return safe_dist
