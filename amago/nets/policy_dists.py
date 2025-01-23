@@ -145,7 +145,7 @@ class PolicyDistribution(nn.Module, ABC):
 
 
 @gin.configurable
-class DiscretePolicyDistribution(PolicyDistribution):
+class Discrete(PolicyDistribution):
     def __init__(
         self, d_action: int, clip_prob_low: float = 0.001, clip_prob_high: float = 0.99
     ):
@@ -175,7 +175,7 @@ class DiscretePolicyDistribution(PolicyDistribution):
 
 
 @gin.configurable
-class TanhGaussianPolicyDistribution(PolicyDistribution):
+class TanhGaussian(PolicyDistribution):
     def __init__(
         self,
         d_action: int,
@@ -214,7 +214,7 @@ class TanhGaussianPolicyDistribution(PolicyDistribution):
 
 
 @gin.configurable
-class GMMPolicyDistribution(PolicyDistribution):
+class GMM(PolicyDistribution):
     def __init__(
         self,
         d_action: int,
@@ -256,7 +256,7 @@ class GMMPolicyDistribution(PolicyDistribution):
 
 
 @gin.configurable
-class MultibinaryPolicyDistribution(PolicyDistribution):
+class Multibinary(PolicyDistribution):
     def __init__(self, d_action: int):
         super().__init__(d_action)
 
