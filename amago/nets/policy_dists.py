@@ -120,6 +120,12 @@ class _Categorical(pyd.Categorical):
         return super().sample(*args, **kwargs).unsqueeze(-1)
 
 
+def tanh_bounded_std(log_std: torch.Tensor, lower_limit: float, upper_limit: float):
+    log_std = torch.tanh(log_std)
+    log_std = lower_limit + 0.5 * (upper_limit - lower_limit) * (log_std + 1)
+    return log_std.exp()
+
+
 class PolicyDistribution(nn.Module, ABC):
     def __init__(self, d_action: int):
         super().__init__()
@@ -184,6 +190,7 @@ class TanhGaussian(PolicyDistribution):
         clip_actions_on_log_prob: tuple[float, float] = (-0.99, 0.99),
     ):
         super().__init__(d_action)
+        assert log_std_low < log_std_high
         self.log_std_low = log_std_low
         self.log_std_high = log_std_high
         self.clip_actions_on_log_prob = clip_actions_on_log_prob
@@ -202,11 +209,7 @@ class TanhGaussian(PolicyDistribution):
 
     def forward(self, vec: torch.Tensor) -> pyd.Distribution:
         mu, log_std = vec.chunk(2, dim=-1)
-        log_std = torch.tanh(log_std)
-        log_std = self.log_std_low + 0.5 * (self.log_std_high - self.log_std_low) * (
-            log_std + 1
-        )
-        std = log_std.exp()
+        std = tanh_bounded_std(log_std, self.log_std_low, self.log_std_high)
         dist = _SquashedNormal(
             mu, std, clip_on_tanh_inverse=self.clip_actions_on_log_prob
         )
@@ -245,11 +248,7 @@ class GMM(PolicyDistribution):
         log_std = rearrange(
             vec[..., idx : 2 * idx], "... g (m p) -> ... g m p", m=self.gmm_modes
         )
-        log_std = torch.tanh(log_std)
-        log_std = self.log_std_low + 0.5 * (self.log_std_high - self.log_std_low) * (
-            log_std + 1
-        )
-        stds = log_std.exp()
+        stds = tanh_bounded_std(log_std, self.log_std_low, self.log_std_high)
         logits = vec[..., 2 * idx :]
         dist = _TanhGMM(means=means, stds=stds, logits=logits)
         return dist
