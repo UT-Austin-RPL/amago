@@ -407,8 +407,7 @@ class Agent(nn.Module):
             elif self.multibinary:
                 logp_a = a_dist.log_prob(a_buffer).mean(-1, keepdim=True)
             else:
-                # action probs at the [-1, 1] border can be unstable
-                logp_a = a_dist.log_prob(a_buffer.clamp(-0.995, 0.995)).sum(-1, keepdim=True)
+                logp_a = a_dist.log_prob(a_buffer).sum(-1, keepdim=True)
             # clamp for stability and throw away last action that was a duplicate
             logp_a = logp_a[:, :-1, ...].clamp(-1e3, 1e3)
             # filtered nll
@@ -718,9 +717,7 @@ class MultiTaskAgent(Agent):
             elif self.multibinary:
                 logp_a = a_dist.log_prob(a_buffer).mean(-1, keepdim=True)
             else:
-                logp_a = a_dist.log_prob(a_buffer.clamp(-0.995, 0.995)).sum(
-                    -1, keepdim=True
-                )
+                logp_a = a_dist.log_prob(a_buffer).sum(-1, keepdim=True)
             logp_a = logp_a[:, :-1, ...].clamp(-1e3, 1e3)
             actor_loss += self.offline_coeff * -(filter_.detach() * logp_a)
             if log_step:

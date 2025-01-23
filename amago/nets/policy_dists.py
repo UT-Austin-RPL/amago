@@ -83,7 +83,6 @@ class _TanhTransform(pyd.transforms.Transform):
         return x.tanh()
 
     def _inverse(self, y):
-        print(self.clip_inv_low, self.clip_inv_high)
         return self.atanh(y.clamp(self.clip_inv_low, self.clip_inv_high))
 
     def log_abs_det_jacobian(self, x, y):
