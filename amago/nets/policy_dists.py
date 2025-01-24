@@ -120,12 +120,6 @@ class _Categorical(pyd.Categorical):
         return super().sample(*args, **kwargs).unsqueeze(-1)
 
 
-def tanh_bounded_std(log_std: torch.Tensor, lower_limit: float, upper_limit: float):
-    log_std = torch.tanh(log_std)
-    log_std = lower_limit + 0.5 * (upper_limit - lower_limit) * (log_std + 1)
-    return log_std.exp()
-
-
 class PolicyDistribution(nn.Module, ABC):
     def __init__(self, d_action: int):
         super().__init__()
@@ -180,19 +174,56 @@ class Discrete(PolicyDistribution):
         return safe_dist
 
 
+class _Continuous(PolicyDistribution):
+    def __init__(
+        self, d_action: int, std_low: float, std_high: float, std_activation: str
+    ):
+        super().__init__(d_action)
+        assert 0 < std_low < (std_high or float("inf"))
+        self.std_low = std_low
+        self.std_high = std_high
+        self.std_activation = std_activation
+
+    @property
+    def is_discrete(self):
+        return False
+
+    def std_from_network_output(self, raw_std: torch.Tensor):
+        if self.std_activation == "tanh":
+            tanh_scale = torch.tanh(raw_std)
+            log_std_low = math.log(self.std_low)
+            log_std_high = math.log(self.std_high)
+            log_std = log_std_low + 0.5 * (log_std_high - log_std_low) * (
+                tanh_scale + 1
+            )
+            return log_std.exp()
+        elif self.std_activation == "softplus":
+            std = F.softplus(raw_std) + self.std_low
+            if self.std_high is not None:
+                std = std.clamp(max=self.std_high)
+            return std
+        else:
+            raise ValueError(
+                f"Invalid strategy: {self.std_activation}. Must be 'tanh' or 'softplus'."
+            )
+
+
 @gin.configurable
-class TanhGaussian(PolicyDistribution):
+class TanhGaussian(_Continuous):
     def __init__(
         self,
         d_action: int,
-        log_std_low: float = -5.0,
-        log_std_high: float = 2.0,
+        std_low: float = math.exp(-5.0),
+        std_high: float = math.exp(2.0),
+        std_activation: str = "tanh",  # or "softplus "
         clip_actions_on_log_prob: tuple[float, float] = (-0.99, 0.99),
     ):
-        super().__init__(d_action)
-        assert log_std_low < log_std_high
-        self.log_std_low = log_std_low
-        self.log_std_high = log_std_high
+        super().__init__(
+            d_action=d_action,
+            std_low=std_low,
+            std_high=std_high,
+            std_activation=std_activation,
+        )
         self.clip_actions_on_log_prob = clip_actions_on_log_prob
 
     @property
@@ -200,16 +231,12 @@ class TanhGaussian(PolicyDistribution):
         return True
 
     @property
-    def is_discrete(self):
-        return False
-
-    @property
     def input_dimension(self):
         return 2 * self.d_action
 
     def forward(self, vec: torch.Tensor) -> pyd.Distribution:
-        mu, log_std = vec.chunk(2, dim=-1)
-        std = tanh_bounded_std(log_std, self.log_std_low, self.log_std_high)
+        mu, raw_std = vec.chunk(2, dim=-1)
+        std = self.std_from_network_output(raw_std)
         dist = _SquashedNormal(
             mu, std, clip_on_tanh_inverse=self.clip_actions_on_log_prob
         )
@@ -217,25 +244,25 @@ class TanhGaussian(PolicyDistribution):
 
 
 @gin.configurable
-class GMM(PolicyDistribution):
+class GMM(_Continuous):
     def __init__(
         self,
         d_action: int,
         gmm_modes: int = 5,
-        log_std_low: float = -5.0,
-        log_std_high: float = 2.0,
+        std_low: float = 1e-4,
+        std_high: Optional[float] = None,
+        std_activation: str = "softplus",  # or "tanh"
     ):
-        super().__init__(d_action)
+        super().__init__(
+            d_action=d_action,
+            std_low=std_low,
+            std_high=std_high,
+            std_activation=std_activation,
+        )
         self.gmm_modes = gmm_modes
-        self.log_std_low = log_std_low
-        self.log_std_high = log_std_high
 
     @property
     def actions_differentiable(self):
-        return False
-
-    @property
-    def is_discrete(self):
         return False
 
     @property
@@ -245,10 +272,10 @@ class GMM(PolicyDistribution):
     def forward(self, vec: torch.Tensor) -> pyd.Distribution:
         idx = self.gmm_modes * self.d_action
         means = rearrange(vec[..., :idx], "... g (m p) -> ... g m p", m=self.gmm_modes)
-        log_std = rearrange(
+        raw_std = rearrange(
             vec[..., idx : 2 * idx], "... g (m p) -> ... g m p", m=self.gmm_modes
         )
-        stds = tanh_bounded_std(log_std, self.log_std_low, self.log_std_high)
+        stds = self.std_from_network_output(raw_std)
         logits = vec[..., 2 * idx :]
         dist = _TanhGMM(means=means, stds=stds, logits=logits)
         return dist

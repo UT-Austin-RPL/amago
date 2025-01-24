@@ -16,6 +16,7 @@ from .policy_dists import (
     PolicyDistribution,
     TanhGaussian,
     DiscreteLikeContinuous,
+    GMM,
 )
 from amago.utils import amago_warning
 
@@ -32,7 +33,7 @@ class Actor(nn.Module):
         d_hidden: int = 256,
         activation: str = "leaky_relu",
         dropout_p: float = 0.0,
-        continuous_dist_type: Optional[Type[PolicyDistribution]] = TanhGaussian,
+        continuous_dist_type: Optional[Type[PolicyDistribution]] = GMM,
     ):
         super().__init__()
         # determine policy output
