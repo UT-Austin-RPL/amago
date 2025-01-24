@@ -184,7 +184,6 @@ class FlexAttention(SelfAttention):
         )
 
     def kv_cache_score_mod(self, cache_seqlens):
-
         def _kv_cache_score_mod(score, b, h, q_idx, kv_idx):
             q_idx_rel = q_idx + cache_seqlens[b]
             base = self.score_mod(score, b, h, q_idx_rel, kv_idx)
@@ -193,7 +192,6 @@ class FlexAttention(SelfAttention):
         return _kv_cache_score_mod
 
     def kv_cache_mask_mod(self, cache_seqlens):
-
         def _kv_cache_mask_mod(b, h, q_idx, kv_idx):
             q_idx_rel = q_idx + cache_seqlens[b]
             base = self.mask_mod(b, h, q_idx_rel, kv_idx)
