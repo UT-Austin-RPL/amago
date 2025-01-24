@@ -168,7 +168,7 @@ class Discrete(PolicyDistribution):
     def forward(self, vec: torch.Tensor) -> pyd.Distribution:
         dist = _Categorical(logits=vec)
         probs = dist.probs
-        clip_probs = probs.clamp(min_prob, max_prob)
+        clip_probs = probs.clamp(self.clip_prob_low, self.clip_prob_high)
         safe_probs = clip_probs / clip_probs.sum(-1, keepdims=True).detach()
         safe_dist = _Categorical(probs=safe_probs)
         return safe_dist

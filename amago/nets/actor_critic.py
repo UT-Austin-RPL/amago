@@ -13,6 +13,7 @@ import gin
 from .ff import FFBlock, MLP
 from .utils import activation_switch, symlog, symexp
 from .policy_dists import (
+    Discrete,
     PolicyDistribution,
     TanhGaussian,
     DiscreteLikeContinuous,
@@ -37,7 +38,7 @@ class Actor(nn.Module):
         super().__init__()
         # determine policy output
         self.num_gammas = len(gammas)
-        dist_type = DiscretePolicyDistribution if discrete else continuous_dist_type
+        dist_type = Discrete if discrete else continuous_dist_type
         self.policy_dist = dist_type(d_action=action_dim)
         assert isinstance(self.policy_dist, PolicyDistribution)
         assert self.policy_dist.is_discrete == discrete
