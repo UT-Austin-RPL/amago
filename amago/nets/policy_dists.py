@@ -124,7 +124,7 @@ class PolicyDistribution(ABC):
     def __init__(self, d_action: int):
         super().__init__()
         self.d_action = d_action
-    
+
     def __call__(self, vec: torch.Tensor) -> pyd.Distribution:
         # looks like a nn.Module but doesn't break old checkpoints
         return self.forward(vec)
