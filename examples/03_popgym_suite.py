@@ -3,6 +3,7 @@ from argparse import ArgumentParser
 import wandb
 
 from amago.envs.builtin.popgym_envs import POPGymAMAGO, MultiDomainPOPGymAMAGO
+from amago.agent import binary_filter
 from amago.cli_utils import *
 
 
@@ -23,11 +24,26 @@ if __name__ == "__main__":
     add_cli(parser)
     args = parser.parse_args()
 
+    # whenever we need a "max rollout length" value, we use this arbitrarily large number
+    artificial_horizon = max(args.max_seq_len, 2000)
+
+    # fmt: off
     config = {
         "amago.nets.actor_critic.NCriticsTwoHot.min_return": None,
         "amago.nets.actor_critic.NCriticsTwoHot.max_return": None,
         "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 64,
+        "binary_filter.threshold": 1e-3,
+        # learnable position embedding
+        "amago.nets.transformer.LearnablePosEmb.max_time_idx": artificial_horizon,
+        "amago.nets.traj_encoders.TformerTrajEncoder.pos_emb": "learnable",
+        # removes policy clipping
+        "amago.nets.policy_dists.Discrete.clip_prob_high": 1.0,
+        "amago.nets.policy_dists.Discrete.clip_prob_low": 1e-6,
+        # paper version defaulted to large set of gamma values
+        "amago.agent.Multigammas.discrete": [0.1, 0.7, 0.9, 0.93, 0.95, 0.98, 0.99, 0.992, 0.994, 0.995, 0.997, 0.998, 0.999, 0.9991, 0.9992, 0.9993, 0.9994, 0.9995],
     }
+    # fmt: on
+
     traj_encoder_type = switch_traj_encoder(
         config,
         arch=args.traj_encoder,
@@ -35,12 +51,21 @@ if __name__ == "__main__":
         layers=args.memory_layers,  # paper: 3
     )
     tstep_encoder_type = switch_tstep_encoder(
-        config, arch="ff", n_layers=2, d_hidden=512 if args.multidomain else 256, d_output=256
+        config,
+        arch="ff",
+        n_layers=2,
+        d_hidden=512,
+        d_output=200,  # corrected hparam
     )
     agent_type = switch_agent(
-        config, args.agent_type, reward_multiplier=200.0 if args.multidomain else 100.0
+        config,
+        args.agent_type,
+        reward_multiplier=200.0 if args.multidomain else 100.0,
+        tau=0.0025,  # corrected hparam
     )
-    exploration_type = switch_exploration(config, "egreedy", steps_anneal=1_000_000 if arsg.multidomain else 400_000)
+    exploration_type = switch_exploration(
+        config, "egreedy", steps_anneal=1_000_000 if args.multidomain else 400_000
+    )
     use_config(config, args.configs)
 
     group_name = f"{args.run_name}_{args.env}"
@@ -55,16 +80,17 @@ if __name__ == "__main__":
             make_train_env=make_train_env,
             make_val_env=make_train_env,
             max_seq_len=args.max_seq_len,
-            traj_save_len=2000,
+            traj_save_len=artificial_horizon,
             group_name=group_name,
             run_name=run_name,
             tstep_encoder_type=tstep_encoder_type,
             traj_encoder_type=traj_encoder_type,
             exploration_wrapper_type=exploration_type,
             agent_type=agent_type,
-            val_timesteps_per_epoch=2000,
-            learning_rate=1e-4 if args.multidomain else 3e-4,
-            grad_clip=1.0 if args.multidomain else 2.0,
+            val_timesteps_per_epoch=artificial_horizon,
+            learning_rate=1e-4,  # corrected hparam
+            grad_clip=1.0,  # corrected hparam
+            lr_warmup_steps=2000,  # paper version defaulted to longer warmups than we use now
         )
         experiment = switch_async_mode(experiment, args.mode)
         experiment.start()
