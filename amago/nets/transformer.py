@@ -565,7 +565,9 @@ class Transformer(nn.Module):
         elif pos_emb == "learnable":
             self.position_embedding = LearnablePosEmb(d_model)
         else:
-            raise ValueError
+            raise ValueError(
+                f"Unrecognized pos_emb: {pos_emb}. Options are 'fixed' or 'learnable'."
+            )
         self.inp = nn.Linear(inp_dim, d_model)
         self.dropout = nn.Dropout(dropout_emb)
         assert all(l.d_model == d_model for l in layers)
