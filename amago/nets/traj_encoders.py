@@ -130,7 +130,7 @@ class TformerTrajEncoder(TrajEncoder):
         dropout_qkv: float = 0.00,
         activation: str = "leaky_relu",
         norm: str = "layer",
-        pos_emb: str = "learnable",
+        pos_emb: str = "fixed",
         causal: bool = True,
         sigma_reparam: bool = True,
         normformer_norms: bool = True,
