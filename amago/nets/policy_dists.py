@@ -120,10 +120,14 @@ class _Categorical(pyd.Categorical):
         return super().sample(*args, **kwargs).unsqueeze(-1)
 
 
-class PolicyDistribution(nn.Module, ABC):
+class PolicyDistribution(ABC):
     def __init__(self, d_action: int):
         super().__init__()
         self.d_action = d_action
+    
+    def __call__(self, vec: torch.Tensor) -> pyd.Distribution:
+        # looks like a nn.Module but doesn't break old checkpoints
+        return self.forward(vec)
 
     @property
     @abstractmethod
@@ -140,6 +144,7 @@ class PolicyDistribution(nn.Module, ABC):
     def input_dimension(self) -> int:
         raise NotImplementedError
 
+    @abstractmethod
     def forward(self, vec: torch.Tensor) -> pyd.Distribution:
         raise NotImplementedError
 
@@ -215,7 +220,7 @@ class TanhGaussian(_Continuous):
         d_action: int,
         std_low: float = math.exp(-5.0),
         std_high: float = math.exp(2.0),
-        std_activation: str = "tanh",  # or "softplus "
+        std_activation: str = "tanh",  # or "softplus"
         clip_actions_on_log_prob: tuple[float, float] = (-0.99, 0.99),
     ):
         super().__init__(
