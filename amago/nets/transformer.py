@@ -184,7 +184,6 @@ class FlexAttention(SelfAttention):
         )
 
     def kv_cache_score_mod(self, cache_seqlens):
-
         def _kv_cache_score_mod(score, b, h, q_idx, kv_idx):
             q_idx_rel = q_idx + cache_seqlens[b]
             base = self.score_mod(score, b, h, q_idx_rel, kv_idx)
@@ -193,7 +192,6 @@ class FlexAttention(SelfAttention):
         return _kv_cache_score_mod
 
     def kv_cache_mask_mod(self, cache_seqlens):
-
         def _kv_cache_mask_mod(b, h, q_idx, kv_idx):
             q_idx_rel = q_idx + cache_seqlens[b]
             base = self.mask_mod(b, h, q_idx_rel, kv_idx)
@@ -539,6 +537,18 @@ class FixedPosEmb(nn.Module):
         return emb
 
 
+@gin.configurable
+class LearnablePosEmb(nn.Module):
+    def __init__(self, d_model: int, max_time_idx: int = gin.REQUIRED):
+        super().__init__()
+        self.embeddings = nn.Embedding(
+            num_embeddings=max_time_idx, embedding_dim=d_model
+        )
+
+    def forward(self, pos_idxs: torch.LongTensor):
+        return self.embeddings(pos_idxs)
+
+
 class Transformer(nn.Module):
     def __init__(
         self,
@@ -547,9 +557,17 @@ class Transformer(nn.Module):
         layers: Iterable[nn.Module],
         dropout_emb: float = 0.05,
         norm: str = "layer",
+        pos_emb: str = "fixed",
     ):
         super().__init__()
-        self.position_embedding = FixedPosEmb(d_model)
+        if pos_emb == "fixed":
+            self.position_embedding = FixedPosEmb(d_model)
+        elif pos_emb == "learnable":
+            self.position_embedding = LearnablePosEmb(d_model)
+        else:
+            raise ValueError(
+                f"Unrecognized pos_emb: {pos_emb}. Options are 'fixed' or 'learnable'."
+            )
         self.inp = nn.Linear(inp_dim, d_model)
         self.dropout = nn.Dropout(dropout_emb)
         assert all(l.d_model == d_model for l in layers)
