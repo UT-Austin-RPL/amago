@@ -132,16 +132,19 @@ class PolicyDistribution(ABC):
     @property
     @abstractmethod
     def actions_differentiable(self) -> bool:
+        # (can you use -Q(s, a ~ pi) as an actor loss?)
         raise NotImplementedError
 
     @property
     @abstractmethod
     def is_discrete(self) -> bool:
+        # used to decide how the critic predicts vals
         raise NotImplementedError
 
     @property
     @abstractmethod
     def input_dimension(self) -> int:
+        # used to determine the output of the actor network
         raise NotImplementedError
 
     @abstractmethod
@@ -152,7 +155,14 @@ class PolicyDistribution(ABC):
 @gin.configurable
 class Discrete(PolicyDistribution):
     def __init__(
-        self, d_action: int, clip_prob_low: float = 0.001, clip_prob_high: float = 0.99
+        self,
+        d_action: int,
+        # clips and renoramlizes actor probs with the intention
+        # of stabilizing value computation in the critic and
+        # protecting against total entropy collapse. These
+        # defaults are now thought to be too conservative.
+        clip_prob_low: float = 0.001,
+        clip_prob_high: float = 0.99,
     ):
         super().__init__(d_action)
         self.clip_prob_low = clip_prob_low
@@ -194,7 +204,10 @@ class _Continuous(PolicyDistribution):
         return False
 
     def std_from_network_output(self, raw_std: torch.Tensor):
+        # maps the network's output value to a valid standard deviation
+        # for the policy distribution. There are many ways to do this.
         if self.std_activation == "tanh":
+            # this version shows up more in off-policy RL codebases
             tanh_scale = torch.tanh(raw_std)
             log_std_low = math.log(self.std_low)
             log_std_high = math.log(self.std_high)
@@ -203,6 +216,7 @@ class _Continuous(PolicyDistribution):
             )
             return log_std.exp()
         elif self.std_activation == "softplus":
+            # this version is used by robomimic for robot IL
             std = F.softplus(raw_std) + self.std_low
             if self.std_high is not None:
                 std = std.clamp(max=self.std_high)
@@ -221,6 +235,9 @@ class TanhGaussian(_Continuous):
         std_low: float = math.exp(-5.0),
         std_high: float = math.exp(2.0),
         std_activation: str = "tanh",  # or "softplus"
+        # clips the actions before computing dist.log_prob(action);
+        # these values can be quite unstable on actions far from the
+        # current policy (offline RL, IL), and at the (-1, 1) border.
         clip_actions_on_log_prob: tuple[float, float] = (-0.99, 0.99),
     ):
         super().__init__(
