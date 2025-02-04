@@ -72,7 +72,7 @@ class POPGym(gym.Wrapper):
         return self.create_obs(obs), info
 
     def create_obs(self, obs):
-        new_obs = np.concatenate((obs, self.timer / 1000.), axis=-1)
+        new_obs = np.concatenate((obs, self.timer / 1000.0), axis=-1)
         return new_obs
 
     def step(self, action):
@@ -84,8 +84,8 @@ class POPGym(gym.Wrapper):
 
 
 class POPGymAMAGO(AMAGOEnv):
-    def __init__(self, env_name: str):
-        env = POPGym(env_name)
+    def __init__(self, env_name: str, truncated_is_done: bool = True):
+        env = POPGym(env_name, truncated_is_done=truncated_is_done)
         super().__init__(env, env_name=env_name)
 
 
@@ -204,4 +204,3 @@ if __name__ == "__main__":
     env = POPGym("popgym-MineSweeperMedium-v0")
     print(env.action_space)
     print(env.observation_space)
-

@@ -32,13 +32,12 @@ if __name__ == "__main__":
         "amago.nets.actor_critic.NCriticsTwoHot.min_return": None,
         "amago.nets.actor_critic.NCriticsTwoHot.max_return": None,
         "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 64,
-        "binary_filter.threshold": 1e-3,
+        "binary_filter.threshold": 1e-3, # not important
         # learnable position embedding
         "amago.nets.transformer.LearnablePosEmb.max_time_idx": artificial_horizon,
         "amago.nets.traj_encoders.TformerTrajEncoder.pos_emb": "learnable",
-        # removes policy clipping
-        "amago.nets.policy_dists.Discrete.clip_prob_high": 1.0,
-        "amago.nets.policy_dists.Discrete.clip_prob_low": 1e-6,
+        "amago.nets.policy_dists.Discrete.clip_prob_high": 1.0, # not important
+        "amago.nets.policy_dists.Discrete.clip_prob_low": 1e-6, # not important
         # paper version defaulted to large set of gamma values
         "amago.agent.Multigammas.discrete": [0.1, 0.7, 0.9, 0.93, 0.95, 0.98, 0.99, 0.992, 0.994, 0.995, 0.997, 0.998, 0.999, 0.9991, 0.9992, 0.9993, 0.9994, 0.9995],
     }
@@ -55,16 +54,19 @@ if __name__ == "__main__":
         arch="ff",
         n_layers=2,
         d_hidden=512,
-        d_output=200,  # corrected hparam
+        d_output=200,
     )
     agent_type = switch_agent(
         config,
         args.agent_type,
         reward_multiplier=200.0 if args.multidomain else 100.0,
-        tau=0.0025,  # corrected hparam
+        tau=0.0025,
     )
+    # steps_anneal can safely be set much lower (<500k) in most tasks. More sweeps needed.
     exploration_type = switch_exploration(
-        config, "egreedy", steps_anneal=1_000_000 if args.multidomain else 400_000
+        config,
+        "egreedy",
+        steps_anneal=1_000_000,
     )
     use_config(config, args.configs)
 
@@ -74,7 +76,11 @@ if __name__ == "__main__":
         if args.multidomain:
             make_train_env = lambda: MultiDomainPOPGymAMAGO()
         else:
-            make_train_env = lambda: POPGymAMAGO(f"popgym-{args.env}-v0")
+            # in order to match the pre-gymnasium version of popgym (done instead of terminated/truncated),
+            # we need to set terminated = terminated or truncated
+            make_train_env = lambda: POPGymAMAGO(
+                f"popgym-{args.env}-v0", truncated_is_done=True
+            )
         experiment = create_experiment_from_cli(
             args,
             make_train_env=make_train_env,
@@ -88,9 +94,9 @@ if __name__ == "__main__":
             exploration_wrapper_type=exploration_type,
             agent_type=agent_type,
             val_timesteps_per_epoch=artificial_horizon,
-            learning_rate=1e-4,  # corrected hparam
-            grad_clip=1.0,  # corrected hparam
-            lr_warmup_steps=2000,  # paper version defaulted to longer warmups than we use now
+            learning_rate=1e-4,
+            grad_clip=1.0,
+            lr_warmup_steps=2000,
         )
         experiment = switch_async_mode(experiment, args.mode)
         experiment.start()

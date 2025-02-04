@@ -114,9 +114,7 @@ class BilevelEpsilonGreedy(ExplorationWrapper):
             random_action = self.rng.integers(
                 0, num_actions, size=(self.batched_envs, 1)
             )
-            use_random = np.expand_dims(
-                self.rng.standard_normal(self.batched_envs) <= noise, 1
-            )
+            use_random = np.expand_dims(self.rng.random(self.batched_envs) <= noise, 1)
             expl_action = (
                 use_random * random_action + (1 - use_random) * action
             ).astype(np.uint8)
