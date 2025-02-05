@@ -17,6 +17,7 @@ except ImportError:
 import gymnasium as gym
 import numpy as np
 from einops import rearrange
+import gin
 
 from amago.envs import AMAGOEnv
 
@@ -84,31 +85,42 @@ class ALEAction:
         return action
 
 
+@gin.configurable
 class AtariGame(gym.Env):
     def __init__(
         self,
         game: str,
         resolution: tuple[int, int] = (84, 84),
+        grayscale: bool = False,
         time_limit: int = 108_000,
         frame_skip: int = 4,
         channels_last: bool = False,
         use_discrete_actions: bool = False,
+        sticky_action_prob: float = 0.25,
+        terminal_on_life_loss: bool = False,
+        version: str = "v5",
     ):
         super().__init__()
         self.resolution = resolution
         self.time_limit = time_limit
         self.frame_skip = frame_skip
+        self.terminal_on_life_loss = terminal_on_life_loss
+        self.grayscale = grayscale
+        # TODO: look into color averaging or max/skip
         self._env = gym.make(
-            game,
+            f"ALE/{game}-{version}",
             frameskip=frame_skip,
-            repeat_action_probability=0.25,
-            obs_type="rgb",
+            repeat_action_probability=sticky_action_prob,
+            obs_type="rgb" if not grayscale else "grayscale",
             full_action_space=True,
         )
         self.channels_last = channels_last
         self.rom_name = game
+        channels = 1 if grayscale else 3
         obs_shape = (
-            self.resolution + (3,) if self.channels_last else (3,) + self.resolution
+            self.resolution + (channels,)
+            if channels_last
+            else (channels,) + self.resolution
         )
         self.use_discrete_actions = use_discrete_actions
         if use_discrete_actions:
@@ -126,14 +138,16 @@ class AtariGame(gym.Env):
         obs = cv2.resize(
             frame, tuple(reversed(self.resolution)), interpolation=cv2.INTER_AREA
         )
+        if self.grayscale:
+            obs = np.expand_dims(obs, axis=-1)
         if not self.channels_last:
             obs = rearrange(obs, "h w c -> c h w")
-
         return obs
 
     def reset(self, *args, **kwargs) -> tuple[np.ndarray, dict]:
         self._time = 0
         obs, info = self._env.reset()
+        self.lives = info["lives"]
         return self.screen(obs), info
 
     def step(self, action: np.ndarray) -> tuple[np.ndarray, float, bool, bool, dict]:
@@ -142,6 +156,8 @@ class AtariGame(gym.Env):
         next_obs, reward, terminated, truncated, info = self._env.step(action)
         self._time += self.frame_skip  # matches frame counter used in standard ALE
         truncated = truncated or self._time >= self.time_limit
+        if self.terminal_on_life_loss:
+            terminated = terminated or info["lives"] < self.lives
         return self.screen(next_obs), reward, terminated, truncated, info
 
 
