@@ -14,12 +14,50 @@ try:
     import cv2
 except ImportError:
     amago_warning("Missing cv2 Install: `pip install opencv-python`")
+import ale_py  # import to register when using mismatched gymnasium/ale versioning for continuous actions
 import gymnasium as gym
 import numpy as np
 from einops import rearrange
 import gin
 
 from amago.envs import AMAGOEnv
+
+
+class _MaxAndSkipEnv(gym.Wrapper[np.ndarray, int, np.ndarray, int]):
+    """
+    https://stable-baselines3.readthedocs.io/en/master/_modules/stable_baselines3/common/atari_wrappers.html#MaxAndSkipEnv
+
+    Later added to gymnasium 1.0
+    """
+
+    def __init__(self, env: gym.Env, skip: int = 4) -> None:
+        super().__init__(env)
+        assert (
+            env.observation_space.dtype is not None
+        ), "No dtype specified for the observation space"
+        assert (
+            env.observation_space.shape is not None
+        ), "No shape defined for the observation space"
+        self._obs_buffer = np.zeros(
+            (2, *env.observation_space.shape), dtype=env.observation_space.dtype
+        )
+        self._skip = skip
+
+    def step(self, action: int):
+        total_reward = 0.0
+        terminated = truncated = False
+        for i in range(self._skip):
+            obs, reward, terminated, truncated, info = self.env.step(action)
+            done = terminated or truncated
+            if i == self._skip - 2:
+                self._obs_buffer[0] = obs
+            if i == self._skip - 1:
+                self._obs_buffer[1] = obs
+            total_reward += float(reward)
+            if done:
+                break
+        max_frame = self._obs_buffer.max(axis=0)
+        return max_frame, total_reward, terminated, truncated, info
 
 
 class AtariAMAGOWrapper(AMAGOEnv):
@@ -95,10 +133,11 @@ class AtariGame(gym.Env):
         time_limit: int = 108_000,
         frame_skip: int = 4,
         channels_last: bool = False,
-        use_discrete_actions: bool = False,
+        action_space: str = "discrete",
         sticky_action_prob: float = 0.25,
         terminal_on_life_loss: bool = False,
         version: str = "v5",
+        continuous_action_threshold: float = 0.5,
     ):
         super().__init__()
         self.resolution = resolution
@@ -106,30 +145,50 @@ class AtariGame(gym.Env):
         self.frame_skip = frame_skip
         self.terminal_on_life_loss = terminal_on_life_loss
         self.grayscale = grayscale
-        # TODO: look into color averaging or max/skip
-        self._env = gym.make(
-            f"ALE/{game}-{version}",
-            frameskip=frame_skip,
+        self.channels_last = channels_last
+        self.rom_name = game
+
+        # create environment
+        env_kwargs = dict(
+            # more standard approach is to grayscale and then let a wrapper handle frame skipping.
+            # for color i'm not sure this works and revert to the default from our previous experiments.
+            frameskip=1 if grayscale else frame_skip,
             repeat_action_probability=sticky_action_prob,
             obs_type="rgb" if not grayscale else "grayscale",
             full_action_space=True,
         )
-        self.channels_last = channels_last
-        self.rom_name = game
+        if action_space == "continuous":
+            assert (
+                ale_py.__version__ >= "0.10"
+            ), "pip install --upgrade ale_py==0.10 for continuous actions"
+            env_kwargs["continuous"] = True
+            env_kwargs["continuous_action_threshold"] = continuous_action_threshold
+        self._env = gym.make(f"ALE/{game}-{version}", **env_kwargs)
+        if grayscale:
+            # grayscaled frameskips can use the MaxAndSkipEnv trick
+            self._env = _MaxAndSkipEnv(self._env, skip=frame_skip)
+
+        # set observation space
         channels = 1 if grayscale else 3
         obs_shape = (
             self.resolution + (channels,)
             if channels_last
             else (channels,) + self.resolution
         )
-        self.use_discrete_actions = use_discrete_actions
-        if use_discrete_actions:
-            self.action_space = self._env.action_space
-        else:
-            self.action_space = gym.spaces.MultiBinary(5)
         self.observation_space = gym.spaces.Box(
             low=0, high=255, shape=obs_shape, dtype=np.uint8
         )
+
+        # set action space
+        self.action_space_type = action_space
+        if self.action_space_type == "discrete":
+            self.action_space = self._env.action_space
+        elif self.action_space_type == "multibinary":
+            self.action_space = gym.spaces.MultiBinary(5)
+        elif self.action_space_type == "continuous":
+            self.action_space = self._env.action_space
+        else:
+            raise ValueError(f"Invalid action space: {self.action_space_type}")
 
     def render(self, *args, **kwargs):
         return self._env.render(*args, **kwargs)
@@ -151,7 +210,7 @@ class AtariGame(gym.Env):
         return self.screen(obs), info
 
     def step(self, action: np.ndarray) -> tuple[np.ndarray, float, bool, bool, dict]:
-        if not self.use_discrete_actions:
+        if self.action_space_type == "multibinary":
             action = ALEAction(*action.tolist()).to_discrete()
         next_obs, reward, terminated, truncated, info = self._env.step(action)
         self._time += self.frame_skip  # matches frame counter used in standard ALE
