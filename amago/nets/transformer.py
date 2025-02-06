@@ -58,18 +58,19 @@ class VanillaAttention(SelfAttention):
         assert L == 1
         scale = 1.0 / math.sqrt(E)
         # fill cache, trim sequences
-        key_cache[:, cache_seqlens] = keys
-        val_cache[:, cache_seqlens] = values
+        cache_idxs = torch.arange(key_cache.shape[0], device=key_cache.device)
+        key_cache[cache_idxs, cache_seqlens] = keys[:, 0]
+        val_cache[cache_idxs, cache_seqlens] = values[:, 0]
         end = cache_seqlens + 1
         max_len = end.max()
-        k_cache = key_cache[:, :max_len]
-        v_cache = val_cache[:, :max_len]
+        k_cache = torch.nan_to_num(key_cache[:, :max_len])
+        v_cache = torch.nan_to_num(val_cache[:, :max_len])
         # attention scores + masking
-        scores = torch.einsum("blhe,blhe->blh", queries, k_cache)
+        scores = scale * torch.einsum("blhe,blhe->blh", queries, k_cache)
         mask = torch.arange(max_len, device=cache_seqlens.device)[None, :] >= end[:, None]
         scores.masked_fill_(mask[:, :, None], -torch.inf)
         # output
-        A = self.dropout(torch.softmax(scale * scores, dim=1))
+        A = self.dropout(torch.softmax(scores, dim=1))
         V = torch.einsum("blh,blhd->bhd", A, v_cache).unsqueeze(1)
         # fmt: on
         return V
@@ -225,12 +226,17 @@ class FlexAttention(SelfAttention):
         else:
             assert not self.training
             q, k, v = torch.unbind(qkv, dim=2)
-            key_cache[:, cache_seqlens] = k
-            val_cache[:, cache_seqlens] = v
+            cache_idxs = torch.arange(key_cache.shape[0], device=k.device)
+            key_cache[cache_idxs, cache_seqlens] = k[:, 0]
+            val_cache[cache_idxs, cache_seqlens] = v[:, 0]
             max_len = cache_seqlens.max() + 1
             q = rearrange(q, "b l h e -> b h l e")
-            k_cache = rearrange(key_cache[:, :max_len], "b l h e -> b h l e")
-            v_cache = rearrange(val_cache[:, :max_len], "b l h e -> b h l e")
+            k_cache = torch.nan_to_num(
+                rearrange(key_cache[:, :max_len], "b l h e -> b h l e")
+            )
+            v_cache = torch.nan_to_num(
+                rearrange(val_cache[:, :max_len], "b l h e -> b h l e")
+            )
             # TODO: custom constructor as potential speedup?
             # https://pytorch.org/blog/flexattention/#q-how-can-we-compute-blockmask-quicker
             inf_mask = create_block_mask(
