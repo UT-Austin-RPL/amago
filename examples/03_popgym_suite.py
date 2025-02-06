@@ -3,7 +3,6 @@ from argparse import ArgumentParser
 import wandb
 
 from amago.envs.builtin.popgym_envs import POPGymAMAGO, MultiDomainPOPGymAMAGO
-from amago.agent import binary_filter
 from amago.cli_utils import *
 
 
@@ -36,6 +35,7 @@ if __name__ == "__main__":
         # learnable position embedding
         "amago.nets.transformer.LearnablePosEmb.max_time_idx": artificial_horizon,
         "amago.nets.traj_encoders.TformerTrajEncoder.pos_emb": "learnable",
+        "amago.nets.traj_encoders.TformerTrajEncoder.attention_type": amago.nets.transformer.FlashAttention,
         "amago.nets.policy_dists.Discrete.clip_prob_high": 1.0, # not important
         "amago.nets.policy_dists.Discrete.clip_prob_low": 1e-6, # not important
         # paper version defaulted to large set of gamma values
