@@ -4,11 +4,6 @@ import torch
 from torch import nn
 import gin
 
-try:
-    import flash_attn
-except ImportError:
-    flash_attn = None
-
 from amago.nets import ff, transformer, utils
 from amago.utils import amago_warning
 
@@ -141,11 +136,6 @@ class TformerTrajEncoder(TrajEncoder):
         self.head_dim = d_model // n_heads
         self.n_heads = n_heads
         self.n_layers = n_layers
-        if flash_attn is None and attention_type == transformer.FlashAttention:
-            amago_warning(
-                f"`flash_attn` is not installed; falling back to VanillaAttention"
-            )
-            attention_type = transformer.VanillaAttention
         self.attention_type = attention_type
         self.d_model = d_model
 
