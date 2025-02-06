@@ -26,6 +26,7 @@ except ImportError:
 # Flash Attention 2
 try:
     import flash_attn
+    from flash_attn import flash_attn_qkvpacked_func, flash_attn_with_kvcache
 except ImportError:
     amago_warning("Missing FlashAttention (2.0) Install")
     flash_attn = None
@@ -111,7 +112,9 @@ class FlashAttention(SelfAttention):
         dropout: float,
         window_size: tuple[int, int] = (-1, -1),
     ):
-        assert flash_attn is not None, "Missing flash attention 2 install."
+        assert (
+            flash_attn is not None
+        ), "Missing flash attention 2 install (pip install amago[flash])."
         super().__init__(causal=causal, dropout=dropout)
         self.window_size = window_size
 
@@ -119,7 +122,7 @@ class FlashAttention(SelfAttention):
     def forward(self, qkv, key_cache=None, val_cache=None, cache_seqlens=None):
         qkv = qkv.to(torch.bfloat16)
         if key_cache is None or val_cache is None or cache_seqlens is None:
-            out = flash_attn.flash_attn_qkvpacked_func(
+            out = flash_attn_qkvpacked_func(
                 qkv,
                 dropout_p=self.dropout if self.training else 0.0,
                 causal=self.causal,
@@ -128,7 +131,7 @@ class FlashAttention(SelfAttention):
         else:
             assert not self.training
             q, k, v = qkv.unbind(2)
-            out = flash_attn.flash_attn_with_kvcache(
+            out = flash_attn_with_kvcache(
                 q=q,
                 k_cache=key_cache,
                 v_cache=val_cache,
