@@ -57,9 +57,9 @@ conda activate amago
 pip install -e amago
 ```
 
-There are some optional installs for additional features:
+- `pip install -e amago[flash]`: The base Transformer policy uses [FlashAttention 2.0](https://github.com/Dao-AILab/flash-attention) by default. We recommend installing `flash_attn` if your GPU is compatible. Please refer to the [official installation instructions](https://github.com/Dao-AILab/flash-attention) if you run into issues.
 
-- `pip install -e amago[flash]`: The default Transformer policy has an option for [FlashAttention 2.0](https://github.com/Dao-AILab/flash-attention). FlashAttention leads to significant speedups on long sequences if your GPU is compatible. Please refer to the [official installation instructions](https://github.com/Dao-AILab/flash-attention) if you run into issues.
+There are some optional installs for additional features:
 
 - `pip install -e amago[mamba]`: Enables [Mamba](https://arxiv.org/abs/2312.00752) sequence model policies. 
 

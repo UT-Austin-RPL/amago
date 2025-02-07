@@ -138,6 +138,7 @@ class AtariGame(gym.Env):
         terminal_on_life_loss: bool = False,
         version: str = "v5",
         continuous_action_threshold: float = 0.5,
+        clip_rewards: bool = False,
     ):
         super().__init__()
         self.resolution = resolution
@@ -146,6 +147,7 @@ class AtariGame(gym.Env):
         self.terminal_on_life_loss = terminal_on_life_loss
         self.grayscale = grayscale
         self.channels_last = channels_last
+        self.clip_rewards = clip_rewards
         self.rom_name = game
 
         # create environment
@@ -217,6 +219,8 @@ class AtariGame(gym.Env):
         truncated = truncated or self._time >= self.time_limit
         if self.terminal_on_life_loss:
             terminated = terminated or info["lives"] < self.lives
+        if self.clip_rewards:
+            reward = max(min(reward, 1.0), -1.0)
         return self.screen(next_obs), reward, terminated, truncated, info
 
 

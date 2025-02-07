@@ -2,7 +2,6 @@ from argparse import ArgumentParser
 from functools import partial
 
 import wandb
-import gym
 
 from amago.envs.builtin.ale_retro import AtariAMAGOWrapper, AtariGame
 from amago.nets.cnn import NatureishCNN, IMPALAishCNN
@@ -36,7 +35,16 @@ ATARI_TIME_LIMIT = (30 * 60 * 60) // 5  # (30 minutes of game time)
 
 def make_atari_game(game_name):
     return AtariAMAGOWrapper(
-        AtariGame(game=game_name, use_discrete_actions=True),
+        AtariGame(
+            game=game_name,
+            action_space="discrete",
+            terminal_on_life_loss=False,
+            version="v5",
+            frame_skip=5,
+            grayscale=False,
+            sticky_action_prob=0.25,
+            clip_rewards=False,
+        ),
     )
 
 
