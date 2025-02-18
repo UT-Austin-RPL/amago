@@ -60,6 +60,29 @@ class _TanhWrappedDistribution(pyd.Distribution):
         return torch.tanh(self.base_dist.mean) * self.scale
 
 
+class _ClippedDistribution(pyd.Distribution):
+    """Clips the output of a distribution to be within [-1, 1] when sampling during environment interaction."""
+
+    def __init__(self, base_dist):
+        super().__init__(validate_args=False)
+        self.base_dist = base_dist
+
+    def log_prob(self, *args, **kwargs):
+        # Unsqueeze the last dimension of the base distribution for compatibility with existing code
+        return self.base_dist.log_prob(*args, **kwargs).unsqueeze(-1)
+
+    def sample(self, *args, **kwargs):
+        return self.base_dist.sample(*args, **kwargs).clamp(-1.0, 1.0)
+
+    def rsample(self, *args, **kwargs):
+        # Don't clip the rsample because it would mess up the gradients
+        return self.base_dist.rsample(*args, **kwargs)
+
+    @property
+    def mean(self):
+        return self.base_dist.mean
+
+
 class _TanhTransform(pyd.transforms.Transform):
     # Credit: https://github.com/denisyarats/pytorch_sac/blob/master/agent/actor.py
     domain = pyd.constraints.real
@@ -106,12 +129,23 @@ class _SquashedNormal(pyd.transformed_distribution.TransformedDistribution):
             mu = tr(mu)
         return mu
 
+class _ClippedNormal(pyd.Normal):
+    """Clips the output of a normal distribution to be within [-1, 1] when sampling during environment interaction.
+    We don't clip the rsample because it would mess up the gradients."""
+    def sample(self, *args, **kwargs):
+        return super().sample(*args, **kwargs).clamp(-1.0, 1.0)
 
-def _TanhGMM(means, stds, logits):
+
+def _TanhGMM(means, stds, logits, tanh_means_only):
+    if tanh_means_only:
+        means = torch.tanh(means)
     comp = pyd.Independent(pyd.Normal(loc=means, scale=stds), 1)
     mix = pyd.Categorical(logits=logits)
     dist = pyd.MixtureSameFamily(mixture_distribution=mix, component_distribution=comp)
-    dist = _TanhWrappedDistribution(base_dist=dist, scale=1.0)
+    if tanh_means_only:
+        dist = _ClippedDistribution(dist)
+    else:
+        dist = _TanhWrappedDistribution(base_dist=dist, scale=1.0)
     return dist
 
 
@@ -239,6 +273,7 @@ class TanhGaussian(_Continuous):
         # these values can be quite unstable on actions far from the
         # current policy (offline RL, IL), and at the (-1, 1) border.
         clip_actions_on_log_prob: tuple[float, float] = (-0.99, 0.99),
+        tanh_means_only: bool = False,  # only apply tanh to means instead of the whole distribution
     ):
         super().__init__(
             d_action=d_action,
@@ -247,6 +282,7 @@ class TanhGaussian(_Continuous):
             std_activation=std_activation,
         )
         self.clip_actions_on_log_prob = clip_actions_on_log_prob
+        self.tanh_means_only = tanh_means_only
 
     @property
     def actions_differentiable(self):
@@ -259,9 +295,13 @@ class TanhGaussian(_Continuous):
     def forward(self, vec: torch.Tensor) -> pyd.Distribution:
         mu, raw_std = vec.chunk(2, dim=-1)
         std = self.std_from_network_output(raw_std)
-        dist = _SquashedNormal(
-            mu, std, clip_on_tanh_inverse=self.clip_actions_on_log_prob
-        )
+        if self.tanh_means_only:
+            mu = torch.tanh(mu)
+            dist = _ClippedNormal(mu, std)
+        else:
+            dist = _SquashedNormal(
+                mu, std, clip_on_tanh_inverse=self.clip_actions_on_log_prob
+            )
         return dist
 
 
@@ -274,6 +314,7 @@ class GMM(_Continuous):
         std_low: float = 1e-4,
         std_high: Optional[float] = None,
         std_activation: str = "softplus",  # or "tanh"
+        tanh_means_only: bool = False,  # only apply tanh to means instead of the whole distribution
     ):
         super().__init__(
             d_action=d_action,
@@ -282,6 +323,7 @@ class GMM(_Continuous):
             std_activation=std_activation,
         )
         self.gmm_modes = gmm_modes
+        self.tanh_means_only = tanh_means_only
 
     @property
     def actions_differentiable(self):
@@ -299,7 +341,9 @@ class GMM(_Continuous):
         )
         stds = self.std_from_network_output(raw_std)
         logits = vec[..., 2 * idx :]
-        dist = _TanhGMM(means=means, stds=stds, logits=logits)
+        dist = _TanhGMM(
+            means=means, stds=stds, logits=logits, tanh_means_only=self.tanh_means_only
+        )
         return dist
 
 
