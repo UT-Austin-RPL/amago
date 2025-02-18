@@ -36,6 +36,7 @@ from .loading import (
 from .hindsight import Relabeler
 from .agent import Agent
 from .nets import TstepEncoder, TrajEncoder
+from .nets.traj_encoders import GRUTrajEncoder
 
 
 @gin.configurable
@@ -399,7 +400,7 @@ class Experiment:
         ckpt_name = f"{self.run_name}_epoch_{self.epoch}"
         self.accelerator.save_state(
             os.path.join(self.ckpt_dir, "training_states", ckpt_name),
-            safe_serialization=True,
+            safe_serialization=not isinstance(self.policy.traj_encoder, GRUTrajEncoder),
         )
         if self.accelerator.is_main_process:
             # create backup of raw weights unrelated to the more complex process of resuming an accelerate state
