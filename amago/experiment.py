@@ -76,6 +76,9 @@ class Experiment:
     exploration_wrapper_type: Optional[type[ExplorationWrapper]] = EpsilonGreedy
     # whether to sample from the stochastic actor during eval, or take the argmax action.
     sample_actions: bool = True
+    # how often to reset the hidden state of the model during rollout
+    # this is a hack to prevent OOD hidden states in RNNs
+    hidden_state_reset_interval: Optional[int] = None
     # a safety measure that forces a call to `reset` every _ epochs for cases when `reset` is otherwise never called (already_vectorized).
     force_reset_train_envs_every: Optional[int] = None
 
@@ -620,7 +623,11 @@ class Experiment:
             if done.any() and save_on_done:
                 utils.call_async_env(envs, "save_finished_trajs")
             obs, rl2s, time_idxs = get_t()
-            hidden_state = policy.traj_encoder.reset_hidden_state(hidden_state, done)
+            reset_hidden = done
+            if self.hidden_state_reset_interval is not None:
+                time_idxs_np = time_idxs.cpu().numpy().reshape(done.shape)
+                reset_hidden |= time_idxs_np % self.hidden_state_reset_interval == 0
+            hidden_state = policy.traj_encoder.reset_hidden_state(hidden_state, reset_hidden)
             if render:
                 envs.render()
 
