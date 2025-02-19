@@ -36,7 +36,6 @@ from .loading import (
 from .hindsight import Relabeler
 from .agent import Agent
 from .nets import TstepEncoder, TrajEncoder
-from .nets.traj_encoders import GRUTrajEncoder
 
 
 @gin.configurable
@@ -400,7 +399,7 @@ class Experiment:
         ckpt_name = f"{self.run_name}_epoch_{self.epoch}"
         self.accelerator.save_state(
             os.path.join(self.ckpt_dir, "training_states", ckpt_name),
-            safe_serialization=not isinstance(self.policy.traj_encoder, GRUTrajEncoder),
+            safe_serialization=self.policy.traj_encoder.safe_serialization,
         )
         if self.accelerator.is_main_process:
             # create backup of raw weights unrelated to the more complex process of resuming an accelerate state
@@ -628,7 +627,9 @@ class Experiment:
             if self.hidden_state_reset_interval is not None:
                 time_idxs_np = time_idxs.cpu().numpy().reshape(done.shape)
                 reset_hidden |= time_idxs_np % self.hidden_state_reset_interval == 0
-            hidden_state = policy.traj_encoder.reset_hidden_state(hidden_state, reset_hidden)
+            hidden_state = policy.traj_encoder.reset_hidden_state(
+                hidden_state, reset_hidden
+            )
             if render:
                 envs.render()
 

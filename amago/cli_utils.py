@@ -198,7 +198,7 @@ def switch_exploration(
 def switch_traj_encoder(
     config: dict, arch: str, memory_size: int, layers: int, **kwargs
 ) -> type[TrajEncoder]:
-    assert arch in ["ff", "rnn", "transformer", "mamba"]
+    assert arch in ["ff", "rnn", "lstm", "transformer", "mamba"]
     if arch == "transformer":
         traj_encoder_type = amago.nets.traj_encoders.TformerTrajEncoder
         model_config = "amago.nets.traj_encoders.TformerTrajEncoder"
@@ -216,6 +216,16 @@ def switch_traj_encoder(
             {
                 f"{model_config}.n_layers": layers,
                 f"{model_config}.d_output": memory_size,
+                f"{model_config}.d_hidden": memory_size,
+            }
+        )
+    elif arch == "lstm":
+        traj_encoder_type = amago.nets.traj_encoders.LSTMTrajEncoder
+        model_config = "amago.nets.traj_encoders.LSTMTrajEncoder"
+        config.update(
+            {
+                f"{model_config}.n_layers": layers,
+                # f"{model_config}.1": memory_size,
                 f"{model_config}.d_hidden": memory_size,
             }
         )

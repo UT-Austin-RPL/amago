@@ -14,6 +14,7 @@ from amago.utils import amago_warning
 
 
 class TrajEncoder(nn.Module, ABC):
+    safe_serialization = True
     def __init__(self, tstep_dim: int, max_seq_len: int):
         super().__init__()
         self.tstep_dim = tstep_dim
@@ -77,6 +78,7 @@ class FFTrajEncoder(TrajEncoder):
 
 @gin.configurable
 class GRUTrajEncoder(TrajEncoder):
+    safe_serialization = False
     def __init__(
         self,
         tstep_dim: int,
@@ -102,6 +104,50 @@ class GRUTrajEncoder(TrajEncoder):
     def reset_hidden_state(self, hidden_state, dones):
         assert hidden_state is not None
         hidden_state[:, dones] = 0.0
+        return hidden_state
+
+    def forward(self, seq, time_idxs=None, hidden_state=None):
+        output_seq, new_hidden_state = self.rnn(seq, hidden_state)
+        out = self.out_norm(self.out(output_seq))
+        return out, new_hidden_state
+
+    @property
+    def emb_dim(self):
+        return self._emb_dim
+
+@gin.configurable
+class LSTMTrajEncoder(TrajEncoder):
+    safe_serialization = False
+
+    def __init__(
+        self,
+        tstep_dim: int,
+        max_seq_len: int,
+        d_hidden: int = 256,
+        n_layers: int = 2,
+        d_output: int = 256,
+        norm: str = "layer",
+    ):
+        super().__init__(tstep_dim, max_seq_len)
+        self.rnn = nn.LSTM(
+            input_size=tstep_dim,
+            hidden_size=d_hidden,
+            num_layers=n_layers,
+            bias=True,
+            batch_first=True,
+            bidirectional=False,
+        )
+        self.out = nn.Linear(d_hidden, d_output)
+        self.out_norm = ff.Normalization(norm, d_output)
+        self._emb_dim = d_output
+
+    def reset_hidden_state(self, hidden_state, dones):
+        # tuple
+        # 0 shape: (2, 12, 400)
+        # 1 shape: (2, 12, 400)
+        assert hidden_state is not None
+        hidden_state[0][:, dones] = 0.0
+        hidden_state[1][:, dones] = 0.0
         return hidden_state
 
     def forward(self, seq, time_idxs=None, hidden_state=None):
