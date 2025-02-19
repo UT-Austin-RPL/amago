@@ -273,7 +273,7 @@ class TanhGaussian(_Continuous):
         # these values can be quite unstable on actions far from the
         # current policy (offline RL, IL), and at the (-1, 1) border.
         clip_actions_on_log_prob: tuple[float, float] = (-0.99, 0.99),
-        tanh_means_only: bool = False,  # only apply tanh to means instead of the whole distribution
+        tanh_means_only: bool = True,  # only apply tanh to means instead of the whole distribution
     ):
         super().__init__(
             d_action=d_action,
@@ -314,7 +314,7 @@ class GMM(_Continuous):
         std_low: float = 1e-4,
         std_high: Optional[float] = None,
         std_activation: str = "softplus",  # or "tanh"
-        tanh_means_only: bool = False,  # only apply tanh to means instead of the whole distribution
+        tanh_means_only: bool = True,  # only apply tanh to means instead of the whole distribution
     ):
         super().__init__(
             d_action=d_action,
