@@ -90,18 +90,24 @@ class MLP(nn.Module):
         dropout_p: float = 0.0,
     ):
         super().__init__()
-        assert n_layers >= 1
-        self.in_layer = nn.Linear(d_inp, d_hidden)
-        self.dropout = nn.Dropout(dropout_p)
-        self.layers = nn.ModuleList(
-            [nn.Linear(d_hidden, d_hidden) for _ in range(n_layers - 1)]
-        )
-        self.out_layer = nn.Linear(d_hidden, d_output)
-        self.activation = activation_switch(activation)
+        assert n_layers >= 0
+        self.n_layers = n_layers
+        
+        if n_layers == 0:
+            self.out_layer = nn.Linear(d_inp, d_output)
+        else:
+            self.in_layer = nn.Linear(d_inp, d_hidden)
+            self.dropout = nn.Dropout(dropout_p)
+            self.layers = nn.ModuleList(
+                [nn.Linear(d_hidden, d_hidden) for _ in range(n_layers - 1)]
+            )
+            self.out_layer = nn.Linear(d_hidden, d_output)
+            self.activation = activation_switch(activation)
 
     def forward(self, x):
-        x = self.dropout(self.activation(self.in_layer(x)))
-        for layer in self.layers:
-            x = self.dropout(self.activation(layer(x)))
+        if self.n_layers > 0:
+            x = self.dropout(self.activation(self.in_layer(x)))
+            for layer in self.layers:
+                x = self.dropout(self.activation(layer(x)))
         x = self.out_layer(x)
         return x
