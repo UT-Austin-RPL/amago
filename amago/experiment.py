@@ -553,6 +553,7 @@ class Experiment:
         hidden_state=None,
         render: bool = False,
         save_on_done: bool = False,
+        episodes: Optional[int] = None,
     ) -> tuple[ReturnHistory, SpecialMetricHistory]:
         """
         Main policy loop for interacting with the environment.
@@ -603,6 +604,7 @@ class Experiment:
             return _obs, _rl2s, _time_idxs
 
         obs, rl2s, time_idxs = get_t()
+        episodes_finished = 0
         for _ in iter_:
             with torch.no_grad():
                 with self.caster():
@@ -617,12 +619,16 @@ class Experiment:
             done = terminated | truncated
             if done.ndim == 2:
                 done = done.squeeze(1)
-            if done.any() and save_on_done:
-                utils.call_async_env(envs, "save_finished_trajs")
+            if done.any():
+                if save_on_done:
+                    utils.call_async_env(envs, "save_finished_trajs")
+                episodes_finished += done.sum()
             obs, rl2s, time_idxs = get_t()
             hidden_state = policy.traj_encoder.reset_hidden_state(hidden_state, done)
             if render:
                 envs.render()
+            if episodes is not None and episodes_finished >= episodes:
+                break
 
         return_history = utils.call_async_env(envs, "return_history")
         special_history = utils.call_async_env(envs, "special_history")
@@ -684,6 +690,7 @@ class Experiment:
         timesteps: int,
         render: bool = False,
         save_trajs_to: Optional[str] = None,
+        episodes: Optional[int] = None,
     ):
         """
         One-off evaluation of a new environment callable for testing.
@@ -721,6 +728,7 @@ class Experiment:
             hidden_state=None,
             render=render,
             save_on_done=is_saving,
+            episodes=episodes,
         )
         logs = self.policy_metrics(returns, specials)
         logs_global = utils.avg_over_accelerate(logs)
@@ -826,7 +834,7 @@ class Experiment:
         C = len(self.policy.critics)
         state_mask = (~((batch.rl2s == MAGIC_PAD_VAL).all(-1, keepdim=True))).float()
         critic_state_mask = repeat(state_mask[:, 1:, ...], f"B L 1 -> B L {C} {G} 1")
-        actor_state_mask = repeat(state_mask[:, :-1, ...], f"B L 1 -> B L {G} 1")
+        actor_state_mask = repeat(state_mask[:, 1:, ...], f"B L 1 -> B L {G} 1")
 
         masked_actor_loss = utils.masked_avg(actor_loss, actor_state_mask)
         if isinstance(critic_loss, torch.Tensor):
@@ -873,6 +881,7 @@ class Experiment:
                 if log_step:
                     l.update(
                         {
+                            "Learning Rate" : self.lr_schedule.get_last_lr()[0],
                             "Batch Size (in Timesteps)": l["mask"].numel(),
                             "Unmasked Batch Size (in Timesteps)": l["mask"].sum(),
                         }
