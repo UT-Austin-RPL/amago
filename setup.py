@@ -6,7 +6,7 @@ setup(
     author="Jake Grigsby",
     author_email="grigsby@cs.utexas.edu",
     license="MIT",
-    packages=find_packages(include=["amago"]),
+    packages=find_packages(include=["amago", "amago.*"]),
     python_requires=">=3.10",
     install_requires=[
         "gymnasium>=0.26,<=0.29.1",
