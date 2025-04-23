@@ -290,6 +290,7 @@ class SlidingWindowFlexAttention(FlexAttention):
         )
 
 
+@gin.configurable
 class SigmaReparam(nn.Linear):
     """
     Updated version of SigmaReparam following the initialization strategy in the official code release.
@@ -297,11 +298,23 @@ class SigmaReparam(nn.Linear):
     https://github.com/ywchan2005/sigma-reparam-pytorch/blob/2a5676ac71f75567a09db4ecafc1a4d7bc135b8e/sigma_reparam.py#L5
     """
 
-    def __init__(self, d_in, d_out, bias: bool = True):
+    def __init__(self, d_in, d_out, bias: bool = True, fast_init: bool = False):
         super().__init__(d_in, d_out, bias=bias)
-        nn.init.trunc_normal_(self.weight, std=0.02)
-        u = torch.linalg.svd(self.weight.T, full_matrices=False)[-1][0].detach()
-        v = torch.linalg.svd(self.weight, full_matrices=False)[-1][0].detach()
+        if not fast_init:
+            nn.init.trunc_normal_(self.weight, std=0.02)
+            u = torch.linalg.svd(self.weight.T, full_matrices=False)[-1][0].detach()
+            v = torch.linalg.svd(self.weight, full_matrices=False)[-1][0].detach()
+        else:
+            # Use simpler initialization from legacy version
+            nn.init.kaiming_uniform_(self.weight, a=math.sqrt(5))
+            if self.bias is not None:
+                fan_in, _ = nn.init._calculate_fan_in_and_fan_out(self.weight)
+                bound = 1 / math.sqrt(fan_in) if fan_in > 0 else 0
+                nn.init.uniform_(self.bias, -bound, bound)
+            u = torch.randn(d_out, device=self.weight.device, dtype=self.weight.dtype)
+            v = torch.randn(d_in, device=self.weight.device, dtype=self.weight.dtype)
+            u = u / u.norm(dim=0)
+            v = v / v.norm(dim=0)
         self.register_buffer("u", u)
         self.register_buffer("v", v)
         self.gamma = nn.Parameter(torch.ones(1), requires_grad=True)
