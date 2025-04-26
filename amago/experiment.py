@@ -362,6 +362,13 @@ class Experiment:
         os.makedirs(os.path.join(self.ckpt_dir, "policy_weights"), exist_ok=True)
         self.epoch = 0
 
+    def load_checkpoint_from_path(self, path: str, is_accelerate_state: bool = True):
+        if not is_accelerate_state:
+            ckpt = utils.retry_load_checkpoint(path, map_location=self.DEVICE)
+            self.policy.load_state_dict(ckpt)
+        else:
+            self.accelerator.load_state(path)
+
     def load_checkpoint(self, epoch: int, resume_training_state: bool = True):
         """
         Load a historical checkpoint from the `ckpts` directory of this experiment.
@@ -373,20 +380,12 @@ class Experiment:
         `resume_training_state = False` only loads the policy weights.
         """
         if not resume_training_state:
-            # load the weights without worrrying about resuming the accelerate state
-            ckpt = utils.retry_load_checkpoint(
-                os.path.join(
-                    self.ckpt_dir, "policy_weights", f"policy_epoch_{epoch}.pt"
-                ),
-                map_location=self.DEVICE,
-            )
-            self.policy.load_state_dict(ckpt)
+            path = os.path.join(self.ckpt_dir, "policy_weights", f"policy_epoch_{epoch}.pt")
+            self.load_checkpoint_from_path(path, is_accelerate_state=False)
         else:
-            # loads weights and will set the epoch but otherwise resets training
-            # (optimizer, grad scaler, etc.)
             ckpt_name = f"{self.run_name}_epoch_{epoch}"
             ckpt_path = os.path.join(self.ckpt_dir, "training_states", ckpt_name)
-            self.accelerator.load_state(ckpt_path)
+            self.load_checkpoint_from_path(ckpt_path, is_accelerate_state=True)
         self.epoch = epoch
 
     def save_checkpoint(self):

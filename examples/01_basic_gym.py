@@ -39,7 +39,6 @@ if __name__ == "__main__":
     config = {
         # dictionary that sets default value for kwargs of classes that are marked as `gin.configurable`
         # see `tutorial.md` for more information. For example:
-        # "amago.nets.traj_encoders.TformerTrajEncoder.attention_type": amago.nets.transformer.VanillaAttention,
         "amago.nets.policy_dists.Discrete.clip_prob_high": 1.0,
         "amago.nets.policy_dists.Discrete.clip_prob_low": 1e-6,
     }
