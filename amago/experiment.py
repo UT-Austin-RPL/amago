@@ -187,11 +187,11 @@ class Experiment:
         """
         Manual initialization after __init__ to give time for gin configuration.
         """
+        self.init_dsets()
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             warnings.filterwarnings("always", category=utils.AmagoWarning)
             env_summary = self.init_envs()
-        self.init_dsets()
         self.init_dloaders()
         self.init_model()
         self.init_checkpoints()
@@ -301,8 +301,6 @@ class Experiment:
 
         # wrap environments to save trajectories to replay buffer
         shared_env_kwargs = dict(
-            dset_root=self.dset_root,
-            dset_name=self.dset_name,
             save_trajs_as=self.save_trajs_as,
             save_every_low=save_every_low,
             save_every_high=save_every_high,
@@ -311,7 +309,7 @@ class Experiment:
             EnvCreator(
                 make_env=env_func,
                 # save trajectories to disk
-                make_dset=True,
+                save_trajs_to=self.train_dset.save_new_trajs_to,
                 # adds exploration noise
                 exploration_wrapper_type=self.exploration_wrapper_type,
                 **shared_env_kwargs,
@@ -322,7 +320,7 @@ class Experiment:
             EnvCreator(
                 make_env=env_func,
                 # do not save trajectories to disk
-                make_dset=False,
+                save_trajs_to=None,
                 # no exploration noise
                 exploration_wrapper_type=None,
                 **shared_env_kwargs,

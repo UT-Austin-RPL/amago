@@ -75,6 +75,11 @@ class RLDataset(ABC, Dataset):
         return self.items_per_epoch
 
     @property
+    @abstractmethod
+    def save_new_trajs_to(self) -> Optional[str]:
+        raise NotImplementedError
+
+    @property
     def ready_for_training(self) -> bool:
         return True
 
@@ -189,8 +194,6 @@ class DiskTrajDataset(RLDataset):
             padded_sampling=padded_sampling,
         )
         self.relabeler = relabeler
-
-        assert dset_root is not None and os.path.exists(dset_root)
         # create two directories for the FIFO and protected buffers
         self.fifo_path = get_path_to_trajs(dset_root, dset_name, fifo=True)
         self.protected_path = get_path_to_trajs(dset_root, dset_name, fifo=False)
@@ -198,6 +201,10 @@ class DiskTrajDataset(RLDataset):
         os.makedirs(self.protected_path, exist_ok=True)
         self.max_size = max_size
         self._refresh_files()
+
+    @property
+    def save_new_trajs_to(self) -> Optional[str]:
+        return self.fifo_path
 
     @property
     def disk_usage(self):
