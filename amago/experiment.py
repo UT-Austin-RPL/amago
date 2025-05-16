@@ -29,7 +29,7 @@ from .envs.exploration import (
 from .envs import SequenceWrapper, ReturnHistory, SpecialMetricHistory, EnvCreator
 from .loading import (
     Batch,
-    TrajDset,
+    DiskTrajDataset,
     RLData_pad_collate,
     MAGIC_PAD_VAL,
 )
@@ -233,13 +233,8 @@ class Experiment:
             \t Environment:
             \t\t {env_summary}
             \t\t Exploration Type: {expl_str}
-            \t Replay Buffer:
-            \t\t Buffer Path: {os.path.join(self.dset_root, self.dset_name, "buffer")}
-            \t\t FIFO Buffer Max Size: {self.dset_max_size}
-            \t\t FIFO Buffer Initial Size: {self.train_dset.count_deletable_trajectories()}
-            \t\t Protected Buffer Initial Size: {self.train_dset.count_protected_trajectories()}
-            \t\t Trajectory File Max Sequence Length: {self.traj_save_len}
-            \t\t Trajectory Padded Sampling: {self.padded_sampling}
+            \t Dataset:
+            \t\t{self.train_dset.get_description()}
             \t Accelerate Processes: {self.accelerator.num_processes} \n\n"""
         )
 
@@ -380,7 +375,9 @@ class Experiment:
         `resume_training_state = False` only loads the policy weights.
         """
         if not resume_training_state:
-            path = os.path.join(self.ckpt_dir, "policy_weights", f"policy_epoch_{epoch}.pt")
+            path = os.path.join(
+                self.ckpt_dir, "policy_weights", f"policy_epoch_{epoch}.pt"
+            )
             self.load_checkpoint_from_path(path, is_accelerate_state=False)
         else:
             ckpt_name = f"{self.run_name}_epoch_{epoch}"
@@ -434,13 +431,13 @@ class Experiment:
         Clear the replay buffer from disk (mainly for `examples/`).
         """
         if self.accelerator.is_main_process:
-            self.train_dset.clear(delete_protected=delete_protected)
+            self.train_dset.delete(delete_protected=delete_protected)
 
     def init_dsets(self):
         """
         Create a pytorch dataset to load trajectories from disk.
         """
-        self.train_dset = TrajDset(
+        self.train_dset = DiskTrajDataset(
             relabeler=self.relabel_type(),
             dset_root=self.dset_root,
             dset_name=self.dset_name,
@@ -448,6 +445,7 @@ class Experiment:
             * self.batch_size
             * self.accelerator.num_processes,
             max_seq_len=self.max_seq_len,
+            max_size=self.dset_max_size,
             padded_sampling=self.padded_sampling,
         )
         return self.train_dset
@@ -880,7 +878,7 @@ class Experiment:
                 if log_step:
                     l.update(
                         {
-                            "Learning Rate" : self.lr_schedule.get_last_lr()[0],
+                            "Learning Rate": self.lr_schedule.get_last_lr()[0],
                             "Batch Size (in Timesteps)": l["mask"].numel(),
                             "Unmasked Batch Size (in Timesteps)": l["mask"].sum(),
                         }
@@ -895,36 +893,6 @@ class Experiment:
             return torch.autocast(device_type="cuda")
         else:
             return contextlib.suppress()
-
-    def manage_replay_buffer(self):
-        """
-        Find new trajectory files saved to disk and delete old ones to imitate a fixed-size replay buffer.
-        Also logs buffer stats to wandb.
-        """
-        self.train_dset.refresh_files()
-        if not self.has_replay_buffer_rights:
-            return
-        old_size = self.train_dset.count_trajectories()
-        self.accelerator.wait_for_everyone()
-        if self.accelerator.is_main_process:
-            # the main process edits its file list during the filter but this is currently
-            # wasted effort because the other processes don't see the changes...
-            self.train_dset.filter(new_size=self.dset_max_size)
-        self.accelerator.wait_for_everyone()
-        self.train_dset.refresh_files()  # ... so check the current files again
-        dset_size = self.train_dset.count_trajectories()
-        fifo_size = self.train_dset.count_deletable_trajectories()
-        protected_size = self.train_dset.count_protected_trajectories()
-        self.log(
-            {
-                "Trajectory Files Saved in FIFO Replay Buffer": fifo_size,
-                "Trajectory Files Saved in Protected Replay Buffer": protected_size,
-                "Total Trajectory Files in Replay Buffer": dset_size,
-                "Trajectory Files Deleted": old_size - dset_size,
-                "Buffer Disk Space (GB)": self.train_dset.disk_usage,
-            },
-            key="buffer",
-        )
 
     def learn(self):
         """
@@ -962,9 +930,13 @@ class Experiment:
                 self.collect_new_training_data()
             self.accelerator.wait_for_everyone()
 
-            self.manage_replay_buffer()
+            buffer_log = self.train_dset.on_end_of_epoch(
+                has_edit_rights=self.has_replay_buffer_rights,
+                accelerator=self.accelerator,
+            )
+            self.log(buffer_log, key="buffer")
             self.init_dloaders()
-            if self.train_dset.count_trajectories() == 0:
+            if not self.train_dset.ready_for_training:
                 utils.amago_warning(
                     f"Skipping epoch {epoch} because no training trajectories have been saved yet..."
                 )
