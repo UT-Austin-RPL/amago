@@ -13,6 +13,7 @@ from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import Dataset
 import numpy as np
 from accelerate import Accelerator
+import gin
 
 from .hindsight import Trajectory, Relabeler, FrozenTraj
 
@@ -60,18 +61,24 @@ class RLData:
 
 
 class RLDataset(ABC, Dataset):
-    def __init__(
-        self,
-        items_per_epoch: int,
-        max_seq_len: Optional[int] = None,
-        padded_sampling: str = "none",
-    ):
-        self.items_per_epoch = items_per_epoch
-        self.max_seq_len = max_seq_len
-        assert padded_sampling in ["none", "right", "left", "both"]
-        self.padded_sampling = padded_sampling
+    def __init__(self):
+        self.experiment = None
+
+    def configure_from_experiment(self, experiment):
+        self.experiment = experiment
+        self.items_per_epoch = (
+            experiment.train_batches_per_epoch
+            * experiment.batch_size
+            * experiment.accelerator.num_processes
+        )
+        self.max_seq_len = experiment.max_seq_len
+        self.padded_sampling = experiment.padded_sampling
+        self.max_size = experiment.dset_max_size
+        self.has_edit_rights = experiment.has_dset_edit_rights
 
     def __len__(self):
+        if self.experiment is None:
+            raise ValueError("Dataset not configured")
         return self.items_per_epoch
 
     @property
@@ -81,12 +88,10 @@ class RLDataset(ABC, Dataset):
 
     @property
     def ready_for_training(self) -> bool:
-        return True
+        return self.experiment is not None
 
-    def on_end_of_epoch(
-        self, has_edit_rights: bool, accelerator: Accelerator
-    ) -> dict[str, Any]:
-        pass
+    def on_end_of_epoch(self, epoch: int) -> dict[str, Any]:
+        return {}
 
     def delete(self, delete_protected: bool = False):
         pass
@@ -100,6 +105,8 @@ class RLDataset(ABC, Dataset):
         raise NotImplementedError
 
     def __getitem__(self, i):
+        if self.experiment is None:
+            raise ValueError("Dataset not configured")
         data = self.sample_random_trajectory()
         if self.max_seq_len is not None:
             data = data.random_slice(
@@ -173,6 +180,7 @@ def get_path_to_trajs(dset_root: str, dset_name: str, fifo: bool) -> str:
     return os.path.join(dset_root, dset_name, "buffer", "fifo" if fifo else "protected")
 
 
+@gin.configurable
 class DiskTrajDataset(RLDataset):
     """
     Load trajectory files saved from the AMAGOEnvs (the default in most cases)
@@ -180,26 +188,17 @@ class DiskTrajDataset(RLDataset):
 
     def __init__(
         self,
-        relabeler: Relabeler,
         dset_root: str,
         dset_name: str,
-        max_size: int,
-        items_per_epoch: Optional[int] = None,
-        max_seq_len: Optional[int] = None,
-        padded_sampling: str = "none",
+        relabeler: Optional[Relabeler] = None,
     ):
-        super().__init__(
-            items_per_epoch=items_per_epoch,
-            max_seq_len=max_seq_len,
-            padded_sampling=padded_sampling,
-        )
-        self.relabeler = relabeler
+        super().__init__()
+        self.relabeler = Relabeler() if relabeler is None else relabeler
         # create two directories for the FIFO and protected buffers
         self.fifo_path = get_path_to_trajs(dset_root, dset_name, fifo=True)
         self.protected_path = get_path_to_trajs(dset_root, dset_name, fifo=False)
         os.makedirs(self.fifo_path, exist_ok=True)
         os.makedirs(self.protected_path, exist_ok=True)
-        self.max_size = max_size
         self._refresh_files()
 
     @property
@@ -207,15 +206,17 @@ class DiskTrajDataset(RLDataset):
         return self.fifo_path
 
     @property
-    def disk_usage(self):
+    def _disk_usage(self):
         bytes = sum(os.path.getsize(f) for f in self.all_filenames)
         return bytes * 1e-9
 
     @property
     def ready_for_training(self) -> bool:
-        return len(self.all_filenames) > 0
+        return super().ready_for_training and len(self.all_filenames) > 0
 
     def delete(self, delete_protected: bool = False):
+        if self.experiment is None:
+            raise ValueError("Dataset not configured")
         # remove files on disk
         if os.path.exists(self.fifo_path):
             shutil.rmtree(self.fifo_path)
@@ -277,6 +278,8 @@ class DiskTrajDataset(RLDataset):
         self.all_filenames = list(self.fifo_filenames | self.protected_filenames)
 
     def get_description(self) -> str:
+        if self.experiment is None:
+            raise ValueError("Dataset not configured")
         return f"""DiskTrajDataset
         \t\t FIFO Buffer Path: {self.fifo_path}
         \t\t Protected Buffer Path: {self.protected_path}
@@ -287,15 +290,17 @@ class DiskTrajDataset(RLDataset):
         \t\t Trajectory Padded Sampling: {self.padded_sampling}
         """
 
-    def on_end_of_epoch(self, has_edit_rights: bool, accelerator: Accelerator):
+    def on_end_of_epoch(self, epoch: int) -> dict[str, Any]:
+        if self.experiment is None:
+            raise ValueError("Dataset not configured")
         self._refresh_files()
-        if not has_edit_rights:
+        if not self.has_edit_rights:
             return
         old_size = self._count_trajectories()
-        accelerator.wait_for_everyone()
-        if accelerator.is_main_process:
+        self.experiment.accelerator.wait_for_everyone()
+        if self.experiment.accelerator.is_main_process:
             self._filter()
-        accelerator.wait_for_everyone()
+        self.experiment.accelerator.wait_for_everyone()
         self._refresh_files()
         dset_size = self._count_trajectories()
         fifo_size = self._count_deletable_trajectories()
@@ -305,10 +310,12 @@ class DiskTrajDataset(RLDataset):
             "Trajectory Files Saved in Protected Replay Buffer": protected_size,
             "Total Trajectory Files in Replay Buffer": dset_size,
             "Trajectory Files Deleted": old_size - dset_size,
-            "Buffer Disk Space (GB)": self.disk_usage,
+            "Buffer Disk Space (GB)": self._disk_usage,
         }
 
     def sample_random_trajectory(self) -> RLData:
+        if self.experiment is None:
+            raise ValueError("Dataset not configured")
         filename = random.choice(self.all_filenames)
         traj = load_traj_from_disk(filename)
         traj = self.relabeler(traj)

@@ -29,6 +29,7 @@ from .envs.exploration import (
 from .envs import SequenceWrapper, ReturnHistory, SpecialMetricHistory, EnvCreator
 from .loading import (
     Batch,
+    RLDataset,
     DiskTrajDataset,
     RLData_pad_collate,
     MAGIC_PAD_VAL,
@@ -46,10 +47,13 @@ class Experiment:
     #############
     # the name of the experiment. used to create a directory in `dset_root` to store checkpoints and logs. used for logging to wandb.
     run_name: str
+    ckpt_base_dir: str
     # the most important hyperparameter: the maximum sequence length that the model will be trained on.
     max_seq_len: int
     # trajectories are saved to disk on `terminated or truncated` or after this many steps have passed since the last save (whichever comes first)
     traj_save_len: int
+    # dataset for loading training sequences
+    dataset: RLDataset
     # TstepEncoder is created by calling this with default kwargs (use gin)
     tstep_encoder_type: type[TstepEncoder]
     # TrajEncoder is created by calling this with default kwargs (use gin)
@@ -98,16 +102,10 @@ class Experiment:
     ############
     ## Replay ##
     ############
-    # path to the root directory where your datasets (and checkpoints) are stored
-    dset_root: str = None
-    # stores all the trajectories in `dset_root/dset_name/buffer`. You can use this to reuse the same dataset across multiple experiments.
-    dset_name: str = None
     # turn this off for collect-only runs where we need to assume the replay buffer is being managed by another learner process.
-    has_replay_buffer_rights: bool = True
+    has_dset_edit_rights: bool = True
     # maximum number of .traj files to keep in the replay buffer before we start deleting the oldest files
     dset_max_size: int = 15_000
-    # an object that can edit trajectory data before it is sent to the agent. useful for hindsight relabeling (temporarily removed) and data augmentation.
-    relabel_type: type[Relabeler] = Relabeler
     # randomizes trajectory file lengths when saving snippets from a much longer rollout. please refer to a longer explanation in `amago.Experiment.init_envs`.
     stagger_traj_file_lengths: bool = True
     # how to save trajectory .traj files. three options:
@@ -234,7 +232,7 @@ class Experiment:
             \t\t {env_summary}
             \t\t Exploration Type: {expl_str}
             \t Dataset:
-            \t\t{self.train_dset.get_description()}
+            \t\t{self.dataset.get_description()}
             \t Accelerate Processes: {self.accelerator.num_processes} \n\n"""
         )
 
@@ -309,7 +307,7 @@ class Experiment:
             EnvCreator(
                 make_env=env_func,
                 # save trajectories to disk
-                save_trajs_to=self.train_dset.save_new_trajs_to,
+                save_trajs_to=self.dataset.save_new_trajs_to,
                 # adds exploration noise
                 exploration_wrapper_type=self.exploration_wrapper_type,
                 **shared_env_kwargs,
@@ -347,12 +345,11 @@ class Experiment:
         """
         Create ckpts/training_states and ckpts/policy_weights dirs
         """
-        self.ckpt_dir = os.path.join(
-            self.dset_root, self.dset_name, self.run_name, "ckpts"
-        )
+        self.ckpt_dir = os.path.join(self.ckpt_base_dir, self.run_name, "ckpts")
         os.makedirs(self.ckpt_dir, exist_ok=True)
         os.makedirs(os.path.join(self.ckpt_dir, "training_states"), exist_ok=True)
         os.makedirs(os.path.join(self.ckpt_dir, "policy_weights"), exist_ok=True)
+        os.makedirs(os.path.join(self.ckpt_dir, "latest"), exist_ok=True)
         self.epoch = 0
 
     def load_checkpoint_from_path(self, path: str, is_accelerate_state: bool = True):
@@ -405,18 +402,14 @@ class Experiment:
         """
         Write absolute latest policy to a hardcoded location used by `read_latest_policy`
         """
-        ckpt_name = os.path.join(
-            self.dset_root, self.dset_name, self.run_name, "policy.pt"
-        )
+        ckpt_name = os.path.join(self.ckpt_dir, "latest", "policy.pt")
         torch.save(self.policy.state_dict(), ckpt_name)
 
     def read_latest_policy(self):
         """
         Read the latest policy -- used to communicate weight updates between learning/collecting processes
         """
-        ckpt_name = os.path.join(
-            self.dset_root, self.dset_name, self.run_name, "policy.pt"
-        )
+        ckpt_name = os.path.join(self.ckpt_dir, "latest", "policy.pt")
         ckpt = utils.retry_load_checkpoint(ckpt_name, map_location=self.DEVICE)
         if ckpt is not None:
             self.accelerator.print("Loading latest policy....")
@@ -429,31 +422,21 @@ class Experiment:
         Clear the replay buffer from disk (mainly for `examples/`).
         """
         if self.accelerator.is_main_process:
-            self.train_dset.delete(delete_protected=delete_protected)
+            self.dataset.delete(delete_protected=delete_protected)
 
     def init_dsets(self):
         """
-        Create a pytorch dataset to load trajectories from disk.
+        Update the experiment to use important info configured by the experiment.
         """
-        self.train_dset = DiskTrajDataset(
-            relabeler=self.relabel_type(),
-            dset_root=self.dset_root,
-            dset_name=self.dset_name,
-            items_per_epoch=self.train_batches_per_epoch
-            * self.batch_size
-            * self.accelerator.num_processes,
-            max_seq_len=self.max_seq_len,
-            max_size=self.dset_max_size,
-            padded_sampling=self.padded_sampling,
-        )
-        return self.train_dset
+        self.dataset.configure_from_experiment(self)
+        return self.dataset
 
     def init_dloaders(self):
         """
         Create pytorch dataloaders to batch trajectories in parallel.
         """
         train_dloader = DataLoader(
-            self.train_dset,
+            self.dataset,
             batch_size=self.batch_size,
             num_workers=self.dloader_workers,
             collate_fn=RLData_pad_collate,
@@ -467,15 +450,13 @@ class Experiment:
         Configure log dir and wandb compatibility.
         """
         gin_config = gin.operative_config_str()
-        config_path = os.path.join(
-            self.dset_root, self.dset_name, self.run_name, "config.txt"
-        )
+        config_path = os.path.join(self.ckpt_dir, "config.txt")
         with open(config_path, "w") as f:
             f.write(gin_config)
         if self.log_to_wandb:
             # records the gin config on the wandb dashboard
             gin_as_wandb = utils.gin_as_wandb_config()
-            log_dir = os.path.join(self.dset_root, "wandb_logs")
+            log_dir = os.path.join(self.ckpt_dir, "wandb_logs")
             os.makedirs(log_dir, exist_ok=True)
             self.accelerator.init_trackers(
                 project_name=self.wandb_project,
@@ -928,13 +909,10 @@ class Experiment:
                 self.collect_new_training_data()
             self.accelerator.wait_for_everyone()
 
-            buffer_log = self.train_dset.on_end_of_epoch(
-                has_edit_rights=self.has_replay_buffer_rights,
-                accelerator=self.accelerator,
-            )
+            buffer_log = self.dataset.on_end_of_epoch(epoch)
             self.log(buffer_log, key="buffer")
             self.init_dloaders()
-            if not self.train_dset.ready_for_training:
+            if not self.dataset.ready_for_training:
                 utils.amago_warning(
                     f"Skipping epoch {epoch} because no training trajectories have been saved yet..."
                 )
