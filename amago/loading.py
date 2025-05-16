@@ -76,9 +76,14 @@ class RLDataset(ABC, Dataset):
         self.max_size = experiment.dset_max_size
         self.has_edit_rights = experiment.has_dset_edit_rights
 
-    def __len__(self):
+    def check_configured(self):
         if self.experiment is None:
-            raise ValueError("Dataset not configured")
+            raise ValueError(
+                "Dataset not configured. Call `configure_from_experiment()` first."
+            )
+
+    def __len__(self):
+        self.check_configured()
         return self.items_per_epoch
 
     @property
@@ -105,8 +110,7 @@ class RLDataset(ABC, Dataset):
         raise NotImplementedError
 
     def __getitem__(self, i):
-        if self.experiment is None:
-            raise ValueError("Dataset not configured")
+        self.check_configured()
         data = self.sample_random_trajectory()
         if self.max_seq_len is not None:
             data = data.random_slice(
@@ -215,8 +219,7 @@ class DiskTrajDataset(RLDataset):
         return super().ready_for_training and len(self.all_filenames) > 0
 
     def delete(self, delete_protected: bool = False):
-        if self.experiment is None:
-            raise ValueError("Dataset not configured")
+        self.check_configured()
         # remove files on disk
         if os.path.exists(self.fifo_path):
             shutil.rmtree(self.fifo_path)
@@ -278,8 +281,7 @@ class DiskTrajDataset(RLDataset):
         self.all_filenames = list(self.fifo_filenames | self.protected_filenames)
 
     def get_description(self) -> str:
-        if self.experiment is None:
-            raise ValueError("Dataset not configured")
+        self.check_configured()
         return f"""DiskTrajDataset
         \t\t FIFO Buffer Path: {self.fifo_path}
         \t\t Protected Buffer Path: {self.protected_path}
@@ -291,8 +293,6 @@ class DiskTrajDataset(RLDataset):
         """
 
     def on_end_of_epoch(self, epoch: int) -> dict[str, Any]:
-        if self.experiment is None:
-            raise ValueError("Dataset not configured")
         self._refresh_files()
         if not self.has_edit_rights:
             return
@@ -314,8 +314,7 @@ class DiskTrajDataset(RLDataset):
         }
 
     def sample_random_trajectory(self) -> RLData:
-        if self.experiment is None:
-            raise ValueError("Dataset not configured")
+        self.check_configured()
         filename = random.choice(self.all_filenames)
         traj = load_traj_from_disk(filename)
         traj = self.relabeler(traj)
