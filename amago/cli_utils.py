@@ -5,6 +5,7 @@ import gin
 
 import amago
 from amago import TrajEncoder, TstepEncoder, Agent
+from amago.loading import DiskTrajDataset
 from amago.envs.exploration import (
     ExplorationWrapper,
     EpsilonGreedy,
@@ -278,10 +279,21 @@ def create_experiment_from_cli(
 ):
     cli = command_line_args
 
+    # TODO: temporary -- create a new-style dataset in the place
+    # where all the existing examples assume the dataset will be
+    # until i can take the time to go through every example again.
+    dset = DiskTrajDataset(
+        dset_root=cli.buffer_dir,
+        dset_name=run_name,
+    )
+
     experiment = experiment_type(
         agent_type=agent_type,
         tstep_encoder_type=tstep_encoder_type,
         traj_encoder_type=traj_encoder_type,
+        dataset=dset,
+        # TODO: temporary -- remove this once exmaples are updated
+        ckpt_base_dir=cli.buffer_dir,
         make_train_env=make_train_env,
         make_val_env=make_val_env,
         max_seq_len=max_seq_len,
@@ -289,8 +301,6 @@ def create_experiment_from_cli(
         exploration_wrapper_type=exploration_wrapper_type,
         dset_max_size=cli.dset_max_size,
         run_name=run_name,
-        dset_name=run_name,
-        dset_root=cli.buffer_dir,
         dloader_workers=cli.dloader_workers,
         log_to_wandb=not cli.no_log,
         wandb_group_name=group_name,
@@ -319,7 +329,7 @@ def make_experiment_learn_only(experiment: amago.Experiment) -> amago.Experiment
     experiment.parallel_actors = 1
     experiment.always_save_latest = True
     experiment.always_load_latest = False
-    experiment.has_replay_buffer_rights = True
+    experiment.has_dset_edit_editss = True
     return experiment
 
 
@@ -333,7 +343,7 @@ def make_experiment_collect_only(experiment: amago.Experiment) -> amago.Experime
     # run "forever"; terminate manually (when learning process is done)
     experiment.epochs = max(experiment.epochs, 1_000_000)
     # do not delete anything from the collection process
-    experiment.has_replay_buffer_rights = False
+    experiment.has_dset_edit_editss = False
     return experiment
 
 
