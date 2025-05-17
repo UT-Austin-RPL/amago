@@ -12,7 +12,6 @@ import torch
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import Dataset
 import numpy as np
-from accelerate import Accelerator
 import gin
 
 from .hindsight import Trajectory, Relabeler, FrozenTraj
@@ -58,6 +57,51 @@ class RLData:
         self.rews = self.rews[tc]
         self.actions = self.actions[tc]
         return self
+
+
+MAGIC_PAD_VAL = 4.0
+pad = partial(pad_sequence, batch_first=True, padding_value=MAGIC_PAD_VAL)
+
+
+@dataclass
+class Batch:
+    """
+    Keeps data organized during training step
+    """
+
+    obs: dict[torch.Tensor]
+    rl2s: torch.Tensor
+    rews: torch.Tensor
+    dones: torch.Tensor
+    actions: torch.Tensor
+    time_idxs: torch.Tensor
+
+    def to(self, device):
+        self.obs = {k: v.to(device) for k, v in self.obs.items()}
+        self.rl2s = self.rl2s.to(device)
+        self.rews = self.rews.to(device)
+        self.dones = self.dones.to(device)
+        self.actions = self.actions.to(device)
+        self.time_idxs = self.time_idxs.to(device)
+        return self
+
+
+def RLData_pad_collate(samples: list[RLData]) -> Batch:
+    assert samples[0].obs.keys() == samples[-1].obs.keys()
+    obs = {k: pad([s.obs[k] for s in samples]) for k in samples[0].obs.keys()}
+    rl2s = pad([s.rl2s for s in samples])
+    rews = pad([s.rews for s in samples])
+    dones = pad([s.dones for s in samples])
+    actions = pad([s.actions for s in samples])
+    time_idxs = pad([s.time_idxs for s in samples])
+    return Batch(
+        obs=obs,
+        rl2s=rl2s,
+        rews=rews,
+        dones=dones,
+        actions=actions,
+        time_idxs=time_idxs,
+    )
 
 
 class RLDataset(ABC, Dataset):
@@ -117,51 +161,6 @@ class RLDataset(ABC, Dataset):
                 length=self.max_seq_len, padded_sampling=self.padded_sampling
             )
         return data
-
-
-MAGIC_PAD_VAL = 4.0
-pad = partial(pad_sequence, batch_first=True, padding_value=MAGIC_PAD_VAL)
-
-
-@dataclass
-class Batch:
-    """
-    Keeps data organized during training step
-    """
-
-    obs: dict[torch.Tensor]
-    rl2s: torch.Tensor
-    rews: torch.Tensor
-    dones: torch.Tensor
-    actions: torch.Tensor
-    time_idxs: torch.Tensor
-
-    def to(self, device):
-        self.obs = {k: v.to(device) for k, v in self.obs.items()}
-        self.rl2s = self.rl2s.to(device)
-        self.rews = self.rews.to(device)
-        self.dones = self.dones.to(device)
-        self.actions = self.actions.to(device)
-        self.time_idxs = self.time_idxs.to(device)
-        return self
-
-
-def RLData_pad_collate(samples: list[RLData]) -> Batch:
-    assert samples[0].obs.keys() == samples[-1].obs.keys()
-    obs = {k: pad([s.obs[k] for s in samples]) for k in samples[0].obs.keys()}
-    rl2s = pad([s.rl2s for s in samples])
-    rews = pad([s.rews for s in samples])
-    dones = pad([s.dones for s in samples])
-    actions = pad([s.actions for s in samples])
-    time_idxs = pad([s.time_idxs for s in samples])
-    return Batch(
-        obs=obs,
-        rl2s=rl2s,
-        rews=rews,
-        dones=dones,
-        actions=actions,
-        time_idxs=time_idxs,
-    )
 
 
 def load_traj_from_disk(path: str) -> Trajectory | FrozenTraj:

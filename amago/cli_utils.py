@@ -5,7 +5,7 @@ import gin
 
 import amago
 from amago import TrajEncoder, TstepEncoder, Agent
-from amago.loading import DiskTrajDataset
+from amago.loading import DiskTrajDataset, RLDataset
 from amago.envs.exploration import (
     ExplorationWrapper,
     EpsilonGreedy,
@@ -275,17 +275,21 @@ def create_experiment_from_cli(
     traj_encoder_type: type[TrajEncoder],
     exploration_wrapper_type: type[ExplorationWrapper] = EpsilonGreedy,
     experiment_type=amago.Experiment,
+    dataset: Optional[RLDataset] = None,
     **extra_experiment_kwargs,
 ):
     cli = command_line_args
 
-    # TODO: temporary -- create a new-style dataset in the place
-    # where all the existing examples assume the dataset will be
-    # until i can take the time to go through every example again.
-    dset = DiskTrajDataset(
-        dset_root=cli.buffer_dir,
-        dset_name=run_name,
-    )
+    if dataset is None:
+        # create a new-style dataset in the place
+        # where all the existing examples assume the dataset will be
+        # until i can take the time to go through every example again.
+        dset = DiskTrajDataset(
+            dset_root=cli.buffer_dir,
+            dset_name=run_name,
+        )
+    else:
+        dset = dataset
 
     experiment = experiment_type(
         agent_type=agent_type,
@@ -329,7 +333,7 @@ def make_experiment_learn_only(experiment: amago.Experiment) -> amago.Experiment
     experiment.parallel_actors = 1
     experiment.always_save_latest = True
     experiment.always_load_latest = False
-    experiment.has_dset_edit_editss = True
+    experiment.has_dset_edit_rights = True
     return experiment
 
 
@@ -343,7 +347,7 @@ def make_experiment_collect_only(experiment: amago.Experiment) -> amago.Experime
     # run "forever"; terminate manually (when learning process is done)
     experiment.epochs = max(experiment.epochs, 1_000_000)
     # do not delete anything from the collection process
-    experiment.has_dset_edit_editss = False
+    experiment.has_dset_edit_rights = False
     return experiment
 
 

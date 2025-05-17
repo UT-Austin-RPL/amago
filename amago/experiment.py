@@ -391,7 +391,7 @@ class Experiment:
         )
         if self.accelerator.is_main_process:
             # create backup of raw weights unrelated to the more complex process of resuming an accelerate state
-            weights_only = torch.save(
+            torch.save(
                 self.policy.state_dict(),
                 os.path.join(
                     self.ckpt_dir, "policy_weights", f"policy_epoch_{self.epoch}.pt"
