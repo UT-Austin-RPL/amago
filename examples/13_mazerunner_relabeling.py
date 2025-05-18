@@ -32,6 +32,7 @@ import numpy as np
 import amago
 from amago.envs.builtin.mazerunner import MazeRunnerAMAGOEnv
 from amago.hindsight import Relabeler, FrozenTraj
+from amago.loading import DiskTrajDataset
 from amago.cli_utils import *
 
 
@@ -90,6 +91,7 @@ class HindsightInstructionReplay(Relabeler):
 
         var names are references to pseudocode in AMAGO Appendix B Alg 1 (arXiv page 20)
         """
+        breakpoint()
         if self.strategy == "none":
             del traj.obs["achieved"]
             return traj
@@ -218,6 +220,17 @@ if __name__ == "__main__":
     group_name = args.run_name
     for trial in range(args.trials):
         run_name = group_name + f"_trial_{trial}"
+
+        dataset = DiskTrajDataset(
+            dset_root=args.buffer_dir,
+            dset_name=run_name,
+            dset_max_size=args.dset_max_size,
+            relabeler=HindsightInstructionReplay(
+                num_goals=args.goals,
+                strategy=args.relabel,
+            ),
+        )
+
         experiment = create_experiment_from_cli(
             args,
             make_train_env=make_train_env,
@@ -227,12 +240,9 @@ if __name__ == "__main__":
             # make sure the entire trajectory is contained in one file that will be sent to the relabeler
             traj_save_len=args.time_limit + 1,
             stagger_traj_file_lengths=False,
-            # the default Relabeler does nothing. Here we replace it with the custom one above
-            relabel_type=partial(
-                HindsightInstructionReplay,
-                num_goals=args.goals,
-                strategy=args.relabel,
-            ),
+            # provide the dataset explicitly to use our relabeler instead of the default.
+            # create_experiment_from_cli creates the default dataset otherwise.
+            dataset=dataset,
             run_name=run_name,
             tstep_encoder_type=tstep_encoder_type,
             traj_encoder_type=traj_encoder_type,
