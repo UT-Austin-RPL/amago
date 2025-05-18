@@ -5,6 +5,7 @@ import gin
 
 import amago
 from amago import TrajEncoder, TstepEncoder, Agent
+from amago.loading import DiskTrajDataset, RLDataset
 from amago.envs.exploration import (
     ExplorationWrapper,
     EpsilonGreedy,
@@ -266,31 +267,44 @@ def create_experiment_from_cli(
     make_train_env: callable,
     make_val_env: callable,
     max_seq_len: int,
-    traj_save_len: int,
     group_name: str,
     run_name: str,
     agent_type: type[Agent],
     tstep_encoder_type: type[TstepEncoder],
     traj_encoder_type: type[TrajEncoder],
+    traj_save_len: Optional[int] = None,
     exploration_wrapper_type: type[ExplorationWrapper] = EpsilonGreedy,
     experiment_type=amago.Experiment,
+    dataset: Optional[RLDataset] = None,
     **extra_experiment_kwargs,
 ):
     cli = command_line_args
+
+    traj_save_len = traj_save_len or 1e10
+
+    if dataset is None:
+        # create a new-style dataset in the place
+        # where all the existing examples assume the dataset will be
+        dset = DiskTrajDataset(
+            dset_root=cli.buffer_dir,
+            dset_name=run_name,
+            dset_max_size=cli.dset_max_size,
+        )
+    else:
+        dset = dataset
 
     experiment = experiment_type(
         agent_type=agent_type,
         tstep_encoder_type=tstep_encoder_type,
         traj_encoder_type=traj_encoder_type,
+        dataset=dset,
+        ckpt_base_dir=cli.buffer_dir,
         make_train_env=make_train_env,
         make_val_env=make_val_env,
         max_seq_len=max_seq_len,
         traj_save_len=traj_save_len,
         exploration_wrapper_type=exploration_wrapper_type,
-        dset_max_size=cli.dset_max_size,
         run_name=run_name,
-        dset_name=run_name,
-        dset_root=cli.buffer_dir,
         dloader_workers=cli.dloader_workers,
         log_to_wandb=not cli.no_log,
         wandb_group_name=group_name,
@@ -319,7 +333,7 @@ def make_experiment_learn_only(experiment: amago.Experiment) -> amago.Experiment
     experiment.parallel_actors = 1
     experiment.always_save_latest = True
     experiment.always_load_latest = False
-    experiment.has_replay_buffer_rights = True
+    experiment.has_dset_edit_rights = True
     return experiment
 
 
@@ -333,7 +347,7 @@ def make_experiment_collect_only(experiment: amago.Experiment) -> amago.Experime
     # run "forever"; terminate manually (when learning process is done)
     experiment.epochs = max(experiment.epochs, 1_000_000)
     # do not delete anything from the collection process
-    experiment.has_replay_buffer_rights = False
+    experiment.has_dset_edit_rights = False
     return experiment
 
 

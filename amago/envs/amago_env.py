@@ -24,6 +24,15 @@ from amago.loading import get_path_to_trajs
 
 
 class AMAGOEnv(gym.Wrapper):
+    """
+    A wrapper that connects `gymnasium` envs to the `Experiment`
+
+    Args:
+        env: The gymnasium env to wrap. Wraps the action space to [-1, 1] if continuous control.
+        env_name: The name of the environment. Used for logging metrics.
+        batched_envs: Alert the `Experiment` that this env is vectorized with a batch dimension like (batched_envs, ...)
+    """
+
     def __init__(
         self, env: gym.Env, env_name: Optional[str] = None, batched_envs: int = 1
     ):
@@ -191,29 +200,17 @@ class SequenceWrapper(gym.Wrapper):
     def __init__(
         self,
         env: gym.Env,
+        save_trajs_to: Optional[str],
         save_every: Optional[tuple[int, int]] = None,
-        make_dset: bool = False,
-        dset_root: str = None,
-        dset_name: str = None,
         save_trajs_as: str = "npz",
-        save_to_protected: bool = False,
     ):
         super().__init__(env)
 
         self.batched_envs = env.batched_envs
-        self.make_dset = make_dset
-        if make_dset:
-            assert dset_root is not None
-            assert dset_name is not None
-            self.dset_write_dir = get_path_to_trajs(
-                dset_root, dset_name, fifo=not save_to_protected
-            )
-            if not os.path.exists(self.dset_write_dir):
-                os.makedirs(self.dset_write_dir)
-        else:
-            self.dset_write_dir = None
-        self.dset_root = dset_root
-        self.dset_name = dset_name
+        self.dset_write_dir = save_trajs_to
+        self.saving = self.dset_write_dir is not None
+        if self.saving:
+            os.makedirs(self.dset_write_dir, exist_ok=True)
         self.save_every = save_every
         self.save_trajs_as = save_trajs_as
         self._total_frames = 0
@@ -312,7 +309,7 @@ class SequenceWrapper(gym.Wrapper):
         )
 
     def finish_active_traj(self, idx: int, new_init_timestep: Timestep):
-        if self.make_dset:
+        if self.saving:
             # environment name, a random id, and a timestamp .traj
             traj_name = f"{self.env.env_name.strip().replace('_', '')}_{uuid4().hex[:8]}_{time.time()}"
             path = os.path.join(self.dset_write_dir, traj_name)
@@ -348,11 +345,10 @@ class SequenceWrapper(gym.Wrapper):
 
 @dataclass
 class EnvCreator:
+    # utility that makes sure the parallel envs always work with AsyncVectorEnv
     make_env: Callable
     exploration_wrapper_type: Type[ExplorationWrapper]
-    make_dset: bool
-    dset_root: str
-    dset_name: str
+    save_trajs_to: Optional[str]
     save_every_low: int
     save_every_high: int
     save_trajs_as: str
@@ -369,9 +365,7 @@ class EnvCreator:
         env = SequenceWrapper(
             env,
             save_every=(self.save_every_low, self.save_every_high),
-            make_dset=self.make_dset,
-            dset_root=self.dset_root,
-            dset_name=self.dset_name,
+            save_trajs_to=self.save_trajs_to,
             save_trajs_as=self.save_trajs_as,
         )
         self.rl2_space = env.rl2_space

@@ -271,7 +271,7 @@ Off-policy learning makes it easy to relabel old sequence data with new rewards.
 
 ```
 @inproceedings{
-  grigsby2024amago,
+  grigsby2024amago2,
   title={{AMAGO}-2: Breaking the Multi-Task Barrier in Meta-Reinforcement Learning with Transformers},
   author={Jake Grigsby and Justin Sasek and Samyak Parajuli and Daniel Adebi and Amy Zhang and Yuke Zhu},
   booktitle={The Thirty-eighth Annual Conference on Neural Information Processing Systems},

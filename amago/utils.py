@@ -24,6 +24,7 @@ def amago_warning(msg: str, category=AmagoWarning):
     warnings.warn(colored(f"{msg}", "green"), category=category)
 
 
+@gin.configurable
 class AdamWRel(AdamW):
     """
     A variant of AdamW based on "Adam on Local Time: Addressing Nonstationarity
@@ -37,7 +38,7 @@ class AdamWRel(AdamW):
     def __init__(
         self,
         params,
-        reset_interval: int,
+        reset_interval: int = gin.REQUIRED,
         lr: float = 1e-3,
         betas: tuple[float] = (0.9, 0.999),
         eps: float = 1e-8,
@@ -123,6 +124,7 @@ def sum_over_accelerate(data: dict[str, int | float]):
 
 
 def masked_avg(tensor: torch.Tensor, mask: torch.Tensor):
+    mask = mask.float()
     return (tensor * mask).sum() / (mask.sum() + 1e-5)
 
 

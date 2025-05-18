@@ -5,175 +5,95 @@ import pickle
 from dataclasses import dataclass
 from operator import itemgetter
 from functools import partial
-from typing import Optional
+from typing import Optional, Any
+from abc import ABC, abstractmethod
 
 import torch
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import Dataset
 import numpy as np
+import gin
 
 from .hindsight import Trajectory, Relabeler, FrozenTraj
 
 
-def load_traj_from_disk(path: str) -> Trajectory | FrozenTraj:
-    _, ext = os.path.splitext(path)
-    if ext == ".traj":
-        with open(path, "rb") as f:
-            disk = pickle.load(f)
-        traj = Trajectory(timesteps=disk.timesteps)
-        return traj
-    elif ext == ".npz":
-        disk = FrozenTraj.from_dict(np.load(path))
-        return disk
-    else:
-        raise ValueError(
-            f"Unrecognized trajectory file extension `{ext}` for path `{path}`."
-        )
-
-
-def get_path_to_trajs(dset_root: str, dset_name: str, fifo: bool) -> str:
-    return os.path.join(dset_root, dset_name, "buffer", "fifo" if fifo else "protected")
-
-
-class TrajDset(Dataset):
-    """
-    Load trajectory files from disk in parallel with pytorch Dataset/DataLoader
-    pipeline.
-    """
-
-    def __init__(
-        self,
-        relabeler: Relabeler,
-        dset_root: str,
-        dset_name: str,
-        items_per_epoch: Optional[int] = None,
-        max_seq_len: Optional[int] = None,
-        padded_sampling: str = "none",
-    ):
-        assert dset_root is not None and os.path.exists(dset_root)
-        self.relabeler = relabeler
-        self.fifo_path = get_path_to_trajs(dset_root, dset_name, fifo=True)
-        self.protected_path = get_path_to_trajs(dset_root, dset_name, fifo=False)
-        os.makedirs(self.fifo_path, exist_ok=True)
-        os.makedirs(self.protected_path, exist_ok=True)
-        self.length = items_per_epoch
-        self.max_seq_len = max_seq_len
-        assert padded_sampling in ["none", "right", "left", "both"]
-        self.padded_sampling = padded_sampling
-        self.refresh_files()
-
-    def __len__(self):
-        # this length is used by DataLoaders to end an epoch
-        if self.length is None:
-            return self.count_trajectories()
-        else:
-            return self.length
-
-    @property
-    def disk_usage(self):
-        bytes = sum(os.path.getsize(f) for f in self.all_filenames)
-        return bytes * 1e-9
-
-    def clear(self, delete_protected: bool = False):
-        # remove files on disk
-        if os.path.exists(self.fifo_path):
-            shutil.rmtree(self.fifo_path)
-            self.fifo_filenames = set()
-        if os.path.exists(self.protected_path) and delete_protected:
-            shutil.rmtree(self.protected_path)
-            self.protected_filenames = set()
-        self.all_filenames = list(self.fifo_filenames | self.protected_filenames)
-
-    def _list_abs_path_to_files(self, dir: str):
-        names = []
-        for ext in [".traj", ".npz"]:
-            names.extend(
-                [os.path.join(dir, f) for f in os.listdir(dir) if f.endswith(ext)]
-            )
-        return set(names)
-
-    def refresh_files(self):
-        # find the new .traj files from the previous rollout
-        self.fifo_filenames = self._list_abs_path_to_files(self.fifo_path)
-        self.protected_filenames = self._list_abs_path_to_files(self.protected_path)
-        self.all_filenames = list(self.fifo_filenames | self.protected_filenames)
-
-    def count_trajectories(self) -> int:
-        return len(self.all_filenames)
-
-    def count_deletable_trajectories(self) -> int:
-        return len(self.fifo_filenames)
-
-    def count_protected_trajectories(self) -> int:
-        return len(self.protected_filenames)
-
-    def filter(self, new_size: int):
-        """
-        Imitates fixed-size FIFO replay buffers by clearing .traj files on disk in time order.
-        """
-        if len(self.fifo_filenames) <= new_size:
-            # skip the sort
-            return
-
-        path_to_name = lambda path: os.path.basename(os.path.splitext(path)[0])
-        traj_infos = []
-        for traj_filename in self.fifo_filenames:
-            env_name, rand_id, unix_time = path_to_name(traj_filename).split("_")
-            traj_infos.append(
-                {
-                    "env": env_name,
-                    "rand": rand_id,
-                    "time": float(unix_time),
-                    "filename": traj_filename,
-                }
-            )
-        traj_infos = sorted(traj_infos, key=lambda d: d["time"])
-        num_to_remove = max(len(traj_infos) - new_size, 0)
-        to_delete = list(map(itemgetter("filename"), traj_infos[:num_to_remove]))
-        for file_to_delete in to_delete:
-            os.remove(file_to_delete)
-            self.fifo_filenames.discard(file_to_delete)
-        self.all_filenames = list(self.fifo_filenames | self.protected_filenames)
-
-    def __getitem__(self, i):
-        filename = random.choice(self.all_filenames)
-        traj = load_traj_from_disk(filename)
-        traj = self.relabeler(traj)
-        data = RLData(traj)
-        if self.max_seq_len is not None:
-            data = data.random_slice(
-                length=self.max_seq_len, padded_sampling=self.padded_sampling
-            )
-        return data
-
-
+@dataclass
 class RLData:
-    def __init__(self, traj: Trajectory | FrozenTraj):
-        if isinstance(traj, Trajectory):
-            traj = traj.freeze()
-        assert isinstance(traj, FrozenTraj)
-        self.obs = {k: torch.from_numpy(v) for k, v in traj.obs.items()}
-        self.rl2s = torch.from_numpy(traj.rl2s).float()
-        self.time_idxs = torch.from_numpy(traj.time_idxs).long()
-        self.rews = torch.from_numpy(traj.rews).float()
-        self.dones = torch.from_numpy(traj.dones).bool()
-        self.actions = torch.from_numpy(traj.actions).float()
-        self.safe_randrange = lambda l, h: random.randrange(l, max(h, l + 1))
+    """
+    Stores an individual training example (sequence).
+
+    Args:
+        obs (dict[str, torch.Tensor]): A dictionary of observation tensors.
+            The shape of each value is (T, Any), where T is the length of the sequence in timesteps.
+        rews (torch.FloatTensor): A tensor of rewards. Shape: (T - 1, 1).
+            There is no reward before the first timestep.
+        dones (torch.BoolTensor): A tensor of done flags. Shape: (T - 1, 1).
+            There is no done flag before the first timestep.
+        actions (torch.FloatTensor): A tensor of actions. Shape: (T - 1, action dim).
+            There is no action on the last (terminal) timestep.
+        time_idxs (torch.LongTensor): A tensor of time indices. Shape: (T, 1).
+            The global timestep counter of each timestep in the episode.
+            If this is an entire episode, `time_idxs` is range(0, T).
+        rl2s (Optional[torch.FloatTensor]): A tensor of previous action/reward pairs.
+            Shape: (T, 1 + action dim). The previous reward concatenated with the previous action.
+            Used to make these values input to the policy.
+            If not provided, they will be generated by shifting the actions and rewards.
+    """
+
+    obs: dict[str, torch.Tensor]  # (T, obs dim)
+    rews: torch.FloatTensor  # (T - 1, 1)
+    dones: torch.BoolTensor  # (T - 1, 1)
+    actions: torch.FloatTensor  # (T - 1, action dim)
+    time_idxs: torch.LongTensor  # (T, 1)
+    rl2s: Optional[torch.FloatTensor] = None  # (T, 1 + action dim)
+
+    def __post_init__(self):
+        if self.rl2s is None:
+            """
+            Makes the `rl2s` (previous action/reward) sequence optional, because
+            any dataset that isn't generated by our env wrappers wouldn't have it.
+            Must always mirror the format of `hindsight.Trajectory.as_input_sequence`.
+            """
+            blank_action = torch.zeros((1, self.actions.shape[-1]), dtype=torch.float32)
+            blank_rew = torch.zeros((1, 1), dtype=torch.float32)
+            self.rl2s = torch.cat(
+                (
+                    torch.cat((blank_rew, self.rews), dim=0),
+                    torch.cat((blank_action, self.actions), dim=0),
+                ),
+                dim=-1,
+            )
 
     def __len__(self):
         return len(self.actions)
 
     def random_slice(self, length: int, padded_sampling: str = "none"):
+        """
+        Randomly slices the sequence to a given length.
+
+        Args:
+            length: The length of the sequence to sample.
+            padded_sampling: The mode of padding to use.
+                "none" --> sample a random start index and take the next `length` timesteps. Can
+                bias against the timesteps at the end of the trajectory.
+                "both" --> sample without bias against the start and end of the trajectory, but can lead to
+                    much more of the batch being padded/masked.
+                "left" --> sample while effectively padding the left side of the sequence for cases
+                where the start of the training sequence is not always the first timestep of the trajectory.
+                "right" --> sample while effectively padding the right side of the sequence for cases
+                where the end of the trajectory may be undersampled.
+        """
+        _safe_randrange = lambda l, h: random.randrange(l, max(h, l + 1))
         if len(self) <= length:
             start = 0
         elif padded_sampling == "none":
-            start = self.safe_randrange(0, len(self) - length + 1)
+            start = _safe_randrange(0, len(self) - length + 1)
         elif padded_sampling == "both":
-            start = self.safe_randrange(-length + 1, len(self) - 1)
+            start = _safe_randrange(-length + 1, len(self) - 1)
         elif padded_sampling == "left":
-            start = self.safe_randrange(-length + 1, len(self) - length + 1)
+            start = _safe_randrange(-length + 1, len(self) - length + 1)
         elif padded_sampling == "right":
-            start = self.safe_randrange(0, len(self) - 1)
+            start = _safe_randrange(0, len(self) - 1)
         else:
             raise ValueError(
                 f"Unrecognized `padded_sampling` mode: `{padded_sampling}`"
@@ -235,3 +155,316 @@ def RLData_pad_collate(samples: list[RLData]) -> Batch:
         actions=actions,
         time_idxs=time_idxs,
     )
+
+
+class RLDataset(ABC, Dataset):
+    """
+    Abstract base class that defines what `Experiment` expects from its pytorch Dataset.
+    Allows the main training loop to be used with existing data sources (offline RL)
+    that were not generated by our environment wrappers.
+
+    RLDatasets have no real length or fixed indices like typical pytorch Datasets.
+    The "length" is determined by the update : data ratio of the experiment.
+
+    Datasets have a reference to the `Experiment` that is training on them, which can be used
+    to access the `Accelerator` and other useful information.
+    """
+
+    def __init__(self):
+        self.experiment = None
+
+    def configure_from_experiment(self, experiment):
+        """
+        Grabs universal hyperparameters from the experiment that would be confusing
+        to have to define twice.
+        """
+        self.experiment = experiment
+        self.items_per_epoch = (
+            experiment.train_batches_per_epoch
+            * experiment.batch_size
+            * experiment.accelerator.num_processes
+        )
+        self.max_seq_len = experiment.max_seq_len
+        self.padded_sampling = experiment.padded_sampling
+        self.has_edit_rights = experiment.has_dset_edit_rights
+
+    def check_configured(self):
+        if self.experiment is None:
+            raise ValueError(
+                "Dataset not configured. Call `configure_from_experiment()` first."
+            )
+
+    def __len__(self):
+        # the length is set by the number of items we want to sample between
+        # env interactions, not by the actual number of items in the dataset.
+        self.check_configured()
+        return self.items_per_epoch
+
+    @property
+    @abstractmethod
+    def save_new_trajs_to(self) -> Optional[str]:
+        """
+        Tells the parallel actors where to write new trajectories.
+
+        If `None`, the actors will not write new trajectories to disk.
+        """
+        raise NotImplementedError
+
+    @property
+    def ready_for_training(self) -> bool:
+        """
+        Whether the dataset is ready to be used for training.
+        If `False` `Experiment` will keep collecting data until learning
+        updates can begin.
+        """
+        return self.experiment is not None
+
+    def on_end_of_collection(self, epoch: int) -> dict[str, Any]:
+        """
+        Callback for `Experiment` to call *after* each round
+        of environment interaction / data collection, but *before*
+        gradient updates resume.
+
+        Args:
+            epoch: The current epoch (in case there is some kind of schedule)
+
+        Returns a dictionary of metrics to log.
+        """
+        return {}
+
+    def delete(self):
+        """
+        Called when the user wants to delete the dataset (from disk?).
+        """
+        pass
+
+    @abstractmethod
+    def get_description(self) -> str:
+        """
+        Returns a string describing the dataset. Printed as part of the hparam
+        summary when the experiment starts.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def sample_random_trajectory(self) -> RLData:
+        """
+        Prepare a (random) *full trajectory* or at least the maximum sequence length
+        of the dataset. Sampling random subsets up to the policy's sequence length is
+        handled automatically.
+        """
+        raise NotImplementedError
+
+    def __getitem__(self, i):
+        self.check_configured()
+        data = self.sample_random_trajectory()
+        if self.max_seq_len is not None:
+            data = data.random_slice(
+                length=self.max_seq_len, padded_sampling=self.padded_sampling
+            )
+        return data
+
+
+def load_traj_from_disk(path: str) -> Trajectory | FrozenTraj:
+    _, ext = os.path.splitext(path)
+    if ext == ".traj":
+        with open(path, "rb") as f:
+            disk = pickle.load(f)
+        traj = Trajectory(timesteps=disk.timesteps)
+        return traj
+    elif ext == ".npz":
+        disk = FrozenTraj.from_dict(np.load(path))
+        return disk
+    else:
+        raise ValueError(
+            f"Unrecognized trajectory file extension `{ext}` for path `{path}`."
+        )
+
+
+def get_path_to_trajs(dset_root: str, dset_name: str, fifo: bool) -> str:
+    return os.path.join(dset_root, dset_name, "buffer", "fifo" if fifo else "protected")
+
+
+@gin.configurable
+class DiskTrajDataset(RLDataset):
+    """
+    Imitates the typical FIFO replay buffer but stores sequence data on disk.
+    Tells the parallel actors to write finished trajectories to a buffer directory
+    and then deletes the oldest trajectories when the dataset exceeds a max size.
+    Also creates a "protected" directory where trajectory data from previous runs
+    or demonstrations can be stored and sampled from without being deleted
+    (in the style of DQfD and so on).
+
+    Creates a dataset in the structure:
+    dset_root/
+        dset_name/
+            buffer/
+                fifo/
+                    ... # .traj or .npz files
+                protected/
+                    ... # .traj or .npz files
+
+
+    Args:
+        dset_root: The root directory to store the dataset.
+        dset_name: The name of the dataset.
+        dset_max_size: The maximum number of trajectories to keep in the FIFO buffer.
+        relabeler: A function that edits/relabels trajectory data when loaded. (`amago.hindsight.Relabeler`).
+    """
+
+    def __init__(
+        self,
+        dset_root: str,
+        dset_name: str,
+        dset_max_size: int,
+        relabeler: Optional[Relabeler] = None,
+    ):
+        super().__init__()
+        self.relabeler = Relabeler() if relabeler is None else relabeler
+        # create two directories for the FIFO and protected buffers
+        self.fifo_path = get_path_to_trajs(dset_root, dset_name, fifo=True)
+        self.protected_path = get_path_to_trajs(dset_root, dset_name, fifo=False)
+        self.dset_max_size = dset_max_size
+        os.makedirs(self.fifo_path, exist_ok=True)
+        os.makedirs(self.protected_path, exist_ok=True)
+        self._refresh_files()
+
+    @property
+    def save_new_trajs_to(self) -> Optional[str]:
+        # tells the parallel actors where to write new trajectories
+        return self.fifo_path
+
+    @property
+    def _disk_usage(self):
+        bytes = sum(os.path.getsize(f) for f in self.all_filenames)
+        return bytes * 1e-9
+
+    @property
+    def ready_for_training(self) -> bool:
+        return super().ready_for_training and len(self.all_filenames) > 0
+
+    def delete(self, delete_protected: bool = False):
+        self.check_configured()
+        # remove files on disk
+        if os.path.exists(self.fifo_path):
+            shutil.rmtree(self.fifo_path)
+            self.fifo_filenames = set()
+        if os.path.exists(self.protected_path) and delete_protected:
+            shutil.rmtree(self.protected_path)
+            self.protected_filenames = set()
+        self.all_filenames = list(self.fifo_filenames | self.protected_filenames)
+
+    def _list_abs_path_to_files(self, dir: str):
+        names = []
+        for ext in [".traj", ".npz"]:
+            names.extend(
+                [os.path.join(dir, f) for f in os.listdir(dir) if f.endswith(ext)]
+            )
+        return set(names)
+
+    def _refresh_files(self):
+        # find the new .traj files from the previous rollout
+        self.fifo_filenames = self._list_abs_path_to_files(self.fifo_path)
+        self.protected_filenames = self._list_abs_path_to_files(self.protected_path)
+        self.all_filenames = list(self.fifo_filenames | self.protected_filenames)
+
+    def _count_trajectories(self) -> int:
+        return len(self.all_filenames)
+
+    def _count_deletable_trajectories(self) -> int:
+        return len(self.fifo_filenames)
+
+    def _count_protected_trajectories(self) -> int:
+        return len(self.protected_filenames)
+
+    def _filter(self):
+        """
+        Imitates fixed-size FIFO replay buffers by clearing .traj files on disk in time order.
+        """
+        if len(self.fifo_filenames) <= self.dset_max_size:
+            # skip the sort
+            return
+
+        path_to_name = lambda path: os.path.basename(os.path.splitext(path)[0])
+        traj_infos = []
+        for traj_filename in self.fifo_filenames:
+            env_name, rand_id, unix_time = path_to_name(traj_filename).split("_")
+            traj_infos.append(
+                {
+                    "env": env_name,
+                    "rand": rand_id,
+                    "time": float(unix_time),
+                    "filename": traj_filename,
+                }
+            )
+        traj_infos = sorted(traj_infos, key=lambda d: d["time"])
+        num_to_remove = max(len(traj_infos) - self.dset_max_size, 0)
+        to_delete = list(map(itemgetter("filename"), traj_infos[:num_to_remove]))
+        for file_to_delete in to_delete:
+            os.remove(file_to_delete)
+            self.fifo_filenames.discard(file_to_delete)
+        self.all_filenames = list(self.fifo_filenames | self.protected_filenames)
+
+    def get_description(self) -> str:
+        self.check_configured()
+        return f"""DiskTrajDataset
+        \t\t FIFO Buffer Path: {self.fifo_path}
+        \t\t Protected Buffer Path: {self.protected_path}
+        \t\t FIFO Buffer Max Size: {self.dset_max_size}
+        \t\t FIFO Buffer Initial Size: {self._count_deletable_trajectories()}
+        \t\t Protected Buffer Initial Size: {self._count_protected_trajectories()}
+        \t\t Trajectory File Max Sequence Length: {self.max_seq_len}
+        \t\t Trajectory Padded Sampling: {self.padded_sampling}
+        """
+
+    def on_end_of_collection(self, epoch: int) -> dict[str, Any]:
+        """
+        Implements the FIFO buffer behavior.
+        """
+        self._refresh_files()
+        if not self.has_edit_rights:
+            # this Experiment is not supposed to manage the dataset
+            return
+        # old `accelerate` paranoia
+        old_size = self._count_trajectories()
+        self.experiment.accelerator.wait_for_everyone()
+        if self.experiment.accelerator.is_main_process:
+            self._filter()
+        self.experiment.accelerator.wait_for_everyone()
+        self._refresh_files()
+        dset_size = self._count_trajectories()
+        fifo_size = self._count_deletable_trajectories()
+        protected_size = self._count_protected_trajectories()
+        return {
+            "Trajectory Files Saved in FIFO Replay Buffer": fifo_size,
+            "Trajectory Files Saved in Protected Replay Buffer": protected_size,
+            "Total Trajectory Files in Replay Buffer": dset_size,
+            "Trajectory Files Deleted": old_size - dset_size,
+            "Buffer Disk Space (GB)": self._disk_usage,
+        }
+
+    def sample_random_trajectory(self) -> RLData:
+        self.check_configured()
+        filename = random.choice(self.all_filenames)
+        traj = load_traj_from_disk(filename)
+        traj = self.relabeler(traj)
+        return self._traj_to_rl_data(traj)
+
+    def _traj_to_rl_data(self, traj: Trajectory | FrozenTraj) -> RLData:
+        if isinstance(traj, Trajectory):
+            traj = traj.freeze()
+        assert isinstance(traj, FrozenTraj)
+        obs = {k: torch.from_numpy(v) for k, v in traj.obs.items()}
+        rl2s = torch.from_numpy(traj.rl2s).float()
+        time_idxs = torch.from_numpy(traj.time_idxs).long()
+        rews = torch.from_numpy(traj.rews).float()
+        dones = torch.from_numpy(traj.dones).bool()
+        actions = torch.from_numpy(traj.actions).float()
+        return RLData(
+            obs=obs,
+            rl2s=rl2s,
+            time_idxs=time_idxs,
+            rews=rews,
+            dones=dones,
+            actions=actions,
+        )
