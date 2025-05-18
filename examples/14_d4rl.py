@@ -12,6 +12,7 @@ import amago
 from amago.envs import AMAGOEnv
 from amago.cli_utils import *
 from amago.loading import RLData, RLDataset
+from amago.nets.policy_dists import TanhGaussian, GMM
 
 
 def add_cli(parser):
@@ -20,6 +21,13 @@ def add_cli(parser):
     )
     parser.add_argument(
         "--max_seq_len", type=int, default=32, help="Policy sequence length."
+    )
+    parser.add_argument(
+        "--policy_dist",
+        type=str,
+        default="TanhGaussian",
+        help="Policy distribution type",
+        choices=["TanhGaussian", "GMM"],
     )
     parser.add_argument(
         "--eval_timesteps",
@@ -170,6 +178,7 @@ if __name__ == "__main__":
         "amago.nets.actor_critic.NCriticsTwoHot.d_hidden": 128,
         "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 48,
         "amago.nets.actor_critic.Actor.d_hidden": 128,
+        "amago.nets.actor_critic.Actor.continuous_dist_type": eval(args.policy_dist),
     }
     tstep_encoder_type = switch_tstep_encoder(
         config,
@@ -189,6 +198,7 @@ if __name__ == "__main__":
         args.agent_type,
         online_coeff=0.0,
         offline_coeff=1.0,
+        gamma=0.99,
         reward_multiplier=1.0,
     )
     use_config(config, args.configs)
@@ -211,6 +221,7 @@ if __name__ == "__main__":
             val_timesteps_per_epoch=args.eval_timesteps,
             learning_rate=1.5e-4,
             dataset=dataset,
+            sample_actions=False,
         )
         experiment = switch_async_mode(experiment, args.mode)
         experiment.start()

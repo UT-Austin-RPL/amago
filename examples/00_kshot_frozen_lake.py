@@ -1,6 +1,9 @@
+import os
+
 import amago
 from amago.envs.builtin.toy_gym import MetaFrozenLake
 from amago.envs import AMAGOEnv
+from amago.loading import DiskTrajDataset
 from amago.cli_utils import *
 
 
@@ -60,6 +63,11 @@ if __name__ == "__main__":
     for trial in range(args.trials):
         run_name = group_name + f"_trial_{trial}"
 
+        # create a dataset on disk. envs will write finished episodes here
+        dset = DiskTrajDataset(dset_root=args.buffer_dir, dset_name=run_name)
+        # save checkpoints alongside the buffer
+        ckpt_dir = args.buffer_dir
+
         # wrap environment
         make_env = lambda: AMAGOEnv(
             MetaFrozenLake(
@@ -79,14 +87,14 @@ if __name__ == "__main__":
             make_val_env=make_env,
             max_seq_len=args.max_seq_len,
             traj_save_len=args.max_rollout_length,
+            dataset=dset,
+            ckpt_base_dir=ckpt_dir,
             agent_type=amago.agent.Agent,
             exploration_wrapper_type=exploration_wrapper_type,
             tstep_encoder_type=tstep_encoder_type,
             traj_encoder_type=traj_encoder_type,
             dset_max_size=12_500,
             run_name=run_name,
-            dset_name=run_name,
-            dset_root=args.buffer_dir,
             dloader_workers=10,
             log_to_wandb=args.log,
             wandb_group_name=group_name,
