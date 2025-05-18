@@ -103,6 +103,8 @@ class D4RLGymEnv(gym.Env):
     """
 
     def __init__(self, env_name: str):
+        # hack fix seeding for parallel envs
+        np.random.seed(random.randrange(1e6))
         self.env_name = env_name
         self.env = og_gym.make(env_name)
         self.action_space = space_convert(self.env.action_space)
@@ -118,14 +120,14 @@ class D4RLGymEnv(gym.Env):
 
     def reset(self, *args, **kwargs):
         self.episode_return = 0
-        return self.env.reset(*args, **kwargs), {}
+        return self.env.reset(), {}
 
     def step(self, action):
         s, r, d, i = self.env.step(action)
         self.episode_return += r
         if d:
             i[f"{AMAGO_ENV_LOG_PREFIX} D4RL Normalized Return"] = (
-                d4rl.get_normalized_score(self.env_name, self.episode_return).item()
+                d4rl.get_normalized_score(self.env_name, self.episode_return)
             )
         return s, r, d, d, i
 
