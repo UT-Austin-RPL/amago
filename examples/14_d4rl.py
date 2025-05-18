@@ -58,10 +58,10 @@ class D4RLDataset(RLDataset):
         s = self.episode_ends[episode_idx] + 1
         e = self.episode_ends[episode_idx + 1] + 1
         traj_len = e - s
+        if traj_len < 2:
+            return self.sample_random_trajectory()
         """
         Slice an episode, with off-by-one action/reward/terminal alignment,
-        from D4RL.
-
         In D4RL qlearning_dataset, the last transition of an episode is:
         obs = dataset['observations'][i].astype(np.float32)
         new_obs = dataset['observations'][i+1].astype(np.float32)
@@ -70,11 +70,11 @@ class D4RLDataset(RLDataset):
         done_bool = bool(dataset['terminals'][i]) # True
         data = (obs, action, reward, new_obs, done_bool)
         """
-        obs_np = self.d4rl_dset["observations"][s:e]
-        actions_np = self.d4rl_dset["actions"][s : e - 1]
-        rewards_np = self.d4rl_dset["rewards"][s : e - 1]
-        terminals_np = self.d4rl_dset["terminals"][s + 1 : e]
-        timeouts_np = self.d4rl_dset["timeouts"][s + 1 : e]
+        obs_np = self.d4rl_dset["observations"][s : e + 1]
+        actions_np = self.d4rl_dset["actions"][s:e]
+        rewards_np = self.d4rl_dset["rewards"][s:e]
+        terminals_np = self.d4rl_dset["terminals"][s:e]
+        timeouts_np = self.d4rl_dset["timeouts"][s:e]
 
         # convert to torch, adding time_idxs
         obs = {"observation": torch.from_numpy(obs_np)}
@@ -191,7 +191,8 @@ if __name__ == "__main__":
         online_coeff=0.0,
         offline_coeff=1.0,
         gamma=0.99,
-        reward_multiplier=1.0,
+        reward_multiplier=100.0,
+        num_critics=6,
     )
     use_config(config, args.configs)
 
@@ -209,8 +210,9 @@ if __name__ == "__main__":
             agent_type=agent_type,
             group_name=group_name,
             val_timesteps_per_epoch=args.eval_timesteps,
-            learning_rate=1.5e-4,
+            learning_rate=1e-4,
             dataset=dataset,
+            padded_sampling="right",
             sample_actions=False,
         )
         experiment = switch_async_mode(experiment, args.mode)
