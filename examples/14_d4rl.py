@@ -76,7 +76,7 @@ class D4RLDataset(RLDataset):
         terminals_np = self.d4rl_dset["terminals"][s + 1 : e]
         timeouts_np = self.d4rl_dset["timeouts"][s + 1 : e]
 
-        # convert to torch, adding time_idxs and the "rl2" prev action/rew features
+        # convert to torch, adding time_idxs
         obs = {"observation": torch.from_numpy(obs_np)}
         actions = torch.from_numpy(actions_np).float()
         rewards = torch.from_numpy(rewards_np).float().unsqueeze(-1)

@@ -267,18 +267,20 @@ def create_experiment_from_cli(
     make_train_env: callable,
     make_val_env: callable,
     max_seq_len: int,
-    traj_save_len: int,
     group_name: str,
     run_name: str,
     agent_type: type[Agent],
     tstep_encoder_type: type[TstepEncoder],
     traj_encoder_type: type[TrajEncoder],
+    traj_save_len: Optional[int] = None,
     exploration_wrapper_type: type[ExplorationWrapper] = EpsilonGreedy,
     experiment_type=amago.Experiment,
     dataset: Optional[RLDataset] = None,
     **extra_experiment_kwargs,
 ):
     cli = command_line_args
+
+    traj_save_len = traj_save_len or 1e10
 
     if dataset is None:
         # create a new-style dataset in the place
