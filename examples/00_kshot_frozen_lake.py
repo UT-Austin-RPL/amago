@@ -1,5 +1,3 @@
-import os
-
 import amago
 from amago.envs.builtin.toy_gym import MetaFrozenLake
 from amago.envs import AMAGOEnv

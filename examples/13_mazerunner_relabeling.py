@@ -91,7 +91,6 @@ class HindsightInstructionReplay(Relabeler):
 
         var names are references to pseudocode in AMAGO Appendix B Alg 1 (arXiv page 20)
         """
-        breakpoint()
         if self.strategy == "none":
             del traj.obs["achieved"]
             return traj
