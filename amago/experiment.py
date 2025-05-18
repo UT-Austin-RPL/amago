@@ -164,8 +164,6 @@ class Experiment:
     l2_coeff: float = 1e-3
     # mixed precision mode. this is passed directly to `accelerate` and follows its options ("no", "fp16", "bf16").
     mixed_precision: str = "no"
-    # experimental feature implementing the Adam timestep reset discussed in https://openreview.net/pdf?id=biAqUbAuG7 (RL optimization is non-stationary, so maybe we should stop using Adam's global timer)
-    local_time_optimizer: bool = False
 
     def __post_init__(self):
         self.accelerator = Accelerator(
@@ -214,7 +212,7 @@ class Experiment:
             else "None"
         )
         self.accelerator.print(
-            f"""\n\n \t\t {colored('AMAGO v3', 'green')}
+            f"""\n\n \t\t {colored('AMAGO v3.1', 'green')}
             \t -------------------------
             \t Agent: {self.policy.__class__.__name__}
             \t\t Max Sequence Length: {self.max_seq_len}
@@ -473,23 +471,7 @@ class Experiment:
         Override to switch from AdamW
         """
         adamw_kwargs = dict(lr=self.learning_rate, weight_decay=self.l2_coeff)
-        if not self.local_time_optimizer:
-            return torch.optim.AdamW(policy.trainable_params, **adamw_kwargs)
-        else:
-            target_based_estimate = int(math.log(0.01, 1.0 - policy.tau))
-            collection_based_estimate = (
-                self.train_batches_per_epoch // self.batches_per_update
-            )
-            if self.train_timesteps_per_epoch == 0:
-                # offline: rely on target net decay as non-stationarity comes from shifting targets
-                reset_interval = target_based_estimate
-            else:
-                # online: at least space the resets into different epochs, which cause
-                # the dataset distribution to change (slightly)
-                reset_interval = max(target_based_estimate, collection_based_estimate)
-            return utils.AdamWRel(
-                policy.trainable_params, reset_interval=reset_interval, **adamw_kwargs
-            )
+        return torch.optim.AdamW(policy.trainable_params, **adamw_kwargs)
 
     def init_model(self):
         """
@@ -801,7 +783,39 @@ class Experiment:
             | bottom_quintile_ret_per_env
         )
 
-    def compute_loss(self, batch: Batch, log_step: bool):
+    def edit_actor_mask(
+        self, batch: Batch, actor_loss: torch.FloatTensor, pad_mask: torch.BoolTensor
+    ) -> torch.BoolTensor:
+        """
+        Customize the actor loss mask.
+
+        Args:
+            batch: The batch of data.
+            actor_loss: The unmasked actor loss. Shape: (Batch, Length, Num Gamma Horizons, 1)
+            pad_mask: The default mask. True where the sequence was not padded out of the dataloader.
+
+        Returns:
+            The mask. True where the actor loss should count, False where it should be ignored.
+        """
+        return pad_mask
+
+    def edit_critic_mask(
+        self, batch: Batch, critic_loss: torch.FloatTensor, pad_mask: torch.BoolTensor
+    ) -> torch.BoolTensor:
+        """
+        Customize the critic loss mask.
+
+        Args:
+            batch: The batch of data.
+            critic_loss: The unmasked critic loss. Shape: (Batch, Length, Num Critics, Num Gamma Horizons, 1)
+            pad_mask: The default mask. True where the sequence was not padded out of the dataloader.
+
+        Returns:
+            The mask. True where the critic loss should count, False where it should be ignored.
+        """
+        return pad_mask
+
+    def compute_loss(self, batch: Batch, log_step: bool) -> dict:
         """
         Core computation of the actor and critic RL loss terms from a `Batch` of data.
         """
@@ -809,9 +823,12 @@ class Experiment:
         update_info = self.policy.update_info
         B, L_1, G, _ = actor_loss.shape
         C = len(self.policy.critics)
-        state_mask = (~((batch.rl2s == MAGIC_PAD_VAL).all(-1, keepdim=True))).float()
+        state_mask = (~((batch.rl2s == MAGIC_PAD_VAL).all(-1, keepdim=True))).bool()
         critic_state_mask = repeat(state_mask[:, 1:, ...], f"B L 1 -> B L {C} {G} 1")
         actor_state_mask = repeat(state_mask[:, 1:, ...], f"B L 1 -> B L {G} 1")
+        # hook to allow custom masks
+        actor_state_mask = self.edit_actor_mask(batch, actor_loss, actor_state_mask)
+        critic_state_mask = self.edit_critic_mask(batch, critic_loss, critic_state_mask)
 
         masked_actor_loss = utils.masked_avg(actor_loss, actor_state_mask)
         if isinstance(critic_loss, torch.Tensor):

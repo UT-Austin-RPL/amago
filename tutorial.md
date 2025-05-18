@@ -1,5 +1,5 @@
 # AMAGO Tutorial
-#### Last Updated: 05/18/25
+#### Last Updated: 05/18/2025
 
 Applying AMAGO to any new problem involves wrapping the environment, defining the network architecture, creating a dataset, and configuring the experiment. The `examples/` folder includes helpful starting points for common cases.
 
