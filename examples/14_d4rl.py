@@ -43,6 +43,8 @@ class D4RLDataset(RLDataset):
         super().__init__()
         self.d4rl_dset = d4rl_dset
         self.episode_ends = np.where(d4rl_dset["terminals"] | d4rl_dset["timeouts"])[0]
+        self.ep_lens = self.episode_ends[1:] - self.episode_ends[:-1]
+        self.max_ep_len = self.ep_lens.max()
 
     def get_description(self) -> str:
         return "D4RL"
@@ -53,23 +55,16 @@ class D4RLDataset(RLDataset):
         return None
 
     def sample_random_trajectory(self):
-        # pick a random episode
         episode_idx = random.randrange(0, len(self.episode_ends) - 1)
+        return self._sample_trajectory(episode_idx)
+
+    def _sample_trajectory(self, episode_idx: int):
+        # pick a random episode
         s = self.episode_ends[episode_idx] + 1
         e = self.episode_ends[episode_idx + 1] + 1
         traj_len = e - s
-        if traj_len < 2:
-            return self.sample_random_trajectory()
-        """
-        Slice an episode, with off-by-one action/reward/terminal alignment,
-        In D4RL qlearning_dataset, the last transition of an episode is:
-        obs = dataset['observations'][i].astype(np.float32)
-        new_obs = dataset['observations'][i+1].astype(np.float32)
-        action = dataset['actions'][i].astype(np.float32)
-        reward = dataset['rewards'][i].astype(np.float32)
-        done_bool = bool(dataset['terminals'][i]) # True
-        data = (obs, action, reward, new_obs, done_bool)
-        """
+        # if traj_len < 2:
+        #    return self.sample_random_trajectory()
         obs_np = self.d4rl_dset["observations"][s : e + 1]
         actions_np = self.d4rl_dset["actions"][s:e]
         rewards_np = self.d4rl_dset["rewards"][s:e]
@@ -110,9 +105,12 @@ class D4RLGymEnv(gym.Env):
         self.action_space = space_convert(self.env.action_space)
         self.observation_space = space_convert(self.env.observation_space)
         if isinstance(self.env, og_gym.wrappers.TimeLimit):
+            # this time limit is apparently not consistent with the datasets
             self.time_limit = self.env._max_episode_steps
         else:
             self.time_limit = None
+        self.max_return = d4rl.infos.REF_MAX_SCORE[self.env_name]
+        self.min_return = d4rl.infos.REF_MIN_SCORE[self.env_name]
 
     @property
     def dset(self):
@@ -148,14 +146,9 @@ if __name__ == "__main__":
         print("WARNING: timesteps_per_epoch is not supported for D4RL, setting to 0")
         args.timesteps_per_epoch = 0
 
-    if example_env.time_limit is not None:
-        print(
-            f"WARNING: time limit is {example_env.time_limit}, setting eval_timesteps"
-        )
-        args.eval_timesteps = example_env.time_limit + 1
-
     # create dataset
     dataset = D4RLDataset(d4rl_dset=example_env.dset)
+    args.eval_timesteps = example_env.time_limit + 1
 
     # setup environment
     make_train_env = lambda: AMAGOEnv(
@@ -167,8 +160,8 @@ if __name__ == "__main__":
     # agent architecture: drop everything down to standard small sizes
     config = {
         "amago.nets.actor_critic.NCritics.d_hidden": 128,
-        "amago.nets.actor_critic.NCriticsTwoHot.d_hidden": 128,
-        "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 48,
+        "amago.nets.actor_critic.NCriticsTwoHot.d_hidden": 256,
+        "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 128,
         "amago.nets.actor_critic.Actor.d_hidden": 128,
         "amago.nets.actor_critic.Actor.continuous_dist_type": eval(args.policy_dist),
     }
@@ -191,8 +184,8 @@ if __name__ == "__main__":
         online_coeff=0.0,
         offline_coeff=1.0,
         gamma=0.99,
-        reward_multiplier=100.0,
-        num_critics=6,
+        reward_multiplier=100.0 if example_env.max_return <= 10.0 else 1,
+        num_critics=4,
     )
     use_config(config, args.configs)
 
