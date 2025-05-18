@@ -30,11 +30,9 @@ from .envs import SequenceWrapper, ReturnHistory, SpecialMetricHistory, EnvCreat
 from .loading import (
     Batch,
     RLDataset,
-    DiskTrajDataset,
     RLData_pad_collate,
     MAGIC_PAD_VAL,
 )
-from .hindsight import Relabeler
 from .agent import Agent
 from .nets import TstepEncoder, TrajEncoder
 
@@ -51,8 +49,6 @@ class Experiment:
     ckpt_base_dir: str
     # the most important hyperparameter: the maximum sequence length that the model will be trained on.
     max_seq_len: int
-    # trajectories are saved to disk on `terminated or truncated` or after this many steps have passed since the last save (whichever comes first)
-    traj_save_len: int
     # dataset for loading training sequences
     dataset: RLDataset
     # TstepEncoder is created by calling this with default kwargs (use gin)
@@ -103,6 +99,8 @@ class Experiment:
     ############
     ## Replay ##
     ############
+    # trajectories are saved to disk on `terminated or truncated` or after this many steps have passed since the last save (whichever comes first)
+    traj_save_len: int = 1e10
     # turn this off for collect-only runs where we need to assume the replay buffer is being managed by another learner process.
     has_dset_edit_rights: bool = True
     # randomizes trajectory file lengths when saving snippets from a much longer rollout. please refer to a longer explanation in `amago.Experiment.init_envs`.

@@ -201,8 +201,6 @@ if __name__ == "__main__":
             make_train_env=make_train_env,
             make_val_env=make_train_env,
             max_seq_len=args.max_seq_len,
-            # TODO: not actually used, still required (?)
-            traj_save_len=args.max_seq_len * 8,
             run_name=run_name,
             tstep_encoder_type=tstep_encoder_type,
             traj_encoder_type=traj_encoder_type,
