@@ -817,17 +817,21 @@ class Experiment:
         """
         Core computation of the actor and critic RL loss terms from a `Batch` of data.
         """
+        # Agent.forward handles most of the work
         critic_loss, actor_loss = self.policy_aclr(batch, log_step=log_step)
         update_info = self.policy.update_info
         B, L_1, G, _ = actor_loss.shape
         C = len(self.policy.critics)
+
+        # mask sequence losses
         state_mask = (~((batch.rl2s == MAGIC_PAD_VAL).all(-1, keepdim=True))).bool()
         critic_state_mask = repeat(state_mask[:, 1:, ...], f"B L 1 -> B L {C} {G} 1")
         actor_state_mask = repeat(state_mask[:, 1:, ...], f"B L 1 -> B L {G} 1")
         # hook to allow custom masks
         actor_state_mask = self.edit_actor_mask(batch, actor_loss, actor_state_mask)
         critic_state_mask = self.edit_critic_mask(batch, critic_loss, critic_state_mask)
-
+        batch_size = B * L_1
+        unmasked_batch_size = actor_state_mask[..., 0, 0].sum()
         masked_actor_loss = utils.masked_avg(actor_loss, actor_state_mask)
         if isinstance(critic_loss, torch.Tensor):
             masked_critic_loss = utils.masked_avg(critic_loss, critic_state_mask)
@@ -835,11 +839,13 @@ class Experiment:
             assert critic_loss is None
             masked_critic_loss = 0.0
 
+        # all of this is logged
         return {
-            "critic_loss": masked_critic_loss,
-            "actor_loss": masked_actor_loss,
-            "seq_len": L_1 + 1,
-            "mask": state_mask,
+            "Critic Loss": masked_critic_loss,
+            "Actor Loss": masked_actor_loss,
+            "Sequence Length": L_1 + 1,
+            "Batch Size (in Timesteps)": batch_size,
+            "Unmasked Batch Size (in Timesteps)": unmasked_batch_size,
         } | update_info
 
     def _get_grad_norms(self):
@@ -862,7 +868,7 @@ class Experiment:
         with self.accelerator.accumulate(self.policy_aclr):
             self.optimizer.zero_grad()
             l = self.compute_loss(batch, log_step=log_step)
-            loss = l["actor_loss"] + self.critic_loss_weight * l["critic_loss"]
+            loss = l["Actor Loss"] + self.critic_loss_weight * l["Critic Loss"]
             self.accelerator.backward(loss)
             if self.accelerator.sync_gradients:
                 self.accelerator.clip_grad_norm_(
@@ -872,11 +878,7 @@ class Experiment:
                 self.grad_update_counter += 1
                 if log_step:
                     l.update(
-                        {
-                            "Learning Rate": self.lr_schedule.get_last_lr()[0],
-                            "Batch Size (in Timesteps)": l["mask"].numel(),
-                            "Unmasked Batch Size (in Timesteps)": l["mask"].sum(),
-                        }
+                        {"Learning Rate": self.lr_schedule.get_last_lr()[0]}
                         | self._get_grad_norms()
                     )
             self.optimizer.step()
