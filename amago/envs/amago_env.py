@@ -24,6 +24,15 @@ from amago.loading import get_path_to_trajs
 
 
 class AMAGOEnv(gym.Wrapper):
+    """
+    A wrapper that connects `gymnasium` envs to the `Experiment`
+
+    Args:
+        env: The gymnasium env to wrap. Wraps the action space to [-1, 1] if continuous control.
+        env_name: The name of the environment. Used for logging metrics.
+        batched_envs: Alert the `Experiment` that this env is vectorized with a batch dimension like (batched_envs, ...)
+    """
+
     def __init__(
         self, env: gym.Env, env_name: Optional[str] = None, batched_envs: int = 1
     ):
@@ -336,6 +345,7 @@ class SequenceWrapper(gym.Wrapper):
 
 @dataclass
 class EnvCreator:
+    # utility that makes sure the parallel envs always work with AsyncVectorEnv
     make_env: Callable
     exploration_wrapper_type: Type[ExplorationWrapper]
     save_trajs_to: Optional[str]
