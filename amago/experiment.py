@@ -655,11 +655,8 @@ class Experiment:
         def wrap(m):
             return lambda: SequenceWrapper(
                 m(),
+                save_trajs_to=save_trajs_to,
                 save_every=None,
-                make_dset=is_saving,
-                dset_root=save_trajs_to,
-                dset_name="",
-                save_trajs_as="npz",
             )
 
         if self.env_mode == "already_vectorized":
@@ -682,6 +679,7 @@ class Experiment:
             timesteps,
             hidden_state=None,
             render=render,
+            # saves trajectories as soon as they're finished instead of waiting until the end of eval
             save_on_done=is_saving,
             episodes=episodes,
         )
