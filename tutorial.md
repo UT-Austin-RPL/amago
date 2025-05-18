@@ -7,7 +7,7 @@ Applying AMAGO to any new problem involves wrapping the environment, defining th
 <img src="media/amago_overview.png" alt="amagoarch" width="950"/>
 </p>
 
->[!INFO]
+>[!TIP]
 > `examples/00_kshot_frozen_lake.py` is the most complete example of creating an `Experiment`. The rest skip steps with a command line helper.
 
 <br>
@@ -74,12 +74,6 @@ experiment = amago.Experiment(
 ```
 
 There are some details in getting the pytorch agent and jax envs to cooperate and share a GPU. See `examples/02_gymnax.py`.
-
-> [!WARNING]
-> Support for `jax` and other GPU-batched envs is a recent experimental feature. Please refer to the latest `jax` documentation for instructions on installing versions compatible with your hardware.
-
-> [!INFO]
-> `examples/02_gymnax.py` and `examples/11_xland_minigrid.py` are relevant examples.
 
 </details>
 
@@ -196,8 +190,7 @@ experiment = amago.Experiment(
 )
 ``` 
 
-> [!INFO]
-> `examples/10_babyai.py` and `examples/11_xland_minigrid.py` are relevant examples.
+`examples/10_babyai.py` and `examples/11_xland_minigrid.py` are relevant examples.
 
 </details>
 
@@ -276,13 +269,14 @@ dataset = DiskTrajectoryDataset(
 experiment = amago.Experiment(
   ...,
   dataset=dataset,
+  # optional control over the way all datasets sample from seqs longer than the policy's max input length
+  padded_sampling="none",
   # optional control over the way envs write to the dataset:
   traj_save_len=1000, # write sequences after this many timesteps even if the episode hasn't finished
-  padded_sampling="none", # strategy for sub-sampling sequences when longer than the policy's max input length
 )
 ```
 
-> [!INFO]
+> [!TIP]
 > If data is coming from some other source (like an existing offline RL dataset) you can inherit from `RLDataset`. `examples/14_d4rl.py` has an example.
 
 <br>
