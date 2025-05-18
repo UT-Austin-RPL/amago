@@ -1,11 +1,14 @@
 # AMAGO Tutorial
-#### Last Updated: 11/18/24
+#### Last Updated: 05/18/25
 
-Applying AMAGO to any new environment involves 7 basic steps. The `examples/` folder includes helpful starting points for common cases.
+Applying AMAGO to any new problem involves wrapping the environment, defining the network architecture, creating a dataset, and configuring the experiment. The `examples/` folder includes helpful starting points for common cases.
 
 <p align="center">
 <img src="media/amago_overview.png" alt="amagoarch" width="950"/>
 </p>
+
+>[!INFO]
+> `examples/00_kshot_frozen_lake.py` is the most complete example of creating an `Experiment`. The rest skip steps with a command line helper.
 
 <br>
 
@@ -72,7 +75,11 @@ experiment = amago.Experiment(
 
 There are some details in getting the pytorch agent and jax envs to cooperate and share a GPU. See `examples/02_gymnax.py`.
 
-> *NOTE*: Support for `jax` and other GPU-batched envs is a recent experimental feature. Please refer to the latest `jax` documentation for instructions on installing versions compatible with your hardware.
+> [!WARNING]
+> Support for `jax` and other GPU-batched envs is a recent experimental feature. Please refer to the latest `jax` documentation for instructions on installing versions compatible with your hardware.
+
+> [!INFO]
+> `examples/02_gymnax.py` and `examples/11_xland_minigrid.py` are relevant examples.
 
 </details>
 
@@ -188,6 +195,10 @@ experiment = amago.Experiment(
   tstep_encoder_type=MultiModalRobotTstepEncoder,
 )
 ``` 
+
+> [!INFO]
+> `examples/10_babyai.py` and `examples/11_xland_minigrid.py` are relevant examples.
+
 </details>
 
 <br>
@@ -242,14 +253,48 @@ experiment = amago.Experiment(
 
 <br>
 
-### **5. Configure the `Experiment`**
+### **5. Create an `RLDataset`**
+
+AMAGO trains on sequence data loaded from an `amago.loading.RLDataset` that inherits from the pytorch `Dataset`. If we are generating all of our own training data from scratch each run (normal online RL), just use `DiskTrajectoryDataset`, which tells the envs where to save sequences and deletes the oldest data when full (like a normal replay buffer).
+
+```python
+from amago.loading import DiskTrajectoryDataset
+
+dataset = DiskTrajectoryDataset(
+  dset_root="plenty_of_space",
+  dset_name="give_this_replay_buffer_a_name",
+  dset_max_size=10_000, # measured in *sequences*
+)
+# creates a directory sturcture like:
+# dset_root/
+#   dset_name/
+#     buffer/
+#       protected/
+#          optional place to move data you want to sample from but never delete
+#       fifo/
+#          envs write files here and dset deletes them when full
+experiment = amago.Experiment(
+  ...,
+  dataset=dataset,
+  # optional control over the way envs write to the dataset:
+  traj_save_len=1000, # write sequences after this many timesteps even if the episode hasn't finished
+  padded_sampling="none", # strategy for sub-sampling sequences when longer than the policy's max input length
+)
+```
+
+> [!INFO]
+> If data is coming from some other source (like an existing offline RL dataset) you can inherit from `RLDataset`. `examples/14_d4rl.py` has an example.
+
+<br>
+
+### **6. Configure the `Experiment`**
 
 The `Experiment` has lots of other kwargs to control things like the ratio of data collection to learning updates, optimization, and logging. Formal documentation for `Experiment` and the rest of the modules is coming soon. For now, you can find an explanation of each setting in the comments at the top of `amago/experiment.py`
 
 
 <br>
 
-### **6. Configure Anything Else**
+### **7. Configure Anything Else**
 
 We try to keep the settings of each `Experiment` under control by using [`gin`](https://github.com/google/gin-config) to configure individual pieces like the `TstepEncoder`, `TrajEncoder`, `Agent`, and actor/critic heads. You can read more about `gin` [here](https://github.com/google/gin-config/blob/master/docs/index.md)... but hopefully won't need to. We try to make this easy: our code follows a simple rule that, if something is marked `@gin.configruable`, none of its `kwargs` are set, meaning that the default value always gets used. `gin` lets you change that default value without editing the source code, and keeps track of the settings you used on `wandb`. 
 
@@ -457,62 +502,48 @@ use_config(config, gin_configs=["environment_config.gin", "rl_config.gin"])
 
 <br>
 
-### **7. Start the Experiment and Run Training**
+### **8. Start the Experiment and Run Training**
 
 
 Launch training with:
 
 ```python
-experiment = amago.Experiment(...)
+experiment = amago.Experiment(
+  # last two required args
+  run_name="some_name",
+  ckpt_base_dir="some/place/",
+  ...
+)
 experiment.start()
 experiment.learn()
 ```
+Checkpoints and logs are saved in:
 
-Aside from the `wandb` logging metrics, AMAGO generates output files in the following format:
-
-```bash
-{Experiment.dset_root}/
-    |-- {Experiment.dset_name}/
-        |-- buffer/
-        |    |-- protected/ # any data placed here will be sampled but never deleted
-        |    |      |-- {env_name}_{random_id}_{unix_time}.traj # or .npz
-        |    |      |-- ...
-        |    |-- fifo/ # new data written here. oldest files deleted when > {Experiment.dset_max_size}
-        |           |-- {environment_name}_{random_id}_{unix_time}.traj
-        |           |-- {environment_name}_{another_random_id}_{later_unix_time}.traj
-        |           |-- ...
-        |
-        |
-        |-- {Experiment.run_name}/
-            |-- config.txt # stores gin configuration details for reproducibility
-            |-- policy.pt # the latest model weights
-            |-- ckpts/
-                    |-- training_states/
-                    |    | # full checkpoint dirs used to restore `accelerate` training runs
-                    |    |-- {Experiment.run_name}_epoch_0/
-                    |    |-- {Experiment.run_name}_epoch_{Experiment.ckpt_interval}/
-                    |    |-- ...
-                    |
-                    |-- policy_weights/
-                        | # standard pytorch weight files
-                        |-- policy_epoch_0.pt
-                        |-- policy_epoch_{Experiment.ckpt_interval}.pt
-                        |-- ...
-        -- # other runs that share this replay buffer would be listed here
+```shell
+{Experiment.ckpt_base_dir}
+    |-- {Experiment.run_name}/
+        |-- config.txt # stores gin configuration details for reproducibility
+        |-- wandb_logs/
+        |-- ckpts/
+                |-- training_states/
+                |    | # full checkpoint dirs used to restore `accelerate` training runs
+                |    |-- {Experiment.run_name}_epoch_0/
+                |    |-- {Experiment.run_name}_epoch_{Experiment.ckpt_interval}/
+                |    |-- ...
+                |
+                |-- latest/
+                |    |--policy.pt # the latest model weights
+                |-- policy_weights/
+                    | # standard pytorch weight files
+                    |-- policy_epoch_0.pt
+                    |-- policy_epoch_{Experiment.ckpt_interval}.pt
+                    |-- ...
 ```
 
 Each `epoch`, we:
 1. Interact with the training envs for `train_timesteps_per_epoch`, creating a total of `parallel_actors * train_timesteps_per_epoch` new timesteps.
-2. Save any training sequences that have finished to `dset_root/dset_name/buffer/`.
-4. Compute the RL training objectives on `train_batches_per_epoch` batches sampled uniformly from all the files saved in `dset_root/dset_name/buffer`.  Gradient steps are taken every `batches_per_update` batches.
-
-
-#### Offline RL and Replay Across Experiments
-<details>
-
-The path to the replay buffer is determined by `dset_root/dset_name`, not by the `run_name`: we can share the same replay buffer across multiple experiments or initialize the buffer to the result of a previous experiment. The buffer is divided into two partitions `fifo`  and `protected`. `fifo` imitates a standard replay buffer by deleting the oldest data when full. `protected` data is sampled but never deleted. The best way to do offline RL is to move the offline dataset into `dset_root/dset_name/buffer/protected` and set `start_collecting_at_epoch = float("inf")`. This will likely involve converting our offline RL dataset to `hindsight.Trajectory`s and saving them to disk (examples coming soon). Any online fine-tuning after `start_collecting_at_epoch` would follow the [DQfD](https://arxiv.org/abs/1704.03732) style of preserving the initial dataset while collecting our own online dataset in `fifo` and sampling uniformly from both.
-
-</details>
+2. Save any training sequences that have finished, if applicable.
+4. Compute the RL training objectives on `train_batches_per_epoch` batches sampled from the dataset.  Gradient steps are taken every `batches_per_update` batches.
 
 <br>
 
@@ -526,7 +557,6 @@ experiment = Experiment(
   log_to_wandb=True,
   wandb_project="my_project_name",
   wandb_entity="my_wandb_username",
-  run_name="my_run_name",
   ...,
 )
 ```
@@ -584,13 +614,13 @@ To use accelerate, run `accelerate config` and answer the questions. `accelerate
 
 Then, to use the GPUs you requested during `accelerate config`, we'd replace a command that noramlly looks like this:
 
-```bash
+```shell
 python my_training_script.py --run_name agi --env CartPole-v1 ...
 ```
 
 with:
 
-```bash
+```shell
 accelerate launch my_training_script.py --run_name agi --env CartPole-v1 ...
 ```
 
@@ -640,7 +670,7 @@ experiment.learn()
 
 `accelerate config` a 4-gpu training process on GPU ids 1, 2, 3, 4
 Then:
-```bash
+```shell
 CUDA_VISIBLE_DEVICES=5 python my_training_script.py --mode collect # on a free GPU
 ```
 

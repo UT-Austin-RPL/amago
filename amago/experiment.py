@@ -453,7 +453,7 @@ class Experiment:
         if self.log_to_wandb:
             # records the gin config on the wandb dashboard
             gin_as_wandb = utils.gin_as_wandb_config()
-            log_dir = os.path.join(self.ckpt_dir, "wandb_logs")
+            log_dir = os.path.join(self.ckpt_base_dir, self.run_name, "wandb_logs")
             os.makedirs(log_dir, exist_ok=True)
             self.accelerator.init_trackers(
                 project_name=self.wandb_project,
