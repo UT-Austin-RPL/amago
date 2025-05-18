@@ -283,10 +283,10 @@ def create_experiment_from_cli(
     if dataset is None:
         # create a new-style dataset in the place
         # where all the existing examples assume the dataset will be
-        # until i can take the time to go through every example again.
         dset = DiskTrajDataset(
             dset_root=cli.buffer_dir,
             dset_name=run_name,
+            dset_max_size=cli.dset_max_size,
         )
     else:
         dset = dataset
@@ -296,14 +296,12 @@ def create_experiment_from_cli(
         tstep_encoder_type=tstep_encoder_type,
         traj_encoder_type=traj_encoder_type,
         dataset=dset,
-        # TODO: temporary -- remove this once exmaples are updated
         ckpt_base_dir=cli.buffer_dir,
         make_train_env=make_train_env,
         make_val_env=make_val_env,
         max_seq_len=max_seq_len,
         traj_save_len=traj_save_len,
         exploration_wrapper_type=exploration_wrapper_type,
-        dset_max_size=cli.dset_max_size,
         run_name=run_name,
         dloader_workers=cli.dloader_workers,
         log_to_wandb=not cli.no_log,

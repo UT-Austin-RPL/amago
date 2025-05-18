@@ -117,7 +117,6 @@ class RLDataset(ABC, Dataset):
         )
         self.max_seq_len = experiment.max_seq_len
         self.padded_sampling = experiment.padded_sampling
-        self.max_size = experiment.dset_max_size
         self.has_edit_rights = experiment.has_dset_edit_rights
 
     def check_configured(self):
@@ -193,6 +192,7 @@ class DiskTrajDataset(RLDataset):
         self,
         dset_root: str,
         dset_name: str,
+        dset_max_size: int,
         relabeler: Optional[Relabeler] = None,
     ):
         super().__init__()
@@ -200,6 +200,7 @@ class DiskTrajDataset(RLDataset):
         # create two directories for the FIFO and protected buffers
         self.fifo_path = get_path_to_trajs(dset_root, dset_name, fifo=True)
         self.protected_path = get_path_to_trajs(dset_root, dset_name, fifo=False)
+        self.dset_max_size = dset_max_size
         os.makedirs(self.fifo_path, exist_ok=True)
         os.makedirs(self.protected_path, exist_ok=True)
         self._refresh_files()
@@ -255,7 +256,7 @@ class DiskTrajDataset(RLDataset):
         """
         Imitates fixed-size FIFO replay buffers by clearing .traj files on disk in time order.
         """
-        if len(self.fifo_filenames) <= self.max_size:
+        if len(self.fifo_filenames) <= self.dset_max_size:
             # skip the sort
             return
 
@@ -272,7 +273,7 @@ class DiskTrajDataset(RLDataset):
                 }
             )
         traj_infos = sorted(traj_infos, key=lambda d: d["time"])
-        num_to_remove = max(len(traj_infos) - self.max_size, 0)
+        num_to_remove = max(len(traj_infos) - self.dset_max_size, 0)
         to_delete = list(map(itemgetter("filename"), traj_infos[:num_to_remove]))
         for file_to_delete in to_delete:
             os.remove(file_to_delete)
@@ -284,7 +285,7 @@ class DiskTrajDataset(RLDataset):
         return f"""DiskTrajDataset
         \t\t FIFO Buffer Path: {self.fifo_path}
         \t\t Protected Buffer Path: {self.protected_path}
-        \t\t FIFO Buffer Max Size: {self.max_size}
+        \t\t FIFO Buffer Max Size: {self.dset_max_size}
         \t\t FIFO Buffer Initial Size: {self._count_deletable_trajectories()}
         \t\t Protected Buffer Initial Size: {self._count_protected_trajectories()}
         \t\t Trajectory File Max Sequence Length: {self.max_seq_len}

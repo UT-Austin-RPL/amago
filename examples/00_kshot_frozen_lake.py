@@ -64,7 +64,9 @@ if __name__ == "__main__":
         run_name = group_name + f"_trial_{trial}"
 
         # create a dataset on disk. envs will write finished episodes here
-        dset = DiskTrajDataset(dset_root=args.buffer_dir, dset_name=run_name)
+        dset = DiskTrajDataset(
+            dset_root=args.buffer_dir, dset_name=run_name, dset_max_size=12_500
+        )
         # save checkpoints alongside the buffer
         ckpt_dir = args.buffer_dir
 
@@ -93,7 +95,6 @@ if __name__ == "__main__":
             exploration_wrapper_type=exploration_wrapper_type,
             tstep_encoder_type=tstep_encoder_type,
             traj_encoder_type=traj_encoder_type,
-            dset_max_size=12_500,
             run_name=run_name,
             dloader_workers=10,
             log_to_wandb=args.log,

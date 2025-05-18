@@ -47,6 +47,7 @@ class Experiment:
     #############
     # the name of the experiment. used to create a directory in `dset_root` to store checkpoints and logs. used for logging to wandb.
     run_name: str
+    # the base directory to store checkpoints and logs.
     ckpt_base_dir: str
     # the most important hyperparameter: the maximum sequence length that the model will be trained on.
     max_seq_len: int
@@ -104,8 +105,6 @@ class Experiment:
     ############
     # turn this off for collect-only runs where we need to assume the replay buffer is being managed by another learner process.
     has_dset_edit_rights: bool = True
-    # maximum number of .traj files to keep in the replay buffer before we start deleting the oldest files
-    dset_max_size: int = 15_000
     # randomizes trajectory file lengths when saving snippets from a much longer rollout. please refer to a longer explanation in `amago.Experiment.init_envs`.
     stagger_traj_file_lengths: bool = True
     # how to save trajectory .traj files. three options:
