@@ -416,12 +416,12 @@ class Experiment:
         else:
             utils.amago_warning("Latest policy checkpoint was not loaded.")
 
-    def delete_buffer_from_disk(self, delete_protected: bool = False):
+    def delete_buffer_from_disk(self):
         """
         Clear the replay buffer from disk (mainly for `examples/`).
         """
         if self.accelerator.is_main_process:
-            self.dataset.delete(delete_protected=delete_protected)
+            self.dataset.delete()
 
     def init_dsets(self):
         """
@@ -719,24 +719,28 @@ class Experiment:
         Accumulate x-axis metrics for plotting (total frames by environment name and the current epoch)
         across accelerate processes.
         """
-        # overall total frames per process
-        total_frames = sum(utils.call_async_env(self.train_envs, "total_frames"))
-        # total frames by env_name per process
-        frames_by_env_name = utils.call_async_env(
-            self.train_envs, "total_frames_by_env_name"
-        )
-        total_frames_by_env_name = defaultdict(int)
-        for env_frames in frames_by_env_name:
-            for env_name, frames in env_frames.items():
-                total_frames_by_env_name[f"total_frames-{env_name}"] += frames
-        total_frames_by_env_name = dict(total_frames_by_env_name)
-        total_frames_by_env_name["total_frames"] = total_frames
-        # sum over processes
-        total_frames_global = utils.sum_over_accelerate(total_frames_by_env_name)
+        metrics = {}
+        if hasattr(self, "train_envs"):
+            # overall total frames per process
+            total_frames = sum(utils.call_async_env(self.train_envs, "total_frames"))
+            # total frames by env_name per process
+            frames_by_env_name = utils.call_async_env(
+                self.train_envs, "total_frames_by_env_name"
+            )
+            total_frames_by_env_name = defaultdict(int)
+            for env_frames in frames_by_env_name:
+                for env_name, frames in env_frames.items():
+                    total_frames_by_env_name[f"total_frames-{env_name}"] += frames
+            total_frames_by_env_name = dict(total_frames_by_env_name)
+            total_frames_by_env_name["total_frames"] = total_frames
+            # sum over processes
+            total_frames_global = utils.sum_over_accelerate(total_frames_by_env_name)
+            metrics.update(total_frames_global)
+
         # add epoch
-        total_frames_global["Epoch"] = self.epoch
-        total_frames_global["gradient_steps"] = self.grad_update_counter
-        return total_frames_global
+        metrics["Epoch"] = self.epoch
+        metrics["gradient_steps"] = self.grad_update_counter
+        return metrics
 
     def log(self, metrics_dict, key):
         """
@@ -908,12 +912,12 @@ class Experiment:
                 self.collect_new_training_data()
             self.accelerator.wait_for_everyone()
 
-            buffer_log = self.dataset.on_end_of_epoch(epoch)
-            self.log(buffer_log, key="buffer")
+            dset_log = self.dataset.on_end_of_collection(epoch)
+            self.log(dset_log, key="dataset")
             self.init_dloaders()
             if not self.dataset.ready_for_training:
                 utils.amago_warning(
-                    f"Skipping epoch {epoch} because no training trajectories have been saved yet..."
+                    f"Skipping training on epoch {epoch} because `dataset.ready_for_training` is False"
                 )
                 continue
 

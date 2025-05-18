@@ -82,15 +82,6 @@ class D4RLDataset(RLDataset):
         rewards = torch.from_numpy(rewards_np).float().unsqueeze(-1)
         time_idxs = torch.arange(traj_len).unsqueeze(-1).long()
         dones = torch.from_numpy(terminals_np).bool().unsqueeze(-1)
-        blank_action = torch.zeros((1, actions.shape[-1]), dtype=torch.float32)
-        blank_rew = torch.zeros((1, 1), dtype=torch.float32)
-        rl2s = torch.cat(
-            (
-                torch.cat((blank_rew, rewards), dim=0),
-                torch.cat((blank_action, actions), dim=0),
-            ),
-            dim=-1,
-        )
 
         return RLData(
             obs=obs,
@@ -98,7 +89,6 @@ class D4RLDataset(RLDataset):
             rews=rewards,
             dones=dones,
             time_idxs=time_idxs,
-            rl2s=rl2s,
         )
 
 
