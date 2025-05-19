@@ -260,6 +260,24 @@ class Agent(nn.Module):
             a = dist.sample((k,))
         return a
 
+    def _critic_ensemble_to_td_target(self, ensemble_td_target: torch.Tensor):
+        B, L, C, G, _ = ensemble_td_target.shape
+        # random subset of critic ensemble
+        random_subset = torch.randint(
+            low=0,
+            high=C,
+            size=(B, L, self.num_critics_td, G, 1),
+            device=ensemble_td_target.device,
+        )
+        td_target_rand = torch.take_along_dim(ensemble_td_target, random_subset, dim=2)
+        if self.online_coeff > 0:
+            # clipped double q
+            td_target = td_target_rand.min(2, keepdims=True).values
+        else:
+            # without DPG updates the usual min creates strong underestimation. take mean instead
+            td_target = td_target_rand.mean(2, keepdims=True)
+        return td_target
+
     def forward(self, batch: Batch, log_step: bool):
         """
         Main step of training loop. Generate actor and critic loss
@@ -346,22 +364,7 @@ class Agent(nn.Module):
                 gamma = self.gammas.to(r.device).unsqueeze(-1)
                 ensemble_td_target = r + gamma * (1.0 - d) * q_targ_sp_ap_gp
                 assert ensemble_td_target.shape == (B, L - 1, C, G, 1)
-                # random subset of critic ensemble
-                random_subset = torch.randint(
-                    low=0,
-                    high=C,
-                    size=(B, L - 1, self.num_critics_td, G, 1),
-                    device=r.device,
-                )
-                td_target_rand = torch.take_along_dim(
-                    ensemble_td_target, random_subset, dim=2
-                )
-                if self.online_coeff > 0:
-                    # clipped double q
-                    td_target = td_target_rand.min(2, keepdims=True).values
-                else:
-                    # without DPG updates the usual min creates strong underestimation. take mean instead
-                    td_target = td_target_rand.mean(2, keepdims=True)
+                td_target = self._critic_ensemble_to_td_target(ensemble_td_target)
                 assert td_target.shape == (B, L - 1, 1, G, 1)
                 self.popart.update_stats(
                     td_target, mask=critic_mask.all(2, keepdim=True)
@@ -418,6 +421,7 @@ class Agent(nn.Module):
             else:
                 # Behavior Cloning
                 filter_ = torch.ones((1, 1, 1, 1), device=a.device)
+            
             if self.discrete:
                 # buffer actions are one-hot encoded
                 logp_a = a_dist.log_prob(a_buffer.argmax(-1)).unsqueeze(-1)
@@ -670,19 +674,7 @@ class MultiTaskAgent(Agent):
                 gamma = self.gammas.to(r.device).unsqueeze(-1)
                 ensemble_td_target = r + gamma * (1.0 - d) * q_targ_sp_ap_gp
                 assert ensemble_td_target.shape == (B, L - 1, C, G, 1)
-                random_subset = torch.randint(
-                    low=0,
-                    high=C,
-                    size=(B, L - 1, self.num_critics_td, G, 1),
-                    device=r.device,
-                )
-                td_target_rand = torch.take_along_dim(
-                    ensemble_td_target, random_subset, dim=2
-                )
-                if self.online_coeff > 0:
-                    td_target = td_target_rand.min(2, keepdims=True).values
-                else:
-                    td_target = td_target_rand.mean(2, keepdims=True)
+                td_target = self._critic_ensemble_to_td_target(ensemble_td_target)
                 assert td_target.shape == (B, L - 1, 1, G, 1)
                 # we are only using popart to track stats for online actor update,
                 # since scale intentionally does not impact critic loss
