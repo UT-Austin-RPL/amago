@@ -90,6 +90,8 @@ class Agent(nn.Module):
         # skip the computation of the "offline" policy regression weights/"filter".
         # Useful when you're doing imitation learning (all weights become 1.0)
         fake_filter: bool = False,
+        # num actions to use anytime we're going to estimate E_[Q(s, a ~ pi)] by sampling continuous action dists
+        num_actions_for_cont_value: int = 5,
         # function that takes seq of advantage estimates and outputs the regression weights.
         # offline_loss = -fbc_filter_func(advantages) * log pi(actions | states)
         # defaults to binary_filter, which masks negative advantage values (CRR).
@@ -123,6 +125,7 @@ class Agent(nn.Module):
         self.reward_multiplier = reward_multiplier
         self.pad_val = MAGIC_PAD_VAL
         self.fake_filter = fake_filter
+        self.num_actions_for_cont_value = num_actions_for_cont_value
         self.fbc_filter_func = fbc_filter_func
         self.offline_coeff = offline_coeff
         self.online_coeff = online_coeff
@@ -244,6 +247,16 @@ class Agent(nn.Module):
         dtype = torch.uint8 if (self.discrete or self.multibinary) else torch.float32
         return actions.to(dtype=dtype), hidden_state
 
+    def _sample_k_actions(self, dist, k: int):
+        if self.discrete:
+            assert k == 1, "There is no need to sample multiple discrete actions"
+            a = [dist.probs]
+        elif self.actor.actions_differentiable:
+            a = [dist.rsample() for _ in range(k)]
+        else:
+            a = [dist.sample() for _ in range(k)]
+        return torch.stack(a, dim=0)
+
     def forward(self, batch: Batch, log_step: bool):
         """
         Main step of training loop. Generate actor and critic loss
@@ -270,6 +283,7 @@ class Agent(nn.Module):
         _B, _L, D_action = a.shape
         assert _L == L - 1
         G = len(self.gammas)
+        K = self.num_actions_for_cont_value if not self.discrete else 1
         # note that the last timestep does not have an action.
         # we give it a fake one to make shape math work.
         a_buffer = torch.cat((a, a[:, -1, ...].clone().unsqueeze(1)), axis=1)
@@ -298,35 +312,50 @@ class Agent(nn.Module):
         critic_loss = None
         # one actor forward pass
         a_dist = self.actor(s_rep)
-        if self.discrete:
-            a_agent = a_dist.probs
-        elif self.actor.actions_differentiable:
-            a_agent = a_dist.rsample()
-        else:
-            a_agent = a_dist.sample()
+        a_agent = self._sample_k_actions(a_dist, k=K)
+        assert a_agent.shape == (K, B, L, G, D_action)
 
         if not self.fake_filter or self.online_coeff > 0:
-            s_a_agent_g = (s_rep.detach(), a_agent)
-            # detach() above b/c these grads flow to traj_encoder through the policy
+            # detach() b/c these grads flow to traj_encoder through the policy
+            critic_s_rep = repeat(s_rep.detach(), f"b l d -> ({K} b) l d")
+            # (s, a ~ pi) # rearranging to (possibly empty) batch dimension of num_actions_for_cont_value
+            s_a_agent_g = (
+                critic_s_rep, 
+                rearrange(a_agent, "k b l g d -> (k b) l g d")
+            )
+            # (s, a)
             s_a_g = (s_rep[:, :-1, ...], a_buffer[:, :-1, ...])
-            # all the `phi` terms are only here b/c we used to implement DR3
-            q_s_a_agent_g, phi_s_a_agent_g = self.maximized_critics(*s_a_agent_g)
+            # Q(s, a ~ pi)
+            q_s_a_agent_g, _ = self.maximized_critics(*s_a_agent_g)
+            assert q_s_a_agent_g.shape == (K * B, L, C, G, 1)
+            q_s_a_agent_g = rearrange(q_s_a_agent_g, "(k b) l c g 1 -> k b l c g 1", k=K).mean(0)
             assert q_s_a_agent_g.shape == (B, L, C, G, 1)
-            q_s_a_g, phi_s_a_g = self.critics(*s_a_g)
+            # Q(s, a)
+            q_s_a_g, _ = self.critics(*s_a_g)
+            assert q_s_a_g.shape == (B, L-1, C, G, 1)
 
             ########################
             ## Step 4: TD Targets ##
             ########################
-            # \mathcal{B}\bar{Q}(s, a, g)
+            # td_target = r + gamma * (1 - d) * Q_target(s', a' ~ pi(s'))
             with torch.no_grad():
+                # (a ~ pi_target)
                 a_prime_dist = self.target_actor(s_rep) if self.use_target_actor else a_dist
-                ap = a_prime_dist.probs if self.discrete else a_prime_dist.sample()
-                assert ap.shape == (B, L, G, D_action)
-                sp_ap_gp = (s_rep[:, 1:, ...].detach(), ap[:, 1:, ...].detach())
+                ap = self._sample_k_actions(a_prime_dist, k=K).detach()
+                assert ap.shape == (K, B, L, G, D_action)
+                # (s', a' ~ pi(s'))
+                sp_ap_gp = (
+                    critic_s_rep[:, 1:, ...], 
+                    repeat(ap[:, :, 1:], f"k b l g d -> (k b) l g d")
+                )
+                # Q_target(s', a' ~ pi(s'))
                 q_targ_sp_ap_gp, _ = self.target_critics(*sp_ap_gp)
+                assert q_targ_sp_ap_gp.shape == (K * B, L - 1, C, G, 1)
+                q_targ_sp_ap_gp = rearrange(q_targ_sp_ap_gp, "(k b) l c g 1 -> k b l c g 1", k=K).mean(0)
                 assert q_targ_sp_ap_gp.shape == (B, L - 1, C, G, 1)
                 q_targ_sp_ap_gp = self.popart(q_targ_sp_ap_gp, normalized=False)
                 assert q_targ_sp_ap_gp.shape == (B, L - 1, C, G, 1)
+                # y = r + gamma * (1 - d) * Q_target(s', a' ~ pi(s'))
                 gamma = self.gammas.to(r.device).unsqueeze(-1)
                 ensemble_td_target = r + gamma * (1.0 - d) * q_targ_sp_ap_gp
                 assert ensemble_td_target.shape == (B, L - 1, C, G, 1)
@@ -391,10 +420,13 @@ class Agent(nn.Module):
         ######################
         if self.offline_coeff > 0:
             if not self.fake_filter:
-                # Critic Regularized Regression (but noisy w/ k = 1 to save a forward pass)
                 with torch.no_grad():
+                    # V(s) = E_a[Q(s, a ~ pi)] (computed with sample of num_actions_for_cont_value 
+                    # in continuous case, or explicitly in discrete case). Already taken mean
+                    # over actions, now mean over critic ensemble.
                     val_s_g = q_s_a_agent_g[:, :-1, ...].mean(2).detach()
                     assert val_s_g.shape == (B, L - 1, G, 1)
+                    # A(s, a) = Q(s, a) - V(s)
                     advantage_a_s_g = q_s_a_g.mean(2) - val_s_g
                     assert advantage_a_s_g.shape == (B, L - 1, G, 1)
                     filter_ = self.fbc_filter_func(advantage_a_s_g).float()
