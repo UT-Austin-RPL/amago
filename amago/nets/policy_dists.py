@@ -327,7 +327,7 @@ class Multibinary(PolicyDistribution):
 
 class DiscreteLikeContinuous:
     def __init__(self, categorical: _Categorical):
-        self.dist = categorical
+        self.dist = pyd.OneHotCategorical(logits=categorical.logits)
 
     @property
     def probs(self):
@@ -341,11 +341,10 @@ class DiscreteLikeContinuous:
         return self.dist.entropy()
 
     def log_prob(self, action):
-        return self.dist.log_prob(action.argmax(-1)).unsqueeze(-1)
+        return self.dist.log_prob(action)
 
     def sample(self, *args, **kwargs):
-        samples = self.dist.sample(*args, **kwargs)
-        action = (
-            F.one_hot(samples, num_classes=self.probs.shape[-1]).squeeze(-2).float()
-        )
-        return action
+        return self.dist.sample(*args, **kwargs)
+
+    def rsample(self):
+        return F.gumbel_softmax(self.logits, tau=0.5, hard=True, dim=-1)

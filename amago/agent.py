@@ -14,6 +14,7 @@ from amago.loading import Batch, MAGIC_PAD_VAL
 from amago.nets.tstep_encoders import TstepEncoder
 from amago.nets.traj_encoders import TrajEncoder
 from amago.nets import actor_critic
+from amago.nets.policy_dists import DiscreteLikeContinuous
 from amago import utils
 
 
@@ -91,7 +92,8 @@ class Agent(nn.Module):
         # Useful when you're doing imitation learning (all weights become 1.0)
         fake_filter: bool = False,
         # num actions to use anytime we're going to estimate E_[Q(s, a ~ pi)] by sampling continuous action dists
-        num_actions_for_cont_value: int = 12,
+        num_actions_for_value_in_critic_loss: int = 1,
+        num_actions_for_value_in_actor_loss: int = 1,
         # function that takes seq of advantage estimates and outputs the regression weights.
         # offline_loss = -fbc_filter_func(advantages) * log pi(actions | states)
         # defaults to binary_filter, which masks negative advantage values (CRR).
@@ -125,7 +127,8 @@ class Agent(nn.Module):
         self.reward_multiplier = reward_multiplier
         self.pad_val = MAGIC_PAD_VAL
         self.fake_filter = fake_filter
-        self.num_actions_for_cont_value = num_actions_for_cont_value
+        self.num_actions_for_value_in_critic_loss = num_actions_for_value_in_critic_loss
+        self.num_actions_for_value_in_actor_loss = num_actions_for_value_in_actor_loss
         self.fbc_filter_func = fbc_filter_func
         self.offline_coeff = offline_coeff
         self.online_coeff = online_coeff
@@ -283,7 +286,8 @@ class Agent(nn.Module):
         _B, _L, D_action = a.shape
         assert _L == L - 1
         G = len(self.gammas)
-        K = self.num_actions_for_cont_value if not self.discrete else 1
+        K_c = self.num_actions_for_value_in_critic_loss if not self.discrete else 1
+        K_a = self.num_actions_for_value_in_actor_loss if not self.discrete else 1
         # note that the last timestep does not have an action.
         # we give it a fake one to make shape math work.
         a_buffer = torch.cat((a, a[:, -1, ...].clone().unsqueeze(1)), axis=1)
@@ -311,8 +315,8 @@ class Agent(nn.Module):
         #########################################
         critic_loss = None
         a_dist = self.actor(s_rep)
-        a_agent = self._sample_k_actions(a_dist, k=K)
-        assert a_agent.shape == (K, B, L, G, D_action)
+        a_agent = self._sample_k_actions(a_dist, k=K_a)
+        assert a_agent.shape == (K_a, B, L, G, D_action)
 
         if not self.fake_filter or self.online_coeff > 0:
             # (s, a ~ pi), Q(s, a ~ pi)
@@ -331,8 +335,8 @@ class Agent(nn.Module):
             with torch.no_grad():
                 # (a ~ pi_target)
                 a_prime_dist = self.target_actor(s_rep) if self.use_target_actor else a_dist
-                ap = self._sample_k_actions(a_prime_dist, k=K).detach()
-                assert ap.shape == (K, B, L, G, D_action)
+                ap = self._sample_k_actions(a_prime_dist, k=K_c).detach()
+                assert ap.shape == (K_c, B, L, G, D_action)
                 # (s', a' ~ pi(s'))
                 sp_ap_gp = (s_rep[:, 1:, ...], ap[:, :, 1:, ...])
                 # Q_target(s', a' ~ pi(s'))
@@ -575,6 +579,8 @@ class MultiTaskAgent(Agent):
             reward_multiplier=reward_multiplier,
             tau=tau,
             fake_filter=fake_filter,
+            num_actions_for_value_in_critic_loss=num_actions_for_value_in_critic_loss,
+            num_actions_for_value_in_actor_loss=num_actions_for_value_in_actor_loss,
             online_coeff=online_coeff,
             offline_coeff=offline_coeff,
             use_target_actor=use_target_actor,
@@ -582,8 +588,6 @@ class MultiTaskAgent(Agent):
             fbc_filter_func=fbc_filter_func,
             popart=popart,
         )
-        self.num_actions_for_value_in_critic_loss = num_actions_for_value_in_critic_loss
-        self.num_actions_for_value_in_actor_loss = num_actions_for_value_in_actor_loss
         critic_kwargs = {
             "state_dim": self.traj_encoder.emb_dim,
             "action_dim": self.action_dim,
@@ -595,6 +599,9 @@ class MultiTaskAgent(Agent):
         self.maximized_critics = actor_critic.NCriticsTwoHot(**critic_kwargs)
         self.hard_sync_targets()
 
+    def _sample_k_actions(self, dist, k: int):
+        raise NotImplementedError
+
     def forward(self, batch: Batch, log_step: bool):
         # fmt: off
         self.update_info = {}  # holds wandb stats
@@ -603,9 +610,7 @@ class MultiTaskAgent(Agent):
         ## Step 0: Timestep Emb ##
         ##########################
         active_log_dict = self.update_info if log_step else None
-        o = self.tstep_encoder(
-            obs=batch.obs, rl2s=batch.rl2s, log_dict=active_log_dict
-        )
+        o = self.tstep_encoder(obs=batch.obs, rl2s=batch.rl2s, log_dict=active_log_dict)
 
         ###########################
         ## Step 1: Get Organized ##
@@ -622,9 +627,7 @@ class MultiTaskAgent(Agent):
         C = len(self.critics)
         assert batch.rews.shape == (B, L - 1, 1)
         assert batch.dones.shape == (B, L - 1, 1)
-        r = repeat(
-            (self.reward_multiplier * batch.rews).float(), f"b l r -> b l 1 {G} r"
-        )
+        r = repeat((self.reward_multiplier * batch.rews).float(), f"b l r -> b l 1 {G} r")
         d = repeat(batch.dones.float(), f"b l d -> b l 1 {G} d")
         D_emb = self.traj_encoder.emb_dim
         Bins = self.critics.num_bins
@@ -643,7 +646,7 @@ class MultiTaskAgent(Agent):
         #########################################
         a_dist = self.actor(s_rep)
         if self.discrete:
-            a_dist = actor_critic.DiscreteLikeContinuous(a_dist)
+            a_dist = DiscreteLikeContinuous(a_dist)
 
         critic_loss = None
         if not self.fake_filter or self.online_coeff > 0:
@@ -654,10 +657,10 @@ class MultiTaskAgent(Agent):
                 if self.use_target_actor:
                     a_prime_dist = self.target_actor(s_rep)
                     if self.discrete:
-                        a_prime_dist = actor_critic.DiscreteLikeContinuous(a_prime_dist)
+                        a_prime_dist = DiscreteLikeContinuous(a_prime_dist)
                 else:
                     a_prime_dist = a_dist
-                ap = self._sample_k_actions(a_prime_dist, k=K_c)
+                ap = a_prime_dist.sample((K_c,))
                 assert ap.shape == (K_c, B, L, G, D_action)
                 sp_ap_gp = (s_rep[:, 1:, ...].detach(), ap[:, :, 1:, ...].detach())
                 q_targ_sp_ap_gp = self.target_critics(*sp_ap_gp)
@@ -676,7 +679,10 @@ class MultiTaskAgent(Agent):
                 td_target_rand = torch.take_along_dim(
                     ensemble_td_target, random_subset, dim=2
                 )
-                td_target = td_target_rand.mean(2, keepdims=True)
+                if self.online_coeff > 0:
+                    td_target = td_target_rand.min(2, keepdims=True).values
+                else:
+                    td_target = td_target_rand.mean(2, keepdims=True)
                 assert td_target.shape == (B, L - 1, 1, G, 1)
                 # we are only using popart to track stats for online actor update,
                 # since scale intentionally does not impact critic loss
@@ -709,8 +715,8 @@ class MultiTaskAgent(Agent):
             if log_step:
                 td_stats = self._td_stats(
                     critic_mask,
-                    scalar_q_s_a_g[:, :-1, ...],
                     self.popart.normalize_values(scalar_q_s_a_g)[:, :-1, ...],
+                    scalar_q_s_a_g[:, :-1, ...],
                     r=r,
                     d=d,
                     td_target=td_target,
@@ -724,16 +730,16 @@ class MultiTaskAgent(Agent):
         ######################
         actor_loss = 0.0
         K_a = self.num_actions_for_value_in_actor_loss
-        a_agent = self._sample_k_actions(a_dist, k=K_a)
         if not self.fake_filter and self.offline_coeff > 0:
             with torch.no_grad():
+                a_agent = a_dist.sample((K_a,))
                 q_s_a_agent = self.critics(s_rep.detach(), a_agent)
                 assert q_s_a_agent.probs.shape == (K_a, B, L, C, G, Bins)
                 # mean over actions and critic ensemble
-                val_s = self.critics.bin_dist_to_raw_vals(q_s_a_agent).mean((0, 3))
-                assert val_s.shape == (B, L, G, 1)
+                val_s = self.critics.bin_dist_to_raw_vals(q_s_a_agent)
+                assert val_s.shape == (K_a, B, L, C, G, 1)
                 # A(s, a) = Q(s, a) - V(s) = mean_over_critics(Q(s, a)) - mean_over_critics(mean_over_actions(Q(s, a ~ pi)))
-                advantage_s_a = scalar_q_s_a_g.mean(2) - val_s
+                advantage_s_a = scalar_q_s_a_g.mean(2) - val_s.mean((0, 3))
                 assert advantage_s_a.shape == (B, L, G, 1)
                 filter_ = self.fbc_filter_func(advantage_s_a)[:, :-1, ...].float()
                 binary_filter_ = binary_filter(advantage_s_a)[:, :-1, ...].float()
@@ -752,24 +758,26 @@ class MultiTaskAgent(Agent):
             logp_a = logp_a[:, :-1, ...].clamp(-1e3, 1e3)
             actor_loss += self.offline_coeff * -(filter_.detach() * logp_a)
             if log_step:
-                policy_stats = self._policy_stats(actor_mask, a_dist)
                 filter_stats = self._filter_stats(actor_mask, logp_a, binary_filter_)
-                self.update_info.update(filter_stats | policy_stats)
+                self.update_info.update(filter_stats)
 
         ######################
         ## Step 7: DPG Loss ##
         ######################
         if self.online_coeff > 0:
-            assert (
-                self.actor.actions_differentiable and not self.discrete
-            ), "this ablation only supports continuous actions with rsample()"
-            q_s_a_agent = self.maximized_critics(s_rep.detach(), a_agent)
+            # TODO: possible to recycle this q_val for the FBC loss above, as is done in Agent.
+            # For now, only call rsample when specifically using online_coeff > 0 (since it's usually turned off)
+            assert self.actor.actions_differentiable, "online-style actor loss is not compatible with action distribution"
+            a_agent_dpg = torch.stack([a_dist.rsample() for _ in range(K_a)], dim=0)
+            q_s_a_agent = self.maximized_critics(s_rep.detach(), a_agent_dpg)
             q_s_a_agent = self.popart.normalize_values(
                 # mean over K actions, min over critic ensemble
                 self.maximized_critics.bin_dist_to_raw_vals(q_s_a_agent).mean(0).min(2).values
             )
             actor_loss += self.online_coeff * -(q_s_a_agent[:, :-1, ...])
-        
+        if log_step:
+            policy_stats = self._policy_stats(actor_mask, a_dist)
+            self.update_info.update(policy_stats)
 
         return critic_loss, actor_loss
 
