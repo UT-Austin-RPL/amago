@@ -165,27 +165,30 @@ class NCritics(nn.Module):
     def __len__(self):
         return self.num_critics
 
+    @torch.compile
     def forward(self, state: torch.Tensor, action: torch.Tensor):
+        assert action.dim() == 5
+        K, B, L, G, D = action.shape
         if self.discrete:
-            # now clipped inside of Discrete dist
-            clip_action = action
+            assert K == 1
             inp = state
         else:
-            assert action.dim() == 4
-            B, L, G, D = action.shape
-            state = repeat(state, "b l d -> (b g) l d", g=self.num_gammas)
-            action = rearrange(action, "b l g d -> (b g) l d")
-            gammas_rep = gammas_as_input_seq(self.gammas, B, L).to(action.device)
-            # clip to remove DPG incentive to push actions to [-1, 1] border
+            state = repeat(state, "b l d -> (k b g) l d", k=K, g=self.num_gammas)
+            action = rearrange(action, "k b l g d -> (k b g) l d", k=K)
+            gammas_rep = gammas_as_input_seq(self.gammas, K * B, L).to(action.device)
             clip_action = action.clamp(-0.999, 0.999)
             inp = torch.cat((state, gammas_rep, clip_action), dim=-1)
-        outputs, phis = self.net(inp)
+        outputs, _ = self.net(inp)
         if self.discrete:
-            outputs = rearrange(outputs, "b l c (g o) -> b l c g o", g=self.num_gammas)
-            outputs = (outputs * clip_action.unsqueeze(2)).sum(-1, keepdims=True)
+            outputs = rearrange(
+                outputs, "b l c (g o) -> 1 b l c g o", g=self.num_gammas
+            )
+            outputs = (outputs * action.unsqueeze(3)).sum(-1, keepdims=True)
         else:
-            outputs = rearrange(outputs, "(b g) l c o -> b l c g o", g=self.num_gammas)
-        return outputs, phis
+            outputs = rearrange(
+                outputs, "(k b g) l c o -> k b l c g o", k=K, g=self.num_gammas
+            )
+        return outputs
 
 
 @gin.configurable
