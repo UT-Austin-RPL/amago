@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Optional
 
 import torch
 from torch import nn
@@ -36,7 +37,7 @@ class FFTrajEncoder(TrajEncoder):
         tstep_dim,
         max_seq_len,
         d_model: int = 256,
-        d_ff: int | None = None,
+        d_ff: Optional[int] = None,
         n_layers: int = 1,
         dropout=0.0,
         activation="leaky_relu",
@@ -57,13 +58,17 @@ class FFTrajEncoder(TrajEncoder):
         self.dropout = nn.Dropout(dropout)
         self._emb_dim = d_model
 
-    def forward(self, seq, time_idxs=None, hidden_state=None):
+    @torch.compile
+    def _traj_blocks_forward(self, seq: torch.Tensor) -> torch.Tensor:
         traj_emb = self.dropout(self.activation(self.traj_emb(seq)))
         for traj_block in self.traj_blocks:
             traj_emb = traj_block(traj_emb)
         traj_emb = self.traj_last(traj_emb)
         traj_emb = self.dropout(self.norm(traj_emb))
-        return traj_emb, hidden_state
+        return traj_emb
+
+    def forward(self, seq, time_idxs=None, hidden_state=None):
+        return self._traj_blocks_forward(seq), hidden_state
 
     @property
     def emb_dim(self):

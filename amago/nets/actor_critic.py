@@ -98,7 +98,6 @@ class _EinMixEnsemble(nn.Module):
                 for _ in range(n_layers - 1)
             ]
         )
-
         self.output_layer = Mix(
             "b l c d_in -> b l c d_out",
             weight_shape="c d_in d_out",
@@ -244,21 +243,24 @@ class NCriticsTwoHot(nn.Module):
     def __len__(self):
         return self.num_critics
 
+    @torch.compile
     def forward(self, state: torch.Tensor, action: torch.Tensor):
-        assert action.dim() == 4
-        B, L, G, D = action.shape
+        assert action.dim() == 5
+        K, B, L, G, D = action.shape
         assert G == self.num_gammas
-        state = repeat(state, "b l d -> (b g) l d", g=self.num_gammas)
-        action = rearrange(action.clamp(-0.999, 0.999), "b l g d -> (b g) l d")
-        gammas_rep = gammas_as_input_seq(self.gammas, B, L).to(action.device)
+        state = repeat(state, "b l d -> (k b g) l d", k=K, g=self.num_gammas)
+        action = rearrange(action.clamp(-0.999, 0.999), "k b l g d -> (k b g) l d")
+        gammas_rep = gammas_as_input_seq(self.gammas, K * B, L).to(action.device)
         inp = torch.cat((state, gammas_rep, action), dim=-1)
         outputs, phis = self.net(inp)
-        outputs = rearrange(outputs, "(b g) l c o -> b l c g o", g=self.num_gammas)
+        outputs = rearrange(
+            outputs, "(k b g) l c o -> k b l c g o", k=K, g=self.num_gammas
+        )
         val_dist = pyd.Categorical(logits=outputs)
         clip_probs = val_dist.probs.clamp(1e-6, 0.999)
         safe_probs = clip_probs / clip_probs.sum(-1, keepdims=True).detach()
         safe_dist = pyd.Categorical(probs=safe_probs)
-        return safe_dist, phis
+        return safe_dist
 
     def bin_dist_to_raw_vals(self, bin_dist: pyd.Categorical):
         assert isinstance(bin_dist, pyd.Categorical)

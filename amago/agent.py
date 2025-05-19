@@ -91,7 +91,7 @@ class Agent(nn.Module):
         # Useful when you're doing imitation learning (all weights become 1.0)
         fake_filter: bool = False,
         # num actions to use anytime we're going to estimate E_[Q(s, a ~ pi)] by sampling continuous action dists
-        num_actions_for_cont_value: int = 5,
+        num_actions_for_cont_value: int = 12,
         # function that takes seq of advantage estimates and outputs the regression weights.
         # offline_loss = -fbc_filter_func(advantages) * log pi(actions | states)
         # defaults to binary_filter, which masks negative advantage values (CRR).
@@ -250,12 +250,12 @@ class Agent(nn.Module):
     def _sample_k_actions(self, dist, k: int):
         if self.discrete:
             assert k == 1, "There is no need to sample multiple discrete actions"
-            a = [dist.probs]
+            a = dist.probs.unsqueeze(0)
         elif self.actor.actions_differentiable:
-            a = [dist.rsample() for _ in range(k)]
+            a = torch.stack([dist.rsample() for _ in range(k)], dim=0)
         else:
-            a = [dist.sample() for _ in range(k)]
-        return torch.stack(a, dim=0)
+            a = dist.sample((k,))
+        return a
 
     def forward(self, batch: Batch, log_step: bool):
         """
@@ -544,22 +544,46 @@ class MultiTaskAgent(Agent):
         obs_space: gym.spaces.Dict,
         rl2_space: gym.spaces.Box,
         action_space: gym.spaces.Space,
+        tstep_encoder_type: Type[TstepEncoder],
+        traj_encoder_type: Type[TrajEncoder],
         max_seq_len: int,
+        num_critics: int = 4,
+        num_critics_td: int = 2,
         online_coeff: float = 0.0,
         offline_coeff: float = 1.0,
-        fbc_filter_k: int = 3,
-        **kwargs,
+        gamma: float = 0.999,
+        reward_multiplier: float = 10.0,
+        tau: float = 0.003,
+        fake_filter: bool = False,
+        num_actions_for_value_in_critic_loss: int = 1,
+        num_actions_for_value_in_actor_loss: int = 3,
+        fbc_filter_func: callable = binary_filter,
+        popart: bool = True,
+        use_target_actor: bool = True,
+        use_multigamma: bool = True,
     ):
         super().__init__(
             obs_space=obs_space,
             rl2_space=rl2_space,
             action_space=action_space,
             max_seq_len=max_seq_len,
+            tstep_encoder_type=tstep_encoder_type,
+            traj_encoder_type=traj_encoder_type,
+            num_critics=num_critics,
+            num_critics_td=num_critics_td,
+            gamma=gamma,
+            reward_multiplier=reward_multiplier,
+            tau=tau,
+            fake_filter=fake_filter,
             online_coeff=online_coeff,
             offline_coeff=offline_coeff,
-            **kwargs,
+            use_target_actor=use_target_actor,
+            use_multigamma=use_multigamma,
+            fbc_filter_func=fbc_filter_func,
+            popart=popart,
         )
-        self.fbc_filter_k = fbc_filter_k
+        self.num_actions_for_value_in_critic_loss = num_actions_for_value_in_critic_loss
+        self.num_actions_for_value_in_actor_loss = num_actions_for_value_in_actor_loss
         critic_kwargs = {
             "state_dim": self.traj_encoder.emb_dim,
             "action_dim": self.action_dim,
@@ -592,6 +616,7 @@ class MultiTaskAgent(Agent):
         _B, _L, D_action = a.shape
         assert _L == L - 1
         G = len(self.gammas)
+        K_c = self.num_actions_for_value_in_critic_loss
         a_buffer = torch.cat((a, a[:, -1, ...].clone().unsqueeze(1)), axis=1)
         a_buffer = repeat(a_buffer, f"b l a -> b l {G} a")
         C = len(self.critics)
@@ -610,9 +635,7 @@ class MultiTaskAgent(Agent):
         ################################
         ## Step 2: Sequence Embedding ##
         ################################
-        s_rep, hidden_state = self.traj_encoder(
-            seq=o, time_idxs=batch.time_idxs, hidden_state=None
-        )
+        s_rep, hidden_state = self.traj_encoder(seq=o, time_idxs=batch.time_idxs, hidden_state=None)
         assert s_rep.shape == (B, L, D_emb)
 
         #########################################
@@ -634,14 +657,12 @@ class MultiTaskAgent(Agent):
                         a_prime_dist = actor_critic.DiscreteLikeContinuous(a_prime_dist)
                 else:
                     a_prime_dist = a_dist
-                ap = a_prime_dist.sample()
-                assert ap.shape == (B, L, G, D_action)
-                sp_ap_gp = (s_rep[:, 1:, ...].detach(), ap[:, 1:, ...].detach())
-                q_targ_sp_ap_gp, _ = self.target_critics(*sp_ap_gp)
-                assert q_targ_sp_ap_gp.probs.shape == (B, L - 1, C, G, Bins)
-                q_targ_sp_ap_gp = self.target_critics.bin_dist_to_raw_vals(
-                    q_targ_sp_ap_gp
-                )
+                ap = self._sample_k_actions(a_prime_dist, k=K_c)
+                assert ap.shape == (K_c, B, L, G, D_action)
+                sp_ap_gp = (s_rep[:, 1:, ...].detach(), ap[:, :, 1:, ...].detach())
+                q_targ_sp_ap_gp = self.target_critics(*sp_ap_gp)
+                assert q_targ_sp_ap_gp.probs.shape == (K_c, B, L - 1, C, G, Bins)
+                q_targ_sp_ap_gp = self.target_critics.bin_dist_to_raw_vals(q_targ_sp_ap_gp).mean(0)
                 assert q_targ_sp_ap_gp.shape == (B, L - 1, C, G, 1)
                 gamma = self.gammas.to(r.device).unsqueeze(-1)
                 ensemble_td_target = r + gamma * (1.0 - d) * q_targ_sp_ap_gp
@@ -672,11 +693,11 @@ class MultiTaskAgent(Agent):
             #########################
             ## Step 5: Critic Loss ##
             #########################
-            s_a_g = (s_rep, a_buffer)
-            q_s_a_g, _ = self.critics(*s_a_g)
-            assert q_s_a_g.probs.shape == (B, L, C, G, Bins)
+            s_a_g = (s_rep, a_buffer.unsqueeze(0))
+            q_s_a_g = self.critics(*s_a_g)
+            assert q_s_a_g.probs.shape == (1, B, L, C, G, Bins)
             critic_loss = F.cross_entropy(
-                rearrange(q_s_a_g.logits[:, :-1, ...], "b l c g u -> (b l c g) u"),
+                rearrange(q_s_a_g.logits[0, :, :-1, ...], "b l c g u -> (b l c g) u"),
                 rearrange(td_target_labels, "b l c g u -> (b l c g) u"),
                 reduction="none",
             )
@@ -684,16 +705,16 @@ class MultiTaskAgent(Agent):
                 critic_loss, "(b l c g) -> b l c g 1", b=B, l=L - 1, c=C, g=G
             )
             assert critic_loss.shape == (B, L - 1, C, G, 1)
+            scalar_q_s_a_g = self.critics.bin_dist_to_raw_vals(q_s_a_g).squeeze(0)
             if log_step:
-                raw_q_s_a_g_ = self.critics.bin_dist_to_raw_vals(q_s_a_g)[:, :-1, ...]
                 td_stats = self._td_stats(
                     critic_mask,
-                    raw_q_s_a_g_,
-                    self.popart.normalize_values(raw_q_s_a_g_),
+                    scalar_q_s_a_g[:, :-1, ...],
+                    self.popart.normalize_values(scalar_q_s_a_g)[:, :-1, ...],
                     r=r,
                     d=d,
                     td_target=td_target,
-                    raw_q_bins=q_s_a_g.probs[:, :-1],
+                    raw_q_bins=q_s_a_g.probs[0, :, :-1],
                 )
                 popart_stats = self._popart_stats()
                 self.update_info.update(td_stats | popart_stats)
@@ -702,20 +723,17 @@ class MultiTaskAgent(Agent):
         ## Step 6: FBC Loss ##
         ######################
         actor_loss = 0.0
+        K_a = self.num_actions_for_value_in_actor_loss
+        a_agent = self._sample_k_actions(a_dist, k=K_a)
         if not self.fake_filter and self.offline_coeff > 0:
             with torch.no_grad():
-                K = self.fbc_filter_k
-                a_agent = rearrange(a_dist.sample((K,)), "k b l g a -> (b k) l g a")
-                s_rep_fbc = repeat(s_rep.detach(), "b l f -> (b k) l f", k=K)
-                s_a_agent = (s_rep_fbc, a_agent)
-                q_s_a_agent, phi_s_a_agent = self.critics(*s_a_agent)
-                assert q_s_a_agent.probs.shape == (B * K, L, C, G, Bins)
-                val_s = self.critics.bin_dist_to_raw_vals(q_s_a_agent).mean(2).detach()
-                assert val_s.shape == (B * K, L, G, 1)
-                val_s = rearrange(val_s, "(b k) l g 1 -> b k l g 1", k=K).mean(1)
+                q_s_a_agent = self.critics(s_rep.detach(), a_agent)
+                assert q_s_a_agent.probs.shape == (K_a, B, L, C, G, Bins)
+                # mean over actions and critic ensemble
+                val_s = self.critics.bin_dist_to_raw_vals(q_s_a_agent).mean((0, 3))
                 assert val_s.shape == (B, L, G, 1)
-                q_s_a_g = self.critics.bin_dist_to_raw_vals(q_s_a_g).mean(2)
-                advantage_s_a = q_s_a_g - val_s
+                # A(s, a) = Q(s, a) - V(s) = mean_over_critics(Q(s, a)) - mean_over_critics(mean_over_actions(Q(s, a ~ pi)))
+                advantage_s_a = scalar_q_s_a_g.mean(2) - val_s
                 assert advantage_s_a.shape == (B, L, G, 1)
                 filter_ = self.fbc_filter_func(advantage_s_a)[:, :-1, ...].float()
                 binary_filter_ = binary_filter(advantage_s_a)[:, :-1, ...].float()
@@ -745,10 +763,10 @@ class MultiTaskAgent(Agent):
             assert (
                 self.actor.actions_differentiable and not self.discrete
             ), "this ablation only supports continuous actions with rsample()"
-            a_agent = a_dist.rsample()
-            q_s_a_agent, _ = self.maximized_critics(s_rep.detach(), a_agent)
+            q_s_a_agent = self.maximized_critics(s_rep.detach(), a_agent)
             q_s_a_agent = self.popart.normalize_values(
-                self.maximized_critics.bin_dist_to_raw_vals(q_s_a_agent).min(2).values
+                # mean over K actions, min over critic ensemble
+                self.maximized_critics.bin_dist_to_raw_vals(q_s_a_agent).mean(0).min(2).values
             )
             actor_loss += self.online_coeff * -(q_s_a_agent[:, :-1, ...])
         

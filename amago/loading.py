@@ -304,7 +304,6 @@ class DiskTrajDataset(RLDataset):
                 protected/
                     ... # .traj or .npz files
 
-
     Args:
         dset_root: The root directory to store the dataset.
         dset_name: The name of the dataset.
