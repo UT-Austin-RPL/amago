@@ -64,6 +64,57 @@ def exp_filter(
 
 @gin.configurable
 class Agent(nn.Module):
+    """
+    The agent architecture is an actor-critic with a shared backbone:
+
+    ```python
+    obs_emb_seq = timestep_encoder(obs_seq)
+    state_emb_seq = traj_encoder(obs_emb_seq) # sequence model
+    action_dist = actor(state_emb_seq)
+    if discrete:
+        # network outputs a q val for each action
+        value_pred = critic(state_emb_seq)[action_dist.sample()]
+    else:
+        # network outputs a scalar q val for an input action
+        value_pred = critic(state_emb_seq, action_dist.sample())
+    ```
+
+    Then, for every timstep of state_emb_seq, we compute the actor loss and critic loss:
+
+    ```python
+    if discrete:
+        def Q(state, critic, action):
+            return critic(state)[action]
+
+        def V(state, critic, action_dist, k):
+            return (critic(state) * action_dist.probs).sum()
+    else:
+        def Q(state, critic, action):
+            return critic(state, action)
+
+        def V(state, critic, action_dist, k):
+            return 1/k * sum(Q(state, critic, action_dist.sample()) for _ in range(k))
+
+    td_target = mean/min_over_ensemble( r + gamma * (1 - d) * V(next_state, target_critic, target_actor(next_state), k_c) )
+    advantages = Q(state, critic, action) - V(state, critic, action_dist, k_a)
+    offline_loss = -fbc_filter_func(advantages) * actor(state).log_prob(action)
+    online_loss = -V(state, critic.detach(), actor(state), k_a)
+
+    actor_loss = online_coeff * offline_loss + online_coeff * online_loss
+    critic_loss = (critic(state, action) - td_target) ** 2
+    ```
+
+    And this is done in parallel across multiple values of the discount factor gamma.
+
+    Provided by `Experiment` (configured elsewhere):
+    - `obs_space`: gym.spaces.Dict
+    - `rl2_space`: gym.spaces.Box
+    - `action_space`: gym.spaces.Space
+    - `max_seq_len`: int
+    - `tstep_encoder_type`: Type[TstepEncoder]
+    - `traj_encoder_type`: Type[TrajEncoder]
+    """
+
     def __init__(
         self,
         obs_space: gym.spaces.Dict,
@@ -742,7 +793,7 @@ class MultiTaskAgent(Agent):
 
         if self.offline_coeff > 0:
             if self.discrete:
-                logp_a = a_dist.log_prob(a_buffer)
+                logp_a = a_dist.log_prob(a_buffer).unsqueeze(-1)
             elif self.multibinary:
                 logp_a = a_dist.log_prob(a_buffer).mean(-1, keepdim=True)
             else:
