@@ -1,5 +1,5 @@
-from itertools import chain
-from typing import Type, Optional
+import itertools
+from typing import Type, Optional, Tuple, Any, List
 
 import torch
 from torch import nn
@@ -20,11 +20,30 @@ from amago import utils
 
 @gin.configurable
 class Multigammas:
+    """A hook for gin configuration of Multi-gamma values.
+
+    Defines the list of gamma values used during training in addition to the main gamma
+    parameter in Agent, which is the value used during rollouts/evals by default.
+    Settings are divided into discrete and continuous action spaces versions, because
+    the cost of adding gammas tends to be much higher for continuous action critics,
+    where they multiply the effective batch size of the actor/critic loss computation.
+    Note that adding gammas has no effect on the batch size of the heavier sequence model
+    backbone. Therefore the relative cost of this trick decreases as the overall model
+    size increases.
+
+    Args:
+        discrete (use gin): List of gamma values for discrete action spaces. Note that adding
+            gammas is much more expensive for MultiTaskAgent than Agent.
+        continuous (use gin): List of gamma values for continuous action spaces. Note that adding
+            gammas is much more expensive for continuous action spaces than discrete
+            in Agent.
+    """
+
     def __init__(
         self,
         # fmt: off
-        discrete = [.1, .9, .95, .97, .99, .995],
-        continuous = [.1, .9, .95, .97, .99, .995],
+        discrete: List[float] = [.1, .9, .95, .97, .99, .995],
+        continuous: List[float] = [.1, .9, .95, .97, .99, .995],
         # fmt: on
     ):
         self.discrete = discrete
@@ -33,6 +52,14 @@ class Multigammas:
 
 @gin.configurable
 def binary_filter(adv: torch.Tensor, threshold: float = 0.0) -> torch.Tensor:
+    """Weights policy regression data according to `adv > threshold`.
+
+    Args:
+        adv: Tensor of advantages (Batch, Length, Gammas, 1)
+
+    Keyword Args:
+        threshold: Float, the threshold for the binary filter. Defaults to 0.0.
+    """
     return adv > threshold
 
 
@@ -45,14 +72,19 @@ def exp_filter(
     clip_weights_low: Optional[float] = 1e-7,
     clip_weights_high: Optional[float] = None,
 ) -> torch.Tensor:
-    """
-    Weights policy regression data according to `exp(beta * adv)`.
+    """Weights policy regression data according to `exp(beta * adv)`.
 
-    NOTE that some papers define the beta hparam according to
-    exp( 1/beta * adv ), so check whether you need to invert the value
-    to match their setting.
+    Args:
+        adv: Tensor of advantages (Batch, Length, Gammas, 1)
 
-    Clip the raw advantages and/or the resulting weights for stability.
+    Keyword Args:
+        beta: Float, the beta parameter for the exponential filter. Note that some papers define the beta hparam according to
+            exp( 1/beta * adv ), so check whether you need to invert the value
+            to match their setting. Defaults to 1.0.
+        clip_adv_low: If provided, clip input advantages below this value. Defaults to None.
+        clip_adv_high: If provided, clip input advantages above this value. Defaults to None.
+        clip_weights_low: If provided, clip output weights below this value. Defaults to 1e-7.
+        clip_weights_high: If provided, clip output weights above this value. Defaults to None.
     """
     if clip_adv_low is not None or clip_adv_high is not None:
         adv = torch.clamp(adv, min=clip_adv_low, max=clip_adv_high)
@@ -64,55 +96,102 @@ def exp_filter(
 
 @gin.configurable
 class Agent(nn.Module):
-    """
-    The agent architecture is an actor-critic with a shared backbone:
+    """Actor-Critic with a shared sequence model backbone.
 
-    ```python
-    obs_emb_seq = timestep_encoder(obs_seq)
-    state_emb_seq = traj_encoder(obs_emb_seq) # sequence model
-    action_dist = actor(state_emb_seq)
-    if discrete:
-        # network outputs a q val for each action
-        value_pred = critic(state_emb_seq)[action_dist.sample()]
-    else:
-        # network outputs a scalar q val for an input action
-        value_pred = critic(state_emb_seq, action_dist.sample())
-    ```
+    `Agent` manages the training and inference of a sequence model policy. The base learning
+    update is a heavily parallelized/ensembled version of DDPG/TD3/REDQ/etc. + CRR/AWAC.
 
-    Then, for every timstep of state_emb_seq, we compute the actor loss and critic loss:
+    Given a sequence of trajectory data `traj_seq`, we embed and encode the sequence as follows:
 
-    ```python
-    if discrete:
-        def Q(state, critic, action):
-            return critic(state)[action]
+    .. code-block:: python
 
-        def V(state, critic, action_dist, k):
-            return (critic(state) * action_dist.probs).sum()
-    else:
-        def Q(state, critic, action):
-            return critic(state, action)
+        emb_seq = timestep_encoder(traj_seq) # [B, L, dim]
+        state_emb = traj_encoder(obs_emb_seq)  # [B, L, dim]
+        action_dist = actor(state_emb_seq)
 
-        def V(state, critic, action_dist, k):
-            return 1/k * sum(Q(state, critic, action_dist.sample()) for _ in range(k))
+    If using a discrete action space, the critic outputs a vector of Q-values (one per action),
+    and continuous actions follow the (state + action) --> scalar setup.
 
-    td_target = mean/min_over_ensemble( r + gamma * (1 - d) * V(next_state, target_critic, target_actor(next_state), k_c) )
-    advantages = Q(state, critic, action) - V(state, critic, action_dist, k_a)
-    offline_loss = -fbc_filter_func(advantages) * actor(state).log_prob(action)
-    online_loss = -V(state, critic.detach(), actor(state), k_a)
+    .. code-block:: python
 
-    actor_loss = online_coeff * offline_loss + online_coeff * online_loss
-    critic_loss = (critic(state, action) - td_target) ** 2
-    ```
+        if discrete:
+            value_pred = critic(state_emb_seq)[action_dist.sample()]
+        else:
+            value_pred = critic(state_emb_seq, action_dist.sample())
+
+    Value estimates are derived from Q-vals according to:
+
+    .. code-block:: python
+
+        if discrete:
+            def Q(state, critic, action) -> float:
+                return critic(state)[action]
+
+            def V(state, critic, action_dist, k) -> float:
+                return (critic(state) * action_dist.probs).sum()
+        else:
+            def Q(state, critic, action) -> float:
+                return critic(state, action)
+
+            def V(state, critic, action_dist, k) -> float:
+                return 1 / k * sum(Q(state, critic, action_dist.sample()) for _ in range(k))
+
+        k_c = num_actions_for_value_in_critic_loss
+        td_target = mean_or_min_over_ensemble(
+            r + gamma * (1 - d) * V(next_state_emb, target_critic, target_actor(next_state_emb), k_c)
+        )
+
+    The advantage estimate and corresponding losses are:
+
+    .. code-block:: python
+
+        k_a = num_actions_for_value_in_actor_loss
+        advantages = Q(state_emb, critic, action) - V(state_emb, critic, action_dist, k_a)
+
+        offline_loss = -fbc_filter_func(advantages) * actor(state_emb).log_prob(action)
+        online_loss = -V(state_emb, critic.detach(), actor(state_emb), k_a)
+
+        actor_loss = online_coeff * offline_loss + online_coeff * online_loss
+        critic_loss = (Q(state_emb, critic, action) - td_target) ** 2
 
     And this is done in parallel across multiple values of the discount factor gamma.
 
-    Provided by `Experiment` (configured elsewhere):
-    - `obs_space`: gym.spaces.Dict
-    - `rl2_space`: gym.spaces.Box
-    - `action_space`: gym.spaces.Space
-    - `max_seq_len`: int
-    - `tstep_encoder_type`: Type[TstepEncoder]
-    - `traj_encoder_type`: Type[TrajEncoder]
+    Attributes:
+        obs_space: Environment observation space (for creating input layers).
+        rl2_space: A gymnasium space that is automatically generated by AMAGOEnv
+            to represent the shape of extra input features for the previous action and reward.
+        action_space: Environment action space (for creating output layers).
+        max_seq_len: Maximum context length of the policy (in timesteps).
+        tstep_encoder_type: Type of TimestepEncoder to use. Initialized based
+            on provided gym spaces.
+        traj_encoder_type: Type of TrajEncoder to use. Initialized based on
+            provided gym spaces.
+        num_critics (use gin): Number of critics in the ensemble. Defaults to 4.
+        num_critics_td (use gin): Number of critics from the (larger) ensemble used to create
+            clipped double q targets (REDQ). Defaults to 2.
+        online_coeff (use gin): Weight of the "online" aka DPG/TD3-like actor loss
+            -Q(s, a ~ pi(s)). Defaults to 1.0.
+        offline_coeff (use gin): Weight of the "offline" aka advantage weighted/"filtered"
+            regression term (CRR/AWAC). Defaults to 0.1.
+        gamma (use gin): Discount factor *of the policy we sample during rollouts/evals*.
+            Defaults to 0.999.
+        reward_multiplier (use gin): Scale every reward by a constant (for loss function only).
+            Only relevant for numerical stability in value normalization. Avoid large (> 1e5)
+            and small (< 1) absolute values of returns when reward functions are known.
+            Defaults to 10.0.
+        tau (use gin): Polyak averaging factor for target network updates (DDPG-like). Defaults to 0.003.
+        fake_filter (use gin): If True, skips computation of the advantage weights/"filter". Speeds up
+            pure behavior cloning. Defaults to False.
+        num_actions_for_value_in_critic_loss (use_gin): Number of actions used to estimate E_[Q(s, a ~ pi)]
+            for continuous action spaces in critic loss (TD targets). Defaults to 1.
+        num_actions_for_value_in_actor_loss (use_gin): Number of actions used to estimate E_[Q(s, a ~ pi)]
+            for continuous action spaces in the actor loss. Defaults to 1.
+        fbc_filter_func (use gin): Function that takes seq of advantage estimates and outputs the regression
+            weights. See `agent.binary_filter` or `agent.exp_filter`. Defaults to binary_filter.
+        popart (use gin): If True, use PopArt normalization for value network outputs. Defaults to True.
+        use_target_actor (use gin): If True, use a target actor to sample actions used in TD targets.
+            Defaults to True.
+        use_multigamma (use gin): If True, train on multiple discount horizons in parallel. Defaults to True.
     """
 
     def __init__(
@@ -123,38 +202,19 @@ class Agent(nn.Module):
         max_seq_len: int,
         tstep_encoder_type: Type[TstepEncoder],
         traj_encoder_type: Type[TrajEncoder],
-        # number of critics in the ensemble
         num_critics: int = 4,
-        # number of critics used to compute TD targets (REDQ)
         num_critics_td: int = 2,
-        # weight of the "online" aka DPG actor loss (DDPG)
         online_coeff: float = 1.0,
-        # weight of the "offline" aka advantage weighted/"filtered" regression term (CRR/AWAC)
         offline_coeff: float = 0.1,
-        # the discount factor *of the policy we sample during rollouts/evals*
         gamma: float = 0.999,
-        # scale every reward by a constant (for loss function only). This can only help to
-        # bring Q-vals into a range that is numerically stable for PopArt.
-        # If you know the return scale, edit this to stay somewhere like |Q| in [100, 10000].
         reward_multiplier: float = 10.0,
-        # standard polyak update for the target critic(s) (DDPG)
         tau: float = 0.003,
-        # skip the computation of the "offline" policy regression weights/"filter".
-        # Useful when you're doing imitation learning (all weights become 1.0)
         fake_filter: bool = False,
-        # num actions to use anytime we're going to estimate E_[Q(s, a ~ pi)] by sampling continuous action dists
         num_actions_for_value_in_critic_loss: int = 1,
         num_actions_for_value_in_actor_loss: int = 1,
-        # function that takes seq of advantage estimates and outputs the regression weights.
-        # offline_loss = -fbc_filter_func(advantages) * log pi(actions | states)
-        # defaults to binary_filter, which masks negative advantage values (CRR).
         fbc_filter_func: callable = binary_filter,
-        # PopArt adaptive normalization for value network outputs
         popart: bool = True,
-        # use polyak averaged actor for TD targets
         use_target_actor: bool = True,
-        # train on multiple discount horizons in parallel.
-        # values set according to configurable `Multigammas` object above.
         use_multigamma: bool = True,
     ):
         super().__init__()
@@ -234,10 +294,8 @@ class Agent(nn.Module):
 
     @property
     def trainable_params(self):
-        """
-        Returns iterable of all trainable parameters that should be passed to an optimzer. (Everything but the target networks).
-        """
-        return chain(
+        """Iterable over all trainable parameters, which should be passed to the optimizer."""
+        return itertools.chain(
             self.tstep_encoder.parameters(),
             self.traj_encoder.parameters(),
             self.critics.parameters(),
@@ -255,17 +313,13 @@ class Agent(nn.Module):
             )
 
     def hard_sync_targets(self):
-        """
-        Hard copy online actor/critics to target actor/critics
-        """
+        """Hard copy online actor/critics to target actor/critics"""
         self._full_copy(self.target_critics, self.critics)
         self._full_copy(self.target_actor, self.actor)
         self._full_copy(self.maximized_critics, self.critics)
 
     def soft_sync_targets(self):
-        """
-        EMA copy online actor/critics to target actor/critics (DDPG-style)
-        """
+        """EMA copy online actor/critics to target actor/critics (DDPG-style)"""
         self._ema_copy(self.target_critics, self.critics)
         self._ema_copy(self.target_actor, self.actor)
         # full copy duplicate critic
@@ -278,9 +332,29 @@ class Agent(nn.Module):
         time_idxs: torch.Tensor,
         hidden_state=None,
         sample: bool = True,
-    ):
-        """
-        Get rollout actions from the current policy.
+    ) -> Tuple[torch.Tensor, Any]:
+        """Get rollout actions from the current policy.
+
+        Note the standard torch `forward` implements the training step, while `get_actions`
+        is the inference step. Most of the arguments here are easily gathered from the
+        AMAGOEnv gymnasium wrapper. See `amago.experiment.Experiment.interact` for an example.
+
+        Args:
+            obs: Dictionary of (batched) observation tensors. AMAGOEnv makes all
+                observations into dicts.
+            rl2s: Batched Tensor of previous action and reward. AMAGOEnv makes these.
+            time_idxs: Batched Tensor indicating the global timestep of the episode.
+                Mainly used for position embeddings when the sequence length is much shorter
+                than the episode length.
+            hidden_state: Hidden state of the TrajEncoder.
+            sample: Whether to sample from the action distribution or take the argmax
+                (discrete) or mean (continuous).
+
+        Returns:
+            tuple:
+                - Batched Tensor of actions to take in each parallel env *for the primary
+                  ("test-time") discount factor* `Agent.gamma`.
+                - Updated hidden state of the TrajEncoder.
         """
         tstep_emb = self.tstep_encoder(obs=obs, rl2s=rl2s)
         # sequence model embedding [batch, length, d_emb]
@@ -329,11 +403,22 @@ class Agent(nn.Module):
             td_target = td_target_rand.mean(2, keepdims=True)
         return td_target
 
-    def forward(self, batch: Batch, log_step: bool):
-        """
-        Main step of training loop. Generate actor and critic loss
-        terms in a minimum number of forward passes with a compact
-        sequence format. See comments for detailed explanation.
+    def forward(
+        self, batch: Batch, log_step: bool
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Computes actor and critic losses from a Batch of trajectory data.
+
+        Args:
+            batch: Batch object containing trajectory data including observations,
+                actions, rewards, dones, etc.
+            log_step: If True, computes and stores additional statistics in
+                self.update_info for wandb logging.
+
+        Returns:
+            A tuple containing:
+                - critic_loss: Tensor of shape (B, L-1, num_critics, G, 1) where B is batch size,
+                    L is sequence length, G is number of discount factors
+                - actor_loss: Tensor of shape (B, L-1, G, 1)
         """
         # fmt: off
         self.update_info = {}  # holds wandb stats
@@ -598,6 +683,34 @@ class Agent(nn.Module):
 
 @gin.configurable
 class MultiTaskAgent(Agent):
+    """A variant of Agent aimed at learning from distinct reward functions.
+
+    Strives to balance the training loss across tasks with different return scales
+    without resorting to one-hot task IDs. Standard multi-task RL (e.g., N atari games)
+    are all good examples, but so are multi-domain meta-RL problems like Meta-World ML45.
+    This is the agent discussed in the AMAGO-2 paper.
+
+    Follows the same learning update as Agent, with three main differences:
+
+    1. Converts critic regression to classification of two-hot encoded labels representing
+       bins spaced across a fixed range (see amago.nets.actor_critic.NCriticsTwoHot). The
+       version here closely follows Dreamer-V3.
+
+    2. Converts the discrete setup of Agent (where critics output a vector of vals per action)
+       to the same format as continuous actions (state + action) --> scalar. This avoids large
+       critic outputs layers but removes our ability to directly compute E_{a ~ π}[Q(s, a)].
+
+    3. Defaults to an online_coeff of 0 and an offline_coeff of 1.0. This is because the
+       "online" loss (-Q(s, a ~ pi)) scales with the magnitude of Q. The online loss is
+       still available as long as the output of the actor network uses the reparameterization
+       trick. Discrete actions are supported via a gumbel softmax, but this has seen limited
+       testing.
+
+    The combination of points 2 and 3 stresses accurate advantage estimates and motivates a change
+    in the default value of num_actions_for_value_in_critic_loss from 1 --> 3. Arguments otherwise
+    follow the information listed in amago.agent.Agent.
+    """
+
     def __init__(
         self,
         obs_space: gym.spaces.Dict,
