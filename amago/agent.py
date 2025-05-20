@@ -106,7 +106,7 @@ class Agent(nn.Module):
     .. code-block:: python
 
         emb_seq = timestep_encoder(traj_seq) # [B, L, dim]
-        state_emb = traj_encoder(obs_emb_seq)  # [B, L, dim]
+        state_emb_seq = traj_encoder(emb_seq)  # [B, L, dim]
         action_dist = actor(state_emb_seq)
 
     If using a discrete action space, the critic outputs a vector of Q-values (one per action),
@@ -154,7 +154,7 @@ class Agent(nn.Module):
         actor_loss = online_coeff * offline_loss + online_coeff * online_loss
         critic_loss = (Q(state_emb, critic, action) - td_target) ** 2
 
-    And this is done in parallel across multiple values of the discount factor gamma.
+    And this is done in parallel across every timestep and multiple values of the discount factor gamma.
 
     Args:
         obs_space: Environment observation space (for creating input layers).
