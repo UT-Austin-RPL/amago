@@ -1,4 +1,3 @@
-import math
 from typing import Optional, Type
 from functools import lru_cache
 
@@ -259,6 +258,8 @@ class NCriticsTwoHot(nn.Module):
         state_dim: Dimension of the "state" space (which is the output of the TrajEncoder)
         action_dim: Dimension of the action space
         gammas: List of gamma values to use for the multi-gamma critic
+
+    Keyword Args:
         num_critics: Number of critics in the ensemble. Defaults to 4.
         d_hidden: Dimension of hidden layers in the MLP. Defaults to 256.
         n_layers: Number of layers in the MLP. Defaults to 2.
