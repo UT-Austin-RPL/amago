@@ -49,7 +49,8 @@ class CNN(nn.Module, ABC):
         pass
 
     @property
-    def blank_img(self):
+    def blank_img(self) -> torch.Tensor:
+        """Returns an example input image of shape (1, 1) + self.img_shape (uint8)"""
         return torch.zeros((1, 1) + self.img_shape, dtype=torch.uint8)
 
     @torch.compile

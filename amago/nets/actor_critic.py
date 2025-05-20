@@ -432,7 +432,7 @@ class PopArtLayer(nn.Module):
         beta: The beta parameter for the moving average. Defaults to 5e-4.
         init_nu: The initial nu parameter. Defaults to 100.0 following a
             recommendation in the PopArt paper.
-        enabled: If False, this layer is a no-op. Defaults to True. Cannot be
+        enabled (no gin): If False, this layer is a no-op. Defaults to True. Cannot be
             configured by gin. Instead, use `Agent.use_popart`.
     """
 

@@ -246,7 +246,7 @@ class GRUTrajEncoder(TrajEncoder):
 
 @gin.configurable
 class TformerTrajEncoder(TrajEncoder):
-    """Transformer Trajectory Encoder.
+    r"""Transformer Trajectory Encoder.
 
     A pre-norm Transformer decoder-only model that processes sequences of timestep
     embeddings.
