@@ -3,6 +3,7 @@
 You need to be in conda environment with python 3.10.
 
 In ~/amago, run:
+-> pip install -r requirements.txt
 -> ./driver
 
 You can append the -s flag to ./driver to suspend the program in the middle,
