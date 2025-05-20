@@ -1,0 +1,70 @@
+#!/bin/bash
+
+set -e  # Exit on any error
+
+# === Handle optional -s flag ===
+SUSPEND=false
+while getopts "s" opt; do
+  case $opt in
+    s) SUSPEND=true ;;
+  esac
+done
+
+# === Capture absolute base path ===
+ROOT_DIR="$(pwd)"
+DOCS_SOURCE_DIR="$ROOT_DIR/docs/source"
+EXAMPLES_DIR="$DOCS_SOURCE_DIR/examples"
+STATIC_MEDIA_DIR="$DOCS_SOURCE_DIR/_static/media"
+TMP_DIR="$ROOT_DIR/sync"
+GEN_DIR="$DOCS_SOURCE_DIR/generated"
+BUILD_DIR="$ROOT_DIR/docs/build"
+
+# === Define cleanup that always works ===
+cleanup() {
+    echo "Cleaning up examples and media..."
+    rm -rf "$EXAMPLES_DIR"
+    rm -rf "$STATIC_MEDIA_DIR"
+    rm -rf "$TMP_DIR"
+    rm -rf "$GEN_DIR"
+    rm -rf "$BUILD_DIR"
+    echo "Cleanup complete."
+}
+
+# Trap normal exit and Ctrl+C
+trap cleanup EXIT INT TERM
+
+# === Prepare temp folder and remove old copies ===
+rm -rf "$EXAMPLES_DIR" "$STATIC_MEDIA_DIR" "$TMP_DIR"
+mkdir "$TMP_DIR"
+
+# === Download ZIP of amago/crr_k branch ===
+curl -L https://github.com/UT-Austin-RPL/amago/archive/refs/heads/crr_k.zip -o "$TMP_DIR/crr_k.zip"
+
+# === Unzip and extract ===
+unzip -q "$TMP_DIR/crr_k.zip" -d "$TMP_DIR"
+mv "$TMP_DIR/amago-crr_k/examples" "$EXAMPLES_DIR"
+mkdir -p "$DOCS_SOURCE_DIR/_static"
+mv "$TMP_DIR/amago-crr_k/media" "$STATIC_MEDIA_DIR"
+
+# === Optional suspend point ===
+if [ "$SUSPEND" = true ]; then
+    echo "Suspended. You can now make manual edits to: $TMP_DIR/amago-crr_k"
+    echo "Press Enter to continue building the docs..."
+    read -r
+fi
+
+# === Build Sphinx docs ===
+cd "$ROOT_DIR/docs"
+make clean
+clear
+make html
+
+# === Symlink media in built HTML output ===
+cd build/html
+rm -f media
+ln -s _static/media media
+
+# === Start local server ===
+echo "Serving at http://localhost:8080"
+lsof -ti:8080 | xargs -r kill
+python3 -m http.server 8080
