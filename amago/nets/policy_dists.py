@@ -147,10 +147,10 @@ class _ShiftedBeta(pyd.TransformedDistribution):
         return 2.0 * self.base_dist.mean - 1.0
 
 
-class PolicyDistribution(ABC):
+class PolicyOutput(ABC):
     """Abstract base class for mapping network outputs to a distribution over actions.
 
-    Actor networks use a PolicyDistribution to produce a distribution over actions
+    Actor networks use a PolicyOutput to produce a distribution over actions
     that is compatible with the Agent's loss function.
 
     Pretends to be a torch.nn.Module (`forward` == `__call__`) but is not. Has no
@@ -205,18 +205,21 @@ class PolicyDistribution(ABC):
 
         Args:
             vec: Output of the actor network
+            log_dict: If None, this is not a log step and any log value computation can be skipped. If provided, any data added added to the dict will be automatically logged. Defaults to None.
 
         Returns:
-            A torch.distributions.Distribution that at least has a `log_prob` and
-            `sample`, and would be expected to have `rsample` if
+            A torch.distributions.Distribution that at least has a `log_prob()` and
+            `sample()`, and would be expected to have `rsample()` if
             `self.actions_differentiable` is True.
         """
         raise NotImplementedError
 
 
 @gin.configurable
-class Discrete(PolicyDistribution):
-    """Discrete action space policy distribution.
+class Discrete(PolicyOutput):
+    """Generates a categorical distribution over actions.
+
+    Returns a thin wrapper around torch `Categorical` that unsqueezes the last dimension of `sample()` actions to be 1.
 
     Args:
         d_action: Dimension of the action space.
@@ -255,10 +258,6 @@ class Discrete(PolicyDistribution):
     def forward(
         self, vec: torch.Tensor, log_dict: Optional[dict] = None
     ) -> _Categorical:
-        """Returns a thin wrapper around torch `Categorical`.
-
-        The wrapper unsqueezes the last dimension of `sample()` actions to be 1.
-        """
         dist = _Categorical(logits=vec)
         probs = dist.probs
         clip_probs = probs.clamp(self.clip_prob_low, self.clip_prob_high)
@@ -267,6 +266,53 @@ class Discrete(PolicyDistribution):
         if log_dict is not None:
             add_activation_log("Discrete-probs", probs, log_dict)
         return safe_dist
+
+
+@gin.configurable
+class DiscreteLikeContinuous:
+    """Wrapper around `Categorical` used by `MultiTaskAgent`.
+
+    Lets us use discrete actions in a continuous actor-critic setup where the
+    critic takes action vectors as input and outputs a scalar value.
+
+    Categorial --> OneHotCategorical + `rsample()` as F.gumbel_softmax with straight-through `hard` sampling.
+
+    Args:
+        categorical: A `Categorical` distribution.
+
+    Keyword Args:
+        gumbel_softmax_temperature: Temperature for the Gumbel-Softmax trick that enables `rsample()`. Default is 0.5.
+    """
+
+    def __init__(
+        self,
+        categorical: pyd.Categorical | _Categorical,
+        gumbel_softmax_temperature: float = 0.5,
+    ):
+        self.dist = pyd.OneHotCategorical(logits=categorical.logits)
+        self.gumbel_softmax_temperature = gumbel_softmax_temperature
+
+    @property
+    def probs(self) -> torch.Tensor:
+        return self.dist.probs
+
+    @property
+    def logits(self) -> torch.Tensor:
+        return self.dist.logits
+
+    def entropy(self) -> torch.Tensor:
+        return self.dist.entropy()
+
+    def log_prob(self, action: torch.Tensor) -> torch.Tensor:
+        return self.dist.log_prob(action)
+
+    def sample(self, *args, **kwargs) -> torch.Tensor:
+        return self.dist.sample(*args, **kwargs)
+
+    def rsample(self) -> torch.Tensor:
+        return F.gumbel_softmax(
+            self.logits, tau=self.gumbel_softmax_temperature, hard=True, dim=-1
+        )
 
 
 def tanh_bounded_positive(x: torch.Tensor, low: float, high: float) -> torch.Tensor:
@@ -287,8 +333,8 @@ StdActivation = Callable[[torch.Tensor, float, float], torch.Tensor]
 
 
 @gin.configurable
-class TanhGaussian(PolicyDistribution):
-    """Standard Multivariate Normal distribution with a tanh transform to fall in [-1, 1].
+class TanhGaussian(PolicyOutput):
+    """Generates a multivariate normal with a tanh transform to sample in [-1, 1].
 
     Args:
         d_action: Dimension of the action space.
@@ -296,11 +342,8 @@ class TanhGaussian(PolicyDistribution):
     Keyword Args:
         std_low: Minimum standard deviation. Default is exp(-5.0).
         std_high: Maximum standard deviation. Default is exp(2.0).
-        std_activation: Activation function to produce a std from the raw network
-            output. Options are "tanh" or "softplus". Default is "tanh", which
-            uses tanh to place the std along the range of [std_low, std_high],
-            but can saturate. "softplus" uses softplus to produce a positive std
-            that is added to std_low and hard clipped at std_high.
+        std_activation: Activation function to produce a valid standard deviation from the raw network
+            output.
         clip_actions_on_log_prob: Tuple of floats that clips the actions before
             computing dist.log_prob(action). Adresses numerical stability issues
             when computing log_probs at or near saturation points of Tanh
@@ -349,10 +392,10 @@ class TanhGaussian(PolicyDistribution):
 
 
 @gin.configurable
-class GMM(PolicyDistribution):
-    """Gaussian Mixture Model with a tanh transform.
+class GMM(PolicyOutput):
+    """Generates a Gaussian Mixture Model with a tanh transform.
 
-    A more expressive policy than TanhGaussian, but does not support `rsample()`
+    A more expressive policy than TanhGaussian, but output does not support `rsample()`
     or the DPG -Q(s, a ~ pi) loss. Often used in offline or imitation learning
     (IL) settings. Heavily based on robomimic's robot IL setup.
 
@@ -364,9 +407,7 @@ class GMM(PolicyDistribution):
         std_low: Minimum standard deviation. Default is 1e-4.
         std_high: Maximum standard deviation. Default is None.
         std_activation: Activation function to produce a std from the raw network
-            output. Options are "tanh" or "softplus". Default is "softplus",
-            which uses softplus to produce a positive std that is added to
-            std_low and hard clipped at std_high.
+            output.
     """
 
     def __init__(
@@ -415,15 +456,19 @@ class GMM(PolicyDistribution):
 
 
 @gin.configurable
-class Beta(PolicyDistribution):
-    """Beta policy distribution.
+class Beta(PolicyOutput):
+    """Generates a Beta distribution rescaled to [-1, 1].
 
     Args:
         d_action: Dimension of the action space.
 
     Keyword Args:
-        alpha_beta_low: Minimum value of alpha and beta. Default is 1e-4.
-        alpha_beta_high: Maximum value of alpha and beta. Default is None.
+        alpha_low: Minimum value of alpha. Default is 1e-4.
+        alpha_high: Maximum value of alpha. Default is None.
+        beta_low: Minimum value of beta. Default is 1e-4.
+        beta_high: Maximum value of beta. Default is None.
+        std_activation: Activation function to produce a valid standard deviation from the raw network
+            output.
     """
 
     def __init__(
@@ -468,7 +513,7 @@ class Beta(PolicyDistribution):
 
 
 @gin.configurable
-class Multibinary(PolicyDistribution):
+class Multibinary(PolicyOutput):
     """Multi-binary action space support."""
 
     def __init__(self, d_action: int):
@@ -491,50 +536,3 @@ class Multibinary(PolicyDistribution):
     ) -> pyd.Bernoulli:
         dist = pyd.Bernoulli(logits=vec)
         return dist
-
-
-@gin.configurable
-class DiscreteLikeContinuous:
-    """Wrapper around `Categorical` used by `MultiTaskAgent`.
-
-    Lets us use discrete actions in a continuous actor-critic setup where the
-    critic takes action vectors as input and outputs a scalar value.
-
-    Categorial --> OneHotCategorical + `rsample()` as F.gumbel_softmax with straight-through `hard` sampling.
-
-    Args:
-        categorical: A `Categorical` distribution.
-
-    Keyword Args:
-        gumbel_softmax_temperature: Temperature for the Gumbel-Softmax trick that enables `rsample()`. Default is 0.5.
-    """
-
-    def __init__(
-        self,
-        categorical: pyd.Categorical | _Categorical,
-        gumbel_softmax_temperature: float = 0.5,
-    ):
-        self.dist = pyd.OneHotCategorical(logits=categorical.logits)
-        self.gumbel_softmax_temperature = gumbel_softmax_temperature
-
-    @property
-    def probs(self) -> torch.Tensor:
-        return self.dist.probs
-
-    @property
-    def logits(self) -> torch.Tensor:
-        return self.dist.logits
-
-    def entropy(self) -> torch.Tensor:
-        return self.dist.entropy()
-
-    def log_prob(self, action: torch.Tensor) -> torch.Tensor:
-        return self.dist.log_prob(action)
-
-    def sample(self, *args, **kwargs) -> torch.Tensor:
-        return self.dist.sample(*args, **kwargs)
-
-    def rsample(self) -> torch.Tensor:
-        return F.gumbel_softmax(
-            self.logits, tau=self.gumbel_softmax_temperature, hard=True, dim=-1
-        )

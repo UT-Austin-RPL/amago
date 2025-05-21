@@ -13,7 +13,7 @@ from amago.nets.ff import MLP
 from amago.nets.utils import activation_switch, symlog, symexp
 from amago.nets.policy_dists import (
     Discrete,
-    PolicyDistribution,
+    PolicyOutput,
     TanhGaussian,
 )
 from amago.utils import amago_warning
@@ -37,7 +37,7 @@ class Actor(nn.Module):
         activation: Activation function to use in the MLP. Defaults to "leaky_relu".
         dropout_p: Dropout rate to use in the MLP. Defaults to 0.0.
         continuous_dist_type: Type of continuous distribution to use if applicable. Must be a
-            `amago.nets.policy_dists.PolicyDistribution`. Defaults to TanhGaussian.
+            `amago.nets.policy_dists.PolicyOutput`. Defaults to TanhGaussian.
     """
 
     def __init__(
@@ -50,14 +50,14 @@ class Actor(nn.Module):
         d_hidden: int = 256,
         activation: str = "leaky_relu",
         dropout_p: float = 0.0,
-        continuous_dist_type: Type[PolicyDistribution] = TanhGaussian,
+        continuous_dist_type: Type[PolicyOutput] = TanhGaussian,
     ):
         super().__init__()
         # determine policy output
         self.num_gammas = len(gammas)
         dist_type = Discrete if discrete else continuous_dist_type
         self.policy_dist = dist_type(d_action=action_dim)
-        assert isinstance(self.policy_dist, PolicyDistribution)
+        assert isinstance(self.policy_dist, PolicyOutput)
         assert self.policy_dist.is_discrete == discrete
         self.actions_differentiable = self.policy_dist.actions_differentiable
         d_output = self.policy_dist.input_dimension * self.num_gammas
@@ -81,7 +81,7 @@ class Actor(nn.Module):
             state: The "state" sequence (the output of the TrajEncoder) (Batch, Length, state_dim)
 
         Returns:
-            The action distribution. Type varies according to the output of `PolicyDistribution`
+            The action distribution. Type varies according to the output of `PolicyOutput`
             (e.g. `Discrete` or `TanhGaussian`). Always a pytorch distribution (e.g., `Categorical`)
             where sampled actions would have shape (Batch, Length, Gammas, action_dim).
         """
