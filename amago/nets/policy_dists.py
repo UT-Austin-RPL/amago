@@ -8,6 +8,8 @@ import torch.nn.functional as F
 from torch import distributions as pyd
 from einops import rearrange
 
+from amago.nets.utils import add_activation_log
+
 
 class _TanhWrappedDistribution(pyd.Distribution):
     """This is copied directly from Robomimic.
@@ -150,9 +152,11 @@ class PolicyDistribution(ABC):
         super().__init__()
         self.d_action = d_action
 
-    def __call__(self, vec: torch.Tensor) -> pyd.Distribution:
+    def __call__(
+        self, vec: torch.Tensor, log_dict: Optional[dict] = None
+    ) -> pyd.Distribution:
         # looks like a nn.Module but doesn't break old checkpoints
-        return self.forward(vec)
+        return self.forward(vec, log_dict=log_dict)
 
     @property
     @abstractmethod
@@ -182,7 +186,9 @@ class PolicyDistribution(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def forward(self, vec: torch.Tensor) -> pyd.Distribution:
+    def forward(
+        self, vec: torch.Tensor, log_dict: Optional[dict] = None
+    ) -> pyd.Distribution:
         """Maps the output of the actor network to a distribution over actions.
 
         Args:
@@ -234,7 +240,9 @@ class Discrete(PolicyDistribution):
     def input_dimension(self) -> int:
         return self.d_action
 
-    def forward(self, vec: torch.Tensor) -> _Categorical:
+    def forward(
+        self, vec: torch.Tensor, log_dict: Optional[dict] = None
+    ) -> _Categorical:
         """Returns a thin wrapper around torch `Categorical`.
 
         The wrapper unsqueezes the last dimension of `sample()` actions to be 1.
@@ -244,6 +252,8 @@ class Discrete(PolicyDistribution):
         clip_probs = probs.clamp(self.clip_prob_low, self.clip_prob_high)
         safe_probs = clip_probs / clip_probs.sum(-1, keepdims=True).detach()
         safe_dist = _Categorical(probs=safe_probs)
+        if log_dict is not None:
+            add_activation_log("Discrete-probs", probs, log_dict)
         return safe_dist
 
 
@@ -261,7 +271,7 @@ class _Continuous(PolicyDistribution):
     def is_discrete(self) -> bool:
         return False
 
-    def std_from_network_output(self, raw_std: torch.Tensor) -> torch.Tensor:
+    def force_positive_from_network_output(self, raw_std: torch.Tensor) -> torch.Tensor:
         # maps the network's output value to a valid standard deviation
         # for the policy distribution. There are many ways to do this.
         if self.std_activation == "tanh":
@@ -330,12 +340,18 @@ class TanhGaussian(_Continuous):
     def input_dimension(self) -> int:
         return 2 * self.d_action
 
-    def forward(self, vec: torch.Tensor) -> _SquashedNormal:
+    def forward(
+        self, vec: torch.Tensor, log_dict: Optional[dict] = None
+    ) -> _SquashedNormal:
         mu, raw_std = vec.chunk(2, dim=-1)
-        std = self.std_from_network_output(raw_std)
+        std = self.force_positive_from_network_output(raw_std)
         dist = _SquashedNormal(
             mu, std, clip_on_tanh_inverse=self.clip_actions_on_log_prob
         )
+        if log_dict is not None:
+            add_activation_log("TanhGaussian-mu", mu, log_dict)
+            add_activation_log("TanhGaussian-std", std, log_dict)
+            add_activation_log("TanhGaussian-raw_std", raw_std, log_dict)
         return dist
 
 
@@ -384,15 +400,80 @@ class GMM(_Continuous):
     def input_dimension(self) -> int:
         return 2 * self.gmm_modes * self.d_action + self.gmm_modes
 
-    def forward(self, vec: torch.Tensor) -> _TanhWrappedDistribution:
+    def forward(
+        self, vec: torch.Tensor, log_dict: Optional[dict] = None
+    ) -> _TanhWrappedDistribution:
         idx = self.gmm_modes * self.d_action
         means = rearrange(vec[..., :idx], "... g (m p) -> ... g m p", m=self.gmm_modes)
         raw_std = rearrange(
             vec[..., idx : 2 * idx], "... g (m p) -> ... g m p", m=self.gmm_modes
         )
-        stds = self.std_from_network_output(raw_std)
+        stds = self.force_positive_from_network_output(raw_std)
         logits = vec[..., 2 * idx :]
         dist = _TanhGMM(means=means, stds=stds, logits=logits)
+        if log_dict is not None:
+            add_activation_log("GMM-means", means, log_dict)
+            add_activation_log("GMM-raw_std", raw_std, log_dict)
+            add_activation_log("GMM-stds", stds, log_dict)
+            add_activation_log("GMM-logits", logits, log_dict)
+        return dist
+
+
+class _ShiftedBeta(pyd.TransformedDistribution):
+    """Create a Beta distribution on [0,1], then y=2*x - 1 to shift to [-1, 1]"""
+
+    def __init__(self, alpha: torch.Tensor, beta: torch.Tensor):
+        base = pyd.Beta(concentration1=alpha, concentration0=beta)
+        super().__init__(base, [pyd.AffineTransform(loc=-1.0, scale=2.0)])
+
+    @property
+    def mean(self):
+        return 2.0 * self.base_dist.mean - 1.0
+
+
+class Beta(_Continuous):
+    """Beta policy distribution.
+
+    Args:
+        d_action: Dimension of the action space.
+
+    Keyword Args:
+        alpha_beta_low: Minimum value of alpha and beta. Default is 1e-4.
+        alpha_beta_high: Maximum value of alpha and beta. Default is None.
+    """
+
+    def __init__(
+        self, d_action: int, alpha_beta_low: float = 1e-4, alpha_beta_high: float = None
+    ):
+        super().__init__(
+            d_action,
+            std_low=alpha_beta_low,
+            std_high=alpha_beta_high,
+            std_activation="softplus",
+        )
+
+    @property
+    def actions_differentiable(self) -> bool:
+        return True
+
+    @property
+    def is_discrete(self) -> bool:
+        return False
+
+    @property
+    def input_dimension(self) -> int:
+        return 2 * self.d_action
+
+    def forward(
+        self, vec: torch.Tensor, log_dict: Optional[dict] = None
+    ) -> _ShiftedBeta:
+        alpha_input, beta_input = vec.chunk(2, dim=-1)
+        alpha = self.force_positive_from_network_output(alpha_input)
+        beta = self.force_positive_from_network_output(beta_input)
+        dist = _ShiftedBeta(alpha, beta)
+        if log_dict is not None:
+            add_activation_log("Beta-alpha", alpha, log_dict)
+            add_activation_log("Beta-beta", beta, log_dict)
         return dist
 
 
@@ -415,7 +496,9 @@ class Multibinary(PolicyDistribution):
     def input_dimension(self) -> int:
         return self.d_action
 
-    def forward(self, vec: torch.Tensor) -> pyd.Bernoulli:
+    def forward(
+        self, vec: torch.Tensor, log_dict: Optional[dict] = None
+    ) -> pyd.Bernoulli:
         dist = pyd.Bernoulli(logits=vec)
         return dist
 
