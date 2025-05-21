@@ -14,7 +14,7 @@ from torch.utils.data import Dataset
 import numpy as np
 import gin
 
-from .hindsight import Trajectory, Relabeler, FrozenTraj
+from .hindsight import Trajectory, Relabeler, FrozenTraj, NoOpRelabeler
 
 
 @dataclass
@@ -319,7 +319,7 @@ class DiskTrajDataset(RLDataset):
         relabeler: Optional[Relabeler] = None,
     ):
         super().__init__()
-        self.relabeler = Relabeler() if relabeler is None else relabeler
+        self.relabeler = NoOpRelabeler() if relabeler is None else relabeler
         # create two directories for the FIFO and protected buffers
         self.fifo_path = get_path_to_trajs(dset_root, dset_name, fifo=True)
         self.protected_path = get_path_to_trajs(dset_root, dset_name, fifo=False)

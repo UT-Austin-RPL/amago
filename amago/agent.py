@@ -32,11 +32,8 @@ class Multigammas:
     size increases.
 
     Keyword Args:
-        discrete: List of gamma values for discrete action spaces. Note that adding
-            gammas is much more expensive for MultiTaskAgent than Agent.
-        continuous: List of gamma values for continuous action spaces. Note that adding
-            gammas is much more expensive for continuous action spaces than discrete
-            in Agent.
+        discrete: List of gamma values for discrete action spaces
+        continuous: List of gamma values for continuous action spaces
     """
 
     def __init__(
@@ -52,7 +49,7 @@ class Multigammas:
 
 @gin.configurable
 def binary_filter(adv: torch.Tensor, threshold: float = 0.0) -> torch.Tensor:
-    """Weights policy regression data according to `adv > threshold`.
+    """Weights policy regression data according to `(adv > threshold).float()`
 
     Args:
         adv: Tensor of advantages (Batch, Length, Gammas, 1)
@@ -542,7 +539,7 @@ class Agent(nn.Module):
         
         if self.offline_coeff > 0:
             #####################################################
-            ## "Offline" (Advantage Weighted/Filtered) BC Loss ##
+            ## "Offline" (Advantage Weighted/Filtered BC) Loss ##
             #####################################################
             if not self.fake_filter:
                 # f(A(s, a))
@@ -888,7 +885,7 @@ class MultiTaskAgent(Agent):
         K_a = self.num_actions_for_value_in_actor_loss
         if self.offline_coeff > 0:
             #####################################################
-            ## "Offline" (Advantage Weighted/Filtered) BC Loss ##
+            ## "Offline" (Advantage Weighted/Filtered BC) Loss ##
             #####################################################
             if not self.fake_filter:
                 # f(A(s, a))
@@ -916,6 +913,7 @@ class MultiTaskAgent(Agent):
                 logp_a = a_dist.log_prob(a_buffer).mean(-1, keepdim=True)
             else:
                 logp_a = a_dist.log_prob(a_buffer).sum(-1, keepdim=True)
+            # clamp for stability and throw away last action that was a duplicate
             logp_a = logp_a[:, :-1, ...].clamp(-1e3, 1e3)
             actor_loss += self.offline_coeff * -(filter_.detach() * logp_a)
             if log_step:
