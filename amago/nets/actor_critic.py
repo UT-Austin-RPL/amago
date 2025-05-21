@@ -74,7 +74,7 @@ class Actor(nn.Module):
         self.discrete = discrete
         self.action_dim = action_dim
 
-    def forward(self, state) -> pyd.Distribution:
+    def forward(self, state, log_dict: Optional[dict] = None) -> pyd.Distribution:
         """Compute an action distribution from a state representation.
 
         Args:
@@ -89,7 +89,7 @@ class Actor(nn.Module):
         dist_params = rearrange(
             dist_params, "b ... (g f) -> b ... g f", g=self.num_gammas
         )
-        return self.policy_dist(dist_params)
+        return self.policy_dist(dist_params, log_dict=log_dict)
 
 
 class _EinMixEnsemble(nn.Module):
@@ -210,7 +210,9 @@ class NCritics(nn.Module):
         return self.num_critics
 
     @torch.compile
-    def forward(self, state: torch.Tensor, action: torch.Tensor):
+    def forward(
+        self, state: torch.Tensor, action: torch.Tensor, log_dict: Optional[dict] = None
+    ) -> torch.Tensor:
         """Compute a value estimate from a state and action.
 
         Args:
@@ -332,7 +334,9 @@ class NCriticsTwoHot(nn.Module):
         return self.num_critics
 
     @torch.compile
-    def forward(self, state: torch.Tensor, action: torch.Tensor) -> pyd.Categorical:
+    def forward(
+        self, state: torch.Tensor, action: torch.Tensor, log_dict: Optional[dict] = None
+    ) -> pyd.Categorical:
         """Compute a categorical distribution over bins from a state and action.
 
         Args:

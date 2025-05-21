@@ -463,14 +463,14 @@ class Agent(nn.Module):
         ## Step 2: Sequence Embedding ##
         ################################
         # one trajectory encoder forward pass
-        s_rep, hidden_state = self.traj_encoder(seq=o, time_idxs=batch.time_idxs, hidden_state=None)
+        s_rep, hidden_state = self.traj_encoder(seq=o, time_idxs=batch.time_idxs, hidden_state=None, log_dict=active_log_dict)
         assert s_rep.shape == (B, L, D_emb)
 
         #########################################
         ## Step 3: a' ~ \pi, Q(s, a'), Q(s, a) ##
         #########################################
         critic_loss = None
-        a_dist = self.actor(s_rep)
+        a_dist = self.actor(s_rep, log_dict=active_log_dict)
         a_agent = self._sample_k_actions(a_dist, k=K_a)
         assert a_agent.shape == (K_a, B, L, G, D_action)
 
@@ -480,7 +480,7 @@ class Agent(nn.Module):
             q_s_a_agent_g = self.maximized_critics(*s_a_agent_g).mean(0)
             # (s, a), Q(s, a)
             s_a_g = (s_rep[:, :-1, ...], a_buffer[:, :-1, ...].unsqueeze(0))
-            q_s_a_g = self.critics(*s_a_g).mean(0)
+            q_s_a_g = self.critics(*s_a_g, log_dict=active_log_dict).mean(0)
             assert q_s_a_agent_g.shape == (B, L, C, G, 1)
             assert q_s_a_g.shape == (B, L-1, C, G, 1)
 
@@ -808,13 +808,13 @@ class MultiTaskAgent(Agent):
         ################################
         ## Step 2: Sequence Embedding ##
         ################################
-        s_rep, hidden_state = self.traj_encoder(seq=o, time_idxs=batch.time_idxs, hidden_state=None)
+        s_rep, hidden_state = self.traj_encoder(seq=o, time_idxs=batch.time_idxs, hidden_state=None, log_dict=active_log_dict)
         assert s_rep.shape == (B, L, D_emb)
 
         #########################################
         ## Step 3: a' ~ \pi, Q(s, a'), Q(s, a) ##
         #########################################
-        a_dist = self.actor(s_rep)
+        a_dist = self.actor(s_rep, log_dict=active_log_dict)
         if self.discrete:
             a_dist = DiscreteLikeContinuous(a_dist)
 
@@ -858,7 +858,7 @@ class MultiTaskAgent(Agent):
             ## Step 5: Critic Loss ##
             #########################
             s_a_g = (s_rep, a_buffer.unsqueeze(0))
-            q_s_a_g = self.critics(*s_a_g)
+            q_s_a_g = self.critics(*s_a_g, log_dict=active_log_dict)
             assert q_s_a_g.probs.shape == (1, B, L, C, G, Bins)
             critic_loss = F.cross_entropy(
                 rearrange(q_s_a_g.logits[0, :, :-1, ...], "b l c g u -> (b l c g) u"),

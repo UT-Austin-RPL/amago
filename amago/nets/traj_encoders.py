@@ -87,6 +87,7 @@ class TrajEncoder(nn.Module, ABC):
         seq: torch.Tensor,
         time_idxs: torch.Tensor,
         hidden_state: Optional[Any] = None,
+        log_dict: Optional[dict] = None,
     ) -> Tuple[torch.Tensor, Optional[Any]]:
         """Sequence model forward pass.
 
@@ -180,7 +181,9 @@ class FFTrajEncoder(TrajEncoder):
         traj_emb = self.dropout(self.norm(traj_emb))
         return traj_emb
 
-    def forward(self, seq, time_idxs=None, hidden_state=None):
+    def forward(
+        self, seq, time_idxs=None, hidden_state=None, log_dict: Optional[dict] = None
+    ):
         return self._traj_blocks_forward(seq), hidden_state
 
     @property
@@ -234,7 +237,9 @@ class GRUTrajEncoder(TrajEncoder):
         hidden_state[:, dones] = 0.0
         return hidden_state
 
-    def forward(self, seq, time_idxs=None, hidden_state=None):
+    def forward(
+        self, seq, time_idxs=None, hidden_state=None, log_dict: Optional[dict] = None
+    ):
         output_seq, new_hidden_state = self.rnn(seq, hidden_state)
         out = self.out_norm(self.out(output_seq))
         return out, new_hidden_state
@@ -385,6 +390,7 @@ class TformerTrajEncoder(TrajEncoder):
         seq: torch.Tensor,
         time_idxs: torch.Tensor,
         hidden_state: Optional[transformer.TformerHiddenState] = None,
+        log_dict: Optional[dict] = None,
     ) -> Tuple[torch.Tensor, Optional[transformer.TformerHiddenState]]:
         assert time_idxs is not None
         return self.tformer(seq, pos_idxs=time_idxs, hidden_state=hidden_state)
@@ -527,6 +533,7 @@ class MambaTrajEncoder(TrajEncoder):
         seq: torch.Tensor,
         time_idxs: Optional[torch.Tensor] = None,
         hidden_state: Optional[_MambaHiddenState] = None,
+        log_dict: Optional[dict] = None,
     ) -> Tuple[torch.Tensor, Optional[_MambaHiddenState]]:
         seq = self.inp(seq)
         if hidden_state is None:
