@@ -24,12 +24,12 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install -r requirements.txt
+        pip install -r requirements-ci.txt
 
     - name: Build docs with driverci
       run: |
-        chmod +x driverci
-        ./driverci
+        chmod +x driver-ci
+        ./driver-ci
 
   deploy:
     needs: build
