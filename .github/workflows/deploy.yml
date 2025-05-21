@@ -31,11 +31,6 @@ jobs:
         chmod +x driverci
         ./driverci
 
-    - name: Upload GitHub Pages artifact
-      uses: actions/upload-pages-artifact@v2
-      with:
-        path: docs/build/html
-
   deploy:
     needs: build
     runs-on: ubuntu-latest
