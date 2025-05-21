@@ -1,0 +1,11 @@
+/* Expand the main content area */
+.bd-page-width {
+    max-width: 100% !important;
+    width: 95% !important;
+}
+
+/* Expand the article body */
+.bd-content .bd-article-container {
+    max-width: 100% !important;
+    width: 95% !important;
+}

@@ -18,20 +18,33 @@ STATIC_MEDIA_DIR="$DOCS_SOURCE_DIR/_static/media"
 TMP_DIR="$ROOT_DIR/sync"
 GEN_DIR="$DOCS_SOURCE_DIR/generated"
 BUILD_DIR="$ROOT_DIR/docs/build"
+CRON_TAG="# auto-doc-refresh"
 
 # === Define cleanup that always works ===
 cleanup() {
-    echo "Cleaning up examples and media..."
-    rm -rf "$EXAMPLES_DIR"
-    rm -rf "$STATIC_MEDIA_DIR"
-    rm -rf "$TMP_DIR"
-    rm -rf "$GEN_DIR"
-    rm -rf "$BUILD_DIR"
+    echo "Cleaning up examples, media, and markdown..."
+    rm -rf "$EXAMPLES_DIR" "$STATIC_MEDIA_DIR" "$TMP_DIR" "$GEN_DIR" "$BUILD_DIR"
+    rm -f "$DOCS_SOURCE_DIR/index.md" "$DOCS_SOURCE_DIR/tutorial.md"
     echo "Cleanup complete."
+
+    echo "Removing cron job..."
+    crontab -l 2>/dev/null | grep -v "$CRON_TAG" | crontab -
+    echo "Cron job removed."
+    clear
 }
 
 # Trap normal exit and Ctrl+C
 trap cleanup EXIT INT TERM
+
+# === Register cron job to auto-rebuild if not already present ===
+CRON_LINE="*/5 * * * * LATEST=\$(curl -s https://api.github.com/repos/UT-Austin-RPL/amago/branches/crr_k | grep '\"sha\"' | head -n1 | awk -F '\"' '{print \$4}'); HASH_FILE=\$HOME/.last_crr_k_commit; [ -f \"\$HASH_FILE\" ] && LAST=\$(cat \"\$HASH_FILE\") || LAST=\"\"; if [ \"\$LATEST\" != \"\$LAST\" ]; then echo \"\$LATEST\" > \"\$HASH_FILE\" && bash $ROOT_DIR/driver; fi $CRON_TAG"
+
+if ! crontab -l 2>/dev/null | grep -q "$CRON_TAG"; then
+    (crontab -l 2>/dev/null; echo "$CRON_LINE") | crontab -
+    echo "Cron job registered to auto-refresh docs every 5 minutes."
+else
+    echo "Cron job already present."
+fi
 
 # === Prepare temp folder and remove old copies ===
 rm -rf "$EXAMPLES_DIR" "$STATIC_MEDIA_DIR" "$TMP_DIR"
@@ -46,6 +59,50 @@ mv "$TMP_DIR/amago-crr_k/examples" "$EXAMPLES_DIR"
 mkdir -p "$DOCS_SOURCE_DIR/_static"
 mv "$TMP_DIR/amago-crr_k/media" "$STATIC_MEDIA_DIR"
 
+# === Copy and transform tutorial.md ===
+TUTORIAL_SRC="$TMP_DIR/amago-crr_k/tutorial.md"
+TUTORIAL_DST="$DOCS_SOURCE_DIR/tutorial.md"
+
+{
+    found_title=false
+    while IFS= read -r line; do
+        if ! $found_title && [[ "$line" =~ ^# ]]; then
+            echo "# Tutorial"
+            found_title=true
+        else
+            echo "$line"
+        fi
+    done < "$TUTORIAL_SRC"
+} > "$TUTORIAL_DST"
+
+# === Copy and transform README.md into index.md ===
+README_SRC="$TMP_DIR/amago-crr_k/README.md"
+INDEX_DST="$DOCS_SOURCE_DIR/index.md"
+
+# Create new index.md with modified title and appended toctree
+{
+    # Replace first markdown title with '# Home'
+    found_title=false
+    while IFS= read -r line; do
+        if ! $found_title && [[ "$line" =~ ^# ]]; then
+            echo "# Home"
+            found_title=true
+        else
+            echo "$line"
+        fi
+    done < "$README_SRC"
+
+    # Append toctree
+    echo ""
+    echo '```{toctree}'
+    echo ':maxdepth: 2'
+    echo ''
+    echo 'Home <self>'
+    echo 'tutorial'
+    echo 'modules'
+    echo '```'
+} > "$INDEX_DST"
+
 # === Optional suspend point ===
 if [ "$SUSPEND" = true ]; then
     echo "Suspended. You can now make manual edits to: $TMP_DIR/amago-crr_k"
@@ -56,7 +113,6 @@ fi
 # === Build Sphinx docs ===
 cd "$ROOT_DIR/docs"
 make clean
-clear
 make html
 
 # === Symlink media in built HTML output ===
@@ -65,6 +121,7 @@ rm -f media
 ln -s _static/media media
 
 # === Start local server ===
+clear
 echo "Serving at http://localhost:8080"
 lsof -ti:8080 | xargs -r kill
 python3 -m http.server 8080

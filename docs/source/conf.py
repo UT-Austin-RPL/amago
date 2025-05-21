@@ -7,9 +7,9 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'AMAGO'
-copyright = '2025, UT Austin RPL'
-author = 'UT Austin RPL'
-release = '2'
+copyright = '2025, UT Austin Robot Perception and Learning Lab'
+author = 'UT Austin Robot Perception and Learning Lab'
+html_title = "AMAGO"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -52,7 +52,14 @@ exclude_patterns = []
 html_theme = 'alabaster'
 html_static_path = ['_static', 'media']
 
-import sphinx_rtd_theme
-html_theme = "sphinx_rtd_theme"
-# html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+html_css_files = [
+    'custom.css',
+]
+
+import sphinx_book_theme
+html_theme = "sphinx_book_theme"
+
+html_theme_options = {
+    "default_mode": "light",
+}
 
