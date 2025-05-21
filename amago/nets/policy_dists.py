@@ -138,9 +138,19 @@ class _Categorical(pyd.Categorical):
 class _ShiftedBeta(pyd.TransformedDistribution):
     """Create a Beta distribution on [0,1], then y=2*x - 1 to shift to [-1, 1]"""
 
-    def __init__(self, alpha: torch.Tensor, beta: torch.Tensor):
+    def __init__(
+        self,
+        alpha: torch.Tensor,
+        beta: torch.Tensor,
+        clip_actions_on_log_prob: tuple[float, float],
+    ):
         base = pyd.Beta(concentration1=alpha, concentration0=beta)
+        self.clip_actions_on_log_prob = clip_actions_on_log_prob
         super().__init__(base, [pyd.AffineTransform(loc=-1.0, scale=2.0)])
+
+    def log_prob(self, value):
+        clipped_value = value.clamp(*self.clip_actions_on_log_prob)
+        return super().log_prob(clipped_value)
 
     @property
     def mean(self):
@@ -469,6 +479,9 @@ class Beta(PolicyOutput):
         beta_high: Maximum value of beta. Default is None.
         std_activation: Activation function to produce a valid standard deviation from the raw network
             output.
+        clip_actions_on_log_prob: Tuple of floats that clips the actions before
+            computing dist.log_prob(action). Adresses numerical stability issues
+            when computing log_probs at the boundary of the action space.
     """
 
     def __init__(
@@ -479,6 +492,7 @@ class Beta(PolicyOutput):
         beta_low: float = 1e-4,
         beta_high: Optional[float] = None,
         std_activation: StdActivation = softplus_bounded_positive,
+        clip_actions_on_log_prob: tuple[float, float] = (-0.99, 0.99),
     ):
         super().__init__(d_action)
         self.alpha_low = alpha_low
@@ -486,6 +500,7 @@ class Beta(PolicyOutput):
         self.beta_low = beta_low
         self.beta_high = beta_high
         self.std_activation = std_activation
+        self.clip_actions_on_log_prob = clip_actions_on_log_prob
 
     @property
     def actions_differentiable(self) -> bool:
@@ -505,7 +520,9 @@ class Beta(PolicyOutput):
         alpha_input, beta_input = vec.chunk(2, dim=-1)
         alpha = self.std_activation(alpha_input, self.alpha_low, self.alpha_high)
         beta = self.std_activation(beta_input, self.beta_low, self.beta_high)
-        dist = _ShiftedBeta(alpha, beta)
+        dist = _ShiftedBeta(
+            alpha, beta, clip_actions_on_log_prob=self.clip_actions_on_log_prob
+        )
         if log_dict is not None:
             add_activation_log("Beta-alpha", alpha, log_dict)
             add_activation_log("Beta-beta", beta, log_dict)
