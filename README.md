@@ -47,7 +47,7 @@ ICRL is not a new idea, but these challenges have limited adoption and prompted 
 <br>
 
 ## Installation 
-```bash
+```shell
 # download source
 git clone git@github.com:UT-Austin-RPL/amago.git
 # make a fresh conda environment with python 3.10
@@ -65,9 +65,11 @@ There are some optional installs for additional features:
 
 - `pip install -e amago[envs]`: AMAGO comes with built-in support for a wide range of existing and custom meta-RL/generalization/memory domains (`amago/envs/builtin`) used in our experiments. This command installs (most of) the dependencies you'd need to run the [`examples/`](examples/).
 
+> [!TIP]
 > *NOTE*: AMAGO requires `gymnasium` <= 0.29. It is not compatible with the recent `gymnasium` 1.0 release. Please check your `gymnasium` version if you see environment-related error messages on startup.
 
-This is an active long-term research project. Please be warned that the codebase is not stable and we make breaking changes frequently. 
+> [!WARNING]
+> This is an active long-term research project. Please be warned that the codebase is not stable and we make breaking changes frequently. 
 
 <br>
 
@@ -87,12 +89,12 @@ To follow most of the examples you'll need to install the benchmark environments
 Use the `CUDA_VISIBLE_DEVICES` environment variable to assign basic single-GPU examples to a specific GPU index. Most of the examples share a command line interface. Use `--help` for more information.
 
 
-### 0. **Intro to In-Context RL: Meta-Frozen Lake**
+### 0. **Intro to Meta-RL: Kshot-Frozen Lake**
 **[`00_kshot_frozen_lake.py`](examples/00_kshot_frozen_lake.py)**
 
 <img src="media/robot.png" alt="frozen_lake_icon" width="110" align="left"/>
 
-Learn more about in-context RL with help from an intuitive meta-RL problem. Train an agent to adapt over multiple episodes by learning to avoid its previous mistakes.
+Learn more about adaptive policies with help from an intuitive meta-RL problem. Train an agent to adapt over multiple episodes by learning to avoid its previous mistakes.
 
 [Example `wandb`](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/a53gh0wy)
 
@@ -226,6 +228,8 @@ Multi-Game [Procgen](https://arxiv.org/abs/1912.01588) has a similar feel to Ata
 
 **📊 Experimental 📊**. Support for XLand MiniGrid is a new feature. 
 
+<br>
+
 ### **12. Toy Meta-RL / Locomotion: HalfCheetahVelocity (w/ HalfCheetahV4)**
 **[`12_half_cheetah_vel.py`](examples/12_half_cheetah_vel.py)**
 
@@ -246,6 +250,19 @@ A more modern remaster of the famous [HalfCheetahVel mujoco meta-RL benchmark](h
 Off-policy learning makes it easy to relabel old sequence data with new rewards. MazeRunner is a goal-conditioned POMDP navigation problem used to discuss & test the hindsight instruction relabeling technique in our paper. This example includes a template for using hindsight relabeling in the new version of AMAGO.
 
 [Example `wandb`](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/a728v6k0)
+
+<br>
+
+
+### **14. Offline RL: D4RL**
+**[`14_d4rl.py`](examples/14_d4rl.py)**
+
+<img src="media/d4rl.png" alt="d4rl_diagram" width="100" align="left" />
+
+Offline RL on the (original) [D4RL](https://arxiv.org/pdf/2004.07219) datasets. 
+
+[Example `wandb`](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/9ab15rr8)
+
 
 
 <br>
