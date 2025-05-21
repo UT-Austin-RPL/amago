@@ -1,5 +1,5 @@
 import math
-from typing import Optional
+from typing import Optional, Callable
 from abc import ABC, abstractmethod
 
 import gin
@@ -135,6 +135,18 @@ class _Categorical(pyd.Categorical):
         return super().sample(*args, **kwargs).unsqueeze(-1)
 
 
+class _ShiftedBeta(pyd.TransformedDistribution):
+    """Create a Beta distribution on [0,1], then y=2*x - 1 to shift to [-1, 1]"""
+
+    def __init__(self, alpha: torch.Tensor, beta: torch.Tensor):
+        base = pyd.Beta(concentration1=alpha, concentration0=beta)
+        super().__init__(base, [pyd.AffineTransform(loc=-1.0, scale=2.0)])
+
+    @property
+    def mean(self):
+        return 2.0 * self.base_dist.mean - 1.0
+
+
 class PolicyDistribution(ABC):
     """Abstract base class for mapping network outputs to a distribution over actions.
 
@@ -257,46 +269,25 @@ class Discrete(PolicyDistribution):
         return safe_dist
 
 
-class _Continuous(PolicyDistribution):
-    def __init__(
-        self, d_action: int, std_low: float, std_high: float, std_activation: str
-    ):
-        super().__init__(d_action)
-        assert 0 < std_low < (std_high or float("inf"))
-        self.std_low = std_low
-        self.std_high = std_high
-        self.std_activation = std_activation
+def tanh_bounded_positive(x: torch.Tensor, low: float, high: float) -> torch.Tensor:
+    tanh_scale = torch.tanh(x)
+    log_low = math.log(low)
+    log_high = math.log(high)
+    log_std = log_low + 0.5 * (log_high - log_low) * (tanh_scale + 1)
+    return log_std.exp()
 
-    @property
-    def is_discrete(self) -> bool:
-        return False
 
-    def force_positive_from_network_output(self, raw_std: torch.Tensor) -> torch.Tensor:
-        # maps the network's output value to a valid standard deviation
-        # for the policy distribution. There are many ways to do this.
-        if self.std_activation == "tanh":
-            # this version shows up more in off-policy RL codebases
-            tanh_scale = torch.tanh(raw_std)
-            log_std_low = math.log(self.std_low)
-            log_std_high = math.log(self.std_high)
-            log_std = log_std_low + 0.5 * (log_std_high - log_std_low) * (
-                tanh_scale + 1
-            )
-            return log_std.exp()
-        elif self.std_activation == "softplus":
-            # this version is used by robomimic for robot IL
-            std = F.softplus(raw_std) + self.std_low
-            if self.std_high is not None:
-                std = std.clamp(max=self.std_high)
-            return std
-        else:
-            raise ValueError(
-                f"Invalid strategy: {self.std_activation}. Must be 'tanh' or 'softplus'."
-            )
+def softplus_bounded_positive(
+    x: torch.Tensor, low: float, high: Optional[float] = None
+) -> torch.Tensor:
+    return (F.softplus(x) + low).clamp(max=high or float("inf"))
+
+
+StdActivation = Callable[[torch.Tensor, float, float], torch.Tensor]
 
 
 @gin.configurable
-class TanhGaussian(_Continuous):
+class TanhGaussian(PolicyDistribution):
     """Standard Multivariate Normal distribution with a tanh transform to fall in [-1, 1].
 
     Args:
@@ -321,20 +312,22 @@ class TanhGaussian(_Continuous):
         d_action: int,
         std_low: float = math.exp(-5.0),
         std_high: float = math.exp(2.0),
-        std_activation: str = "tanh",  # or "softplus"
+        std_activation: StdActivation = tanh_bounded_positive,
         clip_actions_on_log_prob: tuple[float, float] = (-0.99, 0.99),
     ):
-        super().__init__(
-            d_action=d_action,
-            std_low=std_low,
-            std_high=std_high,
-            std_activation=std_activation,
-        )
+        super().__init__(d_action=d_action)
+        self.std_activation = std_activation
+        self.std_low = std_low
+        self.std_high = std_high
         self.clip_actions_on_log_prob = clip_actions_on_log_prob
 
     @property
     def actions_differentiable(self) -> bool:
         return True
+
+    @property
+    def is_discrete(self) -> bool:
+        return False
 
     @property
     def input_dimension(self) -> int:
@@ -344,7 +337,7 @@ class TanhGaussian(_Continuous):
         self, vec: torch.Tensor, log_dict: Optional[dict] = None
     ) -> _SquashedNormal:
         mu, raw_std = vec.chunk(2, dim=-1)
-        std = self.force_positive_from_network_output(raw_std)
+        std = self.std_activation(raw_std, self.std_low, self.std_high)
         dist = _SquashedNormal(
             mu, std, clip_on_tanh_inverse=self.clip_actions_on_log_prob
         )
@@ -356,7 +349,7 @@ class TanhGaussian(_Continuous):
 
 
 @gin.configurable
-class GMM(_Continuous):
+class GMM(PolicyDistribution):
     """Gaussian Mixture Model with a tanh transform.
 
     A more expressive policy than TanhGaussian, but does not support `rsample()`
@@ -382,15 +375,17 @@ class GMM(_Continuous):
         gmm_modes: int = 5,
         std_low: float = 1e-4,
         std_high: Optional[float] = None,
-        std_activation: str = "softplus",  # or "tanh"
+        std_activation: StdActivation = softplus_bounded_positive,
     ):
-        super().__init__(
-            d_action=d_action,
-            std_low=std_low,
-            std_high=std_high,
-            std_activation=std_activation,
-        )
+        super().__init__(d_action)
         self.gmm_modes = gmm_modes
+        self.std_activation = std_activation
+        self.std_low = std_low
+        self.std_high = std_high
+
+    @property
+    def is_discrete(self) -> bool:
+        return False
 
     @property
     def actions_differentiable(self) -> bool:
@@ -408,7 +403,7 @@ class GMM(_Continuous):
         raw_std = rearrange(
             vec[..., idx : 2 * idx], "... g (m p) -> ... g m p", m=self.gmm_modes
         )
-        stds = self.force_positive_from_network_output(raw_std)
+        stds = self.std_activation(raw_std, self.std_low, self.std_high)
         logits = vec[..., 2 * idx :]
         dist = _TanhGMM(means=means, stds=stds, logits=logits)
         if log_dict is not None:
@@ -419,19 +414,8 @@ class GMM(_Continuous):
         return dist
 
 
-class _ShiftedBeta(pyd.TransformedDistribution):
-    """Create a Beta distribution on [0,1], then y=2*x - 1 to shift to [-1, 1]"""
-
-    def __init__(self, alpha: torch.Tensor, beta: torch.Tensor):
-        base = pyd.Beta(concentration1=alpha, concentration0=beta)
-        super().__init__(base, [pyd.AffineTransform(loc=-1.0, scale=2.0)])
-
-    @property
-    def mean(self):
-        return 2.0 * self.base_dist.mean - 1.0
-
-
-class Beta(_Continuous):
+@gin.configurable
+class Beta(PolicyDistribution):
     """Beta policy distribution.
 
     Args:
@@ -443,14 +427,20 @@ class Beta(_Continuous):
     """
 
     def __init__(
-        self, d_action: int, alpha_beta_low: float = 1e-4, alpha_beta_high: float = None
+        self,
+        d_action: int,
+        alpha_low: float = 1e-4,
+        alpha_high: Optional[float] = None,
+        beta_low: float = 1e-4,
+        beta_high: Optional[float] = None,
+        std_activation: StdActivation = softplus_bounded_positive,
     ):
-        super().__init__(
-            d_action,
-            std_low=alpha_beta_low,
-            std_high=alpha_beta_high,
-            std_activation="softplus",
-        )
+        super().__init__(d_action)
+        self.alpha_low = alpha_low
+        self.alpha_high = alpha_high
+        self.beta_low = beta_low
+        self.beta_high = beta_high
+        self.std_activation = std_activation
 
     @property
     def actions_differentiable(self) -> bool:
@@ -468,8 +458,8 @@ class Beta(_Continuous):
         self, vec: torch.Tensor, log_dict: Optional[dict] = None
     ) -> _ShiftedBeta:
         alpha_input, beta_input = vec.chunk(2, dim=-1)
-        alpha = self.force_positive_from_network_output(alpha_input)
-        beta = self.force_positive_from_network_output(beta_input)
+        alpha = self.std_activation(alpha_input, self.alpha_low, self.alpha_high)
+        beta = self.std_activation(beta_input, self.beta_low, self.beta_high)
         dist = _ShiftedBeta(alpha, beta)
         if log_dict is not None:
             add_activation_log("Beta-alpha", alpha, log_dict)
