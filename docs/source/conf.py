@@ -26,6 +26,16 @@ extensions = [
     'sphinx_autodoc_typehints',
 ]
 
+napoleon_google_docstring = True
+napoleon_numpy_docstring = False
+napoleon_custom_sections = [
+    ("Environment", "params"),
+    ("Logging", "params"),
+    ("Replay", "params"),
+    ("Learning Schedule", "params"),
+    ("Optimization", "params"),
+]
+
 autosummary_generate = True
 add_module_names = False
 modindex_common_prefix = ["amago."]
