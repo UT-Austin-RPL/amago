@@ -467,9 +467,9 @@ class Agent(nn.Module):
         s_rep, hidden_state = self.traj_encoder(seq=o, time_idxs=batch.time_idxs, hidden_state=None, log_dict=active_log_dict)
         assert s_rep.shape == (B, L, D_emb)
 
-        #################################
-        ## a' ~ \pi, Q(s, a'), Q(s, a) ##
-        #################################
+        ################
+        ## a ~ \pi(s) ##
+        ################
         critic_loss = None
         a_dist = self.actor(s_rep, log_dict=active_log_dict)
         a_agent = self._sample_k_actions(a_dist, k=K_a)
@@ -478,9 +478,9 @@ class Agent(nn.Module):
             self.update_info.update(self._policy_stats(actor_mask, a_dist))
 
         if not self.fake_filter or self.online_coeff > 0:  # if we use the critic to train the actor
-            ###########################
-            ## Q(s, a ~ pi), Q(s, a) ##
-            ###########################
+            ############################
+            ## Q(s, a ~ \pi), Q(s, a) ##
+            ############################
             s_a_agent_g = (s_rep.detach(), a_agent)
             q_s_a_agent_g = self.maximized_critics(*s_a_agent_g).mean(0)
             s_a_g = (s_rep[:, :-1, ...], a_buffer[:, :-1, ...].unsqueeze(0))
@@ -547,9 +547,9 @@ class Agent(nn.Module):
             if not self.fake_filter:
                 # f(A(s, a))
                 with torch.no_grad():
-                    # V(s) = E_a[Q(s, a ~ pi)] (computed with sample of num_actions_for_cont_value 
-                    # in continuous case, or explicitly in discrete case). Already taken mean
-                    # over actions, now mean over critic ensemble.
+                    # V(s) = E_{a ~ \pi}[Q(s, a)] (computed with sample of k actions
+                    # in continuous case, or explicitly in discrete case). 
+                    # Already taken mean over actions, now mean over critic ensemble.
                     val_s_g = q_s_a_agent_g[:, :-1, ...].mean(2).detach()
                     assert val_s_g.shape == (B, L - 1, G, 1)
                     # A(s, a) = Q(s, a) - V(s)
@@ -642,17 +642,15 @@ class Agent(nn.Module):
             return {"Policy Entropy (test-time gamma)": masked_avg(entropy, -1)}
 
     def _filter_stats(self, mask, logp_a, filter_) -> dict:
+        # messy data gathering for wandb console
         mask = mask[:, :-1, ...]
 
-        # messy data gathering for wandb console
         def masked_avg(x_, dim=0):
             return (mask[..., dim, :] * x_[..., dim, :]).sum().detach() / mask[
                 ..., dim, :
             ].sum()
 
         binary_filter = filter_ > 0
-
-        # messy data gathering for wandb console
         stats = {
             "Minimum Action Logprob": logp_a.min(),
             "Maximum Action Logprob": logp_a.max(),
@@ -776,15 +774,15 @@ class MultiTaskAgent(Agent):
         # fmt: off
         self.update_info = {}  # holds wandb stats
 
-        ##########################
-        ## Step 0: Timestep Emb ##
-        ##########################
+        ##################
+        ## Timestep Emb ##
+        ##################
         active_log_dict = self.update_info if log_step else None
         o = self.tstep_encoder(obs=batch.obs, rl2s=batch.rl2s, log_dict=active_log_dict)
 
-        ###########################
-        ## Step 1: Get Organized ##
-        ###########################
+        ###################
+        ## Get Organized ##
+        ###################
         B, L, D_o = o.shape
         a = batch.actions
         a = a.clamp(0, 1.0) if self.discrete else a.clamp(-1.0, 1.0)
@@ -799,30 +797,34 @@ class MultiTaskAgent(Agent):
         assert batch.dones.shape == (B, L - 1, 1)
         r = repeat((self.reward_multiplier * batch.rews).float(), f"b l r -> b l 1 {G} r")
         d = repeat(batch.dones.float(), f"b l d -> b l 1 {G} d")
+        gamma = self.gammas.to(r.device).unsqueeze(-1)
         D_emb = self.traj_encoder.emb_dim
         Bins = self.critics.num_bins
         state_mask = (~((batch.rl2s == self.pad_val).all(-1, keepdim=True))).float()
         actor_mask = repeat(state_mask, f"b l 1 -> b l {G} 1")
         critic_mask = repeat(state_mask[:, 1:, ...], f"b l 1 -> b l {C} {G} 1")
 
-        ################################
-        ## Step 2: Sequence Embedding ##
-        ################################
+        ########################
+        ## Sequence Embedding ##
+        ########################
         s_rep, hidden_state = self.traj_encoder(seq=o, time_idxs=batch.time_idxs, hidden_state=None, log_dict=active_log_dict)
         assert s_rep.shape == (B, L, D_emb)
 
-        #########################################
-        ## Step 3: a' ~ \pi, Q(s, a'), Q(s, a) ##
-        #########################################
+        ################
+        ## a ~ \pi(s) ##
+        ################
         a_dist = self.actor(s_rep, log_dict=active_log_dict)
         if self.discrete:
             a_dist = DiscreteLikeContinuous(a_dist)
+        if log_step:
+            policy_stats = self._policy_stats(actor_mask, a_dist)
+            self.update_info.update(policy_stats)
 
         critic_loss = None
-        if not self.fake_filter or self.online_coeff > 0:
-            ########################
-            ## Step 4: TD Targets ##
-            ########################
+        if not self.fake_filter or self.online_coeff > 0: # if we use the critic to train the actor
+            ################
+            ## TD Targets ##
+            ################
             with torch.no_grad():
                 if self.use_target_actor:
                     a_prime_dist = self.target_actor(s_rep)
@@ -830,20 +832,18 @@ class MultiTaskAgent(Agent):
                         a_prime_dist = DiscreteLikeContinuous(a_prime_dist)
                 else:
                     a_prime_dist = a_dist
-                ap = a_prime_dist.sample((K_c,))
+                ap = a_prime_dist.sample((K_c,)) # a' ~ \pi(s')
                 assert ap.shape == (K_c, B, L, G, D_action)
                 sp_ap_gp = (s_rep[:, 1:, ...].detach(), ap[:, :, 1:, ...].detach())
-                q_targ_sp_ap_gp = self.target_critics(*sp_ap_gp)
+                q_targ_sp_ap_gp = self.target_critics(*sp_ap_gp) # Q(s', a')
                 assert q_targ_sp_ap_gp.probs.shape == (K_c, B, L - 1, C, G, Bins)
                 q_targ_sp_ap_gp = self.target_critics.bin_dist_to_raw_vals(q_targ_sp_ap_gp).mean(0)
                 assert q_targ_sp_ap_gp.shape == (B, L - 1, C, G, 1)
-                gamma = self.gammas.to(r.device).unsqueeze(-1)
+                # y = r + gamma * (1.0 - d) * Q(s', a')
                 ensemble_td_target = r + gamma * (1.0 - d) * q_targ_sp_ap_gp
                 assert ensemble_td_target.shape == (B, L - 1, C, G, 1)
                 td_target = self._critic_ensemble_to_td_target(ensemble_td_target)
                 assert td_target.shape == (B, L - 1, 1, G, 1)
-                # we are only using popart to track stats for online actor update,
-                # since scale intentionally does not impact critic loss
                 self.popart.update_stats(
                     td_target, mask=critic_mask.all(2, keepdim=True)
                 )
@@ -854,12 +854,13 @@ class MultiTaskAgent(Agent):
                 )
                 assert td_target_labels.shape == (B, L - 1, C, G, Bins)
 
-            #########################
-            ## Step 5: Critic Loss ##
-            #########################
+            #################
+            ## Critic Loss ##
+            #################
             s_a_g = (s_rep, a_buffer.unsqueeze(0))
-            q_s_a_g = self.critics(*s_a_g, log_dict=active_log_dict)
+            q_s_a_g = self.critics(*s_a_g, log_dict=active_log_dict) # Q(s, a)
             assert q_s_a_g.probs.shape == (1, B, L, C, G, Bins)
+            # mean squared bellman error --> cross entropy w/ bin classification labels
             critic_loss = F.cross_entropy(
                 rearrange(q_s_a_g.logits[0, :, :-1, ...], "b l c g u -> (b l c g) u"),
                 rearrange(td_target_labels, "b l c g u -> (b l c g) u"),
@@ -883,30 +884,32 @@ class MultiTaskAgent(Agent):
                 popart_stats = self._popart_stats()
                 self.update_info.update(td_stats | popart_stats)
 
-        ######################
-        ## Step 6: FBC Loss ##
-        ######################
         actor_loss = 0.0
         K_a = self.num_actions_for_value_in_actor_loss
-        if not self.fake_filter and self.offline_coeff > 0:
-            with torch.no_grad():
-                a_agent = a_dist.sample((K_a,))
-                q_s_a_agent = self.critics(s_rep.detach(), a_agent)
-                assert q_s_a_agent.probs.shape == (K_a, B, L, C, G, Bins)
-                # mean over actions and critic ensemble
-                val_s = self.critics.bin_dist_to_raw_vals(q_s_a_agent)
-                assert val_s.shape == (K_a, B, L, C, G, 1)
-                # A(s, a) = Q(s, a) - V(s) = mean_over_critics(Q(s, a)) - mean_over_critics(mean_over_actions(Q(s, a ~ pi)))
-                advantage_s_a = scalar_q_s_a_g.mean(2) - val_s.mean((0, 3))
-                assert advantage_s_a.shape == (B, L, G, 1)
-                filter_ = self.fbc_filter_func(advantage_s_a)[:, :-1, ...].float()
-                binary_filter_ = binary_filter(advantage_s_a)[:, :-1, ...].float()
-        else:
-            filter_ = binary_filter_ = torch.ones(
-                (B, L - 1, G, 1), dtype=torch.float32, device=s_rep.device
-            )
-
         if self.offline_coeff > 0:
+            #####################################################
+            ## "Offline" (Advantage Weighted/Filtered) BC Loss ##
+            #####################################################
+            if not self.fake_filter:
+                # f(A(s, a))
+                with torch.no_grad():
+                    a_agent = a_dist.sample((K_a,))
+                    q_s_a_agent = self.critics(s_rep.detach(), a_agent)
+                    assert q_s_a_agent.probs.shape == (K_a, B, L, C, G, Bins)
+                    # mean over actions and critic ensemble
+                    val_s = self.critics.bin_dist_to_raw_vals(q_s_a_agent)
+                    assert val_s.shape == (K_a, B, L, C, G, 1)
+                    # A(s, a) = Q(s, a) - V(s) = mean_over_critics(Q(s, a)) - mean_over_critics(mean_over_actions(Q(s, a ~ pi)))
+                    advantage_s_a = scalar_q_s_a_g.mean(2) - val_s.mean((0, 3))
+                    assert advantage_s_a.shape == (B, L, G, 1)
+                    filter_ = self.fbc_filter_func(advantage_s_a)[:, :-1, ...].float()
+                    binary_filter_ = binary_filter(advantage_s_a)[:, :-1, ...].float()
+            else:
+                # Behavior Cloning (f(A(s, a)) = 1)
+                filter_ = binary_filter_ = torch.ones(
+                    (B, L - 1, G, 1), dtype=torch.float32, device=s_rep.device
+                )
+            # log pi(a | s)
             if self.discrete:
                 logp_a = a_dist.log_prob(a_buffer).unsqueeze(-1)
             elif self.multibinary:
@@ -919,10 +922,10 @@ class MultiTaskAgent(Agent):
                 filter_stats = self._filter_stats(actor_mask, logp_a, binary_filter_)
                 self.update_info.update(filter_stats)
 
-        ######################
-        ## Step 7: DPG Loss ##
-        ######################
         if self.online_coeff > 0:
+            #########################
+            ## "Online" (DPG) Loss ##
+            #########################
             # TODO: possible to recycle this q_val for the FBC loss above, as is done in Agent.
             # For now, only call rsample when specifically using online_coeff > 0 (since it's usually turned off)
             assert self.actor.actions_differentiable, "online-style actor loss is not compatible with action distribution"
@@ -933,9 +936,7 @@ class MultiTaskAgent(Agent):
                 self.maximized_critics.bin_dist_to_raw_vals(q_s_a_agent).mean(0).min(2).values
             )
             actor_loss += self.online_coeff * -(q_s_a_agent[:, :-1, ...])
-        if log_step:
-            policy_stats = self._policy_stats(actor_mask, a_dist)
-            self.update_info.update(policy_stats)
+        
 
         return critic_loss, actor_loss
 
