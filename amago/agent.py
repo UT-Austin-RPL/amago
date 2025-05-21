@@ -425,15 +425,15 @@ class Agent(nn.Module):
         # fmt: off
         self.update_info = {}  # holds wandb stats
 
-        ##########################
-        ## Step 0: Timestep Emb ##
-        ##########################
+        ##################
+        ## Timestep Emb ##
+        ##################
         active_log_dict = self.update_info if log_step else None
         o = self.tstep_encoder(obs=batch.obs, rl2s=batch.rl2s, log_dict=active_log_dict)
 
-        ###########################
-        ## Step 1: Get Organized ##
-        ###########################
+        ###################
+        ## Get Organized ##
+        ###################
         B, L, D_o = o.shape
         # padded actions are `self.pad_val` which will be invalid;
         # clip to valid range now and mask the loss later
@@ -453,53 +453,54 @@ class Agent(nn.Module):
         assert batch.rews.shape == (B, L - 1, 1)
         assert batch.dones.shape == (B, L - 1, 1)
         r = repeat((self.reward_multiplier * batch.rews).float(), f"b l r -> b l 1 {G} r")
+        gamma = self.gammas.to(r.device).unsqueeze(-1)
         d = repeat(batch.dones.float(), f"b l d -> b l 1 {G} d")
         D_emb = self.traj_encoder.emb_dim
         state_mask = (~((batch.rl2s == self.pad_val).all(-1, keepdim=True))).float()
         actor_mask = repeat(state_mask, f"b l 1 -> b l {G} 1")
         critic_mask = repeat(state_mask[:, 1:, ...], f"b l 1 -> b l {C} {G} 1")
 
-        ################################
-        ## Step 2: Sequence Embedding ##
-        ################################
+        ########################
+        ## Sequence Embedding ##
+        ########################
         # one trajectory encoder forward pass
         s_rep, hidden_state = self.traj_encoder(seq=o, time_idxs=batch.time_idxs, hidden_state=None, log_dict=active_log_dict)
         assert s_rep.shape == (B, L, D_emb)
 
-        #########################################
-        ## Step 3: a' ~ \pi, Q(s, a'), Q(s, a) ##
-        #########################################
+        #################################
+        ## a' ~ \pi, Q(s, a'), Q(s, a) ##
+        #################################
         critic_loss = None
         a_dist = self.actor(s_rep, log_dict=active_log_dict)
         a_agent = self._sample_k_actions(a_dist, k=K_a)
         assert a_agent.shape == (K_a, B, L, G, D_action)
+        if log_step:
+            self.update_info.update(self._policy_stats(actor_mask, a_dist))
 
-        if not self.fake_filter or self.online_coeff > 0:
-            # (s, a ~ pi), Q(s, a ~ pi)
+        if not self.fake_filter or self.online_coeff > 0:  # if we use the critic to train the actor
+            ###########################
+            ## Q(s, a ~ pi), Q(s, a) ##
+            ###########################
             s_a_agent_g = (s_rep.detach(), a_agent)
             q_s_a_agent_g = self.maximized_critics(*s_a_agent_g).mean(0)
-            # (s, a), Q(s, a)
             s_a_g = (s_rep[:, :-1, ...], a_buffer[:, :-1, ...].unsqueeze(0))
             q_s_a_g = self.critics(*s_a_g, log_dict=active_log_dict).mean(0)
             assert q_s_a_agent_g.shape == (B, L, C, G, 1)
             assert q_s_a_g.shape == (B, L-1, C, G, 1)
 
-            ########################
-            ## Step 4: TD Targets ##
-            ########################
-            # td_target = r + gamma * (1 - d) * Q_target(s', a' ~ pi(s'))
+            ################
+            ## TD Targets ##
+            ################
             with torch.no_grad():
                 # (a ~ pi_target)
                 a_prime_dist = self.target_actor(s_rep) if self.use_target_actor else a_dist
-                ap = self._sample_k_actions(a_prime_dist, k=K_c).detach()
+                ap = self._sample_k_actions(a_prime_dist, k=K_c).detach() # a' 
                 assert ap.shape == (K_c, B, L, G, D_action)
-                # (s', a' ~ pi(s'))
-                sp_ap_gp = (s_rep[:, 1:, ...], ap[:, :, 1:, ...])
-                # Q_target(s', a' ~ pi(s'))
+                sp_ap_gp = (s_rep[:, 1:, ...], ap[:, :, 1:, ...]) # (s', a')
+                # Q_target(s', a')
                 q_targ_sp_ap_gp = self.popart(self.target_critics(*sp_ap_gp).mean(0), normalized=False)
                 assert q_targ_sp_ap_gp.shape == (B, L - 1, C, G, 1)
-                # y = r + gamma * (1 - d) * Q_target(s', a' ~ pi(s'))
-                gamma = self.gammas.to(r.device).unsqueeze(-1)
+                # y = r + gamma * (1 - d) * Q_target(s', a')
                 ensemble_td_target = r + gamma * (1.0 - d) * q_targ_sp_ap_gp
                 assert ensemble_td_target.shape == (B, L - 1, C, G, 1)
                 td_target = self._critic_ensemble_to_td_target(ensemble_td_target)
@@ -510,9 +511,9 @@ class Agent(nn.Module):
                 td_target_norm = self.popart.normalize_values(td_target)
                 assert td_target_norm.shape == (B, L - 1, 1, G, 1)
 
-            #########################
-            ## Step 5: Critic Loss ##
-            #########################
+            #################
+            ## Critic Loss ##
+            #################
             critic_loss = (self.popart(q_s_a_g) - td_target_norm.detach()).pow(2)
             assert critic_loss.shape == (B, L - 1, C, G, 1)
             if log_step:
@@ -527,25 +528,24 @@ class Agent(nn.Module):
                 popart_stats = self._popart_stats()
                 self.update_info.update(td_stats | popart_stats)
 
-        ######################
-        ## Step 6: DPG Loss ##
-        ######################
         actor_loss = torch.zeros((B, L - 1, G, 1), device=a.device)
         if self.online_coeff > 0:
+            #########################
+            ## "Online" (DPG) Loss ##
+            #########################
             assert (
                 self.actor.actions_differentiable
             ), "online-style actor loss is not compatible with action distribution"
             actor_loss += self.online_coeff * -(
                 self.popart(q_s_a_agent_g[:, :-1, ...].min(2).values)
             )
-        if log_step:
-            self.update_info.update(self._policy_stats(actor_mask, a_dist))
-
-        ######################
-        ## Step 7: FBC Loss ##
-        ######################
+        
         if self.offline_coeff > 0:
+            #####################################################
+            ## "Offline" (Advantage Weighted/Filtered) BC Loss ##
+            #####################################################
             if not self.fake_filter:
+                # f(A(s, a))
                 with torch.no_grad():
                     # V(s) = E_a[Q(s, a ~ pi)] (computed with sample of num_actions_for_cont_value 
                     # in continuous case, or explicitly in discrete case). Already taken mean
@@ -557,9 +557,10 @@ class Agent(nn.Module):
                     assert advantage_a_s_g.shape == (B, L - 1, G, 1)
                     filter_ = self.fbc_filter_func(advantage_a_s_g).float()
             else:
-                # Behavior Cloning
+                # Behavior Cloning (f(A(s, a)) = 1)
                 filter_ = torch.ones((1, 1, 1, 1), device=a.device)
             
+            # log pi(a | s)
             if self.discrete:
                 # buffer actions are one-hot encoded
                 logp_a = a_dist.log_prob(a_buffer.argmax(-1)).unsqueeze(-1)
@@ -569,8 +570,7 @@ class Agent(nn.Module):
                 logp_a = a_dist.log_prob(a_buffer).sum(-1, keepdim=True)
             # clamp for stability and throw away last action that was a duplicate
             logp_a = logp_a[:, :-1, ...].clamp(-1e3, 1e3)
-            # filtered nll
-            actor_loss += self.offline_coeff * -(filter_.detach() * logp_a)
+            actor_loss += self.offline_coeff * -(filter_.detach() * logp_a) # + -f(A(s, a)) * log pi(a | s)
             if log_step:
                 filter_stats = self._filter_stats(actor_mask, logp_a, filter_)
                 self.update_info.update(filter_stats)
