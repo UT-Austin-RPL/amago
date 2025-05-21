@@ -21,18 +21,24 @@ class AmagoWarning(Warning):
 
 
 def amago_warning(msg: str, category=AmagoWarning):
+    """Print a warning message in green, usually to warn about unintuitive hparam settings at startup."""
     warnings.warn(colored(f"{msg}", "green"), category=category)
 
 
 @gin.configurable
 class AdamWRel(AdamW):
-    """
-    A variant of AdamW based on "Adam on Local Time: Addressing Nonstationarity
-    in RL with Relative Adam Timesteps", Ellis et al., 2024.
-    (https://openreview.net/pdf?id=biAqUbAuG7)
+    """A variant of AdamW with timestep resets.
 
-    Treats optimization of an RL policy as a sequence of stationary supervised learning stages,
+    Implementation of the optimizer discussed in "Adam on Local Time: Addressing Nonstationarity
+    in RL with Relative Adam Timesteps", Ellis et al., 2024.
+    (https://openreview.net/pdf?id=biAqUbAuG7). Treats optimization of an RL policy as a sequence of stationary supervised learning stages,
     and resets Adam's timestep variable accordingly.
+
+    Args:
+        reset_interval: Number of gradient steps between resets of Adam's time / step count tracker. Must be configured by gin.
+
+    Keyword Args:
+        Follows the main Adam.
     """
 
     def __init__(
@@ -70,7 +76,16 @@ class AdamWRel(AdamW):
         return loss
 
 
-def stack_list_array_dicts(list_: list[dict[np.ndarray]], axis=0, cat: bool = False):
+def stack_list_array_dicts(
+    list_: list[dict[np.ndarray]], axis=0, cat: bool = False
+) -> dict[str, np.ndarray]:
+    """Stack a list of dictionaries of numpy arrays.
+
+    Args:
+        list_: List of dictionaries of numpy arrays.
+        axis: Axis to stack along.
+        cat: Whether to concatenate along an existing axis instead of stacking along a new one.
+    """
     out = {}
     for t in list_:
         for k, v in t.items():
@@ -82,13 +97,15 @@ def stack_list_array_dicts(list_: list[dict[np.ndarray]], axis=0, cat: bool = Fa
     return {k: f(v, axis=axis) for k, v in out.items()}
 
 
-def split_batch(arr, axis: int):
-    # this split does the same thing as `np.unstack` without requiring numpy 2.1+.
-    # split seems to be much slower than unstack if the array is not in cpu memory.
-    return np.split(np.ascontiguousarray(arr), arr.shape[axis], axis=axis)
+def split_dict(dict_: dict[str, np.ndarray], axis=0) -> list[dict[str, np.ndarray]]:
+    """Split a dictionary of numpy arrays into a list of dictionaries of numpy arrays.
 
+    Inverse of `stack_list_array_dicts`.
 
-def split_dict(dict_: dict[str, np.ndarray], axis=0):
+    Args:
+        dict_: Dictionary of numpy arrays.
+        axis: Axis to split along.
+    """
     unstacked = {k: split_batch(v, axis=axis) for k, v in dict_.items()}
     out = None
     for k, vs in unstacked.items():
@@ -100,7 +117,15 @@ def split_dict(dict_: dict[str, np.ndarray], axis=0):
     return out
 
 
-def _func_over_accelerate(data: dict[str, int | float], func: callable):
+def split_batch(arr: np.ndarray, axis: int) -> list[np.ndarray]:
+    # this split does the same thing as `np.unstack` without requiring numpy 2.1+.
+    # split seems to be much slower than unstack if the array is not in cpu memory.
+    return np.split(np.ascontiguousarray(arr), arr.shape[axis], axis=axis)
+
+
+def _func_over_accelerate(
+    data: dict[str, int | float], func: callable
+) -> dict[str, int | float]:
     merged_stats = gather_object([data])
     output = {}
     for device in merged_stats:
@@ -115,15 +140,31 @@ def _func_over_accelerate(data: dict[str, int | float], func: callable):
     return output
 
 
-def avg_over_accelerate(data: dict[str, int | float]):
+def avg_over_accelerate(data: dict[str, int | float]) -> dict[str, int | float]:
+    """Average a dictionary of ints or floats over all devices.
+
+    Args:
+        data: Dictionary of ints or floats.
+    """
     return _func_over_accelerate(data, lambda x: np.array(x).mean())
 
 
-def sum_over_accelerate(data: dict[str, int | float]):
+def sum_over_accelerate(data: dict[str, int | float]) -> dict[str, int | float]:
+    """Sum a dictionary of ints or floats over all devices.
+
+    Args:
+        data: Dictionary of ints or floats.
+    """
     return _func_over_accelerate(data, lambda x: np.array(x).sum())
 
 
-def masked_avg(tensor: torch.Tensor, mask: torch.Tensor):
+def masked_avg(tensor: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
+    """Average a tensor over a mask.
+
+    Args:
+        tensor: Tensor to average.
+        mask: Mask to average over. False where indices should be ignored.
+    """
     mask = mask.float()
     return (tensor * mask).sum() / (mask.sum() + 1e-5)
 
@@ -146,15 +187,17 @@ def get_constant_schedule_with_warmup(
 
 
 def call_async_env(env: gym.vector.VectorEnv, method_name: str, *args, **kwargs):
+    """Convenience that calls a method over (async) parallel envs and waits for the results."""
     env.call_async(method_name, *args, **kwargs)
     return env.call_wait()
 
 
-def count_params(model: nn.Module):
+def count_params(model: nn.Module) -> int:
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 
 def gin_as_wandb_config() -> dict:
+    """Convert the active gin config to a dictionary for convenient logging to wandb."""
     config = gin.operative_config_str()
     lines = config.split("\n")
     params = [l.split("=") for l in lines if (not l.startswith("#") and "=" in l)]
@@ -177,6 +220,16 @@ def get_grad_norm(model):
 
 
 def retry_load_checkpoint(ckpt_path, map_location, tries: int = 10):
+    """Load a model checkpoint with a retry loop in case of async read/write issues
+
+    Args:
+        ckpt_path: Path to the checkpoint file.
+        map_location: Device map location for the checkpoint.
+        tries: Number of tries to load the checkpoint before giving up.
+
+    Returns:
+        ckpt: torch.load() result. None if load failed.
+    """
     if not os.path.exists(ckpt_path):
         amago_warning("Skipping checkpoint load; file not found.")
         return
