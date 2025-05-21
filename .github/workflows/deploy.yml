@@ -2,7 +2,7 @@ name: Deploy Sphinx Docs
 
 on:
   push:
-    branches: [sphinx-docs]
+    branches: [sphinx-docs]  # Triggers on push to the sphinx-docs branch
 
 permissions:
   contents: read
