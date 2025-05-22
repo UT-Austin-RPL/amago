@@ -26,19 +26,25 @@ jobs:
       run: |
         pip install -r requirements-ci.txt
 
-    - name: Build docs with driverci
+    - name: Build docs
       run: |
         chmod +x driver-ci
         ./driver-ci
+
+    - name: Upload GitHub Pages artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: docs/build/html
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deploy.outputs.page_url }}
 
     steps:
     - name: Deploy to GitHub Pages
-      id: deployment
-      uses: actions/deploy-pages@v2
+      id: deploy
+      uses: actions/deploy-pages@v4
+

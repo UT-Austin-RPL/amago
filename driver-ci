@@ -67,3 +67,8 @@ INDEX_DST="$DOCS_SOURCE_DIR/index.md"
 cd "$ROOT_DIR/docs"
 make clean
 make html
+
+# === Copy media into final HTML output ===
+cd "$BUILD_DIR/html"
+mkdir -p media
+cp -r "$STATIC_MEDIA_DIR"/* media/
