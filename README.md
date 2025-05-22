@@ -1,48 +1,49 @@
-# AMAGO 
-### Adaptive RL with Long-Term Memory
-
-#### [[ICLR 2024](https://openreview.net/pdf?id=M6XWoEdmwf)] [[NeurIPS 2024](https://openreview.net/pdf?id=OSHaRf4TVU)]
-
-<img src="media/amago_logo_2.png" alt="amagologo" width="175" align="right"/>
 
 
-AMAGO follows a simple and scalable recipe for building RL agents that can generalize:
-1. Turn meta-learning into a *memory* problem ("in-context RL") .
-2. Put all of our effort into learning effective memory with end-to-end RL.
-3. Treat zero-shot generalization and multi-task RL as special cases of meta-learning.
-4. Then, we can use one method to solve a wide range of problems!
+<div align="center">
+    <img src="media/amago_logo_3.png" alt="amago logo" width="210">
+</div>
+
+<h3 align="center">Adaptive RL with Long-Term Memory</h2>
 
 <br>
 
-AMAGO is a high-powered off-policy version of [RL^2](https://arxiv.org/abs/1611.02779) for training large policies on long sequences. Please refer to our [paper](https://arxiv.org/abs/2310.09971) for a detailed explanation. Some highlights:
 
-- **Broadly Applicable**. Long-term memory, meta-learning, multi-task RL, and zero-shot generalization are all special cases of its POMDP format. Supports discrete, continuous, and multi-binary actions. See examples below!
+<div align="center">
+    <a href="https://arxiv.org/abs/2310.09971">
+        <img src="https://img.shields.io/badge/Paper-AMAGO%20ICLR%202024-blue" alt="Paper #1">
+    </a>
+    <a href="https://arxiv.org/abs/2411.11188">
+        <img src="https://img.shields.io/badge/Paper-AMAGO--2%20NeurIPS%202024-purple" alt="Paper #2">
+    </a>
+    <a href="https://ut-austin-rpl.github.io/amago">
+        <img src="https://img.shields.io/badge/Docs-ut--austin--rpl.github.io%2Famago-4caf50" alt="Docs">
+    </a>
+</div>
+
+<br>
+<br>
+
+
+AMAGO follows a simple and scalable recipe for building RL agents that can generalize:
+1. Turn meta-learning into a *memory* problem ("black-box meta-RL") .
+2. Put all of our effort into learning effective memory with end-to-end RL.
+3. Treat other RL problems as special cases of meta-learning.
+4. Use one method to solve a wide range of problems!
+
+<br>
+
+AMAGO is a high-powered off-policy version of [RL^2](https://arxiv.org/abs/1611.02779) for training large policies on long sequences. Its goal is to do this one thing very well, and make it applicable to just about any RL problem, while remaining customizable for research.
+
+Some highlights:
+
+- **Broadly Applicable**. Long-term memory, meta-learning, multi-task RL, and zero-shot generalization are special cases of its POMDP format. Supports discrete and continuous actions. Online and offline RL. See examples below!
 - **Scalable**. Train large policies on long context sequences across multiple GPUs with parallel actors, asynchronous learning/rollouts, and large replay buffers stored on disk.
-- **Easy to Use**. Quickstart experiments on a broad range of environments. Technical details are easy to customize but designed to require little hyperparameter tuning.
+- **Easy to Modify**. Modular and configurable. Swap in your own model architectures, RL objectives, and datasets. 
 
+<br>
 
-
-## What is In-Context RL?
-
-<p align="center">
-<img src="media/in_context_rl.png" alt="icrl_diagram" width="900"/>
-</p>
-
-Standard RL agents can only generalize to aspects of their environment that 1) *they can observe* and 2) that *changed during training*. In other words, they cannot adapt to changes that are not explicitly revealed, no matter how much experience we collect or how much variety our environment provides. 
-
-
-
-**Meta-RL** agents adapt to changes they *cannot directly observe*; these might range from subtle adjustments of their controls to entirely new reward functions. They do this by exploring their surroundings, inferring what they do not know, and adjusting their decisions to succeed in their current environment.
-
-**In-Context RL** (ICRL), a.k.a *Black-Box Meta-RL*, is a simple approach that lets meta-learning emerge inside a sequence model. The idea is this: RL's goal is to maximize returns, and we could increase returns if we knew more about the environment, so meta-learning will happen naturally. ICRL effectively reduces meta-RL to the problem of training RL with memory. Its main advantage is its flexibility: ICRL blurs formal boundaries between generalization, meta-learning, multi-task RL, and long-term memory by letting us use the same method for every problem!
-
-However, In-Context RL has two key disadvantages:
-
-1. **Memory in RL is hard**, so reducing adaptation to memory may not actually get us very far. 
-2. **Sample inefficiency**. ICRL is deep RL at its most extreme. We make no assumptions about the problem and let a fancy sequence model figure it out from data... and it'll take a lot of data. 
-
-ICRL is not a new idea, but these challenges have limited adoption and prompted research on many alternative approaches. AMAGO is an effort to improve them and push meta-RL beyond toy research problems.
-
+___
 
 <br>
 
@@ -50,7 +51,7 @@ ICRL is not a new idea, but these challenges have limited adoption and prompted 
 ```shell
 # download source
 git clone git@github.com:UT-Austin-RPL/amago.git
-# make a fresh conda environment with python 3.10
+# make a fresh conda environment with python 3.10+
 conda create -n amago python==3.10
 conda activate amago
 # install core agent
@@ -68,31 +69,23 @@ There are some optional installs for additional features:
 > [!TIP]
 > *NOTE*: AMAGO requires `gymnasium` <= 0.29. It is not compatible with the recent `gymnasium` 1.0 release. Please check your `gymnasium` version if you see environment-related error messages on startup.
 
-> [!WARNING]
-> This is an active long-term research project. Please be warned that the codebase is not stable and we make breaking changes frequently. 
-
 <br>
 
-## Tutorial
-You can read a detailed tutorial in [tutorial.md](tutorial.md). Full documentation coming soon.
+## Examples, Tutorial, and Documentation
+We now have some rough [documentation](https://ut-austin-rpl.github.io/amago), including a full [tutorial](https://ut-austin-rpl.github.io/amago/tutorial.html).
 
 
-<br>
-
-## Examples
-
-The [`examples/`](examples/) folder includes helpful starting points for common cases.
-
+The [`examples/`](examples/) folder includes helpful starting points for common cases. 
 
 To follow most of the examples you'll need to install the benchmark environments with `pip install amago[envs]`. If you want to log to `wandb` or check out some of the example results, it's worth reading [this section of the tutorial](https://github.com/UT-Austin-RPL/amago/blob/main/tutorial.md#track-the-results). The public `wandb` links include example commands (click the "Overview" tab). Building this set of public examples with the new version of AMAGO is an active work in progress.
 
 Use the `CUDA_VISIBLE_DEVICES` environment variable to assign basic single-GPU examples to a specific GPU index. Most of the examples share a command line interface. Use `--help` for more information.
 
 
-### 0. **Intro to Meta-RL: Kshot-Frozen Lake**
-**[`00_kshot_frozen_lake.py`](examples/00_kshot_frozen_lake.py)**
+### 0. **Intro to Black-Box Meta-RL: Meta-Frozen-Lake**
+**[`00_meta_frozen_lake.py`](examples/00_meta_frozen_lake.py)**
 
-<img src="media/robot.png" alt="frozen_lake_icon" width="110" align="left"/>
+<img src="media/in_context_rl.png" alt="frozen_lake_diagram" width="510" style="display: block; margin-left: auto; margin-right: auto;"/>
 
 Learn more about adaptive policies with help from an intuitive meta-RL problem. Train an agent to adapt over multiple episodes by learning to avoid its previous mistakes.
 
@@ -202,7 +195,7 @@ Multi-Task RL is a special case of meta-RL where the identity of each task is di
 
 <img src="media/coinrun2.png" alt="icrl_diagram" width="110" align="left"/>
 
-Multi-Game [Procgen](https://arxiv.org/abs/1912.01588) has a similar feel to Atari. However, Procgen's procedural generation and partial observability (especially in "memory" mode) is better suited to multi-episodic adaptation. This example highlights the `TwoShotMTProcgen` setup used by experiments in the second paper.
+Multi-Game [Procgen](https://arxiv.org/abs/1912.01588) has a similar feel to Atari. However, Procgen's procedural generation and partial observability (especially in "memory" mode) is better suited to multi-episodic adaptation. This example highlights the `TwoAttemptMTProcgen` setup used by experiments in the second paper.
 
 <br>
 
