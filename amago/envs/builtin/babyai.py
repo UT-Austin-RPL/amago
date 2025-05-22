@@ -37,6 +37,24 @@ ALL_BABYAI_TASKS = [
 
 
 class MultitaskMetaBabyAI(gym.Env):
+    """A multi-task/meta-RL wrapper of the BabyAI environments.
+
+    Creates a problem where every `reset()` samples a new procedurally generated
+    map from a randomly sampled BabyAI task. The agent is not told which task
+    is active and may not have seen this map layout before. It then has k >= 1
+    attempts to master this (task, layout) pair. Appears in the AMAGO-2 paper.
+
+    Keyword Args:
+        task_names: A list of BabyAI task names to sample from.
+        k_episodes: The number of consecutive attempts to complete the same task.
+        seed_range: The range of seeds to use for BabyAI's randomized env generation.
+        observation_type: The type of observation to use. Options are
+            "partial-grid": 7x7 grid representation of objects in local view (partially observed)
+            "full-grid": 22x22 grid representation of objects on the map
+            "partial-image": 63x63 RGB image of local view (partially observed)
+            "full-image": 63x63 RGB image of the whole map
+    """
+
     def __init__(
         self,
         task_names: List[str],
@@ -194,9 +212,9 @@ class MultitaskMetaBabyAI(gym.Env):
 
 if __name__ == "__main__":
     env = MultitaskMetaBabyAI(ALL_BABYAI_TASKS)
-    b = float("inf")
-    for _ in range(100):
+    for _ in range(10):
         obs, _ = env.reset()
-        print(obs["image"].dtype)
-        b = min(b, obs["image"].min())
-    print(b)
+        done = False
+        for _ in range(20):
+            action = env.action_space.sample()
+            obs, reward, terminated, truncated, info = env.step(action)
