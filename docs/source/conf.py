@@ -42,9 +42,9 @@ modindex_common_prefix = ["amago."]
 
 autodoc_default_options = {
     "members": True,
-    "undoc-members": True,
+    "undoc-members": False,
     "show-inheritance": True,
-    "private-members": True,
+    "private-members": False,
     "special-members": "__init__",
 }
 
