@@ -73,3 +73,6 @@ html_theme_options = {
     "default_mode": "light",
 }
 
+html_context = {
+    "default_mode": "light",
+}
