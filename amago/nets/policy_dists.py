@@ -469,19 +469,26 @@ class GMM(PolicyOutput):
 class Beta(PolicyOutput):
     """Generates a Beta distribution rescaled to [-1, 1].
 
+    (https://proceedings.mlr.press/v70/chou17a/chou17a.pdf)
+
     Args:
         d_action: Dimension of the action space.
 
     Keyword Args:
-        alpha_low: Minimum value of alpha. Default is 1e-4.
+        alpha_low: Minimum value of alpha. Default is 1.0001.
         alpha_high: Maximum value of alpha. Default is None.
-        beta_low: Minimum value of beta. Default is 1e-4.
+        beta_low: Minimum value of beta. Default is 1.0001.
         beta_high: Maximum value of beta. Default is None.
-        std_activation: Activation function to produce a valid standard deviation from the raw network
-            output.
-        clip_actions_on_log_prob: Tuple of floats that clips the actions before
-            computing dist.log_prob(action). Adresses numerical stability issues
-            when computing log_probs at the boundary of the action space.
+        std_activation: Activation function to produce a valid standard
+            deviation from the raw network output.
+        clip_actions_on_log_prob: Tuple of floats that clips the actions
+            before computing dist.log_prob(action). Addresses numerical
+            stability issues when computing log_probs at the boundary of
+            the action space.
+
+    Note:
+        alpha_low > 1 and beta_low > 1 keeps the distribution unimodal.
+        (https://mathlets.org/mathlets/beta-distribution/)
     """
 
     def __init__(
