@@ -39,13 +39,17 @@ ALL_BABYAI_TASKS = [
 class MultitaskMetaBabyAI(gym.Env):
     """A multi-task/meta-RL wrapper of the BabyAI environments.
 
+    BabyAI: https://arxiv.org/abs/1810.08272
+
     Creates a problem where every `reset()` samples a new procedurally generated
     map from a randomly sampled BabyAI task. The agent is not told which task
     is active and may not have seen this map layout before. It then has k >= 1
     attempts to master this (task, layout) pair. Appears in the AMAGO-2 paper.
 
-    Keyword Args:
+    Args:
         task_names: A list of BabyAI task names to sample from.
+
+    Keyword Args:
         k_episodes: The number of consecutive attempts to complete the same task.
         seed_range: The range of seeds to use for BabyAI's randomized env generation.
         observation_type: The type of observation to use. Options are
