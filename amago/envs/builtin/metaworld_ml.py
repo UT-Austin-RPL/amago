@@ -19,17 +19,17 @@ class Metaworld(AMAGOEnv):
     "Meta-World: A Benchmark and Evaluation for Multi-Task and Meta Reinforcement Learning",
     Yu et al., 2019. (https://arxiv.org/abs/1910.10897)
 
-    Randomly sample tasks and automatically logs the success rate and return across k_shot
+    Randomly sample tasks and automatically logs the success rate and return across k_episode
     rollouts.
 
     Args:
         benchmark_name: The name of the benchmark to use. Options are "ml10", "ml45", or a
             specific task name (e.g., "reach-v2").
         split: "train" for training set, "test" for test set.
-        k_shots: The number of attempts the policy has to adapt to the current task.
+        k_episodes: The number of attempts the policy has to adapt to the current task.
     """
 
-    def __init__(self, benchmark_name: str, split: str, k_shots: int):
+    def __init__(self, benchmark_name: str, split: str, k_episodes: int):
         if benchmark_name == "ml10":
             benchmark = metaworld.ML10()
         elif benchmark_name == "ml45":
@@ -40,7 +40,7 @@ class Metaworld(AMAGOEnv):
             except:
                 raise ValueError(f"Unrecognized metaworld benchmark {benchmark_name}")
 
-        env = KShotMetaworld(benchmark, split, k_shots)
+        env = KEpisodeMetaworld(benchmark, split, k_episodes)
         super().__init__(
             env=env,
             env_name=f"metaworld_{benchmark_name}",
@@ -51,29 +51,29 @@ class Metaworld(AMAGOEnv):
         return self.env.task_name
 
 
-class KShotMetaworld(gym.Env):
-    """A simple multi-task wrapper around Meta-World ML benchmarks that handles k-shot
+class KEpisodeMetaworld(gym.Env):
+    """A simple multi-task wrapper around Meta-World ML benchmarks that handles k-episode
     rollouts.
 
-    Randomly samples a task from the benchmark and then resets it k_shot times before
+    Randomly samples a task from the benchmark and then resets it k_episode times before
     terminating. Logs the success rate and return of each of the k attempts.
 
     Args:
         benchmark: The Meta-World benchmark set.
         split: "train" for training set, "test" for test set.
-        k_shots: The number of attempts (episodes) to take for each task.
+        k_episodes: The number of attempts (episodes) to take for each task.
         max_episode_length: The maximum number of steps per attempt (episode). Defaults to 500.
     """
 
     reward_scales = {}
 
     def __init__(
-        self, benchmark, split: str, k_shots: int, max_episode_length: int = 500
+        self, benchmark, split: str, k_episodes: int, max_episode_length: int = 500
     ):
         assert split in ["train", "test"]
         self.benchmark = benchmark
         self.split = split
-        self.k_shots = k_shots
+        self.k_episodes = k_episodes
         self._envs = self.get_env_funcs(benchmark, train_set=split == "train")
         self.reset()
         self.action_space = space_convert(self.env.action_space)
@@ -126,7 +126,7 @@ class KShotMetaworld(gym.Env):
             next_obs = self.env.reset()
             self.current_trial += 1
 
-        truncated = terminated = self.current_trial >= self.k_shots
+        truncated = terminated = self.current_trial >= self.k_episodes
         if truncated or terminated:
             metrics[f"{AMAGO_ENV_LOG_PREFIX} Total Successes"] = self.successes
 

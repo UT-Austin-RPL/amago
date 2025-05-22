@@ -62,7 +62,7 @@ class MultitaskMetaBabyAI(gym.Env):
     def __init__(
         self,
         task_names: List[str],
-        k_episodes: int = 1,
+        k_episodes: int = 2,
         seed_range: Tuple[int, int] = (0, 1_000_000),
         observation_type: str = "partial-grid",
     ):
