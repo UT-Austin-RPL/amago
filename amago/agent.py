@@ -565,8 +565,8 @@ class Agent(nn.Module):
                 logp_a = a_dist.log_prob(a_buffer).mean(-1, keepdim=True)
             else:
                 logp_a = a_dist.log_prob(a_buffer).sum(-1, keepdim=True)
-            # clamp for stability and throw away last action that was a duplicate
-            logp_a = logp_a[:, :-1, ...].clamp(-1e3, 1e3)
+            # throw away last action that was a duplicate
+            logp_a = logp_a[:, :-1, ...]
             actor_loss += self.offline_coeff * -(filter_.detach() * logp_a) # + -f(A(s, a)) * log pi(a | s)
             if log_step:
                 filter_stats = self._filter_stats(actor_mask, logp_a, filter_)
@@ -913,8 +913,8 @@ class MultiTaskAgent(Agent):
                 logp_a = a_dist.log_prob(a_buffer).mean(-1, keepdim=True)
             else:
                 logp_a = a_dist.log_prob(a_buffer).sum(-1, keepdim=True)
-            # clamp for stability and throw away last action that was a duplicate
-            logp_a = logp_a[:, :-1, ...].clamp(-1e3, 1e3)
+            # throw away last action that was a duplicate
+            logp_a = logp_a[:, :-1, ...]
             actor_loss += self.offline_coeff * -(filter_.detach() * logp_a)
             if log_step:
                 filter_stats = self._filter_stats(actor_mask, logp_a, binary_filter_)

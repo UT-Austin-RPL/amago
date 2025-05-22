@@ -487,9 +487,9 @@ class Beta(PolicyOutput):
     def __init__(
         self,
         d_action: int,
-        alpha_low: float = 1e-4,
+        alpha_low: float = 1.0001,
         alpha_high: Optional[float] = None,
-        beta_low: float = 1e-4,
+        beta_low: float = 1.0001,
         beta_high: Optional[float] = None,
         std_activation: StdActivation = softplus_bounded_positive,
         clip_actions_on_log_prob: tuple[float, float] = (-0.99, 0.99),
