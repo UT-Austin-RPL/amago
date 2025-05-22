@@ -14,7 +14,22 @@ from amago.envs import AMAGOEnv, AMAGO_ENV_LOG_PREFIX
 
 
 class Metaworld(AMAGOEnv):
-    def __init__(self, benchmark_name: str, split: str, k_shots):
+    """AMAGOEnv Metaworld ML1/ML10/ML45 Wrapper.
+
+    "Meta-World: A Benchmark and Evaluation for Multi-Task and Meta Reinforcement Learning",
+    Yu et al., 2019. (https://arxiv.org/abs/1910.10897)
+
+    Randomly sample tasks and automatically logs the success rate and return across k_shot
+    rollouts.
+
+    Args:
+        benchmark_name: The name of the benchmark to use. Options are "ml10", "ml45", or a
+            specific task name (e.g., "reach-v2").
+        split: "train" for training set, "test" for test set.
+        k_shots: The number of attempts the policy has to adapt to the current task.
+    """
+
+    def __init__(self, benchmark_name: str, split: str, k_shots: int):
         if benchmark_name == "ml10":
             benchmark = metaworld.ML10()
         elif benchmark_name == "ml45":
@@ -37,6 +52,19 @@ class Metaworld(AMAGOEnv):
 
 
 class KShotMetaworld(gym.Env):
+    """A simple multi-task wrapper around Meta-World ML benchmarks that handles k-shot
+    rollouts.
+
+    Randomly samples a task from the benchmark and then resets it k_shot times before
+    terminating. Logs the success rate and return of each of the k attempts.
+
+    Args:
+        benchmark: The Meta-World benchmark set.
+        split: "train" for training set, "test" for test set.
+        k_shots: The number of attempts (episodes) to take for each task.
+        max_episode_length: The maximum number of steps per attempt (episode). Defaults to 500.
+    """
+
     reward_scales = {}
 
     def __init__(
@@ -89,9 +117,9 @@ class KShotMetaworld(gym.Env):
         soft_reset = False
         if self.current_time >= self.max_episode_length or done:
             soft_reset = True
-            metrics[
-                f"{AMAGO_ENV_LOG_PREFIX} Trial {self.current_trial} Success"
-            ] = self.trial_success
+            metrics[f"{AMAGO_ENV_LOG_PREFIX} Trial {self.current_trial} Success"] = (
+                self.trial_success
+            )
             self.current_time = 0
             self.successes += self.trial_success
             self.trial_success = 0.0

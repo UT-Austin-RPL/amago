@@ -10,7 +10,7 @@ from matplotlib.artist import Artist
 from amago.envs import AMAGOEnv
 
 
-def random_maze(width=11, height=11, complexity=0.75, density=0.75):
+def random_maze(width: int = 11, height: int = 11, complexity: float = 0.75, density: float = 0.75) -> np.ndarray:
     """Generate a maze layout.
 
     Code from https://github.com/zuoxingdong/mazelab
