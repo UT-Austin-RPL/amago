@@ -180,6 +180,7 @@ def _get_constant_schedule_with_warmup_lr_lambda(
 def get_constant_schedule_with_warmup(
     optimizer: torch.optim.Optimizer, num_warmup_steps: int, last_epoch: int = -1
 ):
+    """Get a constant learning rate schedule with a warmup period."""
     lr_lambda = partial(
         _get_constant_schedule_with_warmup_lr_lambda, num_warmup_steps=num_warmup_steps
     )
@@ -193,6 +194,11 @@ def call_async_env(env: gym.vector.VectorEnv, method_name: str, *args, **kwargs)
 
 
 def count_params(model: nn.Module) -> int:
+    """Count the number of trainable parameters in a pytorch module.
+
+    Args:
+        model: Pytorch module.
+    """
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 
@@ -205,7 +211,12 @@ def gin_as_wandb_config() -> dict:
     return params_dict
 
 
-def get_grad_norm(model):
+def get_grad_norm(model: nn.Module) -> float:
+    """Get the (L2) norm of the gradients for a pytorch module.
+
+    Args:
+        model: Pytorch module.
+    """
     total_norm = 0.0
     for p in model.parameters():
         try:
