@@ -33,6 +33,8 @@ class _HalfCheetahV4ExposeVelReward(HalfCheetahEnv):
 
 
 class HalfCheetahV4LogVelocity(_HalfCheetahV4ExposeVelReward):
+    """A wrapper around HalfCheetah-V4 that will automatically log velocity metrics when used in AMAGO."""
+
     def reset(self, *args, **kwargs):
         obs, info = super().reset(*args, **kwargs)
         self._velocity_history = []
@@ -62,6 +64,18 @@ class HalfCheetahV4_MetaVelocity(HalfCheetahV4LogVelocity):
 
     Reward terms are based on the version featured in the VariBAD codebase
     (https://github.com/lmzintgraf/varibad/blob/57e1795be142ace52d0c353097acf193d9067200/environments/mujoco/half_cheetah_vel.py#L8)
+
+    Args:
+        ctrl_cost_weight: Defaults to half the normal ctrl cost, as in the original HalfCheetahVelocity task.
+        velocity_reward_weight: Defaults to 1.0.
+
+        .. note::
+            The original HalfCheetahVelocity task has a max velocity of 3.
+            For reference: a reasonably good policy optimizing HalfCheetah-v4
+            with the standard reward (go as fast as possible) would reach a vel > 10.
+
+        task_min_velocity: Minimum target velocity that determines the hidden task. Defaults to 0.0.
+        task_max_velocity: Maximum target velocity that determines the hidden task. Defaults to 3.0.
     """
 
     def __init__(
