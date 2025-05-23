@@ -17,7 +17,7 @@ def add_cli(parser):
     parser.add_argument("--log", action="store_true")
     parser.add_argument("--trials", type=int, default=1)
     parser.add_argument("--lake_size", type=int, default=5)
-    parser.add_argument("--k_shots", type=int, default=15)
+    parser.add_argument("--k_episodes", type=int, default=15)
     parser.add_argument("--hard_mode", action="store_true")
     parser.add_argument("--recover_mode", action="store_true")
     parser.add_argument("--max_rollout_length", type=int, default=512)
@@ -71,12 +71,12 @@ if __name__ == "__main__":
         # wrap environment
         make_env = lambda: AMAGOEnv(
             MetaFrozenLake(
-                k_shots=args.k_shots,
+                k_episodes=args.k_episodes,
                 size=args.lake_size,
                 hard_mode=args.hard_mode,
                 recover_mode=args.recover_mode,
             ),
-            env_name=f"meta_frozen_lake_k{args.k_shots}_{args.lake_size}x{args.lake_size}"
+            env_name=f"meta_frozen_lake_k{args.k_episodes}_{args.lake_size}x{args.lake_size}"
             + ("_hard" if args.hard_mode else "_easy")
             + ("_recover" if args.recover_mode else "_reset"),
         )

@@ -2,7 +2,10 @@ import gymnasium as gym
 import numpy as np
 
 
-def extend_box_obs_space_by(space: gym.spaces.Box, by: int, low: float, high: float):
+def extend_box_obs_space_by(
+    space: gym.spaces.Box, by: int, low: float, high: float
+) -> gym.spaces.Box:
+    """Utility for adding dimensions to gym.spaces.Box spaces when concatenating extra info like terminal signals and time remaining."""
     assert isinstance(space, gym.spaces.Box)
     return gym.spaces.Box(
         shape=(space.shape[0] + by,),
@@ -12,12 +15,9 @@ def extend_box_obs_space_by(space: gym.spaces.Box, by: int, low: float, high: fl
 
 
 class AlreadyVectorizedEnv(gym.Env):
-    """
-    Thin wrapper imitating the Async calls of a single environment
-    that already has a batch dimension.
+    """Imitates Async calls of a single environment that already has a batch dimension.
 
-    Important: assumes the vectorized environment is handling
-    automatic resets.
+    Important: assumes the vectorized environment is handling automatic resets.
     """
 
     def __init__(self, env_funcs):
@@ -54,6 +54,8 @@ class AlreadyVectorizedEnv(gym.Env):
 
 
 class DummyAsyncVectorEnv(gym.Env):
+    """Imitates Async calls of synchronous parallel environments."""
+
     def __init__(self, env_funcs):
         self.envs = [e() for e in env_funcs]
         self.observation_space = self.envs[0].observation_space
@@ -99,6 +101,14 @@ class DummyAsyncVectorEnv(gym.Env):
 
 
 def space_convert(gym_space):
+    """Converts original `gym` action spaces to their `gymnasium` equivalents so that they pass type checks.
+
+    Args:
+        gym_space: The original `gym` space to convert.
+
+    Returns:
+        The converted `gymnasium` space.
+    """
     import gym as og_gym
 
     if isinstance(gym_space, og_gym.spaces.Box):
@@ -114,6 +124,12 @@ def space_convert(gym_space):
 
 
 class DiscreteActionWrapper(gym.ActionWrapper):
+    """Messy numpy/int squeeze/unsqueeze compatability
+
+    So that the Agent can output discrete actions in any reasonable format.
+    AMAGOEnv automatically adds this wrapper to Discrete action spaces.
+    """
+
     def reset(self, *args, **kwargs):
         return self.env.reset(*args, **kwargs)
 
@@ -130,8 +146,9 @@ class DiscreteActionWrapper(gym.ActionWrapper):
 
 
 class ContinuousActionWrapper(gym.ActionWrapper):
-    """
-    Normalize continuous action spaces [-1, 1]
+    """Normalize continuous action spaces [-1, 1]
+
+    AMAGOEnv automatically adds this wrapper to continuous/Box action spaces.
     """
 
     def __init__(self, env):

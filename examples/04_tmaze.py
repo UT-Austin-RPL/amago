@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 import wandb
 
 from amago.envs import AMAGOEnv
-from amago.envs.builtin.tmaze import TMazeAltPassive
+from amago.envs.builtin.tmaze import TMazeAltPassive, TMazeAltActive
 from amago.envs.exploration import EpsilonGreedy
 from amago.cli_utils import *
 

@@ -35,6 +35,13 @@ else:
 
 
 class SelfAttention(nn.Module, ABC):
+    """A base class for self-attention layers.
+
+    Args:
+        causal: Whether to use a causal mask.
+        dropout: The dropout rate of the attention matrix.
+    """
+
     def __init__(self, causal: bool = True, dropout: float = 0.0):
         super().__init__()
         self.causal = causal
@@ -42,10 +49,37 @@ class SelfAttention(nn.Module, ABC):
 
     @abstractmethod
     def forward(self, qkv, key_cache=None, val_cache=None, cache_seqlens=None):
+        """Map queries keys and values to attention output.
+
+        Should implement full training pass when key_cache/val_cache/cache_seqlens are
+        None, and (cached) inference when provided.
+
+        Args:
+            qkv: A tensor of shape (batch_size, sequence_length, 3, num_heads, head_dim).
+                Packed queries, keys, and values.
+
+        Keyword Args:
+            key_cache: A tensor of shape (batch_size, max_sequence_length, num_heads,
+                head_dim).
+            val_cache: A tensor of shape (batch_size, max_sequence_length, num_heads,
+                head_dim).
+            cache_seqlens: A tensor of shape (batch_size,) that defines the current index
+                of the k/v cache.
+
+        Returns:
+            A tensor of shape (batch_size, sequence_length, num_heads, head_dim).
+        """
         raise NotImplementedError
 
 
 class VanillaAttention(SelfAttention):
+    """Unoptimized self-attention in regular pytorch.
+
+    Args:
+        causal: Whether to use a causal mask.
+        dropout: The dropout rate of the attention matrix.
+    """
+
     def __init__(self, causal: bool, dropout: float):
         super().__init__(causal=causal, dropout=dropout)
         self.dropout = nn.Dropout(self.dropout)
@@ -106,6 +140,15 @@ class VanillaAttention(SelfAttention):
 
 @gin.configurable
 class FlashAttention(SelfAttention):
+    """Optimized self-attention using flash_attn.
+
+    Args:
+        causal: Whether to use a causal mask.
+        dropout: The dropout rate of the attention matrix.
+        window_size: flash_attn's window_size parameter, which enables sliding window
+            attention. Defaults to (-1, -1), which is standard full-length attention.
+    """
+
     def __init__(
         self,
         causal: bool,
@@ -145,15 +188,25 @@ class FlashAttention(SelfAttention):
 
 
 class FlexAttention(SelfAttention):
-    """
-    Experimental support for flash_attention (coming to pytorch 2.5)
+    """Experimental support for flex_attention (a recent pytorch feature).
 
     Allows custom sparse attention patterns using score_mod and mask_mod function.
     (https://pytorch.org/blog/flexattention/)
     (https://github.com/pytorch-labs/attention-gym)
 
-    The main benefit of flash_attention for our purposes is a unified implementation
+    The main benefit of flex_attention for our purposes is a unified implementation
     of key/value cache inference for more complex attention patterns.
+
+    Args:
+        score_mod: A function that takes the batch_idx, head_idx, q_idx, kv_idx and
+            computes a scalar score for the attention matrix entry between these
+            locations.
+        mask_mod: A function that takes the batch_idx, head_idx, q_idx, kv_idx and
+            returns False if attention scores between these locations should be
+            masked.
+        causal: Whether to use a causal mask. If True, the causal mask is applied on
+            top of the custom mask_mod. Defaults to True.
+        dropout: The dropout rate of the attention matrix. Defaults to 0.0.
     """
 
     def __init__(
@@ -257,9 +310,7 @@ class FlexAttention(SelfAttention):
 
 
 class VanillaFlexAttention(FlexAttention):
-    """
-    A sanity-check test of FlexAttention that should be equivalent to VanillaAttention.
-    """
+    """A sanity-check test of FlexAttention that should be equivalent to VanillaAttention."""
 
     def __init__(self, causal: bool = True, dropout: float = 0.0):
         super().__init__(
@@ -272,6 +323,8 @@ class VanillaFlexAttention(FlexAttention):
 
 @gin.configurable
 class SlidingWindowFlexAttention(FlexAttention):
+    """A more useful test of FlexAttention that implements a sliding window pattern for long context lengths."""
+
     def __init__(
         self,
         causal: bool = True,
@@ -292,10 +345,24 @@ class SlidingWindowFlexAttention(FlexAttention):
 
 @gin.configurable
 class SigmaReparam(nn.Linear):
-    """
-    Updated version of SigmaReparam following the initialization strategy in the official code release.
+    """SigmaReparam nn.Linear alternative.
+
     https://github.com/apple/ml-sigma-reparam/blob/fea4e359126f812bd3e0a12234c56330fe4b5fa2/vision/layers.py#L90
     https://github.com/ywchan2005/sigma-reparam-pytorch/blob/2a5676ac71f75567a09db4ecafc1a4d7bc135b8e/sigma_reparam.py#L5
+
+    SigmaReparam is an alternative to nn.Linear that can be used in Transformer blocks
+    to stabilize attention scores. (https://arxiv.org/abs/2303.06296)
+
+    Args:
+        d_in: The input dimension of the layer.
+        d_out: The output dimension of the layer.
+
+    Keyword Args:
+        bias: Whether to use a bias in the layer. Defaults to True.
+        fast_init: Skip a SVD initialization step and use a simpler strategy. Mainly
+            used for backward compatability with old results and as a hacky way to
+            speed up init for large models when we'll be loading a pretrained
+            checkoint soon anyway. Defaults to False.
     """
 
     def __init__(self, d_in, d_out, bias: bool = True, fast_init: bool = False):
@@ -305,7 +372,10 @@ class SigmaReparam(nn.Linear):
             u = torch.linalg.svd(self.weight.T, full_matrices=False)[-1][0].detach()
             v = torch.linalg.svd(self.weight, full_matrices=False)[-1][0].detach()
         else:
-            # Use simpler initialization from legacy version
+            # initialization from legacy version used in the original AMAGO paper.
+            # This was a guess based on the sigma reparam pseudocode before the code was released,
+            # and leads to large outputs early in training... though we never encountered any
+            # real problems with this.
             nn.init.kaiming_uniform_(self.weight, a=math.sqrt(5))
             if self.bias is not None:
                 fan_in, _ = nn.init._calculate_fan_in_and_fan_out(self.weight)
@@ -333,54 +403,8 @@ class SigmaReparam(nn.Linear):
         return out
 
 
-class SigmaReparamLegacyInit(nn.Module):
-    """
-    Legacy version of SigmaReparam with the original initialization strategy.
-    This is the version used in the paper results, and is based on
-    pseudocode in https://arxiv.org/pdf/2303.06296.pdf Appendix C.
-    Results in large initial output values, which are covered up by the LR
-    warmup and other stability measures in flash attention.
-
-    The initialization has been updated to follow tricks from an official code
-    release that came out later.
-    """
-
-    def __init__(self, d_in, d_out, bias: bool = True):
-        super().__init__()
-        self.W = nn.Parameter(torch.randn(d_out, d_in), requires_grad=True)
-        self.b = nn.Parameter(torch.zeros(d_out), requires_grad=True) if bias else None
-        u = torch.randn(d_out)
-        self.register_buffer("u", u / u.norm(dim=0))
-        v = torch.randn(d_in)
-        self.register_buffer("v", v / v.norm(dim=0))
-        self.gamma = nn.Parameter(torch.ones(1), requires_grad=True)
-        self.reset_parameters()
-
-    def reset_parameters(self):
-        # same as nn.Linear
-        nn.init.kaiming_uniform_(self.W, a=math.sqrt(5))
-        if self.b is not None:
-            fan_in, _ = nn.init._calculate_fan_in_and_fan_out(self.W)
-            bound = 1 / math.sqrt(fan_in) if fan_in > 0 else 0
-            nn.init.uniform_(self.b, -bound, bound)
-
-    def forward(self, x):
-        if self.training:
-            with torch.no_grad():
-                u = (self.W @ self.v).float()
-                self.u.data = u / u.norm(dim=0)
-                v = (self.W.T @ self.u).float()
-                self.v.data = v / v.norm(dim=0)
-        sigma = einsum(self.u, self.W, self.v, "d, d c , c->")
-        W_hat = self.gamma / sigma * self.W
-        out = F.linear(x, W_hat, self.b)
-        return out
-
-
 class AttentionLayer(nn.Module):
-    """
-    Query, Key, Value --> Self-Attention --> Output Projection
-    """
+    """Query, Key, Value --> Self-Attention --> Output Projection"""
 
     def __init__(
         self,
@@ -424,9 +448,7 @@ class AttentionLayer(nn.Module):
 
 
 class TransformerLayer(nn.Module):
-    """
-    Pre-Norm Self-Attention Layer
-    """
+    """Pre-Norm Self-Attention Layer"""
 
     def __init__(
         self,
@@ -478,6 +500,8 @@ class TransformerLayer(nn.Module):
 
 
 class Cache:
+    """A cache for key and value tensors."""
+
     def __init__(
         self,
         device: torch.device,
@@ -510,6 +534,8 @@ class Cache:
 
 
 class TformerHiddenState:
+    """Helps manage the Cache hidden state during rollouts."""
+
     def __init__(self, key_cache: Cache, val_cache: Cache, seq_lens: torch.Tensor):
         assert seq_lens.dtype == torch.int32
         assert key_cache.device == val_cache.device
@@ -539,6 +565,8 @@ class TformerHiddenState:
 
 
 class FixedPosEmb(nn.Module):
+    """Classic sinusoidal positional encoding."""
+
     def __init__(self, d_model: int):
         super().__init__()
         self.d_model = d_model
@@ -561,6 +589,20 @@ class FixedPosEmb(nn.Module):
 
 @gin.configurable
 class LearnablePosEmb(nn.Module):
+    """Learnable positional encoding.
+
+    Creates a lookup table of d_model size embeddings for every timestep of the
+    episode.
+
+    Args:
+        d_model: The dimension of the embeddings.
+
+    Keyword Args:
+        max_time_idx: The maximum timestep we'll need to learn an embedding for. So
+            application-specific that it's gin.REQUIRED and therefore must be
+            configured manually in the training script or its .gin files.
+    """
+
     def __init__(self, d_model: int, max_time_idx: int = gin.REQUIRED):
         super().__init__()
         self.embeddings = nn.Embedding(
@@ -572,6 +614,8 @@ class LearnablePosEmb(nn.Module):
 
 
 class Transformer(nn.Module):
+    """Build a full Transformer model from a list of layers."""
+
     def __init__(
         self,
         inp_dim: int,

@@ -5,8 +5,7 @@ import numpy as np
 
 
 class GymnaxCompatibility(GymnaxToVectorGymWrapper):
-    """
-    Convert gymnax Gym wrapper to the expected AMAGO interface.
+    """Convert gymnax Gym wrapper to the expected AMAGO interface.
 
         - Gymnax wants to give us the batched observation and action spaces,
           but AMAGO is expecting unbatched spaces.
