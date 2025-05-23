@@ -1,7 +1,7 @@
 
 
 <div align="center">
-    <img src="media/amago_logo_3.png" alt="amago logo" width="210">
+    <img src="docs/media/amago_logo_3.png" alt="amago logo" width="210">
 </div>
 
 <h3 align="center">Adaptive RL with Long-Term Memory</h2>
@@ -85,7 +85,7 @@ Use the `CUDA_VISIBLE_DEVICES` environment variable to assign basic single-GPU e
 ### 0. **Intro to Black-Box Meta-RL: Meta-Frozen-Lake**
 **[`00_meta_frozen_lake.py`](examples/00_meta_frozen_lake.py)**
 
-<img src="media/in_context_rl.png" alt="frozen_lake_diagram" width="510" style="display: block; margin-left: auto; margin-right: auto;"/>
+<img src="docs/media/in_context_rl.png" alt="frozen_lake_diagram" width="510" style="display: block; margin-left: auto; margin-right: auto;"/>
 
 Learn more about adaptive policies with help from an intuitive meta-RL problem. Train an agent to adapt over multiple episodes by learning to avoid its previous mistakes.
 
@@ -109,7 +109,7 @@ Typical RL benchmarks are MDPs and can be treated as a simple special case of th
 **[`02_gymnax.py`](examples/02_gymnax.py)**
 
 
-<img src="media/gymnax_logo.png" alt="gymnax_logo" width="110" align="left"/>
+<img src="docs/media/gymnax_logo.png" alt="gymnax_logo" width="110" align="left"/>
 
 Like `gymnasium`, but 1000x faster! Use `jax` to add more `--parallel_actors` and speedup experiments. [`gymnax`](https://github.com/RobertTLange/gymnax) includes several interesting memory problems.
 
@@ -122,7 +122,7 @@ Like `gymnasium`, but 1000x faster! Use `jax` to add more `--parallel_actors` an
 ### 3. **POMDPs: POPGym**
 **[`03_popgym_suite.py`](examples/03_popgym_suite.py)**
 
-<img src="media/popgym.png" alt="popgym_diagram" width="180" align="left"/>
+<img src="docs/media/popgym.png" alt="popgym_diagram" width="180" align="left"/>
 
 [POPGym](https://arxiv.org/abs/2303.01859) is a collection of memory unit-tests for RL agents. AMAGO is really good at POPGym and turns most of these tasks into quick experiments for fast prototyping. Our `MultiDomainPOPGym` env concatenates POPGym domains into a harder one-shot multi-task problem discussed in the followup paper.
 
@@ -133,7 +133,7 @@ Like `gymnasium`, but 1000x faster! Use `jax` to add more `--parallel_actors` an
 ### 4. **Super Long-Term Recall: T-Maze**
 **[`04_tmaze.py`](examples/04_tmaze.py)**
 
-<img src="media/tmaze.png" alt="tmaze_diagram" width="160" align="left"/>
+<img src="docs/media/tmaze.png" alt="tmaze_diagram" width="160" align="left"/>
 
 T-Maze is a modified version of the problem featured in [Ni et al., 2023](https://arxiv.org/abs/2307.03864). T-Maze answers the question: RL issues (mostly) aside, what is the most distant memory our sequence model can recall? When using Transformers, the answer is usually whatever we can fit on the GPU...
 
@@ -154,7 +154,7 @@ A common meta-RL problem where the environment resets for a fixed number of time
 **[`06_alchemy.py`](examples/06_alchemy.py)**
 
 
-<img src="media/alchemy.png" alt="icrl_diagram" width="110" align="left"/>
+<img src="docs/media/alchemy.png" alt="icrl_diagram" width="110" align="left"/>
 
 
 Symbolic version of the [DeepMind Alchemy](https://arxiv.org/abs/2102.02926) meta-RL domain.
@@ -171,7 +171,7 @@ Example `wandb` from a recent large-scale attempt with the Multi-Task agent: [Ac
 ### 7. **Meta-RL: Meta-World**
 **[`07_metaworld.py`](examples/07_metaworld.py)**
 
-<img src="media/sawyer2.png" alt="icrl_diagram" width="110" align="left"/>
+<img src="docs/media/sawyer2.png" alt="icrl_diagram" width="110" align="left"/>
 
 [Meta-World](https://meta-world.github.io) creates a meta-RL benchmark out of robotic manipulation tasks. Meta-World ML45 is a great example of why we'd want to use the `MultiTaskAgent` learning update. For much more information please refer to our NeurIPS 2024 paper.
 
@@ -182,7 +182,7 @@ Example `wandb` from a recent large-scale attempt with the Multi-Task agent: [Ac
 ### 8. **Multi-Task RL: Atari**
 **[`08_ale.py`](examples/08_ale.py)**
 
-<img src="media/gopher.png" alt="icrl_diagram" width="110" align="left"/>
+<img src="docs/media/gopher.png" alt="icrl_diagram" width="110" align="left"/>
 
 Multi-Task RL is a special case of meta-RL where the identity of each task is directly provided or can be inferred without memory. We focus on the uncommon setting of learning from *unclipped* rewards because it isolates the challenge of optimizing distinct reward functions. See the NeurIPS 2024 paper for more.
 
@@ -193,7 +193,7 @@ Multi-Task RL is a special case of meta-RL where the identity of each task is di
 ### 9. **Multi-Game Two-Episode Procgen**
 **[`09_multitask_procgen.py`](examples/09_multitask_procgen.py)**
 
-<img src="media/coinrun2.png" alt="icrl_diagram" width="110" align="left"/>
+<img src="docs/media/coinrun2.png" alt="icrl_diagram" width="110" align="left"/>
 
 Multi-Game [Procgen](https://arxiv.org/abs/1912.01588) has a similar feel to Atari. However, Procgen's procedural generation and partial observability (especially in "memory" mode) is better suited to multi-episodic adaptation. This example highlights the `TwoAttemptMTProcgen` setup used by experiments in the second paper.
 
@@ -202,7 +202,7 @@ Multi-Game [Procgen](https://arxiv.org/abs/1912.01588) has a similar feel to Ata
 ### 10. **Multi-Task BabyAI**
 **[`10_babyai.py`](examples/10_babyai.py)**
 
-<img src="media/minigrid.png" alt="icrl_diagram" width="100" align="left" />
+<img src="docs/media/minigrid.png" alt="icrl_diagram" width="100" align="left" />
 
 [BabyAI](https://arxiv.org/abs/1810.08272) is a collection of procedurally generated gridworld tasks with simple lanugage instructions. We create a fun multi-task variant for adaptive agents.
 
@@ -215,7 +215,7 @@ Multi-Game [Procgen](https://arxiv.org/abs/1912.01588) has a similar feel to Ata
 **[`11_xland_minigrid.py`](examples/11_xland_minigrid.py)**
 
 
-<img src="media/xland_rules.png" alt="icrl_diagram" width="150" align="left" />
+<img src="docs/media/xland_rules.png" alt="icrl_diagram" width="150" align="left" />
 
 [XLand-MiniGrid](https://arxiv.org/abs/2312.12044) is a `jax`-accelerated environment that brings the task diversity of [AdA](https://arxiv.org/abs/2301.07608) to [Minigrid](https://arxiv.org/abs/2306.13831)/BabyAI-style gridworlds.
 
@@ -226,7 +226,7 @@ Multi-Game [Procgen](https://arxiv.org/abs/1912.01588) has a similar feel to Ata
 ### **12. Toy Meta-RL / Locomotion: HalfCheetahVelocity (w/ HalfCheetahV4)**
 **[`12_half_cheetah_vel.py`](examples/12_half_cheetah_vel.py)**
 
-<img src="media/half_cheetah.png" alt="half_cheetah_diagram" width="100" align="left" />
+<img src="docs/media/half_cheetah.png" alt="half_cheetah_diagram" width="100" align="left" />
 
 A more modern remaster of the famous [HalfCheetahVel mujoco meta-RL benchmark](https://arxiv.org/pdf/1703.03400), where the cheetah from the [HalfCheetah-v4 gymnasium task](https://gymnasium.farama.org/environments/mujoco/half_cheetah/) needs to run at a randomly sampled (hidden) target velocity based on reward signals.
 
@@ -238,7 +238,7 @@ A more modern remaster of the famous [HalfCheetahVel mujoco meta-RL benchmark](h
 ### **13. Hindsight Relabeling: MazeRunner**
 **[`13_mazerunner_relabeling.py`](examples/13_mazerunner_relabeling.py)**
 
-<img src="media/mazerunner.png" alt="mazerunner_diagram" width="100" align="left" />
+<img src="docs/media/mazerunner.png" alt="mazerunner_diagram" width="100" align="left" />
 
 Off-policy learning makes it easy to relabel old sequence data with new rewards. MazeRunner is a goal-conditioned POMDP navigation problem used to discuss & test the hindsight instruction relabeling technique in our paper. This example includes a template for using hindsight relabeling in the new version of AMAGO.
 
@@ -250,7 +250,7 @@ Off-policy learning makes it easy to relabel old sequence data with new rewards.
 ### **14. Offline RL: D4RL**
 **[`14_d4rl.py`](examples/14_d4rl.py)**
 
-<img src="media/d4rl.png" alt="d4rl_diagram" width="100" align="left" />
+<img src="docs/media/d4rl.png" alt="d4rl_diagram" width="100" align="left" />
 
 Offline RL on the (original) [D4RL](https://arxiv.org/pdf/2004.07219) datasets. 
 
