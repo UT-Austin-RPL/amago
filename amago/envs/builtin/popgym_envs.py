@@ -1,3 +1,7 @@
+"""
+POPGym suite setup and wrappers.
+"""
+
 import random
 
 import gymnasium as gym
@@ -50,6 +54,15 @@ class _DiscreteToBox(gym.ObservationWrapper):
 
 
 class POPGym(gym.Wrapper):
+    """Wrapper around POPGym environments.
+
+    Handles POPGym setup across different observation/action spaces and adds a timer to the observation.
+
+    Args:
+        env_name: The popgym environment name (e.g., "popgym-MineSweeperMedium-v0").
+        truncated_is_done: Whether to consider truncated as a terminal signal (used in value backups). Defaults to True.
+    """
+
     def __init__(self, env_name, truncated_is_done: bool = True):
         str_to_cls = {v["id"]: k for k, v in popgym.envs.ALL.items()}
         env = str_to_cls[env_name]()
@@ -84,12 +97,32 @@ class POPGym(gym.Wrapper):
 
 
 class POPGymAMAGO(AMAGOEnv):
+    """AMAGOEnv POPGym Wrapper.
+
+    Args:
+        env_name: The popgym environment name (e.g., "popgym-MineSweeperMedium-v0").
+        truncated_is_done: Whether to consider truncated as a terminal signal (used in value backups). Defaults to True.
+    """
+
     def __init__(self, env_name: str, truncated_is_done: bool = True):
         env = POPGym(env_name, truncated_is_done=truncated_is_done)
         super().__init__(env, env_name=env_name)
 
 
 class MultiDomainPOPGym(gym.Env):
+    """A multi-task k-shot version of POPGym
+
+    Randomly samples a POPGym task with observation/action spaces padded to a fixed size.
+    Agent has `warmup_episodes` attempts to play the game to decide which task is active.
+    During this phase, rewards are zero but their value is revealed in the observation
+    (E-RL^2-style). True rewards are only given in the last episode after the warmup phase.
+
+    Used in AMAGO-2 paper.
+
+    Args:
+        warmup_episodes: The number of episodes to play before the attempt that "counts" towards the total return.
+    """
+
     mt_names = [
         # env name, observation dim, action dim
         "AutoencodeEasy",  # 4, 6
@@ -191,6 +224,14 @@ class MultiDomainPOPGym(gym.Env):
 
 
 class MultiDomainPOPGymAMAGO(AMAGOEnv):
+    """AMAGOEnv MultiDomainPOPGym Wrapper.
+
+    Used to update the env_name and log the eval metrics for each POPGym task separately.
+
+    Args:
+        warmup_episodes: The number of episodes to play before the attempt that "counts" towards the total return.
+    """
+
     def __init__(self, warmup_episodes: int = 1):
         env = MultiDomainPOPGym(warmup_episodes)
         super().__init__(env, env_name="TODO")

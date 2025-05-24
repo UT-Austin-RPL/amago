@@ -1,21 +1,35 @@
+"""
+Feed-forward network components.
+"""
+
 import torch
 from torch import nn
-import gin
 
-from .utils import activation_switch
+from amago.nets.utils import activation_switch
 
 
 class Normalization(nn.Module):
+    """Quick-switch between different normalization methods.
+
+    Args:
+        method: Normalization method to use. Options are: "layer", "batch",
+            "rmsnorm", "unitball", "unitball-detach", "none". "unitball" is
+            (x / ||x||), "unitball-detach" is (x / ||x||.detach()). "none" is a
+            no-op and the rest are standard LayerNorm, BatchNorm, RMSNorm.
+        d_model: Expected dimension of the input to normalize (scalar). Operates
+            on the last dimensions of the input sequence.
+    """
+
     def __init__(self, method: str, d_model: int):
         super().__init__()
-        assert method in [
+        if not method in {
             "layer",
-            "batch",
-            "rmsnorm",
+            "none",
             "unitball",
             "unitball-detach",
-            "none",
-        ]
+            "rmsnorm",
+        }:
+            raise ValueError(f"Invalid normalization method: {method}")
         if method == "layer":
             self.norm = nn.LayerNorm(d_model)
         elif method == "none":
@@ -32,23 +46,20 @@ class Normalization(nn.Module):
                 ).detach()
             )
         elif method == "rmsnorm":
-            self.norm = RMSNorm(size=d_model)
-        else:
-            self.norm = nn.BatchNorm1d(d_model)
+            self.norm = _RMSNorm(size=d_model)
         self.method = method
 
-    def forward(self, x):
-        if self.method == "batch":
-            return self.norm(x.transpose(-1, 1)).transpose(-1, 1)
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.norm(x)
 
 
-class RMSNorm(nn.Module):
+class _RMSNorm(nn.Module):
     """Root Mean Square Layer Normalization.
 
     https://github.com/Lightning-AI/lit-llama/blob/main/lit_llama/model.py#L255
 
-    Derived from https://github.com/bzhangGo/rmsnorm/blob/master/rmsnorm_torch.py. BSD 3-Clause License:
+    Derived from https://github.com/bzhangGo/rmsnorm/blob/master/rmsnorm_torch.py.
+    BSD 3-Clause License:
     https://github.com/bzhangGo/rmsnorm/blob/master/LICENSE.
     """
 
@@ -65,7 +76,22 @@ class RMSNorm(nn.Module):
 
 
 class FFBlock(nn.Module):
-    def __init__(self, d_model, d_ff, dropout=0.00, activation="leaky_relu"):
+    """Feed-forward block with a residual connection.
+
+    Args:
+        d_model: Dimension of the input.
+        d_ff: Dimension of the hidden layer.
+        dropout: Dropout rate.
+        activation: Activation function.
+    """
+
+    def __init__(
+        self,
+        d_model: int,
+        d_ff: int,
+        dropout: float = 0.00,
+        activation: str = "leaky_relu",
+    ):
         super().__init__()
 
         self.ff1 = nn.Linear(d_model, d_ff)
@@ -73,13 +99,27 @@ class FFBlock(nn.Module):
         self.dropout = nn.Dropout(dropout)
         self.activation = activation_switch(activation)
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         x1 = self.dropout(self.activation(self.ff1(x)))
         x1 = self.dropout(self.activation(self.ff2(x1)))
         return x + x1
 
 
 class MLP(nn.Module):
+    """Basic multi-layer feed-forward network.
+
+    d_inp --> d_hidden --> ... --> d_hidden --> d_output
+
+    Args:
+        d_inp: Dimension of the input.
+        d_hidden: Dimension of the hidden layer.
+        n_layers: Number of non-output layers (including the input layer)
+        d_output: Dimension of the output.
+        activation: Activation function. See `amago.nets.utils.activation_switch`
+            for options. Default is "leaky_relu".
+        dropout_p: Dropout rate. Default is 0.0.
+    """
+
     def __init__(
         self,
         d_inp: int,

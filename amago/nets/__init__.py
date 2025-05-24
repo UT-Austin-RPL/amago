@@ -1,3 +1,7 @@
+"""
+Pytorch neural network modules.
+"""
+
 from . import traj_encoders
 from . import tstep_encoders
 from .tstep_encoders import TstepEncoder

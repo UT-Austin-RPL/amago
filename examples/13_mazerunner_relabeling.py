@@ -79,7 +79,7 @@ class HindsightInstructionReplay(Relabeler):
         self.strategy = strategy
         self.k = num_goals
 
-    def __call__(self, traj: FrozenTraj) -> FrozenTraj:
+    def relabel(self, traj: FrozenTraj) -> FrozenTraj:
         """
         Assume observations are a dict with three keys:
         1. `obs` : the regular observation from the env

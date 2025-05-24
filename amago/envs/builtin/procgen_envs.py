@@ -1,3 +1,7 @@
+"""
+Procgen wrapper
+"""
+
 import random
 
 import procgen
@@ -9,6 +13,8 @@ from amago.envs import AMAGOEnv
 
 
 class ProcgenAMAGO(AMAGOEnv):
+    """AMAGOEnv for TwoAttemptMTProcgen that logs metrics for each game separately."""
+
     def __init__(self, env):
         super().__init__(
             env=env,
@@ -40,7 +46,25 @@ ALL_PROCGEN_GAMES = [
 ]
 
 
-class TwoShotMTProcgen(gym.Env):
+class TwoAttemptMTProcgen(gym.Env):
+    """A Multi-Task Procgen environment that gives two attempts at each
+    level.
+
+    Args:
+        games: A list of Procgen game names to include (e.g. ["coinrun",
+            "dodgeball"]).
+        distribution_mode: The distribution mode to use for the environment.
+            Options are:
+            - "easy": Standard procgen easy mode for every game.
+            - "hard": Standard procgen hard mode for every game.
+            - "memory-hard": Memory mode in games it is available, hard mode
+              otherwise.
+        reward_scales: A dictionary mapping game names to multipliers that
+            scale their rewards (e.g., {"coinrun": 10.0, "dodgeball": 0.5}).
+        seed_range: A tuple of integers representing the range of seeds to use
+            for the environment. For train/test splits.
+    """
+
     def __init__(
         self,
         games: list[str],

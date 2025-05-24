@@ -1,3 +1,7 @@
+"""
+XLand-MiniGrid jax --> torch compatibility
+"""
+
 import random
 from collections import defaultdict
 
@@ -39,10 +43,28 @@ def _swap_trees(old_tree, new_tree, replace):
 
 
 class XLandMinigridVectorizedGym(gym.Env):
+    """A Gymnasium wrapper for the jax XLand-Minigrid environment.
+
+    "XLand-MiniGrid: Scalable Meta-Reinforcement Learning Environments in JAX",
+    Nikulin et al., 2023. (https://arxiv.org/abs/2312.12044).
+
+    Args:
+        parallel_envs: The number of parallel environments to run. Creates a vectorized env
+            where observations, actions, rewards have a batch dimension of this size.
+        k_episodes: The number of attempts the agent has to try and solve each new task.
+        rooms: Splits the world grid up into rooms that make exploration more challenging.
+        grid_size: Total size of the gridworld map (n x n).
+        ruleset_benchmark: The benchmark to sample rulesets from. Options in order of increasing difficulty: "trivial-1m",
+        "small-1m", "medium-1m", and "high-1m".
+        train_test_split: Whether to sample from the training ("train") or test ("test") set of the benchmark.
+        train_test_split_key: The random seed for the train/test split.
+        train_test_split_pct: (0, 1) proportion of the benchmark rulesets to assign to the training set.
+    """
+
     def __init__(
         self,
         parallel_envs: int,
-        k_shots: int = 25,
+        k_episodes: int = 25,
         rooms: int = 4,
         grid_size: int = 13,
         ruleset_benchmark: str = "small-1m",
@@ -55,7 +77,7 @@ class XLandMinigridVectorizedGym(gym.Env):
         ), "JAX and xminigrid must be installed to use this environment"
         self.rooms = rooms
         self.grid_size = grid_size
-        self.k_shots = k_shots
+        self.k_episodes = k_episodes
         self.ruleset_benchmark = ruleset_benchmark
         self.parallel_envs = parallel_envs
         benchmark = xminigrid.load_benchmark(name=ruleset_benchmark)
@@ -116,7 +138,7 @@ class XLandMinigridVectorizedGym(gym.Env):
 
     @property
     def suggested_max_seq_len(self):
-        return (self.max_steps_per_episode + 1) * self.k_shots
+        return (self.max_steps_per_episode + 1) * self.k_episodes
 
     def get_obs(self):
         obs = self.x_timestep.observation
@@ -200,7 +222,7 @@ class XLandMinigridVectorizedGym(gym.Env):
         self.episode_return += reward
 
         # meta-resets need to happen on the same timestep as they occur
-        done = self.current_episode >= self.k_shots
+        done = self.current_episode >= self.k_episodes
         if done.any():
             self.reset_if_done(done)
 
@@ -232,7 +254,7 @@ if __name__ == "__main__":
             ruleset_benchmark="trivial-1m",
             train_test_split="train",
             train_test_split_key=0,
-            k_shots=2,
+            k_episodes=2,
         )
         env = AMAGOEnv(env, env_name="XLandMiniGridEnv", batched_envs=PARALLEL_ENVS)
         env = SequenceWrapper(env)

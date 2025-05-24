@@ -1,3 +1,7 @@
+"""
+Symbolic version of DeepMind Alchemy.
+"""
+
 import random
 
 import gymnasium as gym
@@ -11,7 +15,7 @@ except ImportError:
     amago_warning("Missing dm_env / dm_alchemy Install: `pip install amago[envs]")
 
 
-class GymFromDMEnv(gym.Env):
+class _GymFromDMEnv(gym.Env):
     """
     This code is from:
     https://github.com/google-deepmind/bsuite/blob/main/bsuite/utils/gym_wrapper.py
@@ -90,6 +94,12 @@ class GymFromDMEnv(gym.Env):
 
 
 class SymbolicAlchemy(gym.Wrapper):
+    """Thin wrapper converting the symbolic version of DeepMind Alchemy to a Gymnasium environment.
+
+    "Alchemy: A benchmark and analysis toolkit for meta-reinforcement learning agents",
+    Wang et al., 2021. (https://arxiv.org/abs/2102.02926)
+    """
+
     def __init__(self):
         super().__init__(self.init_new_env())
 
@@ -100,7 +110,7 @@ class SymbolicAlchemy(gym.Wrapper):
         env = symbolic_alchemy.get_symbolic_alchemy_level(
             level_name, seed=random.randint(0, 1_000_000)
         )
-        env = GymFromDMEnv(env, "symbolic_obs")
+        env = _GymFromDMEnv(env, "symbolic_obs")
         return env
 
     def reset(self, *args, **kwargs):

@@ -1,3 +1,10 @@
+"""
+Convenience functions that create a generic CLI for :class:`Experiment` and handle common gin configurations
+
+These mostly exist to make the :file:`examples/` easier to maintain with less boilerplate,
+and to break up configuration into several smaller steps.
+"""
+
 from argparse import ArgumentParser
 from typing import Optional
 
@@ -13,14 +20,16 @@ from amago.envs.exploration import (
 )
 
 
-"""
-Convenience functions that create a generic CLI for `Experiment`s and handle the most common gin configurations.
-
-These mostly exist to make the `examples/` easier to maintain with less boilerplate.
-"""
-
-
 def add_common_cli(parser: ArgumentParser) -> ArgumentParser:
+    """Adds a common CLI for examples and basic training scripts.
+
+    Args:
+        parser: The argument parser containing problem-specific application-specific
+            arguments.
+
+    Returns:
+        The argument parser with common CLI arguments added.
+    """
     # extra gin configs
     parser.add_argument(
         "--configs",
@@ -65,7 +74,7 @@ def add_common_cli(parser: ArgumentParser) -> ArgumentParser:
         "--buffer_dir",
         type=str,
         required=True,
-        help="Path to disk location where replay buffer (and checkpoints) will be stored. Should probably be somewhere with lots of space...",
+        help="Path to disk location where checkpoints (and, in most cases, replay buffers) will be stored. Should probably be somewhere with lots of space...",
     )
     # trajectory encoder
     parser.add_argument(
@@ -158,6 +167,33 @@ def add_common_cli(parser: ArgumentParser) -> ArgumentParser:
 
 
 def switch_tstep_encoder(config: dict, arch: str, **kwargs) -> type[TstepEncoder]:
+    """
+    Set default kwargs for a TstepEncoder without gin syntax or config files.
+
+    Args:
+        config: A dictionary of gin parameters yet to be assigned.
+        arch: A shortcut name for built-in TstepEncoders. Options are "ff"
+            (generic MLP) and "cnn" (generic CNN).
+        **kwargs: Assign any of the chosen TstepEncoder's default kwargs.
+
+    Returns:
+        A reference to the TstepEncoder type that can be passed into the
+        Experiment.
+
+    Example:
+        .. code-block:: python
+
+            config = {}
+            # Make the input MLP smaller
+            tstep_encoder_type = switch_tstep_encoder(
+                config, "ff", n_layers=1, d_hidden=128, d_output=128
+            )
+            cli_utils.use_config(config) # set new default parameters
+            experiment = Experiment(
+                ...,  # rest of args
+                tstep_encoder_type=tstep_encoder_type,
+            )
+    """
     assert arch in ["ff", "cnn"]
     if arch == "ff":
         tstep_encoder_type = amago.nets.tstep_encoders.FFTstepEncoder
@@ -171,6 +207,18 @@ def switch_tstep_encoder(config: dict, arch: str, **kwargs) -> type[TstepEncoder
 
 
 def switch_agent(config: dict, agent: str, **kwargs) -> type[Agent]:
+    """
+    Set default kwargs for a built-in Agent without gin syntax or config files.
+
+    Args:
+        config: A dictionary of gin parameters yet to be assigned.
+        agent: A shortcut name for built-in Agents. Options are "agent"
+            (`Agent`) and "multitask" (`MultiTaskAgent`).
+        **kwargs: Assign any of the chosen Agent's default kwargs.
+
+    Returns:
+        A reference to the Agent type that can be passed into the Experiment.
+    """
     assert agent in ["agent", "multitask"]
     if agent == "agent":
         agent_type = amago.agent.Agent
@@ -185,6 +233,20 @@ def switch_agent(config: dict, agent: str, **kwargs) -> type[Agent]:
 def switch_exploration(
     config: dict, strategy: str, **kwargs
 ) -> type[ExplorationWrapper]:
+    """
+    Set default kwargs for a built-in ExplorationWrapper without gin syntax or
+    config files.
+
+    Args:
+        config: A dictionary of gin parameters yet to be assigned.
+        strategy: A shortcut name for built-in ExplorationWrappers. Options are
+            "egreedy" (EpsilonGreedy) and "bilevel" (BilevelEpsilonGreedy).
+        **kwargs: Assign any of the chosen ExplorationWrapper's default kwargs.
+
+    Returns:
+        A reference to the ExplorationWrapper type that can be passed into the
+        Experiment.
+    """
     assert strategy in ["egreedy", "bilevel"]
     if strategy == "egreedy":
         strategy_type = EpsilonGreedy
@@ -199,6 +261,23 @@ def switch_exploration(
 def switch_traj_encoder(
     config: dict, arch: str, memory_size: int, layers: int, **kwargs
 ) -> type[TrajEncoder]:
+    """
+    Set default kwargs for a built-in TrajEncoder without gin syntax or config files.
+
+    Args:
+        config: A dictionary of gin parameters yet to be assigned.
+        arch: A shortcut name for built-in TrajEncoders. Options are "ff"
+            (memory-free residual feed-forward blocks), "rnn" (RNN),
+            "transformer" (Transformer), and "mamba" (Mamba).
+        memory_size: Sets the same conceptual state space dimension across the
+            various architectures. For example, the size of the hidden state in an
+            RNN or d_model in a Transformer.
+        layers: Sets the number of layers in the TrajEncoder.
+        **kwargs: Assign any of the chosen TrajEncoder's default kwargs.
+
+    Returns:
+        A reference to the TrajEncoder type that can be passed into the Experiment.
+    """
     assert arch in ["ff", "rnn", "transformer", "mamba"]
     if arch == "transformer":
         traj_encoder_type = amago.nets.traj_encoders.TformerTrajEncoder
@@ -245,12 +324,20 @@ def switch_traj_encoder(
 
 def use_config(
     custom_params: dict, gin_configs: list[str] | None = None, finalize: bool = True
-):
+) -> None:
     """
-    Bind all the gin parameters from real .gin configs (which the examples avoid using)
-    and regular dictionaries.
+    Bind gin parameters to edit kwarg defaults across the codebase before training
+    begins.
 
-    Use before training begins.
+    Args:
+        custom_params: A dictionary of gin parameters to bind ({param:
+            new_default_value}). This was probably created within the training script
+            or from a few command line args.
+        gin_configs: An optional list of .gin configuration files to use. Gin files
+            are the correct way to handle configs for real projects... unlike the
+            example scripts.
+        finalize: If True, finalize/freeze the gin config to prevent later changes.
+            Defaults to True.
     """
     for param, val in custom_params.items():
         gin.bind_parameter(param, val)
@@ -274,10 +361,45 @@ def create_experiment_from_cli(
     traj_encoder_type: type[TrajEncoder],
     traj_save_len: Optional[int] = None,
     exploration_wrapper_type: type[ExplorationWrapper] = EpsilonGreedy,
-    experiment_type=amago.Experiment,
+    experiment_type: type[amago.Experiment] = amago.Experiment,
     dataset: Optional[RLDataset] = None,
     **extra_experiment_kwargs,
-):
+) -> amago.Experiment:
+    """
+    A convenience function that assigns Experiment kwargs from
+    :py:func:`~amago.cli_utils.add_common_cli()` options.
+
+    Args:
+        command_line_args: The parsed command line arguments created by
+            `cli_utils.add_common_cli()`.
+        make_train_env: A callable that makes the training environment.
+        make_val_env: A callable that makes the validation environment.
+        max_seq_len: The maximum sequence length of the policy during training.
+        group_name: The name of the wandb group to use for logging.
+        run_name: The name of the run for logging & checkpoints.
+        agent_type: The type of agent to use. Can be the output of
+            `cli_utils.switch_agent()`.
+        tstep_encoder_type: The type of tstep encoder to use. Can be the output of
+            `cli_utils.switch_tstep_encoder()`.
+        traj_encoder_type: The type of traj encoder to use. Can be the output of
+            `cli_utils.switch_traj_encoder()`.
+        traj_save_len: The length of the trajectory to save. Defaults to a very large
+            number (which saves entire trajectories on terminated or truncated).
+        exploration_wrapper_type: The type of exploration wrapper to use. Can be the
+            output of `cli_utils.switch_exploration()`, but defaults to
+            `EpsilonGreedy`.
+        experiment_type: The type of experiment to use. Defaults to `amago.Experiment`.
+        dataset: An optional dataset to use. If not provided, we create a
+            `DiskTrajDataset` (an online RL replay buffer on disk) in the same
+            directory where the CLI tells us it will save checkpoints
+            ({args.buffer_dir}/{args.run_name}).
+        **extra_experiment_kwargs: Additional keyword arguments to pass to the
+            Experiment constructor.
+
+    Returns:
+        An Experiment instance.
+    """
+
     cli = command_line_args
 
     traj_save_len = traj_save_len or 1e10
@@ -325,6 +447,15 @@ def create_experiment_from_cli(
 
 
 def make_experiment_learn_only(experiment: amago.Experiment) -> amago.Experiment:
+    """
+    Modify the experiment to run in learn-only mode.
+
+    Args:
+        experiment: The experiment to modify.
+
+    Returns:
+        The modified experiment.
+    """
     experiment.start_collecting_at_epoch = float("inf")
     experiment.train_timesteps_per_epoch = 0
     experiment.val_interval = 10
@@ -338,6 +469,15 @@ def make_experiment_learn_only(experiment: amago.Experiment) -> amago.Experiment
 
 
 def make_experiment_collect_only(experiment: amago.Experiment) -> amago.Experiment:
+    """
+    Modify the experiment to run in collect-only mode.
+
+    Args:
+        experiment: The experiment to modify.
+
+    Returns:
+        The modified experiment.
+    """
     experiment.start_collecting_at_epoch = 0
     experiment.start_learning_at_epoch = float("inf")
     experiment.train_batches_per_epoch = 0
@@ -352,6 +492,16 @@ def make_experiment_collect_only(experiment: amago.Experiment) -> amago.Experime
 
 
 def switch_async_mode(experiment: amago.Experiment, mode: str) -> amago.Experiment:
+    """
+    Switch the experiment mode between collect, learn, or both.
+
+    Args:
+        experiment: The experiment to modify.
+        mode: The mode to switch to. Options are "collect", "learn", or "both".
+
+    Returns:
+        The modified experiment.
+    """
     assert mode in ["collect", "learn", "both"]
     if mode == "collect":
         experiment = make_experiment_collect_only(experiment)

@@ -1,10 +1,9 @@
+"""
+Long-term recall unit-test envs
+"""
+
 import random
 
-"""
-This environment code is from https://github.com/twni2016/Memory-RL
-and discussed in "When Do Transformers Shine in RL? Decoupling Memory from
-Credit Assignment", Ni et al., 2023.
-"""
 
 import numpy as np
 import gymnasium as gym
@@ -12,7 +11,13 @@ import matplotlib.pyplot as plt
 import os
 
 
-class TMazeBase(gym.Env):
+class _TMazeBase(gym.Env):
+    """
+    This environment is from https://github.com/twni2016/Memory-RL
+    and discussed in "When Do Transformers Shine in RL? Decoupling Memory from
+    Credit Assignment", Ni et al., 2023.
+    """
+
     def __init__(
         self,
         episode_length: int = 11,
@@ -25,15 +30,6 @@ class TMazeBase(gym.Env):
         expose_goal: bool = False,
         add_timestep: bool = False,
     ):
-        """
-        The Base class of TMaze, decouples episode_length and corridor_length
-
-        Other variants:
-            (Osband, 2016): distract_reward = eps > 0, goal_reward is given at T-junction (no choice).
-                This only tests the exploration and discounting of agent, no memory required
-            (Osband, 2020): ambiguous_position = True, add_timestep = True, supervised = True.
-                This only tests the memory of agent, no exploration required (not implemented here)
-        """
         super().__init__()
         assert corridor_length >= 1 and episode_length >= 1
         assert penalty <= 0.0
@@ -58,9 +54,9 @@ class TMazeBase(gym.Env):
         )
         self.bias_x, self.bias_y = 1, 2
         self.tmaze_map[self.bias_y, self.bias_x : -self.bias_x] = True  # corridor
-        self.tmaze_map[
-            [self.bias_y - 1, self.bias_y + 1], -self.bias_x - 1
-        ] = True  # goal candidates
+        self.tmaze_map[[self.bias_y - 1, self.bias_y + 1], -self.bias_x - 1] = (
+            True  # goal candidates
+        )
 
         obs_dim = 2 if self.ambiguous_position else 3
         if self.expose_goal:  # test Markov policies
@@ -172,7 +168,7 @@ class TMazeBase(gym.Env):
         plt.close()
 
 
-class TMazeAlt(TMazeBase):
+class TMazeAlt(_TMazeBase):
     """
     Changes the movement penalty to make the environment
     (much) more sample efficient.
@@ -203,6 +199,17 @@ class TMazeAlt(TMazeBase):
 
 
 class TMazeAltPassive(TMazeAlt):
+    """TMaze environment that unit-tests long-term recall.
+
+    Based on "When Do Transformers Shine in RL? Decoupling Memory from
+    Credit Assignment", Ni et al., 2023.
+
+    This version modifies the original movement penalty.
+
+    Args:
+        corridor_length: The length of the corridor. This environment tests whether the agent can recall information across this many timesteps.
+    """
+
     def __init__(
         self,
         corridor_length: int = 10,
@@ -210,35 +217,6 @@ class TMazeAltPassive(TMazeAlt):
         penalty: float = 0.0,
         distract_reward: float = 0.0,
     ):
-        super().__init__(
-            episode_length=corridor_length + 1,
-            corridor_length=corridor_length,
-            goal_reward=goal_reward,
-            penalty=penalty,
-            distract_reward=distract_reward,
-            expose_goal=False,
-            ambiguous_position=True,
-            add_timestep=False,
-        )
-
-
-class TMazeClassicPassive(TMazeBase):
-    def __init__(
-        self,
-        corridor_length: int = 10,
-        goal_reward: float = 1.0,
-        penalty: float = 0.0,
-        distract_reward: float = 0.0,
-    ):
-        """
-        Classic TMaze with Passive Memory
-            assert episode_length == corridor_length + 1
-            (Bakker, 2001): ambiguous_position = True. penalty = 0
-                This is too hard even for T = 10 for vanilla agents because the exploration is extremely hard.
-                This tests both memory and exploration
-            **(tmaze_classic; this work)**: based on (Bakker, 2001), set penalty < 0
-                Unit-tests memory
-        """
         super().__init__(
             episode_length=corridor_length + 1,
             corridor_length=corridor_length,
@@ -252,6 +230,17 @@ class TMazeClassicPassive(TMazeBase):
 
 
 class TMazeAltActive(TMazeAlt):
+    """TMaze environment that tests long-term recall *and* credit assignment.
+
+    Based on "When Do Transformers Shine in RL? Decoupling Memory from
+    Credit Assignment", Ni et al., 2023.
+
+    This version modifies the original movement penalty.
+
+    Args:
+        corridor_length: The length of the corridor. This environment tests whether the agent can recall information across this many timesteps.
+    """
+
     def __init__(
         self,
         corridor_length: int = 10,
@@ -259,34 +248,6 @@ class TMazeAltActive(TMazeAlt):
         penalty: float = 0.0,
         distract_reward: float = 0.0,
     ):
-        oracle_length = 1
-        super().__init__(
-            episode_length=corridor_length + 2 * oracle_length + 1,
-            corridor_length=corridor_length,
-            oracle_length=oracle_length,
-            goal_reward=goal_reward,
-            penalty=penalty,
-            distract_reward=distract_reward,
-            expose_goal=False,
-            ambiguous_position=True,
-            add_timestep=False,
-        )
-
-
-class TMazeClassicActive(TMazeBase):
-    def __init__(
-        self,
-        corridor_length: int = 10,
-        goal_reward: float = 1.0,
-        penalty: float = 0.0,
-        distract_reward: float = 0.0,
-    ):
-        """
-        Classic TMaze with Active Memory
-            assert episode_length == corridor_length + 1 + 2o
-            where o is the length between the starting point and oracle that gives the goal information
-            TMazeClassicPassive is a special case of o = 0.
-        """
         oracle_length = 1
         super().__init__(
             episode_length=corridor_length + 2 * oracle_length + 1,

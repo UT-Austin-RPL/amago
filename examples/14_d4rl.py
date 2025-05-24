@@ -12,7 +12,7 @@ import amago
 from amago.envs import AMAGOEnv
 from amago.cli_utils import *
 from amago.loading import RLData, RLDataset
-from amago.nets.policy_dists import TanhGaussian, GMM
+from amago.nets.policy_dists import TanhGaussian, GMM, Beta
 
 
 def add_cli(parser):
@@ -27,7 +27,7 @@ def add_cli(parser):
         type=str,
         default="TanhGaussian",
         help="Policy distribution type",
-        choices=["TanhGaussian", "GMM"],
+        choices=["TanhGaussian", "GMM", "Beta"],
     )
     parser.add_argument(
         "--eval_timesteps",
@@ -63,8 +63,6 @@ class D4RLDataset(RLDataset):
         s = self.episode_ends[episode_idx] + 1
         e = self.episode_ends[episode_idx + 1] + 1
         traj_len = e - s
-        # if traj_len < 2:
-        #    return self.sample_random_trajectory()
         obs_np = self.d4rl_dset["observations"][s : e + 1]
         actions_np = self.d4rl_dset["actions"][s:e]
         rewards_np = self.d4rl_dset["rewards"][s:e]
@@ -183,8 +181,10 @@ if __name__ == "__main__":
         args.agent_type,
         online_coeff=0.0,
         offline_coeff=1.0,
-        gamma=0.99,
+        gamma=0.995,
         reward_multiplier=100.0 if example_env.max_return <= 10.0 else 1,
+        num_actions_for_value_in_critic_loss=2,
+        num_actions_for_value_in_actor_loss=4,
         num_critics=4,
     )
     use_config(config, args.configs)
