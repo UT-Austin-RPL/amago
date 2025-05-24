@@ -1,3 +1,7 @@
+"""
+Custom Transformer components.
+"""
+
 import math
 from functools import lru_cache
 from typing import Optional, Iterable
@@ -213,8 +217,8 @@ class FlexAttention(SelfAttention):
         self,
         score_mod: callable,
         mask_mod: callable,
-        causal: bool = True,
-        dropout: float = 0.0,
+        causal: bool,
+        dropout: float,
     ):
         assert flex_attention is not None, "FlexAttention requires pytorch >= 2.5"
         if dropout > 0.0:
@@ -312,7 +316,7 @@ class FlexAttention(SelfAttention):
 class VanillaFlexAttention(FlexAttention):
     """A sanity-check test of FlexAttention that should be equivalent to VanillaAttention."""
 
-    def __init__(self, causal: bool = True, dropout: float = 0.0):
+    def __init__(self, causal: bool, dropout: float):
         super().__init__(
             score_mod=lambda score, b, h, q_idx, kv_idx: score,
             mask_mod=lambda b, h, q_idx, kv_idx: True,
@@ -327,8 +331,8 @@ class SlidingWindowFlexAttention(FlexAttention):
 
     def __init__(
         self,
-        causal: bool = True,
-        dropout: float = 0.0,
+        causal: bool,
+        dropout: float,
         window_size: int = gin.REQUIRED,
     ):
         def sliding_window_mask_mod(b, h, q_idx, kv_idx):
@@ -664,6 +668,18 @@ class Transformer(nn.Module):
         return self.norm(seq)
 
     def forward(self, seq, pos_idxs, hidden_state: Optional[TformerHiddenState] = None):
+        """Transformer seq2seq
+
+        Args:
+            seq: The input sequence of shape (batch_size, seq_len, inp_dim).
+            pos_idxs: The position indices of the input sequence of shape (batch_size, seq_len).
+            hidden_state: The hidden state of the transformer.
+
+        Returns:
+            The output sequence of shape (batch_size, seq_len, d_model).
+            The new hidden state of the transformer.
+        """
+
         traj_emb = self.preprocess_seq(seq, pos_idxs)
         if hidden_state is not None:
             assert not self.training

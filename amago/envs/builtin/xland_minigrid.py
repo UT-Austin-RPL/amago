@@ -1,3 +1,7 @@
+"""
+XLand-MiniGrid jax --> torch compatibility
+"""
+
 import random
 from collections import defaultdict
 

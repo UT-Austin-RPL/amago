@@ -1,3 +1,7 @@
+"""
+Start and launch training runs (main :class:`Experiment`).
+"""
+
 import os
 import time
 import warnings
@@ -40,119 +44,74 @@ from .nets import TstepEncoder, TrajEncoder
 @gin.configurable
 @dataclass
 class Experiment:
-    """Build, train, and evaluate an `Agent`.
+    """
+    Build, train, and evaluate an :class:`Agent`.
 
-    Args:
-        run_name: Name of the experiment. Used to create checkpoint and log directories.
-        ckpt_base_dir: Base directory to store checkpoints and logs. Checkpoints are saved to
-            `ckpt_base_dir/run_name`.
-        max_seq_len: Maximum sequence length that the model will be trained on. This also determines
-            the maximum effective batch size of actor-critic learning (Batch Size x Sequence Length).
-        dataset: `RLDataset` for loading training sequences.
-        tstep_encoder_type: `TstepEncoder` is created by calling this with default kwargs (use gin).
-        traj_encoder_type: `TrajEncoder` is created by calling this with default kwargs (use gin).
-        agent_type: Agent is created by calling this with default kwargs (use gin).
-        make_train_env: Function that takes no args and returns an AMAGOEnv. If this isn't a list,
-            it will be repeated `parallel_actors` times. You can create the list yourself if you
-            want to manually assign different envs across the parallel actors.
-        make_val_env: Same as `make_train_env`, but these environments are only used for evaluation
-            and their trajectories are never saved to disk.
-        val_timesteps_per_epoch: How many `steps` to take in each parallel environment for
-            evaluation. Determines the sample size of the evaluation metrics. Should be long enough
-            for each parallel actor to complete at least one episode.
+    .. rubric:: Required
 
-    Environment:
-        parallel_actors: Spawns multiple envs in parallel to speed up data collection with batched
-            inference. Default is 12.
-        env_mode: Two main options: "async" and "already_vectorized". "async" is the default and
-            wraps individual gym environments in a pool of async processes using
-            `gymnasium.vector.AsyncVectorEnv`. "already_vectorized" is an alternate mode designed
-            for jax / gpu-accelerated envs that handle parallelization with a batch dimension on
-            the lowest wrapper level. "sync" is the same as "async" but doesn't actually run the
-            environment in parallel, which is helpful for debugging. Default is "async".
-        exploration_wrapper_type: Exploration is implemented with a gym wrapper that is only
-            applied to training environments. Default is `EpsilonGreedy`.
-        sample_actions: Whether to sample from the stochastic actor during eval, or take the
-            argmax/mean action. Default is `True`.
-        force_reset_train_envs_every: If provided, forces a call to `reset` every _ epochs
-            for cases when `reset` is otherwise never called (already_vectorized). Default is None.
+    :param run_name: Name of the experiment. Used to create checkpoint and log directories.
+    :param ckpt_base_dir: Base directory to store checkpoints and logs. Checkpoints are saved to ``ckpt_base_dir/run_name``.
+    :param max_seq_len: Maximum sequence length for training. Determines effective batch size (Batch Size × Sequence Length).
+    :param dataset: :class:`RLDataset` for loading training sequences.
+    :param tstep_encoder_type: :class:`TstepEncoder` constructor (will be created with default kwargs --- edit via gin).
+    :param traj_encoder_type: :class:`TrajEncoder` constructor (will be created with default kwargs --- edit via gin).
+    :param agent_type: Agent constructor (will be created with default kwargs --- edit via gin).
+    :param make_train_env: Callable returning an :class:`AMAGOEnv`. If not a list, repeated ``parallel_actors`` times. List gives manual assignment across actors.
+    :param make_val_env: Like ``make_train_env``, but only used for evaluation (trajectories never saved).
+    :param val_timesteps_per_epoch: Number of steps per parallel environment for evaluation. Determines metric sample size.
 
-    Logging:
-        log_to_wandb: Enable/disable wandb logging. Default is False.
-        wandb_project: Your wandb project. Default is the `AMAGO_WANDB_PROJECT` environment variable.
-        wandb_entity: Your wandb entity (username or team name). Default is the `AMAGO_WANDB_ENTITY`
-            environment variable.
-        wandb_group_name: Group different runs on the wandb dashboard. Default is None.
-        verbose: Prints tqdm progress bars and some high-level info to the console. Default is True.
-        log_interval: How often to compute and log extra training metrics (in terms of training
-            batches). Default is 300.
+    .. rubric:: Environment
 
-    Replay:
-        padded_sampling: How to pad trajectory sequences if we need to sample a subsequence for
-            training. Options:
-            - "none" will sample the start idx in the range [0, len(traj) - max_seq_len].
-            - "left" pads the left side of the seq to sample the start timesteps more often.
-            - "right" pads the right side of the seq to sample the end timesteps more often.
-            - "both" pads the left and right sides.
-            Padding is only applicable when training sequences are longer than the policy max_seq_len.
-            Defaults to "none".
-        dloader_workers: Number of workers to use for the DataLoader that loads trajectories from
-            disk. Increase when using npz-compressed or when loading very long trajs from pixel envs.
+    :param parallel_actors: Number of parallel envs for batched inference. **Default:** 12.
+    :param env_mode: ``"async"`` (default), wraps envs in async pool. ``"already_vectorized"`` for jax/gpu batch envs. ``"sync"`` for debug. **Default:** "async".
+    :param exploration_wrapper_type: Exploration wrapper for training envs. **Default:** ``EpsilonGreedy``.
+    :param sample_actions: Whether to sample from stochastic actor during eval, or take argmax/mean. **Default:** True.
+    :param force_reset_train_envs_every: If set, forces call to ``reset`` every N epochs for already_vectorized envs. **Default:** None.
 
-        .. note::
-            The parameters below are only relevant when doing online data collection. They determine
-            the way our parallel environments write finished trajectories to disk. The
-            `DiskTrajDataset` will read these files and use them for training.
+    .. rubric:: Logging
 
-        traj_save_len: Trajectories are saved to disk on `terminated or truncated` or after this
-            many steps have passed since the last save (whichever comes first). Defaults to
-            arbitrarily large number, which will save entire trajectories. Indirectly determines the
-            size of files the dataset will need to load.
-        has_dset_edit_rights: Turn this off for collect-only runs where we need to assume the
-            replay buffer is being managed by another learner process. Defaults to True.
-        stagger_traj_file_lengths: Randomizes trajectory file lengths when traj_save_len is set to
-            save short snippets from a much longer rollout.
-        save_trajs_as: How to save trajectory .traj files. Three options:
-            - "npz" saves data as numpy arrays.
-            - "npz-compressed" trades time for disk space by compressing large files.
-            - "traj" pickles the full `Trajectory` object.
-            Defaults to "npz".
+    :param log_to_wandb: Enable or disable wandb logging. **Default:** False.
+    :param wandb_project: wandb project. **Default:** ``AMAGO_WANDB_PROJECT`` env var.
+    :param wandb_entity: wandb entity (username/team). **Default:** ``AMAGO_WANDB_ENTITY`` env var.
+    :param wandb_group_name: Group runs on wandb dashboard. **Default:** None.
+    :param verbose: Print tqdm bars and info to console. **Default:** True.
+    :param log_interval: Log extra metrics every N batches. **Default:** 300.
+    :param padded_sampling: Padding for sampling training subsequences. "none", "left", "right", "both". **Default:** "none".
+    :param dloader_workers: Number of DataLoader workers for disk loading. Increase for compressed/large trajs.
 
-    Learning Schedule:
-        epochs: Each epoch has one round of data collection and one round of training. Defaults to
-            500.
-        start_learning_at_epoch: Skip the first _ epochs before beginning gradient updates. Can be
-            used to imitate the "replay buffer warmup" common to most off-policy implementations.
-            Defaults to 0.
-        start_collecting_at_epoch: Skip the first _ epochs of data collection. Can be used for
-            offline --> online finetuning or to avoid online interaction entirely. Defaults to 0.
-        train_timesteps_per_epoch: How many `steps` to take in each parallel environment each epoch.
-            Defaults to 1000.
-        train_batches_per_epoch: How many batches to load from disk for training each epoch.
-            Defaults to 1000. Gradient updates per epoch is train_batches_per_epoch //
-            batches_per_update.
-        val_interval: How many epochs to wait between evaluation rollouts. Defaults to 20.
-        ckpt_interval: How many epochs to wait between saving checkpoints. Defaults to 50.
-        always_save_latest: Always_save_latest and always_load_latest are used to communicate the
-            latest policy weights between multiple processes. A learning-only thread would
-            always_save, while an actor-only thread would always_load. Defaults to True.
-        always_load_latest: See always_save_latest. Defaults to False.
+    .. note::
 
-    Optimization:
-        batch_size: Training batch size *per gpu* in terms of sequences. Defaults to 24.
-        batches_per_update: Number of batches to accumulate gradients over before updating the
-            model. Defaults to 1.
-        learning_rate: Learning rate for the optimizer. Defaults to 1e-4. Note that we default to
-            `AdamW` and optimizers should be swapped by overriding `init_optimizer()`.
-        critic_loss_weight: Coefficient that balances the actor and critic loss for the TstepEncoder
-            and TrajEncoder -- which optimize both. The actor loss weight is fixed to 1. Defaults to
-            10.
-        lr_warmup_steps: Linear warmup steps for the learning rate scheduler (in terms of gradient
-            steps). Defaults to 500.
-        grad_clip: Gradient clipping (by norm). Defaults to 1.0.
-        l2_coeff: L2 regularization coefficient (note that we default to AdamW). Defaults to 1e-3.
-        mixed_precision: Mixed precision mode. This is passed directly to `accelerate` and follows
-            its options ("no", "fp16", "bf16"). Defaults to "no".
+        The parameters below are only relevant when doing online data collection. They determine
+        how parallel environments write finished trajectories to disk. The :py:class:`~amago.loading.DiskTrajDataset`
+        reads these files for training.
+
+    :param traj_save_len: Save trajectory on episode end or after this many steps (whichever comes first). Larger values save whole trajectories. **Default:** large value.
+    :param has_dset_edit_rights: Turn off for collect-only runs where another process manages the replay buffer. **Default:** True.
+    :param stagger_traj_file_lengths: Randomizes file lengths when ``traj_save_len`` is short snippets. **Default:** False.
+    :param save_trajs_as: Format for saved trajectories. "npz", "npz-compressed", or "traj". **Default:** "npz".
+
+    .. rubric:: Learning Schedule
+
+    :param epochs: Epochs (each = one data collection + one training round). **Default:** 500.
+    :param start_learning_at_epoch: Number of epochs to skip before gradient updates (for replay buffer warmup). **Default:** 0.
+    :param start_collecting_at_epoch: Number of epochs to skip data collection (for offline→online finetune or full offline). **Default:** 0.
+    :param train_timesteps_per_epoch: Number of steps in each parallel env per epoch. **Default:** 1000.
+    :param train_batches_per_epoch: Number of training batches per epoch. **Default:** 1000.
+    :param val_interval: How many epochs between evaluation rollouts. **Default:** 20.
+    :param ckpt_interval: How many epochs between saving checkpoints. **Default:** 50.
+    :param always_save_latest: Whether to always save the latest weights (for distributed usage). **Default:** True.
+    :param always_load_latest: Whether to always load the latest weights (for distributed usage). **Default:** False.
+
+    .. rubric:: Optimization
+
+    :param batch_size: Batch size *per GPU* (in sequences). **Default:** 24.
+    :param batches_per_update: Number of batches to accumulate gradients over before optimizer update. **Default:** 1.
+    :param learning_rate: Optimizer learning rate. **Default:** 1e-4 (defaults to AdamW).
+    :param critic_loss_weight: Weight for critic loss vs actor loss in encoders. **Default:** 10.
+    :param lr_warmup_steps: Number of warmup steps for learning rate scheduler. **Default:** 500.
+    :param grad_clip: Gradient norm clipping value. **Default:** 1.0.
+    :param l2_coeff: L2 regularization coefficient (AdamW). **Default:** 1e-3.
+    :param mixed_precision: Mixed precision mode for ``accelerate`` ("no", "fp16", "bf16"). **Default:** "no".
     """
 
     #############

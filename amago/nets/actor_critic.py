@@ -1,3 +1,7 @@
+"""
+Actor and critic output modules.
+"""
+
 from typing import Optional, Type
 from functools import lru_cache
 
@@ -74,7 +78,9 @@ class Actor(nn.Module):
         self.discrete = discrete
         self.action_dim = action_dim
 
-    def forward(self, state, log_dict: Optional[dict] = None) -> pyd.Distribution:
+    def forward(
+        self, state: torch.Tensor, log_dict: Optional[dict] = None
+    ) -> pyd.Distribution:
         """Compute an action distribution from a state representation.
 
         Args:

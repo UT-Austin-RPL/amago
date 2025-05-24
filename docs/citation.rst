@@ -1,6 +1,8 @@
 
 Citation
 ========
+|
+|
 
 .. code-block:: bibtex
 

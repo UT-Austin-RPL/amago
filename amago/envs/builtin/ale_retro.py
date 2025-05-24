@@ -1,3 +1,7 @@
+"""
+Arcade Learning Environment and (Stable) Retro games.
+"""
+
 import random
 import warnings
 import math

@@ -1,3 +1,7 @@
+"""
+Miscellaneous utilities for neural network modules.
+"""
+
 from typing import Optional
 
 import torch

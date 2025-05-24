@@ -1,8 +1,7 @@
 """
-Convenience functions that create a generic CLI for `Experiment`s and handle the most
-common gin configurations.
+Convenience functions that create a generic CLI for :class:`Experiment` and handle common gin configurations
 
-These mostly exist to make the `examples/` easier to maintain with less boilerplate,
+These mostly exist to make the :file:`examples/` easier to maintain with less boilerplate,
 and to break up configuration into several smaller steps.
 """
 
@@ -362,13 +361,13 @@ def create_experiment_from_cli(
     traj_encoder_type: type[TrajEncoder],
     traj_save_len: Optional[int] = None,
     exploration_wrapper_type: type[ExplorationWrapper] = EpsilonGreedy,
-    experiment_type=amago.Experiment,
+    experiment_type: type[amago.Experiment] = amago.Experiment,
     dataset: Optional[RLDataset] = None,
     **extra_experiment_kwargs,
-):
+) -> amago.Experiment:
     """
     A convenience function that assigns Experiment kwargs from
-    `cli_utils.add_common_cli()` options.
+    :py:func:`~amago.cli_utils.add_common_cli()` options.
 
     Args:
         command_line_args: The parsed command line arguments created by

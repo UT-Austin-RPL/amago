@@ -1,3 +1,7 @@
+"""
+Feed-forward network components.
+"""
+
 import torch
 from torch import nn
 

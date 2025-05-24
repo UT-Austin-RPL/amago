@@ -1,3 +1,7 @@
+"""
+Map trajectory data to a sequence of timestep embeddings.
+"""
+
 from abc import ABC, abstractmethod
 from typing import Optional, Type
 import math

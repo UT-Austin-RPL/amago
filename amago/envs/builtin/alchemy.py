@@ -1,3 +1,7 @@
+"""
+Symbolic version of DeepMind Alchemy.
+"""
+
 import random
 
 import gymnasium as gym

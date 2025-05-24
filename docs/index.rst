@@ -3,7 +3,7 @@ Home
 
 .. image:: media/amago_logo_3.png
    :alt: amago logo
-   :width: 210
+   :width: 310
    :align: center
 
 .. centered:: **Adaptive RL with Long-Term Memory**
@@ -42,13 +42,16 @@ Some highlights:
 - **Scalable**. Train large policies on long context sequences across multiple GPUs with parallel actors, asynchronous learning/rollouts, and large replay buffers stored on disk.
 - **Easy to Modify**. Modular and configurable. Swap in your own model architectures, RL objectives, and datasets.
 
+|
+|
+
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Contents:
 
    installation
+   tutorial/index
    examples/index
-   tutorial
-   API Reference <_autosummary/amago>
+   API Reference <api/amago>
    citation

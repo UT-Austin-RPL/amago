@@ -1,3 +1,7 @@
+"""
+POPGym suite setup and wrappers.
+"""
+
 import random
 
 import gymnasium as gym

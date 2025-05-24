@@ -1,3 +1,7 @@
+"""
+Actor-Critic agents and RL objectives.
+"""
+
 import itertools
 from typing import Type, Optional, Tuple, Any, List
 
@@ -23,7 +27,7 @@ class Multigammas:
     """A hook for gin configuration of Multi-gamma values.
 
     Defines the list of gamma values used during training in addition to the main gamma
-    parameter in Agent, which is the value used during rollouts/evals by default.
+    parameter in :class:`Agent`, which is the value used during rollouts/evals by default.
     Settings are divided into discrete and continuous action spaces versions, because
     the cost of adding gammas tends to be much higher for continuous action critics,
     where they multiply the effective batch size of the actor/critic loss computation.
@@ -188,9 +192,9 @@ class Agent(nn.Module):
         fbc_filter_func: Function that takes seq of advantage estimates and outputs the regression
             weights. See `agent.binary_filter` or `agent.exp_filter`. Defaults to binary_filter.
         popart: If True, use PopArt normalization for value network outputs. Defaults to True.
-        use_target_actor (use gin): If True, use a target actor to sample actions used in TD targets.
+        use_target_actor: If True, use a target actor to sample actions used in TD targets.
             Defaults to True.
-        use_multigamma (use gin): If True, train on multiple discount horizons in parallel. Defaults to True.
+        use_multigamma: If True, train on multiple discount horizons in parallel. Defaults to True.
     """
 
     def __init__(

@@ -1,3 +1,7 @@
+"""
+Stochastic policy output distributions.
+"""
+
 import math
 from typing import Optional, Callable
 from abc import ABC, abstractmethod

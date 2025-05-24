@@ -1,3 +1,7 @@
+"""
+Miscellaneous training loop utilities, optimizers, and schedulers.
+"""
+
 import warnings
 import time
 import os
@@ -34,11 +38,10 @@ class AdamWRel(AdamW):
     (https://openreview.net/pdf?id=biAqUbAuG7). Treats optimization of an RL policy as a sequence of stationary supervised learning stages,
     and resets Adam's timestep variable accordingly.
 
+    Keyword arguments follow the main AdamW.
+
     Args:
         reset_interval: Number of gradient steps between resets of Adam's time / step count tracker. Must be configured by gin.
-
-    Keyword Args:
-        Follows the main Adam.
     """
 
     def __init__(

@@ -1,3 +1,7 @@
+"""
+Procgen wrapper
+"""
+
 import random
 
 import procgen

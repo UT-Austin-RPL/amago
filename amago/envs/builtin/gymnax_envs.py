@@ -1,3 +1,7 @@
+"""
+gymnax compatibility wrapper.
+"""
+
 import gymnax
 from gymnax.wrappers import GymnaxToVectorGymWrapper
 import jax.numpy as jnp

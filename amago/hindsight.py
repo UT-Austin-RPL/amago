@@ -1,3 +1,7 @@
+"""
+Trajectory datastructures
+"""
+
 import pickle
 import copy
 from dataclasses import dataclass, asdict
@@ -178,10 +182,10 @@ class FrozenTraj:
 class Trajectory:
     """A sequence of timesteps.
 
-    Stores a rollout and handles disk saves when using the default RLDataset.
+    Stores a rollout and handles disk saves when using the default :py:class:`~amago.loading.RLDataset`.
 
     Args:
-        timesteps: Iterable of Timestep objects.
+        timesteps: Iterable of :py:class:`Timestep` objects.
     """
 
     def __init__(self, timesteps=Optional[Iterable[Timestep]]):
@@ -261,9 +265,9 @@ class Trajectory:
             )
 
     def freeze(self) -> FrozenTraj:
-        """Freeze the trajectory and return a FrozenTraj object.
+        """Freeze the trajectory and return a :py:class:`FrozenTraj` object.
 
-        FrozenTraj saves time by precomputing input sequences for the Agent.
+        :py:class:`FrozenTraj` saves time by precomputing input sequences for the Agent.
 
         Returns:
             FrozenTraj: Frozen trajectory object with precomputed sequences.
@@ -290,17 +294,16 @@ class Trajectory:
 class Relabeler(ABC):
     """A hook for modifying trajectory data during training.
 
-    In the default DiskTrajDataset, Relabeler has the chance to edit input trajectories
+    In the default :py:class:`~amago.loading.DiskTrajDataset`, Relabeler has the chance to edit input trajectories
     before they are passed to an agent for training. Enables Hindsight Experience Replay
     (HER) and variants. See examples/13_mazerunner_relabeling.py for an implementation.
-
-    Args:
-        relabel_fn: Function that takes a FrozenTraj and returns a new FrozenTraj with
-            relabeled data.
     """
 
-    @abstractmethod
     def __call__(self, traj: Trajectory | FrozenTraj) -> FrozenTraj:
+        return self.relabel(traj)
+
+    @abstractmethod
+    def relabel(self, traj: Trajectory | FrozenTraj) -> FrozenTraj:
         """Relabel a trajectory.
 
         Args:
@@ -315,5 +318,5 @@ class Relabeler(ABC):
 class NoOpRelabeler(Relabeler):
     """A no-op relabeler that returns the input trajectory unchanged."""
 
-    def __call__(self, traj: Trajectory | FrozenTraj) -> FrozenTraj:
+    def relabel(self, traj: Trajectory | FrozenTraj) -> FrozenTraj:
         return traj

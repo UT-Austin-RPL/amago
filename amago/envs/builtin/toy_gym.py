@@ -1,3 +1,7 @@
+"""
+Custom toy gym environments.
+"""
+
 import copy
 import random
 

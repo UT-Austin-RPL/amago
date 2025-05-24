@@ -1,3 +1,7 @@
+"""
+Seq2Seq models for long-term memory.
+"""
+
 from abc import ABC, abstractmethod
 from typing import Optional, Any, Tuple
 

@@ -1,3 +1,7 @@
+"""
+CNN input modules.
+"""
+
 from abc import ABC, abstractmethod
 
 import gin

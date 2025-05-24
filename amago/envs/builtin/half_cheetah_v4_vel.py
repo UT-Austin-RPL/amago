@@ -1,3 +1,7 @@
+"""
+HalfCheetah-Velocity implemented with HalfCheetah-v4.
+"""
+
 import random
 
 from gymnasium.envs.mujoco.half_cheetah_v4 import HalfCheetahEnv

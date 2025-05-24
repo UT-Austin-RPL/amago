@@ -1,3 +1,7 @@
+"""
+Multi-Task BabyAI environment
+"""
+
 import random
 from typing import Tuple, List
 

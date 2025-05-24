@@ -1,3 +1,7 @@
+"""
+MazeRunner navigation environment and wrapper.
+"""
+
 from functools import partial
 import copy
 import random
