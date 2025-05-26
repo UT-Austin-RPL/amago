@@ -711,6 +711,7 @@ class Experiment:
                 save_every=None,
             )
 
+        par_kwargs = dict()
         if self.env_mode == "already_vectorized":
             Par = AlreadyVectorizedEnv
             env_list = [wrap(make_test_env)]
@@ -722,9 +723,10 @@ class Experiment:
                 env_list = [wrap(make_test_env) for _ in range(self.parallel_actors)]
             if self.env_mode == "async":
                 Par = gym.vector.AsyncVectorEnv
+                par_kwargs = dict(context=self.async_env_mp_context)
             elif self.env_mode == "sync":
                 Par = DummyAsyncVectorEnv
-        test_envs = Par(env_list)
+        test_envs = Par(env_list, **par_kwargs)
         test_envs.reset()
         _, (returns, specials) = self.interact(
             test_envs,
