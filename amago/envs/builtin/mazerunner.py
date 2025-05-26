@@ -9,7 +9,6 @@ import random
 import gymnasium as gym
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.artist import Artist
 
 from amago.envs import AMAGOEnv
 

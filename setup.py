@@ -32,13 +32,11 @@ setup(
             # deepmind alchemy
             "dm_env",
             "dm_alchemy @ git+https://github.com/deepmind/dm_alchemy.git",
-            "xminigrid",
             "gymnax",
             "matplotlib",
             "opencv-python",
             "procgen",
             "minigrid",
-            "xminigrid",
             "ale_py>=0.10",
         ],
         "flash": ["ninja", "packaging", "flash-attn"],

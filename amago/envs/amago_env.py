@@ -1,3 +1,7 @@
+"""
+Main environment wrapper stack for sequence data and parallel logging.
+"""
+
 import os
 import random
 import warnings

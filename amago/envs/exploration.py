@@ -1,3 +1,7 @@
+"""
+Exploration via gymnasium wrappers.
+"""
+
 from abc import ABC, abstractmethod
 
 import gymnasium as gym

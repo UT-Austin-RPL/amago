@@ -96,6 +96,7 @@ autosummary_generate_overwrite = True
 # (Optional) hide function/class signatures in the summary table
 autosummary_imported_members = False
 autodoc_property_type = True
+autodoc_mock_imports = ["xminigrid", "ale_py", "jax", "metaworld", "dm_env", "gymnax", "dm_alchemy", "minigrid", "retro", "cv2", "matplotlib", "procgen"]
 
 napoleon_custom_sections = [
     ("Gin Configurable Keyword Args", "Args"),

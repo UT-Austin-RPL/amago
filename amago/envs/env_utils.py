@@ -1,3 +1,7 @@
+"""
+Miscellaneous environment wrappers and utilities.
+"""
+
 import gymnasium as gym
 import numpy as np
 
