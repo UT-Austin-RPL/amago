@@ -45,9 +45,9 @@ jobs:
         uses: actions/configure-pages@v4
 
       - name: Upload Pages Artifact  
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v3
         with:
-          path: build/html
+          path: /docs/build/html/
 
       - name: Deploy to GitHub Pages  
         uses: actions/deploy-pages@v4
