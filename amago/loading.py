@@ -707,3 +707,27 @@ class DiskTrajDataset(RLDataset):
             dones=dones,
             actions=actions,
         )
+
+
+class DoNothingDataset(RLDataset):
+    """A dataset that does nothing and is never ready for training.
+
+    Useful for repurposing Experiment to manage inference or eval only.
+    """
+
+    def __init__(self):
+        super().__init__(dset_name="DoNothingDataset")
+
+    @property
+    def save_new_trajs_to(self):
+        return None
+
+    @property
+    def ready_for_training(self):
+        return False
+
+    def get_description(self):
+        return self.dset_name
+
+    def sample_random_trajectory(self) -> RLData:
+        raise NotImplementedError("DoNothingDataset does not support training!")
