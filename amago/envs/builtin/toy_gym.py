@@ -1,61 +1,52 @@
+"""
+Custom toy gym environments.
+"""
+
 import copy
 import random
 
 import gymnasium as gym
+from gymnasium.envs.toy_text.frozen_lake import generate_random_map
 import numpy as np
 
 from amago.envs import AMAGO_ENV_LOG_PREFIX
 
 
-class RandomLunar(gym.Env):
-    def __init__(
-        self,
-        k_shots=2,
-    ):
-        self.reset()
-        self.action_space = self.env.action_space
-        self.observation_space = self.env.observation_space
-        self.k_shots = k_shots
-
-    def reset(self, *args, **kwargs):
-        self.current_gravity = random.uniform(-3.0, -0.1)
-        self.current_wind = random.uniform(0.0, 20.0)
-        self.current_turbulence = random.uniform(0.0, 2.0)
-        self.env = gym.make(
-            "LunarLander-v2",
-            continuous=True,
-            gravity=self.current_gravity,
-            enable_wind=True,
-            wind_power=self.current_wind,
-            turbulence_power=self.current_turbulence,
-        )
-        self.current_k = 0
-        return self.env.reset()
-
-    def step(self, action):
-        done = False
-        next_state, reward, terminated, truncated, info = self.env.step(action)
-        if terminated or truncated:
-            next_state, info = self.env.reset()
-            self.current_k += 1
-        if self.current_k >= self.k_shots:
-            done = True
-        return next_state, reward, done, False, info
-
-
-from gymnasium.envs.toy_text.frozen_lake import generate_random_map
-
-
 class MetaFrozenLake(gym.Env):
+    """
+    A version of gym's toy FrozenLake problem that demonstrates the
+    strengths of black-box meta-RL. The agent begins in an unknown
+    lake layout and has k attempts to find and exploit a path to the
+    goal. The concept of k explicit attempts can be removed and
+    replaced with long trials that penalize failure without resets.
+    Explicit partial observability can be added in the form of noisy
+    sensor observations. Discrete action indices can be shuffled
+    between tasks.
+
+    Args:
+        size: The size of the lake map (n x n grid).
+        k_episodes: The number of attempts agents have on each new
+            lake layout.
+        hard_mode: If True, randomly shuffle discrete action indices
+            on reset and add noise to the agent's position sensors.
+            Randomly create "holes" in the ice behind the agent's
+            path to penalize backtracking. These changes introduce
+            partial observability and increase memory demands. Defaults
+            to False.
+        recover_mode: If False, falling through the ice terminates the
+            episode. If True, the agent is allowed to recover to its
+            previous position but receives a penalty. Defaults to False.
+    """
+
     def __init__(
         self,
         size: int,
-        k_shots: int = 10,
+        k_episodes: int = 10,
         hard_mode: bool = False,
         recover_mode: bool = False,
     ):
         self.size = size
-        self.k_shots = k_shots
+        self.k_episodes = k_episodes
         self.action_space = gym.spaces.Discrete(5)
         self.observation_space = gym.spaces.Box(shape=(4,), low=0.0, high=1.0)
         self.hard_mode = hard_mode
@@ -79,7 +70,12 @@ class MetaFrozenLake(gym.Env):
         else:
             x, y = self.x, self.y
         return np.array(
-            [x / self.size, y / self.size, reset_signal, self.current_k / self.k_shots],
+            [
+                x / self.size,
+                y / self.size,
+                reset_signal,
+                self.current_k / self.k_episodes,
+            ],
             dtype=np.float32,
         )
 
@@ -127,22 +123,42 @@ class MetaFrozenLake(gym.Env):
         else:
             next_state, info = self.make_obs(False), {}
 
-        terminated = self.current_k >= self.k_shots
+        terminated = self.current_k >= self.k_episodes
         return next_state, reward, terminated, False, info
 
     def render(self, *args, **kwargs):
         render_map = copy.deepcopy(self.active_map)
         render_map[self.x][self.y] = "A"
-        print(f"\nFrozen Lake (k={self.k_shots}, Hard Mode={self.hard_mode})")
+        print(f"\nFrozen Lake (k={self.k_episodes}, Hard Mode={self.hard_mode})")
         for row in render_map:
             print(" ".join(row))
 
 
 class RoomKeyDoor(gym.Env):
-    """
-    A version of the Dark Room Key-Door Env.
+    """A version of the Dark Room Key-Door Env.
 
-    Based on Algorithm Distillation (Laskin et al., 2022)
+    Based on Algorithm Distillation (Laskin et al., 2022).
+
+    Args:
+        dark: If True, the key and door position are hidden from the
+            agent. If False, they are revealed, which is an easy way
+            to demonstrate that meta-learning problems are created by
+            partial observability. Defaults to True.
+        size: The size of the grid (n x n). Defaults to 9.
+        max_episode_steps: The maximum number of steps in each episode before the
+            task is reset. Defaults to 50.
+        meta_rollout_horizon: The agent has this many timsteps to adapt to
+            each world layout. The best solution is to infer the key and door locations
+            and then solve the task as many times as possible within this time limit.
+            Defaults to 500.
+        start_location: The starting location of the agent. Defaults to
+            "random". Can also be set to a specific (x, y) coordinate.
+        key_location: The location of the key. Defaults to "random". Can
+            also be set to a specific (x, y) coordinate.
+        goal_location: The location of the goal. Defaults to "random".
+            Can also be set to a specific (x, y) coordinate.
+        randomize_actions: If True, the discrete action indices are
+            randomly shuffled on each reset. Defaults to False.
     """
 
     def __init__(

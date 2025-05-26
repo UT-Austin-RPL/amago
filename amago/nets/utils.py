@@ -1,3 +1,7 @@
+"""
+Miscellaneous utilities for neural network modules.
+"""
+
 from typing import Optional
 
 import torch
@@ -9,6 +13,17 @@ from amago.loading import MAGIC_PAD_VAL
 
 
 def symlog(x: torch.Tensor | float) -> torch.Tensor | float:
+    """Symmetric log transform.
+
+    Applies sign(x) * log(|x| + 1) to the input. This transform is useful for
+    rescaling ~unbounded ranges to a suitable range for network inputs/outputs.
+
+    Args:
+        x: Input tensor or scalar value.
+
+    Returns:
+        symlog(x) as a Tensor if x is a Tensor, otherwise symlog(x) as a float.
+    """
     not_torch = not isinstance(x, torch.Tensor)
     if not_torch:
         assert isinstance(x, int | float)
@@ -20,6 +35,17 @@ def symlog(x: torch.Tensor | float) -> torch.Tensor | float:
 
 
 def symexp(x: torch.Tensor | float) -> torch.Tensor | float:
+    """Symmetric exponential transform.
+
+    Applies sign(x) * (exp(|x|) - 1) to the input. This is the inverse of the
+    symmetric log transform.
+
+    Args:
+        x: Input tensor or scalar value.
+
+    Returns:
+        symexp(x) as a Tensor if x is a Tensor, otherwise symexp(x) as a float.
+    """
     not_torch = not isinstance(x, torch.Tensor)
     if not_torch:
         assert isinstance(x, int | float)
@@ -33,6 +59,17 @@ def symexp(x: torch.Tensor | float) -> torch.Tensor | float:
 def add_activation_log(
     root_key: str, activation: torch.Tensor, log_dict: Optional[dict] = None
 ):
+    """Add activation statistics to a logging dictionary.
+
+    Logs the maximum, minimum, standard deviation, and mean of the activation
+    tensor under the key prefix "activation-{root_key}-".
+
+    Args:
+        root_key: Prefix for the log keys.
+        activation: Tensor to compute statistics from.
+        log_dict: Dictionary to add statistics to. If None, no logging is
+            performed.
+    """
     if log_dict is None:
         return
     with torch.no_grad():
@@ -44,6 +81,23 @@ def add_activation_log(
 
 @gin.configurable(denylist=["skip"])
 class InputNorm(nn.Module):
+    """Moving-average feature normalization.
+
+    Normalizes input features using a moving average of their statistics. This
+    helps stabilize training by keeping the input distribution relatively
+    constant.
+
+    Args:
+        dim: Dimension of the input feature.
+
+    Keyword Args:
+        beta: Smoothing parameter for the moving average. Defaults to 1e-4.
+        init_nu: Initial value for the moving average of the squared feature
+            values. Defaults to 1.0.
+        skip (no gin): Whether to skip normalization. Defaults to False. Cannot be
+            configured via gin (disable input norm in the TstepEncoder config).
+    """
+
     def __init__(self, dim, beta=1e-4, init_nu=1.0, skip: bool = False):
         super().__init__()
         self.skip = skip
@@ -58,14 +112,7 @@ class InputNorm(nn.Module):
         sigma_ = torch.sqrt(self.nu - self.mu**2 + 1e-5)
         return torch.nan_to_num(sigma_).clamp(1e-3, 1e6)
 
-    def normalize_values(self, val):
-        """
-        Normalize the input with instability protection.
-
-        This function has to normalize lots of elements that are
-        not well distributed (terminal signals, rewards, some
-        parts of the state).
-        """
+    def normalize_values(self, val: torch.Tensor) -> torch.Tensor:
         if self.skip:
             return val
         sigma = self.sigma
@@ -76,7 +123,7 @@ class InputNorm(nn.Module):
         output = torch.where(use_norm, normalized, (val - torch.nan_to_num(self.mu)))
         return output
 
-    def denormalize_values(self, val):
+    def denormalize_values(self, val: torch.Tensor) -> torch.Tensor:
         if self.skip:
             return val
         sigma = self.sigma
@@ -85,7 +132,7 @@ class InputNorm(nn.Module):
         output = torch.where(stable, denormalized, (val + torch.nan_to_num(self.mu)))
         return output
 
-    def masked_stats(self, val):
+    def masked_stats(self, val: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         # make sure the padding value doesn't impact statistics
         mask = (~((val == self.pad_val).all(-1, keepdim=True))).float()
         sum_ = (val * mask).sum((0, 1))
@@ -95,7 +142,7 @@ class InputNorm(nn.Module):
         square_mean = square_sum / total
         return mean, square_mean
 
-    def update_stats(self, val):
+    def update_stats(self, val: torch.Tensor) -> None:
         self._t += 1
         old_sigma = self.sigma
         old_mu = self.mu
@@ -104,18 +151,24 @@ class InputNorm(nn.Module):
         self.mu.data = (1.0 - beta_t) * self.mu + (beta_t * mean)
         self.nu.data = (1.0 - beta_t) * self.nu + (beta_t * square_mean)
 
-    def forward(self, x, denormalize=False):
+    def forward(self, x: torch.Tensor, denormalize: bool = False) -> torch.Tensor:
         if denormalize:
             return self.denormalize_values(x)
         else:
             return self.normalize_values(x)
 
 
+@gin.configurable
 class SlowAdaptiveRational(nn.Module):
-    """
-    A slow non-cuda version of "Adaptive Rational Activations to Boost Deep Reinforcement Learning",
-    Delfosse et al., 2021 (https://arxiv.org/pdf/2102.09407.pdf).
-    Uses Leaky ReLU init.
+    """Adaptive Rational Activation.
+
+    A slow non-cuda version of "Adaptive Rational Activations to Boost Deep
+    Reinforcement Learning", Delfosse et al., 2021
+    (https://arxiv.org/pdf/2102.09407.pdf). Hardcoded to the Leaky Relu version.
+
+    Keyword Args:
+        trainable: Whether to train the parameters of the activation. Defaults to
+            True.
     """
 
     def __init__(self, trainable: bool = True):
@@ -142,7 +195,7 @@ class SlowAdaptiveRational(nn.Module):
         self.num_d, self.den_d = degrees
         self.max_d = max(degrees)
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         pows = torch.linalg.vander(x, N=self.max_d + 1)
         num = (self.numerator * pows[..., : self.num_d]).sum(-1)
         den = (self.denominator * pows[..., 1 : 1 + self.den_d]).abs().sum(-1) + 1
@@ -150,6 +203,21 @@ class SlowAdaptiveRational(nn.Module):
 
 
 def activation_switch(activation: str) -> callable:
+    """Quick switch for the activation function.
+
+    Args:
+        activation: The activation function name. Options are:
+            - "leaky_relu" (Leaky ReLU)
+            - "relu" (ReLU)
+            - "gelu" (GeLU)
+            - "adaptive" (SlowAdaptiveRational)
+
+    Returns:
+        The activation function (callable).
+
+    Raises:
+        ValueError: If the activation function name is not recognized.
+    """
     if activation == "leaky_relu":
         return F.leaky_relu
     elif activation == "relu":

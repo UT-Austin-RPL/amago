@@ -53,8 +53,8 @@ if __name__ == "__main__":
     )
     use_config(config, args.configs)
 
-    make_train_env = lambda: Metaworld(args.benchmark, "train", k_shots=args.k)
-    make_test_env = lambda: Metaworld(args.benchmark, "test", k_shots=args.k)
+    make_train_env = lambda: Metaworld(args.benchmark, "train", k_episodes=args.k)
+    make_test_env = lambda: Metaworld(args.benchmark, "test", k_episodes=args.k)
 
     group_name = (
         f"{args.run_name}_metaworld_{args.benchmark}_K_{args.k}_L_{args.max_seq_len}"

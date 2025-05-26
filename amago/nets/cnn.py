@@ -1,3 +1,7 @@
+"""
+CNN input modules.
+"""
+
 from abc import ABC, abstractmethod
 
 import gin
@@ -24,6 +28,15 @@ def weight_init(m):
 
 
 class CNN(nn.Module, ABC):
+    """Abstract base class for built-in CNN architectures.
+
+    Args:
+        img_shape: Shape of the image (H, W, C) or (C, H, W).
+        channels_first: Whether the image is in channels-first format.
+        activation: Activation function to use. See
+            `amago.nets.utils.activation_switch`.
+    """
+
     def __init__(
         self,
         img_shape: tuple[int, int, int],
@@ -40,11 +53,30 @@ class CNN(nn.Module, ABC):
         pass
 
     @property
-    def blank_img(self):
+    def blank_img(self) -> torch.Tensor:
+        """Returns an example input image of shape (1, 1) + self.img_shape (uint8)"""
         return torch.zeros((1, 1) + self.img_shape, dtype=torch.uint8)
 
     @torch.compile
-    def forward(self, obs, from_float: bool = False, flatten: bool = True):
+    def forward(
+        self, obs: torch.Tensor, from_float: bool = False, flatten: bool = True
+    ) -> torch.FloatTensor:
+        """Produce a feature map from an image.
+
+        Args:
+            obs: Image tensor of shape (Batch, Len, H, W, C) for channels_last or
+                (Batch, Len, C, H, W) for channels_first. Can be uint8 or float
+                dtype.
+            from_float: If False, assumes obs has pixel values in [0, 255],
+                casts to float, and scales to [-1, 1]. If True, assumes obs is
+                already in desired range/dtype. Defaults to False.
+            flatten: If True, flatten output activations into feature array for
+                linear layers. Defaults to True.
+
+        Returns:
+            Feature tensor of shape (B, L, out_dim) if flatten=True, otherwise
+            (B, L, C, H, W) matching CNN output shape.
+        """
         assert obs.ndim == 5
         if not from_float:
             assert obs.dtype == torch.uint8
@@ -64,8 +96,13 @@ class CNN(nn.Module, ABC):
 
 
 class DrQv2Aug(nn.Module):
-    """
+    """Pad+Random Crop image augmentation from DrQv2.
+
     https://github.com/facebookresearch/drqv2/blob/main/drqv2.py
+
+    Args:
+        pad: Number of pixels to pad on each side of the image.
+        channels_first: Whether the image is in channels-first format.
     """
 
     def __init__(self, pad: int, channels_first: bool):
@@ -73,7 +110,17 @@ class DrQv2Aug(nn.Module):
         self.pad = pad
         self.channels_first = channels_first
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Apply pad+random crop augmentation to an image.
+
+        Args:
+            x: Image tensor of shape (Batch, Len, H, W, C) for channels_last or
+                (Batch, Len, C, H, W) for channels_first. Currently, H must equal
+                W.
+
+        Returns:
+            Augmented image with the same shape as the input.
+        """
         if self.channels_first:
             B, L, c, h, w = x.shape
             x = rearrange(x, "b l c h w -> (b l) c h w")
@@ -108,6 +155,17 @@ class DrQv2Aug(nn.Module):
 
 
 class DrQCNN(CNN):
+    """CNN architecture from DrQ-v2.
+
+    https://arxiv.org/abs/2107.09645
+
+    Args:
+        img_shape: Shape of the image (H, W, C) or (C, H, W).
+        channels_first: Whether the image is in channels-first format.
+        activation: Activation function to use. See
+            `amago.nets.utils.activation_switch`.
+    """
+
     def __init__(self, img_shape: tuple[int], channels_first: bool, activation: str):
         super().__init__(
             img_shape, channels_first=channels_first, activation=activation
@@ -119,7 +177,7 @@ class DrQCNN(CNN):
         self.conv4 = nn.Conv2d(32, 32, kernel_size=3, stride=1)
         self.apply(weight_init)
 
-    def conv_forward(self, imgs):
+    def conv_forward(self, imgs: torch.Tensor) -> torch.Tensor:
         x = self.activation(self.conv1(imgs))
         x = self.activation(self.conv2(x))
         x = self.activation(self.conv3(x))
@@ -129,20 +187,45 @@ class DrQCNN(CNN):
 
 @gin.configurable
 class GridworldCNN(CNN):
+    """Tiny CNN architecture useful for gridworld map features.
+
+    Args:
+        img_shape: Shape of the image (H, W, C) or (C, H, W).
+        channels_first: Whether the image is in channels-first format.
+        activation: Activation function to use. See
+            `amago.nets.utils.activation_switch`.
+
+    Keyword Args:
+        channels: List of 3 ints representing the number of output channels for
+            each convolutional layer. Defaults to [16, 32, 48].
+        kernels: List of 3 ints representing the kernel size for each
+            convolutional layer. Defaults to [2, 2, 2].
+        strides: List of 3 ints representing the stride for each convolutional
+            layer. Defaults to [1, 1, 1].
+    """
+
     def __init__(
         self,
         img_shape: tuple[int],
         channels_first: bool,
         activation: str,
         channels: list[int] = [16, 32, 48],
+        kernels: list[int] = [2, 2, 2],
+        strides: list[int] = [1, 1, 1],
     ):
         super().__init__(
             img_shape, channels_first=channels_first, activation=activation
         )
         C = img_shape[0] if self.channels_first else img_shape[-1]
-        self.conv1 = nn.Conv2d(C, channels[0], kernel_size=2, stride=1)
-        self.conv2 = nn.Conv2d(channels[0], channels[1], kernel_size=2, stride=1)
-        self.conv3 = nn.Conv2d(channels[1], channels[2], kernel_size=2, stride=1)
+        self.conv1 = nn.Conv2d(
+            C, channels[0], kernel_size=kernels[0], stride=strides[0]
+        )
+        self.conv2 = nn.Conv2d(
+            channels[0], channels[1], kernel_size=kernels[1], stride=strides[1]
+        )
+        self.conv3 = nn.Conv2d(
+            channels[1], channels[2], kernel_size=kernels[2], stride=strides[2]
+        )
 
     def conv_forward(self, imgs):
         x = self.activation(self.conv1(imgs))
@@ -153,6 +236,23 @@ class GridworldCNN(CNN):
 
 @gin.configurable
 class NatureishCNN(CNN):
+    """Customizable version of the small CNN architecture from DQN.
+
+    Args:
+        img_shape: Shape of the image (H, W, C) or (C, H, W).
+        channels_first: Whether the image is in channels-first format.
+        activation: Activation function to use. See
+            `amago.nets.utils.activation_switch`.
+
+    Keyword Args:
+        channels: List of 3 ints representing the number of output channels for
+            each convolutional layer. Defaults to [32, 64, 64].
+        kernels: List of 3 ints representing the kernel size for each
+            convolutional layer. Defaults to [8, 4, 3].
+        strides: List of 3 ints representing the stride for each convolutional
+            layer. Defaults to [4, 2, 1].
+    """
+
     def __init__(
         self,
         img_shape: tuple[int],
@@ -187,6 +287,22 @@ class NatureishCNN(CNN):
 
 @gin.configurable
 class IMPALAishCNN(CNN):
+    """CNN architecture from IMPALA.
+
+    Args:
+        img_shape: Shape of the image (H, W, C) or (C, H, W).
+        channels_first: Whether the image is in channels-first format.
+        activation: Activation function to use. See
+            `amago.nets.utils.activation_switch`.
+
+    Keyword Args:
+        cnn_block_depths: List of ints representing the number of output
+            channels for each convolutional block. Length defines the number of
+            residual blocks. Defaults to [16, 32, 32].
+        post_group_norm: Whether to use group normalization after each
+            convolutional block. Defaults to True.
+    """
+
     def __init__(
         self,
         img_shape: tuple[int],

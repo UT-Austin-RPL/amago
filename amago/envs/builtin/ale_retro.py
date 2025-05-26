@@ -1,3 +1,7 @@
+"""
+Arcade Learning Environment and (Stable) Retro games.
+"""
+
 import random
 import warnings
 import math
@@ -24,12 +28,8 @@ from amago.envs import AMAGOEnv
 
 
 class _MaxAndSkipEnv(gym.Wrapper[np.ndarray, int, np.ndarray, int]):
-    """
-    https://stable-baselines3.readthedocs.io/en/master/_modules/stable_baselines3/common/atari_wrappers.html#MaxAndSkipEnv
-
-    Later added to gymnasium 1.0
-    """
-
+    # From https://stable-baselines3.readthedocs.io/en/master/_modules/stable_baselines3/common/atari_wrappers.html#MaxAndSkipEnv
+    # Later added to gymnasium 1.0
     def __init__(self, env: gym.Env, skip: int = 4) -> None:
         super().__init__(env)
         assert (
@@ -58,19 +58,6 @@ class _MaxAndSkipEnv(gym.Wrapper[np.ndarray, int, np.ndarray, int]):
                 break
         max_frame = self._obs_buffer.max(axis=0)
         return max_frame, total_reward, terminated, truncated, info
-
-
-class AtariAMAGOWrapper(AMAGOEnv):
-    def __init__(self, env: gym.Env):
-        assert isinstance(env, AtariGame | ALE)
-        super().__init__(
-            env=env,
-            env_name="Atari",
-        )
-
-    @property
-    def env_name(self):
-        return self.env.rom_name
 
 
 class ALEAction:
@@ -125,6 +112,36 @@ class ALEAction:
 
 @gin.configurable
 class AtariGame(gym.Env):
+    """Play a single Atari Game
+
+    Args:
+        game: The name of the game to play.
+
+    Keyword Args:
+        resolution: image resolution. Default is (84, 84).
+        grayscale: Whether to use grayscale frames. Default is
+            False.
+        time_limit: The time limit of the game in frames. Default
+            is 108,000 frames (30 minutes).
+        frame_skip: The number of frames to skip between
+            observations. Default is 4.
+        channels_last: Format images as (H, W, C) if True, or (C,
+            H, W) if False. Default is False.
+        action_space: The action space to use. One of "discrete",
+            "multibinary", or "continuous". Default is "discrete".
+        sticky_action_prob: The probability of repeating the
+            previous action. Default is 0.25.
+        terminal_on_life_loss: Whether to terminate the episode on
+            life loss. Default is False.
+        version: The version of gymnasium ALE environment to use.
+            Default is "v5".
+        continuous_action_threshold: A threshold parameter for
+            continuous action values to trigger their corresponding
+            discrete action. Default is 0.5.
+        clip_rewards: Whether to clip rewards to [-1, 1]. Default
+            is False.
+    """
+
     def __init__(
         self,
         game: str,
@@ -225,20 +242,26 @@ class AtariGame(gym.Env):
 
 
 class ALE(gym.Env):
-    def __init__(self, games: list[str], use_discrete_actions: bool):
+    """Play a collection of Atari games in a multi-task setting.
+
+    Creates `AtariGame` envs with the default kwargs. Use `gin` to customize them.
+
+    Args:
+        game_names: A list of game names to play (e.g. ["Breakout", "Pong", "Qbert"]).
+    """
+
+    def __init__(self, game_names: list[str]):
         super().__init__()
-        self.games = games
-        self.use_discrete_actions = use_discrete_actions
+        self.games = game_names
         self.pick_new_game()
         self.observation_space = self._env.observation_space
         self.action_space = self._env.action_space
 
     def pick_new_game(self):
         game = random.choice(self.games)
-        self._env = AtariGame(
-            f"ALE/{game}-v5", use_discrete_actions=self.use_discrete_actions
-        )
+        self._env = AtariGame(game)
         self.time_limit = self._env.time_limit
+        self.rom_name = self._env.rom_name
         return game
 
     def reset(self, *args, **kwargs):
@@ -250,11 +273,18 @@ class ALE(gym.Env):
         return next_state, reward, terminated, truncated, info
 
 
-class RetroAMAGOWrapper(AMAGOEnv):
-    def __init__(self, env: gym.Env):
+class AtariAMAGOWrapper(AMAGOEnv):
+    """Wraps an AtariGame or ALE environment to be used as an AMAGOEnv.
+
+    Args:
+        env: The environment to wrap.
+    """
+
+    def __init__(self, env: AtariGame | ALE):
+        assert isinstance(env, AtariGame | ALE)
         super().__init__(
             env=env,
-            env_name="RetroArcade-placeholder",
+            env_name="Atari-placeholder",
         )
 
     @property
@@ -263,6 +293,29 @@ class RetroAMAGOWrapper(AMAGOEnv):
 
 
 class RetroArcade(gym.Env):
+    """A multi-task Gym Retro environment.
+
+    On each reset, creates a new Retro game from the level start settings like
+    {game : [level1, level2, ...], game2 : [level1, level2, ...], ...}. Each game
+    is set up similarly to an Atari environment. Multi-console action spaces are
+    padded to a max length. We add a colored border to the edge of the screen
+    that distinguishes between different consoles to identify the action space.
+
+    Args:
+        game_start_dict: A dictionary mapping game names to lists of level start states.
+            Options will depend on the ROMs installed with stable-retro.
+
+    Keyword Args:
+        resolution: The resolution of the screen. Default is (84, 84).
+        time_limit_minutes: The time limit of the game in minutes of game time.
+            Default is 20.
+        frame_skip: The number of frames to skip between observations. Default is 8.
+        channels_last: Whether to use channels last image format. Default is False.
+        use_discrete_actions: Whether to use discrete actions. If True, the env will break
+            when using multiple consoles. If False, use a multi-binary action space padded
+            to the largest console. Default is False.
+    """
+
     console_cabinets = {
         "Snes": [18, 196, 65],
         "Nes": [191, 40, 17],
@@ -375,3 +428,21 @@ class RetroArcade(gym.Env):
         self._time += 1
         truncated = self._time >= self.time_limit
         return self.screen(next_obs), reward, terminated, truncated, info
+
+
+class RetroAMAGOWrapper(AMAGOEnv):
+    """Wraps a RetroArcade environment to be used as an AMAGOEnv.
+
+    Args:
+        env: The environment to wrap.
+    """
+
+    def __init__(self, env: RetroArcade):
+        super().__init__(
+            env=env,
+            env_name="RetroArcade-placeholder",
+        )
+
+    @property
+    def env_name(self):
+        return self.env.rom_name

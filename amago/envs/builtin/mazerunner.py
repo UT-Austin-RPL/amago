@@ -1,24 +1,24 @@
-import gymnasium as gym
-import numpy as np
-
-from amago.envs import AMAGOEnv
-
-
 """
-Core MazeRunner Environment
+MazeRunner navigation environment and wrapper.
 """
 
 from functools import partial
 import copy
 import random
 
+import gymnasium as gym
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.artist import Artist
 
+from amago.envs import AMAGOEnv
 
-def random_maze(width=11, height=11, complexity=0.75, density=0.75):
-    """
+
+def random_maze(
+    width: int = 11, height: int = 11, complexity: float = 0.75, density: float = 0.75
+) -> np.ndarray:
+    """Generate a maze layout.
+
     Code from https://github.com/zuoxingdong/mazelab
     """
     # Only odd shapes
@@ -57,13 +57,26 @@ def random_maze(width=11, height=11, complexity=0.75, density=0.75):
 
 
 class MazeRunnerGymEnv(gym.Env):
+    """Core MazeRunner Environment
+
+    Agent navigates a randomly generated maze to reach a sequence of goal locations.
+
+    Args:
+        maze_dim: Dimension of the maze.
+        min_num_goals: Minimum number of goal locations to navigate to.
+        max_num_goals: Maximum number of goal locations to navigate to.
+        time_limit: Max episode length.
+        goal_in_obs: Whether to include the goal location in the observation. Defaults to True.
+        randomized_action_space: Whether to randomly permute the action space indices on reset. Defaults to False.
+    """
+
     def __init__(
         self,
         maze_dim: int,
         min_num_goals: int,
         max_num_goals: int,
         time_limit: int,
-        goal_in_obs: bool = False,
+        goal_in_obs: bool = True,
         randomized_action_space: bool = False,
     ):
         self.goal_in_obs = goal_in_obs
@@ -302,6 +315,17 @@ class RelabelInfoWrapper(gym.Wrapper):
 
 
 class MazeRunnerAMAGOEnv(AMAGOEnv):
+    """AMAGOEnv MazeRunner environment.
+
+    Configures MazeRunnerGymEnv for hindsight experience replay.
+
+    Args:
+        maze_dim: Dimension of the maze.
+        num_goals: Number of goal locations to navigate to.
+        time_limit: Max episode length.
+        randomized_action_space: Whether to randomly permute the action space indices on reset. Defaults to False.
+    """
+
     def __init__(
         self,
         maze_dim: int,

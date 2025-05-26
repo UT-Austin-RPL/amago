@@ -1,3 +1,7 @@
+"""
+Start and launch training runs (main :class:`Experiment`).
+"""
+
 import os
 import time
 import warnings
@@ -29,11 +33,10 @@ from .envs.exploration import (
 from .envs import SequenceWrapper, ReturnHistory, SpecialMetricHistory, EnvCreator
 from .loading import (
     Batch,
-    TrajDset,
+    RLDataset,
     RLData_pad_collate,
     MAGIC_PAD_VAL,
 )
-from .hindsight import Relabeler
 from .agent import Agent
 from .nets import TstepEncoder, TrajEncoder
 
@@ -41,136 +44,146 @@ from .nets import TstepEncoder, TrajEncoder
 @gin.configurable
 @dataclass
 class Experiment:
+    """
+    Build, train, and evaluate an :py:class:`~amago.agent.Agent`.
+
+    .. rubric:: Required
+
+    :param run_name: Name of the experiment. Used to create checkpoint and log directories.
+    :param ckpt_base_dir: Base directory to store checkpoints and logs. Checkpoints are saved to ``ckpt_base_dir/run_name``.
+    :param max_seq_len: Maximum sequence length for training. Determines effective batch size (Batch Size × Sequence Length).
+    :param dataset: :py:class:`~amago.loading.RLDataset` for loading training sequences.
+    :param tstep_encoder_type: a type of :py:class:`~amago.nets.tstep_encoders.TstepEncoder` (will be created with default kwargs --- edit via gin).
+    :param traj_encoder_type: a type of :py:class:`~amago.nets.traj_encoders.TrajEncoder` (will be created with default kwargs --- edit via gin).
+    :param agent_type: a type of :py:class:`~amago.agent.Agent` (will be created with default kwargs --- edit via gin).
+    :param make_train_env: Callable returning an :py:class:`~amago.envs.amago_env.AMAGOEnv`. If not a list, repeated ``parallel_actors`` times. List gives manual assignment across actors.
+    :param make_val_env: Like ``make_train_env``, but only used for evaluation (trajectories never saved).
+    :param val_timesteps_per_epoch: Number of steps per parallel environment for evaluation. Determines metric sample size. Should be enough time for at least one episode to finish per actor.
+
+    .. rubric:: Environment
+
+    :param parallel_actors: Number of parallel envs for batched inference. **Default:** 12.
+    :param env_mode: ``"async"`` (default), wraps envs in async pool. ``"already_vectorized"`` for jax/gpu batch envs. ``"sync"`` for debug. **Default:** "async".
+    :param exploration_wrapper_type: Exploration wrapper for training envs. **Default:** ``EpsilonGreedy``.
+    :param sample_actions: Whether to sample from stochastic actor during eval, or take argmax/mean. **Default:** True.
+    :param force_reset_train_envs_every: If set, forces call to ``reset`` every N epochs for already_vectorized envs. **Default:** None.
+    :param async_env_mp_context: Multiprocessing spawn method for ``AsyncVectorEnv`` (e.g., ``"forkserver"``). Only relevant for ``env_mode="async"``. Set to None for default method. **Default:** None.
+
+
+    .. rubric:: Logging
+
+    :param log_to_wandb: Enable or disable wandb logging. **Default:** False.
+    :param wandb_project: wandb project. **Default:** ``AMAGO_WANDB_PROJECT`` env var.
+    :param wandb_entity: wandb entity (username/team). **Default:** ``AMAGO_WANDB_ENTITY`` env var.
+    :param wandb_group_name: Group runs on wandb dashboard. **Default:** None.
+    :param verbose: Print tqdm bars and info to console. **Default:** True.
+    :param log_interval: Log extra metrics every N batches. **Default:** 300.
+    :param padded_sampling: Padding for sampling training subsequences. "none", "left", "right", "both". **Default:** "none".
+    :param dloader_workers: Number of DataLoader workers for disk loading. Increase for compressed/large trajs.
+
+    .. note::
+
+        The parameters below are only relevant when doing online data collection. They determine
+        how parallel environments write finished trajectories to disk. The :py:class:`~amago.loading.DiskTrajDataset`
+        reads these files for training.
+
+    :param traj_save_len: Save trajectory on episode end or after this many steps (whichever comes first). Larger values save whole trajectories. **Default:** large value.
+    :param has_dset_edit_rights: Turn off for collect-only runs where another process manages the replay buffer. **Default:** True.
+    :param stagger_traj_file_lengths: Randomizes file lengths when ``traj_save_len`` is short snippets. **Default:** False.
+    :param save_trajs_as: Format for saved trajectories. "npz", "npz-compressed", or "traj". **Default:** "npz".
+
+    .. rubric:: Learning Schedule
+
+    :param epochs: Epochs (each = one data collection + one training round). **Default:** 500.
+    :param start_learning_at_epoch: Number of epochs to skip before gradient updates (for replay buffer warmup). **Default:** 0.
+    :param start_collecting_at_epoch: Number of epochs to skip data collection (for offline→online finetune or full offline). **Default:** 0.
+    :param train_timesteps_per_epoch: Number of steps in each parallel env per epoch. **Default:** 1000.
+    :param train_batches_per_epoch: Number of training batches per epoch. **Default:** 1000.
+    :param val_interval: How many epochs between evaluation rollouts. **Default:** 20.
+    :param ckpt_interval: How many epochs between saving checkpoints. **Default:** 50.
+    :param always_save_latest: Whether to always save the latest weights (for distributed usage). **Default:** True.
+    :param always_load_latest: Whether to always load the latest weights (for distributed usage). **Default:** False.
+
+    .. rubric:: Optimization
+
+    :param batch_size: Batch size *per GPU* (in sequences). **Default:** 24.
+    :param batches_per_update: Number of batches to accumulate gradients over before optimizer update. **Default:** 1.
+    :param learning_rate: Optimizer learning rate. **Default:** 1e-4 (defaults to AdamW).
+    :param critic_loss_weight: Weight for critic loss vs actor loss in encoders. **Default:** 10.
+    :param lr_warmup_steps: Number of warmup steps for learning rate scheduler. **Default:** 500.
+    :param grad_clip: Gradient norm clipping value. **Default:** 1.0.
+    :param l2_coeff: L2 regularization coefficient (AdamW). **Default:** 1e-3.
+    :param mixed_precision: Mixed precision mode for ``accelerate`` ("no", "fp16", "bf16"). **Default:** "no".
+    """
+
     #############
-    ## General ##
+    ## Required ##
     #############
-    # the name of the experiment. used to create a directory in `dset_root` to store checkpoints and logs. used for logging to wandb.
     run_name: str
-    # the most important hyperparameter: the maximum sequence length that the model will be trained on.
+    ckpt_base_dir: str
     max_seq_len: int
-    # trajectories are saved to disk on `terminated or truncated` or after this many steps have passed since the last save (whichever comes first)
-    traj_save_len: int
-    # TstepEncoder is created by calling this with default kwargs (use gin)
+    dataset: RLDataset
     tstep_encoder_type: type[TstepEncoder]
-    # TrajEncoder is created by calling this with default kwargs (use gin)
     traj_encoder_type: type[TrajEncoder]
-    # Agent is created by calling this with default kwargs (use gin)
     agent_type: type[Agent]
+    val_timesteps_per_epoch: int
 
     #################
     ## Environment ##
     #################
-    # a function that takes no args and returns an AMAGOEnv. If this isn't a list, it will be repeated `parallel_actors` times.
-    # You can create the list yourself if you want to manually assign different envs across the parallel actors.
     make_train_env: callable | Iterable[callable]
-    # same as `make_train_env`, but these environments are only used for evaluation and their trajectories are not saved to disk.
     make_val_env: callable | Iterable[callable]
-    # spawns multiple envs in parallel to speed up data collection with batched inference.
-    parallel_actors: int = 10
-    # two main options: "async" and "already_vectorized".
-    # "async" is the default and wraps individual gym environments in a pool of async processes using `gymnasium.vector.AsyncVectorEnv`.
-    # "already_vectorized" is an alternate mode designed for jax / gpu-accelerated envs that handle parallelization with a batch dimension on the lowest wrapper level.
-    # "sync" is the same as "async" but doesn't actually run the environment in parallel, which is helpful for debugging or when the env is so fast that this overhead isn't worth it.
+    parallel_actors: int = 12
     env_mode: str = "async"
-    # exploration is implemented with a gym wrapper that is only applied to training environments.
+    async_env_mp_context: Optional[str] = None
     exploration_wrapper_type: Optional[type[ExplorationWrapper]] = EpsilonGreedy
-    # whether to sample from the stochastic actor during eval, or take the argmax action.
     sample_actions: bool = True
-    # a safety measure that forces a call to `reset` every _ epochs for cases when `reset` is otherwise never called (already_vectorized).
     force_reset_train_envs_every: Optional[int] = None
 
     #############
     ## Logging ##
     #############
-    # enable/disable wandb logging
     log_to_wandb: bool = False
-    # your wandb project
     wandb_project: str = os.environ.get("AMAGO_WANDB_PROJECT")
-    # your wandb entity (username or team name)
     wandb_entity: str = os.environ.get("AMAGO_WANDB_ENTITY")
-    # group different runs on the wandb dashboard
     wandb_group_name: str = None
-    # prints tqdm progress bars and some high-level info to the console
     verbose: bool = True
-    # how many batches between forward/backward passes that spend time computing extra metrics for wandb logging.
     log_interval: int = 300
 
     ############
     ## Replay ##
     ############
-    # path to the root directory where your datasets (and checkpoints) are stored
-    dset_root: str = None
-    # stores all the trajectories in `dset_root/dset_name/buffer`. You can use this to reuse the same dataset across multiple experiments.
-    dset_name: str = None
-    # turn this off for collect-only runs where we need to assume the replay buffer is being managed by another learner process.
-    has_replay_buffer_rights: bool = True
-    # maximum number of .traj files to keep in the replay buffer before we start deleting the oldest files
-    dset_max_size: int = 15_000
-    # an object that can edit trajectory data before it is sent to the agent. useful for hindsight relabeling (temporarily removed) and data augmentation.
-    relabel_type: type[Relabeler] = Relabeler
-    # randomizes trajectory file lengths when saving snippets from a much longer rollout. please refer to a longer explanation in `amago.Experiment.init_envs`.
+    traj_save_len: int = 1e10
+    has_dset_edit_rights: bool = True
     stagger_traj_file_lengths: bool = True
-    # how to save trajectory .traj files. three options:
-    # "npz" saves data as numpy arrays.
-    # "npz-compressed" trades time for disk space by compressing large files.
-    # "traj" pickles the full `Trajectory` object.
     save_trajs_as: str = "npz"
-    # how to pad trajectory sequences if we need to sample a subsequence for training.
-    # "none" will sample the start idx in the range [0, len(traj) - max_seq_len].
-    # this samples every seq evenly but undersamples the RL data (action/rews) at the start/end of the trajectory.
-    # "left" pads the left side of the seq to sample the start timesteps more often.
-    # "right" pads the right side of the seq to sample the end timesteps more often.
-    # "both" pads the left and right sides.
-    # padding is only applicable when sequences are longer than the policy max_seq_len.
     padded_sampling: str = "none"
-    # number of workers to use for the DataLoader that loads trajectories from disk. increase when using npz-compressed or when loading very long trajs from pixel envs.
     dloader_workers: int = 6
 
     #######################
     ## Learning Schedule ##
     #######################
-    # each epoch has one round of data collection and one round of training.
     epochs: int = 1000
-    # skip the first _ epochs before beginning gradient updates. can be used to imitate the "replay buffer warmup" common to most off-policy impelmentations.
     start_learning_at_epoch: int = 0
-    # skip the first _ epochs of data collection. can be used for offline --> online finetuning or to avoid online interaction entirely.
     start_collecting_at_epoch: int = 0
-    # how many `steps` to take in each parallel environment each epoch.
     train_timesteps_per_epoch: int = 1000
-    # how many batches to load from disk for training each epoch. gradient updates per epoch is train_batches_per_epoch // batches_per_update
     train_batches_per_epoch: int = 1000
-    #  how many epochs to wait between evaluation rollouts
-    val_interval: Optional[int] = 10
-    # how many `steps to take in each parallel environment for evaluation. determines the sample size of the evaluation metrics.
-    val_timesteps_per_epoch: int = 10_000
-    # how many epochs to wait between saving checkpoints
-    ckpt_interval: Optional[int] = 20
-    # always_save_latest and always_load_latest are used to communicate the latest policy weights between multiple processes.
-    # A learning-only thread would always_save, while an actor-only thread would always_load.
+    val_interval: Optional[int] = 20
+    ckpt_interval: Optional[int] = 50
     always_save_latest: bool = True
     always_load_latest: bool = False
 
     ##################
     ## Optimization ##
     ##################
-    # training batch size *per gpu*
     batch_size: int = 24
-    # number of batches to accumulate gradients over before updating the model
     batches_per_update: int = 1
-    # learning rate for the optimizer
     learning_rate: float = 1e-4
-    # coefficient that balances the actor and critic loss for the TstepEncoder and TrajEncoder -- which optimize both. The actor loss weight is fixed to 1.
     critic_loss_weight: float = 10.0
-    # linear warmup steps for the learning rate scheduler
     lr_warmup_steps: int = 500
-    # gradient clipping (by norm)
     grad_clip: float = 1.0
-    # l2 regularization coefficient (note that we default to AdamW)
     l2_coeff: float = 1e-3
-    # mixed precision mode. this is passed directly to `accelerate` and follows its options ("no", "fp16", "bf16").
     mixed_precision: str = "no"
-    # experimental feature implementing the Adam timestep reset discussed in https://openreview.net/pdf?id=biAqUbAuG7 (RL optimization is non-stationary, so maybe we should stop using Adam's global timer)
-    local_time_optimizer: bool = False
 
     def __post_init__(self):
         self.accelerator = Accelerator(
@@ -184,14 +197,15 @@ class Experiment:
         )
 
     def start(self):
+        """Manual initialization after __init__ to give time for gin configuration.
+
+        Call before Experiment.learn()
         """
-        Manual initialization after __init__ to give time for gin configuration.
-        """
+        self.init_dsets()
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             warnings.filterwarnings("always", category=utils.AmagoWarning)
             env_summary = self.init_envs()
-        self.init_dsets()
         self.init_dloaders()
         self.init_model()
         self.init_checkpoints()
@@ -201,12 +215,11 @@ class Experiment:
 
     @property
     def DEVICE(self):
+        """Return the device (cpu/gpu) that the experiment is running on."""
         return self.accelerator.device
 
-    def summary(self, env_summary: str):
-        """
-        Print key hparams to the console for reference.
-        """
+    def summary(self, env_summary: str) -> None:
+        """Print key hparams to the console for reference."""
         total_params = utils.count_params(self.policy)
 
         assert (
@@ -218,8 +231,9 @@ class Experiment:
             if self.exploration_wrapper_type is not None
             else "None"
         )
+        dset_str = "\n\t\t\t".join(self.dataset.get_description().split("\n"))
         self.accelerator.print(
-            f"""\n\n \t\t {colored('AMAGO v3', 'green')}
+            f"""\n\n \t\t {colored('AMAGO v3.1', 'green')}
             \t -------------------------
             \t Agent: {self.policy.__class__.__name__}
             \t\t Max Sequence Length: {self.max_seq_len}
@@ -233,19 +247,16 @@ class Experiment:
             \t Environment:
             \t\t {env_summary}
             \t\t Exploration Type: {expl_str}
-            \t Replay Buffer:
-            \t\t Buffer Path: {os.path.join(self.dset_root, self.dset_name, "buffer")}
-            \t\t FIFO Buffer Max Size: {self.dset_max_size}
-            \t\t FIFO Buffer Initial Size: {self.train_dset.count_deletable_trajectories()}
-            \t\t Protected Buffer Initial Size: {self.train_dset.count_protected_trajectories()}
-            \t\t Trajectory File Max Sequence Length: {self.traj_save_len}
-            \t\t Trajectory Padded Sampling: {self.padded_sampling}
+            \t Dataset: {dset_str}
             \t Accelerate Processes: {self.accelerator.num_processes} \n\n"""
         )
 
-    def init_envs(self):
-        """
-        Construct parallel training and validation environments.
+    def init_envs(self) -> str:
+        """Construct parallel training and validation environments.
+
+        Returns:
+            str: Description of the environment setup printed to the console when
+                Experiment.verbose is True.
         """
         assert self.traj_save_len >= self.max_seq_len
 
@@ -265,11 +276,12 @@ class Experiment:
                 utils.amago_warning(
                     f"`Experiment.parallel_actors` is {self.parallel_actors} but `make_val_env` is a list of length {len(make_val_envs)}"
                 )
-            Par = (
-                gym.vector.AsyncVectorEnv
-                if self.env_mode == "async"
-                else DummyAsyncVectorEnv
-            )
+            if self.env_mode == "async":
+                Par = gym.vector.AsyncVectorEnv
+                par_kwargs = dict(context=self.async_env_mp_context)
+            else:
+                Par = DummyAsyncVectorEnv
+                par_kwargs = dict()
         elif self.env_mode == "already_vectorized":
             # alternate environment mode designed for jax / gpu-accelerated envs that handle parallelization
             # with a batch dimension on the lowest wrapper level. These envs must auto-reset and treat the last
@@ -277,6 +289,7 @@ class Experiment:
             make_train_envs = [self.make_train_env]
             make_val_envs = [self.make_val_env]
             Par = AlreadyVectorizedEnv
+            par_kwargs = dict()
         else:
             raise ValueError(f"Invalid `env_mode` {self.env_mode}")
 
@@ -298,16 +311,11 @@ class Experiment:
             """
             save_every_low = self.traj_save_len - self.max_seq_len
             save_every_high = self.traj_save_len + self.max_seq_len
-            utils.amago_warning(
-                f"Note: Partial Context Mode. Randomizing trajectory file lengths in [{save_every_low}, {save_every_high}]"
-            )
         else:
             save_every_low = save_every_high = self.traj_save_len
 
         # wrap environments to save trajectories to replay buffer
         shared_env_kwargs = dict(
-            dset_root=self.dset_root,
-            dset_name=self.dset_name,
             save_trajs_as=self.save_trajs_as,
             save_every_low=save_every_low,
             save_every_high=save_every_high,
@@ -316,7 +324,7 @@ class Experiment:
             EnvCreator(
                 make_env=env_func,
                 # save trajectories to disk
-                make_dset=True,
+                save_trajs_to=self.dataset.save_new_trajs_to,
                 # adds exploration noise
                 exploration_wrapper_type=self.exploration_wrapper_type,
                 **shared_env_kwargs,
@@ -327,7 +335,7 @@ class Experiment:
             EnvCreator(
                 make_env=env_func,
                 # do not save trajectories to disk
-                make_dset=False,
+                save_trajs_to=None,
                 # no exploration noise
                 exploration_wrapper_type=None,
                 **shared_env_kwargs,
@@ -336,11 +344,11 @@ class Experiment:
         ]
 
         # make parallel envs
-        self.train_envs = Par(make_train)
-        self.val_envs = Par(make_val)
+        self.train_envs = Par(make_train, **par_kwargs)
+        self.val_envs = Par(make_val, **par_kwargs)
         self.train_envs.reset()
         self.rl2_space = make_train[0].rl2_space
-        self.hidden_state = None  # holds train_env hidden state between rollouts
+        self.hidden_state = None  # holds train_env hidden state between epochs
 
         if self.env_mode == "already_vectorized":
             _inner = f"Vectorized Gym Env x{self.parallel_actors}"
@@ -350,37 +358,43 @@ class Experiment:
             _desc = f"{Par.__name__}({_inner} x {self.parallel_actors})"
         return _desc
 
-    def init_checkpoints(self):
-        """
-        Create ckpts/training_states and ckpts/policy_weights dirs
-        """
-        self.ckpt_dir = os.path.join(
-            self.dset_root, self.dset_name, self.run_name, "ckpts"
-        )
+    def init_checkpoints(self) -> None:
+        """Create ckpts/training_states, ckpts/policy_weights, and ckpts/latest dirs"""
+        self.ckpt_dir = os.path.join(self.ckpt_base_dir, self.run_name, "ckpts")
         os.makedirs(self.ckpt_dir, exist_ok=True)
         os.makedirs(os.path.join(self.ckpt_dir, "training_states"), exist_ok=True)
         os.makedirs(os.path.join(self.ckpt_dir, "policy_weights"), exist_ok=True)
+        os.makedirs(os.path.join(self.ckpt_dir, "latest"), exist_ok=True)
         self.epoch = 0
 
-    def load_checkpoint_from_path(self, path: str, is_accelerate_state: bool = True):
+    def load_checkpoint_from_path(
+        self, path: str, is_accelerate_state: bool = True
+    ) -> None:
+        """Load a checkpoint from a given path.
+
+        Args:
+            path: Full path to the checkpoint fle to load.
+            is_accelerate_state: Whether the checkpoint is a full accelerate state (True) or
+                pytorch weights only (False). Defaults to True.
+        """
         if not is_accelerate_state:
             ckpt = utils.retry_load_checkpoint(path, map_location=self.DEVICE)
             self.policy.load_state_dict(ckpt)
         else:
             self.accelerator.load_state(path)
 
-    def load_checkpoint(self, epoch: int, resume_training_state: bool = True):
-        """
-        Load a historical checkpoint from the `ckpts` directory of this experiment.
+    def load_checkpoint(self, epoch: int, resume_training_state: bool = True) -> None:
+        """Load a historical checkpoint from the `ckpts` directory of this experiment.
 
-        `resume_training_state = True` perfectly resumes the entire training process
-        (optimizer, grad scaler, etc.), but will probably only work on the exact same
-        accelerate configuration.
-
-        `resume_training_state = False` only loads the policy weights.
+        Args:
+            epoch: The epoch number of the checkpoint to load.
+            resume_training_state: Whether to resume the entire training process (True) or only
+                the policy weights (False). Defaults to True.
         """
         if not resume_training_state:
-            path = os.path.join(self.ckpt_dir, "policy_weights", f"policy_epoch_{epoch}.pt")
+            path = os.path.join(
+                self.ckpt_dir, "policy_weights", f"policy_epoch_{epoch}.pt"
+            )
             self.load_checkpoint_from_path(path, is_accelerate_state=False)
         else:
             ckpt_name = f"{self.run_name}_epoch_{epoch}"
@@ -388,10 +402,8 @@ class Experiment:
             self.load_checkpoint_from_path(ckpt_path, is_accelerate_state=True)
         self.epoch = epoch
 
-    def save_checkpoint(self):
-        """
-        Save both the training state and the policy weights to the ckpt_dir.
-        """
+    def save_checkpoint(self) -> None:
+        """Save both the training state and the policy weights to the ckpt_dir."""
         ckpt_name = f"{self.run_name}_epoch_{self.epoch}"
         self.accelerator.save_state(
             os.path.join(self.ckpt_dir, "training_states", ckpt_name),
@@ -399,29 +411,22 @@ class Experiment:
         )
         if self.accelerator.is_main_process:
             # create backup of raw weights unrelated to the more complex process of resuming an accelerate state
-            weights_only = torch.save(
+            torch.save(
                 self.policy.state_dict(),
                 os.path.join(
                     self.ckpt_dir, "policy_weights", f"policy_epoch_{self.epoch}.pt"
                 ),
             )
 
-    def write_latest_policy(self):
-        """
-        Write absolute latest policy to a hardcoded location used by `read_latest_policy`
-        """
-        ckpt_name = os.path.join(
-            self.dset_root, self.dset_name, self.run_name, "policy.pt"
-        )
+    def write_latest_policy(self) -> None:
+        """Write absolute latest policy to a hardcoded location used by `read_latest_policy`"""
+        ckpt_name = os.path.join(self.ckpt_dir, "latest", "policy.pt")
         torch.save(self.policy.state_dict(), ckpt_name)
 
-    def read_latest_policy(self):
-        """
-        Read the latest policy -- used to communicate weight updates between learning/collecting processes
-        """
-        ckpt_name = os.path.join(
-            self.dset_root, self.dset_name, self.run_name, "policy.pt"
-        )
+    def read_latest_policy(self) -> None:
+        """Read the latest policy -- used to communicate weight updates between
+        learning/collecting processes"""
+        ckpt_name = os.path.join(self.ckpt_dir, "latest", "policy.pt")
         ckpt = utils.retry_load_checkpoint(ckpt_name, map_location=self.DEVICE)
         if ckpt is not None:
             self.accelerator.print("Loading latest policy....")
@@ -429,35 +434,24 @@ class Experiment:
         else:
             utils.amago_warning("Latest policy checkpoint was not loaded.")
 
-    def delete_buffer_from_disk(self, delete_protected: bool = False):
-        """
-        Clear the replay buffer from disk (mainly for `examples/`).
+    def delete_buffer_from_disk(self) -> None:
+        """Clear the replay buffer from disk (mainly for `examples/`).
+
+        Calls `self.dataset.delete()` if the current process is the main process.
         """
         if self.accelerator.is_main_process:
-            self.train_dset.clear(delete_protected=delete_protected)
+            self.dataset.delete()
 
-    def init_dsets(self):
-        """
-        Create a pytorch dataset to load trajectories from disk.
-        """
-        self.train_dset = TrajDset(
-            relabeler=self.relabel_type(),
-            dset_root=self.dset_root,
-            dset_name=self.dset_name,
-            items_per_epoch=self.train_batches_per_epoch
-            * self.batch_size
-            * self.accelerator.num_processes,
-            max_seq_len=self.max_seq_len,
-            padded_sampling=self.padded_sampling,
-        )
-        return self.train_dset
+    def init_dsets(self) -> RLDataset:
+        """Modifies the provided RLDataset (in place) to use important info configured by the
+        experiment."""
+        self.dataset.configure_from_experiment(self)
+        return self.dataset
 
-    def init_dloaders(self):
-        """
-        Create pytorch dataloaders to batch trajectories in parallel.
-        """
+    def init_dloaders(self) -> DataLoader:
+        """Create pytorch dataloaders to batch trajectories in parallel."""
         train_dloader = DataLoader(
-            self.train_dset,
+            self.dataset,
             batch_size=self.batch_size,
             num_workers=self.dloader_workers,
             collate_fn=RLData_pad_collate,
@@ -466,20 +460,16 @@ class Experiment:
         self.train_dloader = self.accelerator.prepare(train_dloader)
         return self.train_dloader
 
-    def init_logger(self):
-        """
-        Configure log dir and wandb compatibility.
-        """
+    def init_logger(self) -> None:
+        """Configure log dir and wandb compatibility."""
         gin_config = gin.operative_config_str()
-        config_path = os.path.join(
-            self.dset_root, self.dset_name, self.run_name, "config.txt"
-        )
+        config_path = os.path.join(self.ckpt_dir, "config.txt")
         with open(config_path, "w") as f:
             f.write(gin_config)
         if self.log_to_wandb:
             # records the gin config on the wandb dashboard
             gin_as_wandb = utils.gin_as_wandb_config()
-            log_dir = os.path.join(self.dset_root, "wandb_logs")
+            log_dir = os.path.join(self.ckpt_base_dir, self.run_name, "wandb_logs")
             os.makedirs(log_dir, exist_ok=True)
             self.accelerator.init_trackers(
                 project_name=self.wandb_project,
@@ -494,33 +484,20 @@ class Experiment:
                 },
             )
 
-    def init_optimizer(self, policy):
-        """
-        Override to switch from AdamW
+    def init_optimizer(self, policy: Agent) -> torch.optim.Optimizer:
+        """Defines the optimizer.
+
+        Override to switch from AdamW.
+
+        Returns:
+            torch.optim.Optimizer in charge of updating the Agent's parameters
+                (Agent.trainable_params)
         """
         adamw_kwargs = dict(lr=self.learning_rate, weight_decay=self.l2_coeff)
-        if not self.local_time_optimizer:
-            return torch.optim.AdamW(policy.trainable_params, **adamw_kwargs)
-        else:
-            target_based_estimate = int(math.log(0.01, 1.0 - policy.tau))
-            collection_based_estimate = (
-                self.train_batches_per_epoch // self.batches_per_update
-            )
-            if self.train_timesteps_per_epoch == 0:
-                # offline: rely on target net decay as non-stationarity comes from shifting targets
-                reset_interval = target_based_estimate
-            else:
-                # online: at least space the resets into different epochs, which cause
-                # the dataset distribution to change (slightly)
-                reset_interval = max(target_based_estimate, collection_based_estimate)
-            return utils.AdamWRel(
-                policy.trainable_params, reset_interval=reset_interval, **adamw_kwargs
-            )
+        return torch.optim.AdamW(policy.trainable_params, **adamw_kwargs)
 
-    def init_model(self):
-        """
-        Build an initial policy based on observation shapes
-        """
+    def init_model(self) -> None:
+        """Build an initial policy based on observation shapes"""
         policy_kwargs = {
             "tstep_encoder_type": self.tstep_encoder_type,
             "traj_encoder_type": self.traj_encoder_type,
@@ -542,7 +519,8 @@ class Experiment:
         self.grad_update_counter = 0
 
     @property
-    def policy(self):
+    def policy(self) -> Agent:
+        """Returns the current Agent policy free from the accelerator wrapper."""
         return self.accelerator.unwrap_model(self.policy_aclr)
 
     def interact(
@@ -554,8 +532,27 @@ class Experiment:
         save_on_done: bool = False,
         episodes: Optional[int] = None,
     ) -> tuple[ReturnHistory, SpecialMetricHistory]:
-        """
-        Main policy loop for interacting with the environment.
+        """Main policy loop for interacting with the environment.
+
+        Args:
+            envs: The (parallel) environments to interact with.
+            timesteps: The number of timesteps to interact with each environment.
+
+        Keyword Args:
+            hidden_state: The hidden state of the policy. If None, a fresh hidden state is
+                initialized. Defaults to None.
+            render: Whether to render the environment. Defaults to False.
+            save_on_done: If True, save completed trajectory sequences to disk as soon as they
+                are finished. If False, wait until all rollouts are completed. Only applicable
+                if the provided envs are configured to save rollouts to disk. Defaults to False.
+            episodes: The number of episodes to interact with the environment. If provided, the
+                loop will terminate after this many episodes have been completed OR we hit the
+                `timesteps` limit, whichever comes first. Defaults to None.
+
+        Returns:
+            tuple[ReturnHistory, SpecialMetricHistory]: Objects that keep track of standard
+                eval stats (average returns) and any additional eval metrics the envs have been
+                configured to record.
         """
         policy = self.policy
         policy.eval()
@@ -633,10 +630,9 @@ class Experiment:
         special_history = utils.call_async_env(envs, "special_history")
         return hidden_state, (return_history, special_history)
 
-    def collect_new_training_data(self):
-        """
-        Generates train_timesteps_per_epoch * parallel_actors timesteps of new environment interaction that
-        will be saved to the replay buffer when the rollouts finishes.
+    def collect_new_training_data(self) -> None:
+        """Generate train_timesteps_per_epoch * parallel_actors timesteps of new environment
+        interaction that will be saved to the replay buffer when the rollouts finishes.
         """
         if (
             self.force_reset_train_envs_every is not None
@@ -651,11 +647,9 @@ class Experiment:
         )
         utils.call_async_env(self.train_envs, "save_finished_trajs")
 
-    def evaluate_val(self):
-        """
-        Evaluates the current policy without exploration noise on the validation environments, and averages
-        the performance metrics across `accelerate` processes.
-        """
+    def evaluate_val(self) -> None:
+        """Evaluate the current policy without exploration noise on the validation environments,
+        and averages the performance metrics across `accelerate` processes."""
         # reset envs first
         self.val_envs.reset()
         start_time = time.time()
@@ -690,20 +684,31 @@ class Experiment:
         render: bool = False,
         save_trajs_to: Optional[str] = None,
         episodes: Optional[int] = None,
-    ):
-        """
-        One-off evaluation of a new environment callable for testing.
+    ) -> dict[str, float]:
+        """One-off evaluation of a new environment callable for testing.
+
+        Args:
+            make_test_env: A callable or iterable of callables that make and return a test
+                environment. If an iterable, it must be of length `Experiment.parallel_actors`.
+            timesteps: The number of timesteps to interact with each environment.
+            render: Whether to render the environment. Defaults to False.
+            save_trajs_to: The directory to save trajectories. Useful when using evaluate_test to
+                gather demonstration data for another run. If None, no data is saved. Defaults to
+                None.
+            episodes: The number of episodes to interact with the environment. If provided, the
+                loop will terminate after this many episodes have been completed OR we hit the
+                `timesteps` limit, whichever comes first. Defaults to None.
+
+        Returns:
+            dict[str, float]: A dictionary of evaluation metrics.
         """
         is_saving = save_trajs_to is not None
 
         def wrap(m):
             return lambda: SequenceWrapper(
                 m(),
+                save_trajs_to=save_trajs_to,
                 save_every=None,
-                make_dset=is_saving,
-                dset_root=save_trajs_to,
-                dset_name="",
-                save_trajs_as="npz",
             )
 
         if self.env_mode == "already_vectorized":
@@ -726,6 +731,7 @@ class Experiment:
             timesteps,
             hidden_state=None,
             render=render,
+            # saves trajectories as soon as they're finished instead of waiting until the end of eval
             save_on_done=is_saving,
             episodes=episodes,
         )
@@ -738,34 +744,36 @@ class Experiment:
             self.accelerator.print(f"Test Average Return : {cur_return}")
         return logs
 
-    def x_axis_metrics(self):
-        """
-        Accumulate x-axis metrics for plotting (total frames by environment name and the current epoch)
-        across accelerate processes.
-        """
-        # overall total frames per process
-        total_frames = sum(utils.call_async_env(self.train_envs, "total_frames"))
-        # total frames by env_name per process
-        frames_by_env_name = utils.call_async_env(
-            self.train_envs, "total_frames_by_env_name"
-        )
-        total_frames_by_env_name = defaultdict(int)
-        for env_frames in frames_by_env_name:
-            for env_name, frames in env_frames.items():
-                total_frames_by_env_name[f"total_frames-{env_name}"] += frames
-        total_frames_by_env_name = dict(total_frames_by_env_name)
-        total_frames_by_env_name["total_frames"] = total_frames
-        # sum over processes
-        total_frames_global = utils.sum_over_accelerate(total_frames_by_env_name)
-        # add epoch
-        total_frames_global["Epoch"] = self.epoch
-        total_frames_global["gradient_steps"] = self.grad_update_counter
-        return total_frames_global
+    def x_axis_metrics(self) -> dict[str, int | float]:
+        """Get current x-axis metrics for wandb."""
+        metrics = {}
+        if hasattr(self, "train_envs"):
+            # overall total frames per process
+            total_frames = sum(utils.call_async_env(self.train_envs, "total_frames"))
+            # total frames by env_name per process
+            frames_by_env_name = utils.call_async_env(
+                self.train_envs, "total_frames_by_env_name"
+            )
+            total_frames_by_env_name = defaultdict(int)
+            for env_frames in frames_by_env_name:
+                for env_name, frames in env_frames.items():
+                    total_frames_by_env_name[f"total_frames-{env_name}"] += frames
+            total_frames_by_env_name = dict(total_frames_by_env_name)
+            total_frames_by_env_name["total_frames"] = total_frames
+            # sum over processes
+            total_frames_global = utils.sum_over_accelerate(total_frames_by_env_name)
+            metrics.update(total_frames_global)
 
-    def log(self, metrics_dict, key):
-        """
-        Log a dict of metrics to the `key` panel of the wandb console, and record the current epoch and total frames.
-        """
+        # add epoch
+        metrics["Epoch"] = self.epoch
+        metrics["gradient_steps"] = self.grad_update_counter
+        return metrics
+
+    def log(
+        self, metrics_dict: dict[str, torch.Tensor | int | float], key: str
+    ) -> None:
+        """Log a dict of metrics to the `key` panel of the wandb console alongisde current
+        x-axis metrics."""
         log_dict = {}
         for k, v in metrics_dict.items():
             if isinstance(v, torch.Tensor):
@@ -782,11 +790,17 @@ class Experiment:
 
     def policy_metrics(
         self,
-        returns: ReturnHistory,
-        specials: SpecialMetricHistory,
+        returns: Iterable[ReturnHistory],
+        specials: Iterable[SpecialMetricHistory],
     ) -> dict:
-        """
-        Gather policy performance metrics across parallel environments and then average over accelerate processes.
+        """Gather policy performance metrics across parallel environments.
+
+        Args:
+            returns: The return history logger froms the environments.
+            specials: The special metrics history loggers from the environments.
+
+        Returns:
+            dict: A dictionary of policy performance metrics.
         """
         returns_by_env_name = defaultdict(list)
         specials_by_env_name = defaultdict(lambda: defaultdict(list))
@@ -823,18 +837,67 @@ class Experiment:
             | bottom_quintile_ret_per_env
         )
 
-    def compute_loss(self, batch: Batch, log_step: bool):
+    def edit_actor_mask(
+        self, batch: Batch, actor_loss: torch.FloatTensor, pad_mask: torch.BoolTensor
+    ) -> torch.BoolTensor:
+        """Customize the actor loss mask.
+
+        Args:
+            batch: The batch of data.
+            actor_loss: The unmasked actor loss. Shape: (Batch, Length, Num Gammas, 1)
+            pad_mask: The default mask. True where the sequence was not padded out of the
+                dataloader.
+
+        Returns:
+            The mask. True where the actor loss should count, False where it should be ignored.
         """
-        Core computation of the actor and critic RL loss terms from a `Batch` of data.
+        return pad_mask
+
+    def edit_critic_mask(
+        self, batch: Batch, critic_loss: torch.FloatTensor, pad_mask: torch.BoolTensor
+    ) -> torch.BoolTensor:
+        """Customize the critic loss mask.
+
+        Args:
+            batch: The batch of data.
+            critic_loss: The unmasked critic loss. Shape: (Batch, Length, Num Critics, Num
+                Gammas, 1)
+            pad_mask: The default mask. True where the sequence was not padded out of the
+                dataloader.
+
+        Returns:
+            The mask. True where the critic loss should count, False where it should be ignored.
         """
+        return pad_mask
+
+    def compute_loss(self, batch: Batch, log_step: bool) -> dict:
+        """Core computation of the actor and critic RL loss terms from a `Batch` of data.
+
+        Args:
+            batch: The batch of data.
+            log_step: Whether to compute extra metrics for wandb logging.
+
+        Returns:
+            dict: loss terms and any logging metrics. "Actor Loss", "Critic Loss", "Sequence
+                Length", "Batch Size (in Timesteps)", "Unmasked Batch Size (in Timesteps)" are
+                always provided. Additional keys are determined by what is logged in the
+                Agent.forward method.
+        """
+        # Agent.forward handles most of the work
         critic_loss, actor_loss = self.policy_aclr(batch, log_step=log_step)
         update_info = self.policy.update_info
         B, L_1, G, _ = actor_loss.shape
         C = len(self.policy.critics)
-        state_mask = (~((batch.rl2s == MAGIC_PAD_VAL).all(-1, keepdim=True))).float()
+
+        # mask sequence losses
+        state_mask = (~((batch.rl2s == MAGIC_PAD_VAL).all(-1, keepdim=True))).bool()
         critic_state_mask = repeat(state_mask[:, 1:, ...], f"B L 1 -> B L {C} {G} 1")
         actor_state_mask = repeat(state_mask[:, 1:, ...], f"B L 1 -> B L {G} 1")
-
+        # hook to allow custom masks
+        actor_state_mask = self.edit_actor_mask(batch, actor_loss, actor_state_mask)
+        critic_state_mask = self.edit_critic_mask(batch, critic_loss, critic_state_mask)
+        batch_size = B * L_1
+        unmasked_batch_size = actor_state_mask[..., 0, 0].sum()
         masked_actor_loss = utils.masked_avg(actor_loss, actor_state_mask)
         if isinstance(critic_loss, torch.Tensor):
             masked_critic_loss = utils.masked_avg(critic_loss, critic_state_mask)
@@ -842,14 +905,17 @@ class Experiment:
             assert critic_loss is None
             masked_critic_loss = 0.0
 
+        # all of this is logged
         return {
-            "critic_loss": masked_critic_loss,
-            "actor_loss": masked_actor_loss,
-            "seq_len": L_1 + 1,
-            "mask": state_mask,
+            "Critic Loss": masked_critic_loss,
+            "Actor Loss": masked_actor_loss,
+            "Sequence Length": L_1 + 1,
+            "Batch Size (in Timesteps)": batch_size,
+            "Unmasked Batch Size (in Timesteps)": unmasked_batch_size,
         } | update_info
 
     def _get_grad_norms(self):
+        """Get gradient norms for logging."""
         ggn = utils.get_grad_norm
         pi = self.policy
         grads = {
@@ -861,15 +927,19 @@ class Experiment:
         return grads
 
     def train_step(self, batch: Batch, log_step: bool):
-        """
-        Take a single training step on a `batch` of data.
+        """Take a single training step on a `batch` of data.
 
-        `log_step = True` computes (many) extra metrics for wandb logging.
+        Args:
+            batch: The batch of data.
+            log_step: Whether to compute extra metrics for wandb logging.
+
+        Returns:
+            dict: metrics from the compute_loss method.
         """
         with self.accelerator.accumulate(self.policy_aclr):
             self.optimizer.zero_grad()
             l = self.compute_loss(batch, log_step=log_step)
-            loss = l["actor_loss"] + self.critic_loss_weight * l["critic_loss"]
+            loss = l["Actor Loss"] + self.critic_loss_weight * l["Critic Loss"]
             self.accelerator.backward(loss)
             if self.accelerator.sync_gradients:
                 self.accelerator.clip_grad_norm_(
@@ -879,11 +949,7 @@ class Experiment:
                 self.grad_update_counter += 1
                 if log_step:
                     l.update(
-                        {
-                            "Learning Rate" : self.lr_schedule.get_last_lr()[0],
-                            "Batch Size (in Timesteps)": l["mask"].numel(),
-                            "Unmasked Batch Size (in Timesteps)": l["mask"].sum(),
-                        }
+                        {"Learning Rate": self.lr_schedule.get_last_lr()[0]}
                         | self._get_grad_norms()
                     )
             self.optimizer.step()
@@ -891,44 +957,30 @@ class Experiment:
         return l
 
     def caster(self):
+        """Get the context manager for mixed precision training."""
         if self.mixed_precision != "no":
             return torch.autocast(device_type="cuda")
         else:
             return contextlib.suppress()
 
-    def manage_replay_buffer(self):
-        """
-        Find new trajectory files saved to disk and delete old ones to imitate a fixed-size replay buffer.
-        Also logs buffer stats to wandb.
-        """
-        self.train_dset.refresh_files()
-        if not self.has_replay_buffer_rights:
-            return
-        old_size = self.train_dset.count_trajectories()
-        self.accelerator.wait_for_everyone()
-        if self.accelerator.is_main_process:
-            # the main process edits its file list during the filter but this is currently
-            # wasted effort because the other processes don't see the changes...
-            self.train_dset.filter(new_size=self.dset_max_size)
-        self.accelerator.wait_for_everyone()
-        self.train_dset.refresh_files()  # ... so check the current files again
-        dset_size = self.train_dset.count_trajectories()
-        fifo_size = self.train_dset.count_deletable_trajectories()
-        protected_size = self.train_dset.count_protected_trajectories()
-        self.log(
-            {
-                "Trajectory Files Saved in FIFO Replay Buffer": fifo_size,
-                "Trajectory Files Saved in Protected Replay Buffer": protected_size,
-                "Total Trajectory Files in Replay Buffer": dset_size,
-                "Trajectory Files Deleted": old_size - dset_size,
-                "Buffer Disk Space (GB)": self.train_dset.disk_usage,
-            },
-            key="buffer",
-        )
+    def learn(self) -> None:
+        """Main training loop for the experiment.
 
-    def learn(self):
-        """
-        Main training loop for the experiment.
+        For every epoch, we:
+            1. Load the latest policy checkpoint if `always_load_latest` is True.
+            2. Evaluate the policy on the validation set if `val_interval` is not None and the
+                current epoch is divisible by `val_interval`.
+            3. Collect new training data if `train_timesteps_per_epoch` is not None and the
+                current epoch >= to `start_collecting_at_epoch`.
+            4. Train the policy on the training data for `train_batches_per_epoch` batches if
+                `self.dataset.ready_for_training` is True.
+            5. Save the policy checkpoint if `ckpt_interval` is not None and the current epoch
+                is divisible by `ckpt_interval`.
+            6. Write the latest policy checkpoint if `always_save_latest` is True.
+
+        Experiment be configured so that processes do some or all of the above. For example, an
+        actor process might only do steps 1, 2, and 3, while a learner process might only do
+        steps 4, 5, and 6.
         """
 
         def make_pbar(loader, epoch_num):
@@ -962,11 +1014,12 @@ class Experiment:
                 self.collect_new_training_data()
             self.accelerator.wait_for_everyone()
 
-            self.manage_replay_buffer()
+            dset_log = self.dataset.on_end_of_collection(experiment=self)
+            self.log(dset_log, key="dataset")
             self.init_dloaders()
-            if self.train_dset.count_trajectories() == 0:
+            if not self.dataset.ready_for_training:
                 utils.amago_warning(
-                    f"Skipping epoch {epoch} because no training trajectories have been saved yet..."
+                    f"Skipping training on epoch {epoch} because `dataset.ready_for_training` is False"
                 )
                 continue
 

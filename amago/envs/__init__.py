@@ -1,3 +1,7 @@
+"""
+gymnasium environments and wrappers
+"""
+
 from .amago_env import (
     AMAGOEnv,
     SequenceWrapper,
