@@ -6,6 +6,7 @@ import os
 import random
 import shutil
 import pickle
+import collections
 from dataclasses import dataclass
 from operator import itemgetter
 from functools import partial
@@ -180,10 +181,14 @@ class RLDataset(ABC, Dataset):
 
     Datasets have a reference to the `Experiment` that is training on them, which can be used
     to access the `Accelerator` and other useful information.
+
+    Args:
+        dset_name: The name of the dataset. Used to identify the dataset in logging metrics. Defaults to the class name.
     """
 
-    def __init__(self):
+    def __init__(self, dset_name: Optional[str] = None):
         self.experiment = None
+        self.dset_name = dset_name or self.__class__.__name__
 
     def configure_from_experiment(self, experiment):
         """
@@ -277,6 +282,176 @@ class RLDataset(ABC, Dataset):
         return data
 
 
+@dataclass
+class _DatasetStatus:
+    dataset: RLDataset
+    initial_weight: float
+    final_weight: float
+    epoch_ready: Optional[int]
+
+
+class MixtureOfDatasets(RLDataset):
+    """Sample from a mixture of datasets.
+
+    Args:
+        datasets: A list of :py:class:`~amago.loading.RLDataset` objects.
+        sampling_weights: Probability of sampling from each dataset. Must sum to 1.
+        smooth_sudden_starts: When a dataset becomes ready for training mid-way through training,
+            anneal its sampling_weight from 0 --> assigned ``sampling_weights[i]`` over ``smooth_sudden_starts`` epochs.
+        dset_name: The name of the dataset. Used to identify the dataset in logging metrics. Defaults to the class name.
+
+    Note:
+        Only samples from datasets that are currently :py:meth:`~amago.loading.RLDataset.ready_for_training`. For example,
+        a mixture of some custom offline dataset and the :py:class:`~amago.loading.DiskTrajDataset` will only sample
+        from the offline dataset until the :py:class:`~amago.loading.DiskTrajDataset` has written trajectories to disk.
+        Sampling weights are renormalized amongst the datasets that are ready for training.
+
+        Only one dataset can direct the Experiment's parallel actors to save new trajectories to disk
+        (only one dataset's `dset.save_new_trajs_to` is not `None`).
+    """
+
+    def __init__(
+        self,
+        datasets: list[RLDataset],
+        sampling_weights: list[float],
+        smooth_sudden_starts: Optional[int] = None,
+        dset_name: Optional[str] = None,
+    ):
+        super().__init__(dset_name=dset_name)
+        if not len(datasets) == len(sampling_weights):
+            raise ValueError(
+                f"{self.__class__.__name__} requires the same number of datasets ({len(datasets)}) as sampling weights ({len(sampling_weights)})"
+            )
+        if not np.isclose(sum(sampling_weights), 1):
+            raise ValueError(
+                f"{self.__class__.__name__} requires the sum of sampling weights to be 1.0"
+            )
+        self.all_datasets = datasets
+        self.sampling_weights = sampling_weights
+        self.smooth_sudden_starts = smooth_sudden_starts
+
+        # find up to 1 dataset that determines where Experiment will write new trajectories
+        active_save_locs = [
+            d.save_new_trajs_to
+            for d in self.all_datasets
+            if d.save_new_trajs_to is not None
+        ]
+        if len(active_save_locs) > 1:
+            raise ValueError("Only one dataset can save new trajectories")
+        self._save_new_trajs_to = active_save_locs[0] if active_save_locs else None
+
+    def configure_from_experiment(self, experiment):
+        super().configure_from_experiment(experiment)
+        for d in self.all_datasets:
+            d.configure_from_experiment(experiment)
+
+        # with datasets configured, initialize our annealing schedule
+        self._dsets_status = []
+        for d, w in zip(self.all_datasets, self.sampling_weights):
+            # if the dataset is available from the start of training, turn off its schedule
+            # setting initial_weight to the final weight.
+            initial_weight = w if d.ready_for_training else 0
+            self._dsets_status.append(
+                _DatasetStatus(
+                    dataset=d,
+                    initial_weight=initial_weight,
+                    final_weight=w,
+                    epoch_ready=None,
+                )
+            )
+        self.update_dset_weights(0)
+        # will hold an empirical counter of sampler per dataset per epoch as a wandb sanity-check
+        # (only works when dataloader has 0 workers)
+        self._sampling_metrics = collections.defaultdict(int)
+
+    @property
+    def save_new_trajs_to(self) -> Optional[str]:
+        return self._save_new_trajs_to
+
+    @property
+    def ready_for_training(self) -> bool:
+        return any(d.ready_for_training for d in self.all_datasets)
+
+    def update_dset_weights(self, epoch: int):
+        self.check_configured()
+
+        # look for newly ready datasets
+        self._available_datasets = []
+        for status in self._dsets_status:
+            if status.epoch_ready is None and status.dataset.ready_for_training:
+                status.epoch_ready = epoch
+
+        # set sampling weights
+        for status in self._dsets_status:
+            if status.epoch_ready is not None:
+                if self.smooth_sudden_starts is None:
+                    # active datasets jump right to their final weight
+                    current_weight = status.final_weight
+                else:
+                    # linear schedule for smooth_sudden_starts epochs
+                    # after the dataset is first discovered to be ready
+                    m = (
+                        status.final_weight - status.initial_weight
+                    ) / self.smooth_sudden_starts
+                    x = epoch - status.epoch_ready
+                    current_weight = min(
+                        m * x + status.initial_weight,
+                        status.final_weight,
+                    )
+                self._available_datasets.append((status.dataset, current_weight))
+            else:
+                # if dataset is not ready for training, set weight to 0
+                self._available_datasets.append((status.dataset, 0.0))
+
+    def on_end_of_collection(self, epoch: int) -> dict[str, Any]:
+        self.check_configured()
+
+        # flatten the metrics from all datasets
+        metrics = {}
+        for d in self.all_datasets:
+            d_metrics = d.on_end_of_collection(epoch)
+            for k, v in d_metrics.items():
+                metrics[f"{d.dset_name} {k}"] = v
+
+        # log and then reset sampling counters
+        total_samples = sum(self._sampling_metrics.values())
+        if total_samples:
+            while self._sampling_metrics:
+                dset_name, samples = self._sampling_metrics.popitem()
+                metrics[f"{dset_name} Empirical Sample Weight (Previous Epoch)"] = (
+                    samples / total_samples
+                )
+
+        # find datasets that are now ready for training, and adjust their sampling weight
+        self.update_dset_weights(epoch)
+        # log sampling weight logic to wandb
+        for dset, active_weight in self._available_datasets:
+            metrics[f"{dset.dset_name} Current Sample Weight"] = active_weight
+        return metrics
+
+    def delete(self):
+        for d in self.all_datasets:
+            d.delete()
+
+    def get_description(self) -> str:
+        return (
+            f"MixtureOfDatasets with {len(self.all_datasets)} datasets"
+            + "\n"
+            + "\n".join(d.get_description() for d in self.all_datasets)
+        )
+
+    def sample_random_trajectory(self) -> RLData:
+        active_dsets, active_weights = zip(*self._available_datasets)
+        # renormalize the weights to sum to 1.0
+        active_weights = [w / sum(active_weights) for w in active_weights]
+        # sample from the available datasets
+        random_dset = random.choices(active_dsets, weights=active_weights, k=1)[0]
+        self._sampling_metrics[random_dset.dset_name] += 1
+        # sample a random trajectory from the chosen dataset
+        rldata = random_dset.sample_random_trajectory()
+        return rldata
+
+
 def load_traj_from_disk(path: str) -> Trajectory | FrozenTraj:
     """Loads a trajectory from disk.
 
@@ -331,8 +506,11 @@ class DiskTrajDataset(RLDataset):
 
     Args:
         dset_root: The root directory to store the dataset.
-        dset_name: The name of the dataset.
+        dset_name: The name of the dataset. Used to create a buffer subdirectory
+            and to identify the dataset in logging metrics.
         dset_max_size: The maximum number of trajectories to keep in the FIFO buffer.
+        dset_min_size: The minimum number of trajectories that need to be present
+            before training updates on this dataset can begin.
         relabeler: A function that edits/relabels trajectory data when loaded.
             (`amago.hindsight.Relabeler`).
     """
@@ -342,13 +520,15 @@ class DiskTrajDataset(RLDataset):
         dset_root: str,
         dset_name: str,
         dset_max_size: int,
+        dset_min_size: int = 1,
         relabeler: Optional[Relabeler] = None,
     ):
-        super().__init__()
+        super().__init__(dset_name=dset_name)
         self.relabeler = NoOpRelabeler() if relabeler is None else relabeler
         # create two directories for the FIFO and protected buffers
         self.fifo_path = get_path_to_trajs(dset_root, dset_name, fifo=True)
         self.protected_path = get_path_to_trajs(dset_root, dset_name, fifo=False)
+        self.dset_min_size = dset_min_size
         self.dset_max_size = dset_max_size
         os.makedirs(self.fifo_path, exist_ok=True)
         os.makedirs(self.protected_path, exist_ok=True)
@@ -366,7 +546,9 @@ class DiskTrajDataset(RLDataset):
 
     @property
     def ready_for_training(self) -> bool:
-        return super().ready_for_training and len(self.all_filenames) > 0
+        return (
+            super().ready_for_training and len(self.all_filenames) > self.dset_min_size
+        )
 
     def delete(self, delete_protected: bool = False):
         self.check_configured()
@@ -433,13 +615,13 @@ class DiskTrajDataset(RLDataset):
     def get_description(self) -> str:
         self.check_configured()
         return f"""DiskTrajDataset
-        \t\t FIFO Buffer Path: {self.fifo_path}
-        \t\t Protected Buffer Path: {self.protected_path}
-        \t\t FIFO Buffer Max Size: {self.dset_max_size}
-        \t\t FIFO Buffer Initial Size: {self._count_deletable_trajectories()}
-        \t\t Protected Buffer Initial Size: {self._count_protected_trajectories()}
-        \t\t Trajectory File Max Sequence Length: {self.max_seq_len}
-        \t\t Trajectory Padded Sampling: {self.padded_sampling}
+        FIFO Buffer Path: {self.fifo_path}
+        Protected Buffer Path: {self.protected_path}
+        FIFO Buffer Max Size: {self.dset_max_size}
+        FIFO Buffer Initial Size: {self._count_deletable_trajectories()}
+        Protected Buffer Initial Size: {self._count_protected_trajectories()}
+        Trajectory File Max Sequence Length: {self.max_seq_len}
+        Trajectory Padded Sampling: {self.padded_sampling}
         """
 
     def on_end_of_collection(self, epoch: int) -> dict[str, Any]:

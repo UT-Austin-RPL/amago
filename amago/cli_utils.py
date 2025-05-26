@@ -407,19 +407,17 @@ def create_experiment_from_cli(
     if dataset is None:
         # create a new-style dataset in the place
         # where all the existing examples assume the dataset will be
-        dset = DiskTrajDataset(
+        dataset = DiskTrajDataset(
             dset_root=cli.buffer_dir,
             dset_name=run_name,
             dset_max_size=cli.dset_max_size,
         )
-    else:
-        dset = dataset
 
     experiment = experiment_type(
         agent_type=agent_type,
         tstep_encoder_type=tstep_encoder_type,
         traj_encoder_type=traj_encoder_type,
-        dataset=dset,
+        dataset=dataset,
         ckpt_base_dir=cli.buffer_dir,
         make_train_env=make_train_env,
         make_val_env=make_val_env,

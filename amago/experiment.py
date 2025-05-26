@@ -228,6 +228,7 @@ class Experiment:
             if self.exploration_wrapper_type is not None
             else "None"
         )
+        dset_str = "\n\t\t\t".join(self.dataset.get_description().split('\n'))
         self.accelerator.print(
             f"""\n\n \t\t {colored('AMAGO v3.1', 'green')}
             \t -------------------------
@@ -243,7 +244,7 @@ class Experiment:
             \t Environment:
             \t\t {env_summary}
             \t\t Exploration Type: {expl_str}
-            \t Dataset: {self.dataset.get_description()}
+            \t Dataset: {dset_str}
             \t Accelerate Processes: {self.accelerator.num_processes} \n\n"""
         )
 
