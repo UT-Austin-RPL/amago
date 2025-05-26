@@ -26,7 +26,6 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install -e .
-          pip install -e .[envs]
 
       - name: Install docs dependencies
         run: |

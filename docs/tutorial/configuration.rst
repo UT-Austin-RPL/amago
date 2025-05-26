@@ -191,4 +191,4 @@ If we want to combine hardcoded changes like these with genuine ``.gin`` files, 
     You can view your active gin config (all the active hyperparameters used by an experiment) in the checkpoint directory as ``config.txt``, or on ``wandb`` in the ``Config`` section.
 
 
-A full API reference is available in the :doc:`/api/amago` section.
+A full API reference is available in the :doc:`API Reference </api/amago>` section.

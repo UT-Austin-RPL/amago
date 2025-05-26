@@ -17,7 +17,7 @@ There are some optional installs for additional features:
 
 - ``pip install -e amago[mamba]``: Enables `Mamba <https://arxiv.org/abs/2312.00752>`_ sequence model policies.
 
-- ``pip install -e amago[envs]``: AMAGO comes with built-in support for a wide range of existing and custom meta-RL/generalization/memory domains (``amago/envs/builtin``) used in our experiments. This command installs (most of) the dependencies you'd need to run the `examples/ <examples/>`_.
+- ``pip install -e amago[envs]``: AMAGO comes with built-in support for a wide range of existing and custom meta-RL/generalization/memory domains (:py:mod:`amago.envs.builtin`) used in our experiments. This command installs (most of) the dependencies you'd need to run the `examples/ <examples/>`_.
 
 .. note::
 
