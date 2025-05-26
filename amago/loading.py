@@ -407,12 +407,12 @@ class MixtureOfDatasets(RLDataset):
         self.check_configured()
 
         # look for newly ready datasets
-        self._available_datasets = []
         for status in self._dsets_status:
             if status.epoch_ready is None and status.dataset.ready_for_training:
                 status.epoch_ready = epoch
 
         # set sampling weights
+        self._available_datasets = []
         for status in self._dsets_status:
             if status.epoch_ready is not None:
                 if self.smooth_sudden_starts is None:
@@ -424,7 +424,7 @@ class MixtureOfDatasets(RLDataset):
                     m = (
                         status.final_weight - status.initial_weight
                     ) / self.smooth_sudden_starts
-                    x = epoch - status.epoch_ready
+                    x = epoch - status.epoch_ready + 1
                     current_weight = min(
                         m * x + status.initial_weight,
                         status.final_weight,
@@ -474,7 +474,8 @@ class MixtureOfDatasets(RLDataset):
     def sample_random_trajectory(self) -> RLData:
         active_dsets, active_weights = zip(*self._available_datasets)
         # renormalize the weights to sum to 1.0
-        active_weights = [w / sum(active_weights) for w in active_weights]
+        total_weight = sum(active_weights)
+        active_weights = [w / total_weight for w in active_weights]
         # sample from the available datasets
         random_dset = random.choices(active_dsets, weights=active_weights, k=1)[0]
         self._sampling_metrics[random_dset.dset_name] += 1
