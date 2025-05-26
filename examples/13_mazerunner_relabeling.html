@@ -1,0 +1,720 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="light">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>MazeRunner HER &#8212; AMAGO</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "light";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'examples/13_mazerunner_relabeling';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="D4RL" href="14_d4rl.html" />
+    <link rel="prev" title="HalfCheetah(v4)-Velocity" href="12_half_cheetah_vel.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="light">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+    
+    <img src="../_static/amago_logo_3.png" class="logo__image only-light" alt="AMAGO - Home"/>
+    <script>document.write(`<img src="../_static/amago_logo_3.png" class="logo__image only-dark" alt="AMAGO - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../tutorial/index.html">Tutorial</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/setup_env.html">Setup the Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/create_dataset.html">Create a Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/create_experiment.html">Create an Experiment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/track_results.html">Track the Results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/configuration.html">Configure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/customization.html">Customize</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/async.html">Multi-GPU and Asynchronous Training</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Examples</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="00_meta_frozen_lake.html">Meta Frozen Lake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="01_basic_gym.html">Basic Gymnasium</a></li>
+<li class="toctree-l2"><a class="reference internal" href="02_gymnax.html">Gymnax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="03_popgym_suite.html">POPGym</a></li>
+<li class="toctree-l2"><a class="reference internal" href="04_tmaze.html">T-Maze</a></li>
+<li class="toctree-l2"><a class="reference internal" href="05_dark_key_door.html">Dark Room Key Door</a></li>
+<li class="toctree-l2"><a class="reference internal" href="06_alchemy.html">Symbolic DM Alchemy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="07_metaworld.html">Meta-World ML1/ML10/ML45</a></li>
+<li class="toctree-l2"><a class="reference internal" href="08_ale.html">Multi-Game Atari</a></li>
+<li class="toctree-l2"><a class="reference internal" href="09_multitask_procgen.html">Multi-Game ProcGen</a></li>
+<li class="toctree-l2"><a class="reference internal" href="10_babyai.html">Multi-Task BabyAI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="11_xland_minigrid.html">XLand Mini-Grid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="12_half_cheetah_vel.html">HalfCheetah(v4)-Velocity</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">MazeRunner HER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="14_d4rl.html">D4RL</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/amago.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/amago.agent.html">amago.agent</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/amago.cli_utils.html">amago.cli_utils</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../api/amago.envs.html">amago.envs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.envs.amago_env.html">amago.envs.amago_env</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../api/amago.envs.builtin.html">amago.envs.builtin</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/amago.envs.builtin.half_cheetah_v4_vel.html">amago.envs.builtin.half_cheetah_v4_vel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/amago.envs.builtin.metaworld_ml.html">amago.envs.builtin.metaworld_ml</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/amago.envs.builtin.popgym_envs.html">amago.envs.builtin.popgym_envs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/amago.envs.builtin.toy_gym.html">amago.envs.builtin.toy_gym</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/amago.envs.builtin.xland_minigrid.html">amago.envs.builtin.xland_minigrid</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.envs.env_utils.html">amago.envs.env_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.envs.exploration.html">amago.envs.exploration</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/amago.experiment.html">amago.experiment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/amago.hindsight.html">amago.hindsight</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/amago.loading.html">amago.loading</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../api/amago.nets.html">amago.nets</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.nets.actor_critic.html">amago.nets.actor_critic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.nets.cnn.html">amago.nets.cnn</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.nets.ff.html">amago.nets.ff</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.nets.goal_embedders.html">amago.nets.goal_embedders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.nets.policy_dists.html">amago.nets.policy_dists</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.nets.traj_encoders.html">amago.nets.traj_encoders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.nets.transformer.html">amago.nets.transformer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.nets.tstep_encoders.html">amago.nets.tstep_encoders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.nets.utils.html">amago.nets.utils</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/amago.utils.html">amago.utils</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../citation.html">Citation</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/examples/13_mazerunner_relabeling.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>MazeRunner HER</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="mazerunner-her">
+<h1>MazeRunner HER<a class="headerlink" href="#mazerunner-her" title="Link to this heading">#</a></h1>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="linenos">  1</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos">  2</span><span class="sd">A demonstration of the hindsight instruction relabeling techinque discussed in the AMAGO paper -</span>
+<span class="linenos">  3</span><span class="sd">a generalization of Hindsight Experience Replay (HER) to sequences of multiple goals.</span>
+<span class="linenos">  4</span><span class="sd">The ability to relabel data is another good reason to prefer off-policy RL^2 to on-policy.</span>
+<span class="linenos">  5</span>
+<span class="linenos">  6</span><span class="sd">This example uses the &quot;MazeRunner&quot; environment. MazeRunner is an adapted version of Memory Maze </span>
+<span class="linenos">  7</span><span class="sd">(https://arxiv.org/abs/2210.13383) that does not require the DM Lab simulator or learning from pixels.</span>
+<span class="linenos">  8</span><span class="sd">For more information please refer to the AMAGO Appendix C.4.</span>
+<span class="linenos">  9</span>
+<span class="linenos"> 10</span><span class="sd">There are three steps to using hindsight relabeling:</span>
+<span class="linenos"> 11</span>
+<span class="linenos"> 12</span><span class="sd">1. Make the env&#39;s observations a dict with keys for the intended goal and alternative goals achieved</span>
+<span class="linenos"> 13</span><span class="sd">   at that timestep. Goals are often subsets of the state space. In this example, observations consist of:</span>
+<span class="linenos"> 14</span><span class="sd">   </span>
+<span class="linenos"> 15</span><span class="sd">   `obs` : the regular observation from the maze environment (LIDAR-ish depth sensors to the walls, timer, etc.)</span>
+<span class="linenos"> 16</span><span class="sd">   `goals` : a sequence of k goal positions to navigate to.</span>
+<span class="linenos"> 17</span><span class="sd">   `achieved`: the agent&#39;s current position.</span>
+<span class="linenos"> 18</span>
+<span class="linenos"> 19</span><span class="sd">2. Let the policy network take the observation and goals as input, but ignore the `achieved` data.</span>
+<span class="linenos"> 20</span>
+<span class="linenos"> 21</span><span class="sd">3. Use the `achieved` key to relabel data with alternative goal sequences that would lead to higher returns.</span>
+<span class="linenos"> 22</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos"> 23</span>
+<span class="linenos"> 24</span><span class="kn">from</span><span class="w"> </span><span class="nn">argparse</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArgumentParser</span>
+<span class="linenos"> 25</span><span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
+<span class="linenos"> 26</span><span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
+<span class="linenos"> 27</span>
+<span class="linenos"> 28</span><span class="kn">import</span><span class="w"> </span><span class="nn">gymnasium</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gym</span>
+<span class="linenos"> 29</span><span class="kn">import</span><span class="w"> </span><span class="nn">wandb</span>
+<span class="linenos"> 30</span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="linenos"> 31</span>
+<span class="linenos"> 32</span><span class="kn">import</span><span class="w"> </span><span class="nn">amago</span>
+<span class="linenos"> 33</span><span class="kn">from</span><span class="w"> </span><span class="nn">amago.envs.builtin.mazerunner</span><span class="w"> </span><span class="kn">import</span> <span class="n">MazeRunnerAMAGOEnv</span>
+<span class="linenos"> 34</span><span class="kn">from</span><span class="w"> </span><span class="nn">amago.hindsight</span><span class="w"> </span><span class="kn">import</span> <span class="n">Relabeler</span><span class="p">,</span> <span class="n">FrozenTraj</span>
+<span class="linenos"> 35</span><span class="kn">from</span><span class="w"> </span><span class="nn">amago.loading</span><span class="w"> </span><span class="kn">import</span> <span class="n">DiskTrajDataset</span>
+<span class="linenos"> 36</span><span class="kn">from</span><span class="w"> </span><span class="nn">amago.cli_utils</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="linenos"> 37</span>
+<span class="linenos"> 38</span>
+<span class="linenos"> 39</span><span class="k">def</span><span class="w"> </span><span class="nf">add_cli</span><span class="p">(</span><span class="n">parser</span><span class="p">):</span>
+<span class="linenos"> 40</span>    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+<span class="linenos"> 41</span>        <span class="s2">&quot;--maze_size&quot;</span><span class="p">,</span>
+<span class="linenos"> 42</span>        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+<span class="linenos"> 43</span>        <span class="n">default</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span>
+<span class="linenos"> 44</span>        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Dimension of randomly generated mazes (n x n). n must be odd.&quot;</span><span class="p">,</span>
+<span class="linenos"> 45</span>    <span class="p">)</span>
+<span class="linenos"> 46</span>    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+<span class="linenos"> 47</span>        <span class="s2">&quot;--goals&quot;</span><span class="p">,</span>
+<span class="linenos"> 48</span>        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+<span class="linenos"> 49</span>        <span class="n">default</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<span class="linenos"> 50</span>        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Length of the sequence of goal positions to reach during the episode.&quot;</span><span class="p">,</span>
+<span class="linenos"> 51</span>    <span class="p">)</span>
+<span class="linenos"> 52</span>    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+<span class="linenos"> 53</span>        <span class="s2">&quot;--time_limit&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">250</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Episode time limit.&quot;</span>
+<span class="linenos"> 54</span>    <span class="p">)</span>
+<span class="linenos"> 55</span>    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+<span class="linenos"> 56</span>        <span class="s2">&quot;--relabel&quot;</span><span class="p">,</span>
+<span class="linenos"> 57</span>        <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;some&quot;</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">],</span>
+<span class="linenos"> 58</span>        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;some&quot;</span><span class="p">,</span>
+<span class="linenos"> 59</span>        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;`none` skips relabeling, `all` relabels every trajectory to a success. `some` creates a mixture of varying returns.&quot;</span><span class="p">,</span>
+<span class="linenos"> 60</span>    <span class="p">)</span>
+<span class="linenos"> 61</span>    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+<span class="linenos"> 62</span>        <span class="s2">&quot;--randomized_actions&quot;</span><span class="p">,</span>
+<span class="linenos"> 63</span>        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+<span class="linenos"> 64</span>        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Randomize the directions of movement each episode (requires context-based identitifcation of current controls).&quot;</span><span class="p">,</span>
+<span class="linenos"> 65</span>    <span class="p">)</span>
+<span class="linenos"> 66</span>    <span class="k">return</span> <span class="n">parser</span>
+<span class="linenos"> 67</span>
+<span class="linenos"> 68</span>
+<span class="linenos"> 69</span><span class="k">class</span><span class="w"> </span><span class="nc">HindsightInstructionReplay</span><span class="p">(</span><span class="n">Relabeler</span><span class="p">):</span>
+<span class="linenos"> 70</span><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos"> 71</span><span class="sd">    Hindsight Experience Replay extended to &quot;instructions&quot; or sequences of multiple goals.</span>
+<span class="linenos"> 72</span>
+<span class="linenos"> 73</span><span class="sd">    Relabelers are passed RL trajectory data before it is padded + batched and sent to the agent</span>
+<span class="linenos"> 74</span><span class="sd">    for training.</span>
+<span class="linenos"> 75</span><span class="sd">    &quot;&quot;&quot;</span>
+<span class="linenos"> 76</span>
+<span class="linenos"> 77</span>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_goals</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">strategy</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;all&quot;</span><span class="p">):</span>
+<span class="linenos"> 78</span>        <span class="k">assert</span> <span class="n">strategy</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;some&quot;</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">]</span>
+<span class="linenos"> 79</span>        <span class="bp">self</span><span class="o">.</span><span class="n">strategy</span> <span class="o">=</span> <span class="n">strategy</span>
+<span class="linenos"> 80</span>        <span class="bp">self</span><span class="o">.</span><span class="n">k</span> <span class="o">=</span> <span class="n">num_goals</span>
+<span class="linenos"> 81</span>
+<span class="linenos"> 82</span>    <span class="k">def</span><span class="w"> </span><span class="nf">relabel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">traj</span><span class="p">:</span> <span class="n">FrozenTraj</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FrozenTraj</span><span class="p">:</span>
+<span class="linenos"> 83</span><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="linenos"> 84</span><span class="sd">        Assume observations are a dict with three keys:</span>
+<span class="linenos"> 85</span><span class="sd">        1. `obs` : the regular observation from the env</span>
+<span class="linenos"> 86</span><span class="sd">        2. `achieved` : candidate goals for relabeling (in this case: current (x, y) position)</span>
+<span class="linenos"> 87</span><span class="sd">        3. `goals` : a (k, n) array of the k goals we want to reach</span>
+<span class="linenos"> 88</span>
+<span class="linenos"> 89</span><span class="sd">        Agent receives `obs` and `goals` as input, and we use `achieved` to relabel failed trajectories</span>
+<span class="linenos"> 90</span><span class="sd">        with new goals that lead to more reward signal.</span>
+<span class="linenos"> 91</span>
+<span class="linenos"> 92</span><span class="sd">        var names are references to pseudocode in AMAGO Appendix B Alg 1 (arXiv page 20)</span>
+<span class="linenos"> 93</span><span class="sd">        &quot;&quot;&quot;</span>
+<span class="linenos"> 94</span>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">strategy</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
+<span class="linenos"> 95</span>            <span class="k">del</span> <span class="n">traj</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;achieved&quot;</span><span class="p">]</span>
+<span class="linenos"> 96</span>            <span class="k">return</span> <span class="n">traj</span>
+<span class="linenos"> 97</span>
+<span class="linenos"> 98</span>        <span class="c1"># 1. Find timesteps where original goals were completed</span>
+<span class="linenos"> 99</span>        <span class="n">k</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">k</span>
+<span class="linenos">100</span>        <span class="n">length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">traj</span><span class="o">.</span><span class="n">rews</span><span class="p">)</span>
+<span class="linenos">101</span>        <span class="n">tsteps_with_goals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">traj</span><span class="o">.</span><span class="n">rews</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+<span class="linenos">102</span>        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tsteps_with_goals</span><span class="p">)</span>
+<span class="linenos">103</span>        <span class="n">goals_completed</span> <span class="o">=</span> <span class="p">[</span>
+<span class="linenos">104</span>            <span class="n">traj</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;goals&quot;</span><span class="p">][</span><span class="n">t</span><span class="p">][</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tsteps_with_goals</span><span class="p">)</span>
+<span class="linenos">105</span>        <span class="p">]</span>
+<span class="linenos">106</span>
+<span class="linenos">107</span>        <span class="c1"># 2. Determine how many relabled goals we&#39;ll add</span>
+<span class="linenos">108</span>        <span class="n">h</span> <span class="o">=</span> <span class="n">k</span> <span class="o">-</span> <span class="n">n</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">strategy</span> <span class="o">==</span> <span class="s2">&quot;all&quot;</span> <span class="k">else</span> <span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">k</span> <span class="o">-</span> <span class="n">n</span><span class="p">)</span>
+<span class="linenos">109</span>
+<span class="linenos">110</span>        <span class="c1"># it&#39;s important that this relabeler can recreate the exact reward func</span>
+<span class="linenos">111</span>        <span class="c1"># and terminal signals of the original env. The best way to check that is to</span>
+<span class="linenos">112</span>        <span class="c1"># let successful trajs (n == self.k, traj.rews.sum() == self.k) or those</span>
+<span class="linenos">113</span>        <span class="c1"># where we&#39;re not adding goals (h == 0) carry on through relabeling,</span>
+<span class="linenos">114</span>        <span class="c1"># then check that the &quot;relabeled&quot; verion is the same as the original.</span>
+<span class="linenos">115</span>        <span class="c1"># Since we&#39;ve already done this we&#39;ll save the relabel time:</span>
+<span class="linenos">116</span>        <span class="k">if</span> <span class="n">h</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+<span class="linenos">117</span>            <span class="k">del</span> <span class="n">traj</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;achieved&quot;</span><span class="p">]</span>
+<span class="linenos">118</span>            <span class="k">return</span> <span class="n">traj</span>
+<span class="linenos">119</span>
+<span class="linenos">120</span>        <span class="c1"># 3. Pick h goals that were achieved as replacements for relabeling</span>
+<span class="linenos">121</span>        <span class="c1"># in this env, every timestep has an alternative goal</span>
+<span class="linenos">122</span>        <span class="n">alternative_tsteps</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">length</span><span class="p">))</span>
+<span class="linenos">123</span>        <span class="c1"># but don&#39;t sample a timestep that achieved a real goal already</span>
+<span class="linenos">124</span>        <span class="n">candidate_tsteps</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">alternative_tsteps</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">tsteps_with_goals</span><span class="p">))</span>
+<span class="linenos">125</span>        <span class="n">h</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">candidate_tsteps</span><span class="p">))</span>
+<span class="linenos">126</span>        <span class="n">tsteps_with_alt_goals</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">candidate_tsteps</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">h</span><span class="p">)</span>
+<span class="linenos">127</span>        <span class="n">alternatives</span> <span class="o">=</span> <span class="p">[</span><span class="n">g</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">traj</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;achieved&quot;</span><span class="p">][</span><span class="n">tsteps_with_alt_goals</span><span class="p">]]</span>
+<span class="linenos">128</span>
+<span class="linenos">129</span>        <span class="c1"># 4. Sort the (new) &quot;alternative&quot; goals and completed (real) goals in the order</span>
+<span class="linenos">130</span>        <span class="c1"># they&#39;d occur in the trajectory. Leave uncompleted real goals at the end</span>
+<span class="linenos">131</span>        <span class="c1"># (in their original order).</span>
+<span class="linenos">132</span>        <span class="n">combined_goals</span> <span class="o">=</span> <span class="n">alternatives</span> <span class="o">+</span> <span class="n">goals_completed</span>
+<span class="linenos">133</span>        <span class="n">tsteps_with_combined_goals</span> <span class="o">=</span> <span class="n">tsteps_with_alt_goals</span> <span class="o">+</span> <span class="n">tsteps_with_goals</span>
+<span class="linenos">134</span>        <span class="c1"># sort combined_goals by tsteps</span>
+<span class="linenos">135</span>        <span class="n">r</span> <span class="o">=</span> <span class="p">[</span><span class="n">g</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">tsteps_with_combined_goals</span><span class="p">,</span> <span class="n">combined_goals</span><span class="p">))]</span>
+<span class="linenos">136</span>        <span class="n">new_goals</span> <span class="o">=</span> <span class="n">traj</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;goals&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+<span class="linenos">137</span>        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">new_goal</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">r</span><span class="p">):</span>
+<span class="linenos">138</span>            <span class="n">new_goals</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">new_goal</span>
+<span class="linenos">139</span>
+<span class="linenos">140</span>        <span class="c1"># 5. Replay the trajectory as if rewards were computed with new_goals.</span>
+<span class="linenos">141</span>        <span class="c1"># This step requires knowledge of the reward function (like HER). In this</span>
+<span class="linenos">142</span>        <span class="c1"># case: binary check that &quot;achieved&quot; == &quot;goals&quot;[current_goal_idx]</span>
+<span class="linenos">143</span>        <span class="n">traj</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;goals&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">new_goals</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">length</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="linenos">144</span>        <span class="n">traj</span><span class="o">.</span><span class="n">rews</span><span class="p">[:]</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="linenos">145</span>        <span class="c1"># note that `rl2s` array is prev_action + prev_reward. The rew is in the 0 index.</span>
+<span class="linenos">146</span>        <span class="n">traj</span><span class="o">.</span><span class="n">rl2s</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="linenos">147</span>        <span class="n">active_goal_idx</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="linenos">148</span>        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">length</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+<span class="linenos">149</span>            <span class="c1"># the format of arrays in the `traj` object is:</span>
+<span class="linenos">150</span>            <span class="c1"># traj.obs = {o_0, o_1, ..., o_length}</span>
+<span class="linenos">151</span>            <span class="c1"># traj.rl2s = {rl2_0, rl2_1, ..., rl2_length}</span>
+<span class="linenos">152</span>            <span class="c1"># traj.rews = {r_1, r_2, ..., missing}</span>
+<span class="linenos">153</span>            <span class="c1"># traj.dones = {d_1, d_2, ..., missing}</span>
+<span class="linenos">154</span>            <span class="n">achieved_this_turn</span> <span class="o">=</span> <span class="n">traj</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;achieved&quot;</span><span class="p">][</span><span class="n">t</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+<span class="linenos">155</span>            <span class="c1"># some envs might have multiple goals per timestep</span>
+<span class="linenos">156</span>            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">achieved_this_turn</span><span class="p">,</span> <span class="n">new_goals</span><span class="p">[</span><span class="n">active_goal_idx</span><span class="p">]):</span>
+<span class="linenos">157</span>                <span class="n">traj</span><span class="o">.</span><span class="n">rews</span><span class="p">[</span><span class="n">t</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="linenos">158</span>                <span class="n">traj</span><span class="o">.</span><span class="n">rl2s</span><span class="p">[</span><span class="n">t</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+<span class="linenos">159</span>                <span class="n">active_goal_idx</span> <span class="o">+=</span> <span class="mi">1</span>
+<span class="linenos">160</span>            <span class="c1"># -1 is &quot;accomplished&quot;... would change by env, but we need some way to keep goals consistent shape</span>
+<span class="linenos">161</span>            <span class="n">traj</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;goals&quot;</span><span class="p">][</span><span class="n">t</span><span class="p">][:</span><span class="n">active_goal_idx</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+<span class="linenos">162</span>            <span class="k">if</span> <span class="n">active_goal_idx</span> <span class="o">&gt;=</span> <span class="n">k</span><span class="p">:</span>
+<span class="linenos">163</span>                <span class="n">traj</span><span class="o">.</span><span class="n">dones</span><span class="p">[</span><span class="n">t</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="linenos">164</span>                <span class="k">break</span>
+<span class="linenos">165</span>        <span class="c1"># enforce early termination</span>
+<span class="linenos">166</span>        <span class="k">del</span> <span class="n">traj</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;achieved&quot;</span><span class="p">]</span>
+<span class="linenos">167</span>        <span class="n">traj</span><span class="o">.</span><span class="n">obs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span><span class="p">[:</span> <span class="n">t</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">traj</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+<span class="linenos">168</span>        <span class="n">traj</span><span class="o">.</span><span class="n">rl2s</span> <span class="o">=</span> <span class="n">traj</span><span class="o">.</span><span class="n">rl2s</span><span class="p">[:</span> <span class="n">t</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+<span class="linenos">169</span>        <span class="n">traj</span><span class="o">.</span><span class="n">time_idxs</span> <span class="o">=</span> <span class="n">traj</span><span class="o">.</span><span class="n">time_idxs</span><span class="p">[:</span> <span class="n">t</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+<span class="linenos">170</span>        <span class="n">traj</span><span class="o">.</span><span class="n">rews</span> <span class="o">=</span> <span class="n">traj</span><span class="o">.</span><span class="n">rews</span><span class="p">[:</span><span class="n">t</span><span class="p">]</span>
+<span class="linenos">171</span>        <span class="n">traj</span><span class="o">.</span><span class="n">dones</span> <span class="o">=</span> <span class="n">traj</span><span class="o">.</span><span class="n">dones</span><span class="p">[:</span><span class="n">t</span><span class="p">]</span>
+<span class="linenos">172</span>        <span class="n">traj</span><span class="o">.</span><span class="n">actions</span> <span class="o">=</span> <span class="n">traj</span><span class="o">.</span><span class="n">actions</span><span class="p">[:</span><span class="n">t</span><span class="p">]</span>
+<span class="linenos">173</span>        <span class="k">return</span> <span class="n">traj</span>
+<span class="linenos">174</span>
+<span class="linenos">175</span>
+<span class="linenos">176</span><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+<span class="linenos">177</span>    <span class="n">parser</span> <span class="o">=</span> <span class="n">ArgumentParser</span><span class="p">()</span>
+<span class="linenos">178</span>    <span class="n">add_common_cli</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+<span class="linenos">179</span>    <span class="n">add_cli</span><span class="p">(</span><span class="n">parser</span><span class="p">)</span>
+<span class="linenos">180</span>    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+<span class="linenos">181</span>
+<span class="linenos">182</span>    <span class="c1"># setup environment</span>
+<span class="linenos">183</span>    <span class="c1"># the AMAGO wrapper adds the relabeling info to the obs dict</span>
+<span class="linenos">184</span>    <span class="n">make_train_env</span> <span class="o">=</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">MazeRunnerAMAGOEnv</span><span class="p">(</span>
+<span class="linenos">185</span>        <span class="n">maze_dim</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">maze_size</span><span class="p">,</span>
+<span class="linenos">186</span>        <span class="n">num_goals</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">goals</span><span class="p">,</span>
+<span class="linenos">187</span>        <span class="n">time_limit</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">time_limit</span><span class="p">,</span>
+<span class="linenos">188</span>        <span class="n">randomized_action_space</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">randomized_actions</span><span class="p">,</span>
+<span class="linenos">189</span>    <span class="p">)</span>
+<span class="linenos">190</span>    <span class="n">config</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="linenos">191</span>    <span class="c1"># switch sequence model</span>
+<span class="linenos">192</span>    <span class="n">traj_encoder_type</span> <span class="o">=</span> <span class="n">switch_traj_encoder</span><span class="p">(</span>
+<span class="linenos">193</span>        <span class="n">config</span><span class="p">,</span>
+<span class="linenos">194</span>        <span class="n">arch</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">traj_encoder</span><span class="p">,</span>
+<span class="linenos">195</span>        <span class="n">memory_size</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">memory_size</span><span class="p">,</span>
+<span class="linenos">196</span>        <span class="n">layers</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">memory_layers</span><span class="p">,</span>
+<span class="linenos">197</span>    <span class="p">)</span>
+<span class="linenos">198</span>    <span class="c1"># switch agent</span>
+<span class="linenos">199</span>    <span class="n">agent_type</span> <span class="o">=</span> <span class="n">switch_agent</span><span class="p">(</span>
+<span class="linenos">200</span>        <span class="n">config</span><span class="p">,</span>
+<span class="linenos">201</span>        <span class="n">args</span><span class="o">.</span><span class="n">agent_type</span><span class="p">,</span>
+<span class="linenos">202</span>        <span class="c1"># reward_multiplier=100.,</span>
+<span class="linenos">203</span>    <span class="p">)</span>
+<span class="linenos">204</span>    <span class="n">tstep_encoder_type</span> <span class="o">=</span> <span class="n">switch_tstep_encoder</span><span class="p">(</span>
+<span class="linenos">205</span>        <span class="n">config</span><span class="p">,</span>
+<span class="linenos">206</span>        <span class="n">arch</span><span class="o">=</span><span class="s2">&quot;ff&quot;</span><span class="p">,</span>
+<span class="linenos">207</span>        <span class="n">n_layers</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+<span class="linenos">208</span>        <span class="n">d_hidden</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>
+<span class="linenos">209</span>        <span class="c1"># ignore &quot;achieved&quot; obs dict in the policy net.</span>
+<span class="linenos">210</span>        <span class="n">specify_obs_keys</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;obs&quot;</span><span class="p">,</span> <span class="s2">&quot;goals&quot;</span><span class="p">],</span>
+<span class="linenos">211</span>    <span class="p">)</span>
+<span class="linenos">212</span>    <span class="n">exploration_type</span> <span class="o">=</span> <span class="n">switch_exploration</span><span class="p">(</span>
+<span class="linenos">213</span>        <span class="n">config</span><span class="p">,</span>
+<span class="linenos">214</span>        <span class="n">strategy</span><span class="o">=</span><span class="s2">&quot;egreedy&quot;</span><span class="p">,</span>
+<span class="linenos">215</span>        <span class="n">steps_anneal</span><span class="o">=</span><span class="mi">500_000</span><span class="p">,</span>  <span class="c1"># needs re-tuning; paper used an older version</span>
+<span class="linenos">216</span>    <span class="p">)</span>
+<span class="linenos">217</span>    <span class="n">use_config</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">configs</span><span class="p">)</span>
+<span class="linenos">218</span>
+<span class="linenos">219</span>    <span class="n">group_name</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">run_name</span>
+<span class="linenos">220</span>    <span class="k">for</span> <span class="n">trial</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">trials</span><span class="p">):</span>
+<span class="linenos">221</span>        <span class="n">run_name</span> <span class="o">=</span> <span class="n">group_name</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;_trial_</span><span class="si">{</span><span class="n">trial</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="linenos">222</span>
+<span class="linenos">223</span>        <span class="n">dataset</span> <span class="o">=</span> <span class="n">DiskTrajDataset</span><span class="p">(</span>
+<span class="linenos">224</span>            <span class="n">dset_root</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">buffer_dir</span><span class="p">,</span>
+<span class="linenos">225</span>            <span class="n">dset_name</span><span class="o">=</span><span class="n">run_name</span><span class="p">,</span>
+<span class="linenos">226</span>            <span class="n">dset_max_size</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">dset_max_size</span><span class="p">,</span>
+<span class="linenos">227</span>            <span class="n">relabeler</span><span class="o">=</span><span class="n">HindsightInstructionReplay</span><span class="p">(</span>
+<span class="linenos">228</span>                <span class="n">num_goals</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">goals</span><span class="p">,</span>
+<span class="linenos">229</span>                <span class="n">strategy</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">relabel</span><span class="p">,</span>
+<span class="linenos">230</span>            <span class="p">),</span>
+<span class="linenos">231</span>        <span class="p">)</span>
+<span class="linenos">232</span>
+<span class="linenos">233</span>        <span class="n">experiment</span> <span class="o">=</span> <span class="n">create_experiment_from_cli</span><span class="p">(</span>
+<span class="linenos">234</span>            <span class="n">args</span><span class="p">,</span>
+<span class="linenos">235</span>            <span class="n">make_train_env</span><span class="o">=</span><span class="n">make_train_env</span><span class="p">,</span>
+<span class="linenos">236</span>            <span class="n">make_val_env</span><span class="o">=</span><span class="n">make_train_env</span><span class="p">,</span>
+<span class="linenos">237</span>            <span class="c1"># paper made a point of using maximum context length; in practice this can be shortened with similar results</span>
+<span class="linenos">238</span>            <span class="n">max_seq_len</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">time_limit</span><span class="p">,</span>
+<span class="linenos">239</span>            <span class="c1"># make sure the entire trajectory is contained in one file that will be sent to the relabeler</span>
+<span class="linenos">240</span>            <span class="n">traj_save_len</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">time_limit</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+<span class="linenos">241</span>            <span class="n">stagger_traj_file_lengths</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="linenos">242</span>            <span class="c1"># provide the dataset explicitly to use our relabeler instead of the default.</span>
+<span class="linenos">243</span>            <span class="c1"># create_experiment_from_cli creates the default dataset otherwise.</span>
+<span class="linenos">244</span>            <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>
+<span class="linenos">245</span>            <span class="n">run_name</span><span class="o">=</span><span class="n">run_name</span><span class="p">,</span>
+<span class="linenos">246</span>            <span class="n">tstep_encoder_type</span><span class="o">=</span><span class="n">tstep_encoder_type</span><span class="p">,</span>
+<span class="linenos">247</span>            <span class="n">traj_encoder_type</span><span class="o">=</span><span class="n">traj_encoder_type</span><span class="p">,</span>
+<span class="linenos">248</span>            <span class="n">exploration_wrapper_type</span><span class="o">=</span><span class="n">exploration_type</span><span class="p">,</span>
+<span class="linenos">249</span>            <span class="n">agent_type</span><span class="o">=</span><span class="n">agent_type</span><span class="p">,</span>
+<span class="linenos">250</span>            <span class="n">group_name</span><span class="o">=</span><span class="n">group_name</span><span class="p">,</span>
+<span class="linenos">251</span>            <span class="n">val_timesteps_per_epoch</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">time_limit</span> <span class="o">*</span> <span class="mi">5</span><span class="p">,</span>
+<span class="linenos">252</span>        <span class="p">)</span>
+<span class="linenos">253</span>        <span class="n">experiment</span> <span class="o">=</span> <span class="n">switch_async_mode</span><span class="p">(</span><span class="n">experiment</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">mode</span><span class="p">)</span>
+<span class="linenos">254</span>        <span class="n">experiment</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+<span class="linenos">255</span>        <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">ckpt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+<span class="linenos">256</span>            <span class="n">experiment</span><span class="o">.</span><span class="n">load_checkpoint</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">ckpt</span><span class="p">)</span>
+<span class="linenos">257</span>        <span class="n">experiment</span><span class="o">.</span><span class="n">learn</span><span class="p">()</span>
+<span class="linenos">258</span>        <span class="n">experiment</span><span class="o">.</span><span class="n">evaluate_test</span><span class="p">(</span>
+<span class="linenos">259</span>            <span class="n">make_train_env</span><span class="p">,</span> <span class="n">timesteps</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">time_limit</span> <span class="o">*</span> <span class="mi">20</span><span class="p">,</span> <span class="n">render</span><span class="o">=</span><span class="kc">False</span>
+<span class="linenos">260</span>        <span class="p">)</span>
+<span class="linenos">261</span>        <span class="n">experiment</span><span class="o">.</span><span class="n">delete_buffer_from_disk</span><span class="p">()</span>
+<span class="linenos">262</span>        <span class="n">wandb</span><span class="o">.</span><span class="n">finish</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="12_half_cheetah_vel.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">HalfCheetah(v4)-Velocity</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="14_d4rl.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">D4RL</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By UT Austin Robot Perception and Learning Lab
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

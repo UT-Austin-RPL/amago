@@ -1,0 +1,757 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" data-theme="light">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>amago.hindsight &#8212; AMAGO</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "light";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/amago/hindsight';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="light">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+    
+    <img src="../../_static/amago_logo_3.png" class="logo__image only-light" alt="AMAGO - Home"/>
+    <script>document.write(`<img src="../../_static/amago_logo_3.png" class="logo__image only-dark" alt="AMAGO - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../tutorial/index.html">Tutorial</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorial/setup_env.html">Setup the Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorial/create_dataset.html">Create a Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorial/create_experiment.html">Create an Experiment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorial/track_results.html">Track the Results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorial/configuration.html">Configure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorial/customization.html">Customize</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorial/async.html">Multi-GPU and Asynchronous Training</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../examples/index.html">Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/00_meta_frozen_lake.html">Meta Frozen Lake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/01_basic_gym.html">Basic Gymnasium</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/02_gymnax.html">Gymnax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/03_popgym_suite.html">POPGym</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/04_tmaze.html">T-Maze</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/05_dark_key_door.html">Dark Room Key Door</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/06_alchemy.html">Symbolic DM Alchemy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/07_metaworld.html">Meta-World ML1/ML10/ML45</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/08_ale.html">Multi-Game Atari</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/09_multitask_procgen.html">Multi-Game ProcGen</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/10_babyai.html">Multi-Task BabyAI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/11_xland_minigrid.html">XLand Mini-Grid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/12_half_cheetah_vel.html">HalfCheetah(v4)-Velocity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/13_mazerunner_relabeling.html">MazeRunner HER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/14_d4rl.html">D4RL</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../api/amago.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api/amago.agent.html">amago.agent</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/amago.cli_utils.html">amago.cli_utils</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../api/amago.envs.html">amago.envs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.envs.amago_env.html">amago.envs.amago_env</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../api/amago.envs.builtin.html">amago.envs.builtin</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api/amago.envs.builtin.half_cheetah_v4_vel.html">amago.envs.builtin.half_cheetah_v4_vel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/amago.envs.builtin.metaworld_ml.html">amago.envs.builtin.metaworld_ml</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/amago.envs.builtin.popgym_envs.html">amago.envs.builtin.popgym_envs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/amago.envs.builtin.toy_gym.html">amago.envs.builtin.toy_gym</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/amago.envs.builtin.xland_minigrid.html">amago.envs.builtin.xland_minigrid</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.envs.env_utils.html">amago.envs.env_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.envs.exploration.html">amago.envs.exploration</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/amago.experiment.html">amago.experiment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/amago.hindsight.html">amago.hindsight</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/amago.loading.html">amago.loading</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../api/amago.nets.html">amago.nets</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.nets.actor_critic.html">amago.nets.actor_critic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.nets.cnn.html">amago.nets.cnn</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.nets.ff.html">amago.nets.ff</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.nets.goal_embedders.html">amago.nets.goal_embedders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.nets.policy_dists.html">amago.nets.policy_dists</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.nets.traj_encoders.html">amago.nets.traj_encoders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.nets.transformer.html">amago.nets.transformer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.nets.tstep_encoders.html">amago.nets.tstep_encoders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.nets.utils.html">amago.nets.utils</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/amago.utils.html">amago.utils</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citation.html">Citation</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for amago.hindsight</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Trajectory datastructures</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">pickle</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">asdict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Iterable</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">amago</span><span class="w"> </span><span class="kn">import</span> <span class="n">utils</span>
+
+
+<div class="viewcode-block" id="Timestep">
+<a class="viewcode-back" href="../../api/amago.hindsight.html#amago.hindsight.Timestep">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Timestep</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Stores a single timestep of rollout data.</span>
+
+<span class="sd">    Time-aligned to the input format of the policy. Agents learn from sequences of timesteps.</span>
+<span class="sd">    Each timestep contains the current observation and time_idx as well as everything that</span>
+<span class="sd">    has happened since the last observation was revealed (previous action, reward, terminal).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        obs: Dictionary of current observation keys and values.</span>
+<span class="sd">        prev_action: The *previous* action taken by the agent.</span>
+<span class="sd">        reward: The reward received by the agent after it took prev_action.</span>
+<span class="sd">        time_idx: The integer index of the current timestep.</span>
+<span class="sd">        terminal: The terminal signal of the environment. True if this is the final observation.</span>
+<span class="sd">        batched_envs: The number of environments in the batch. Used to disambiguate batch dimension.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">obs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span>
+    <span class="n">prev_action</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="n">reward</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="n">time_idx</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="n">terminal</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="n">batched_envs</span><span class="p">:</span> <span class="nb">int</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">prev_action</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">prev_action</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">batched_envs</span>
+        <span class="p">)</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">reward</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">reward</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">batched_envs</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_idx</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_idx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">batched_envs</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">terminal</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">terminal</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">batched_envs</span>
+
+<div class="viewcode-block" id="Timestep.as_input">
+<a class="viewcode-back" href="../../api/amago.hindsight.html#amago.hindsight.Timestep.as_input">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">as_input</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Outputs Timestep data in the input format of the Agent.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            tuple: A tuple containing:</span>
+<span class="sd">                - obs: Dictionary of observations with shape (batched_envs, dim_value)</span>
+<span class="sd">                - rl2s: Tensor of meta-RL inputs (prev action, reward) with shape</span>
+<span class="sd">                  (batched_envs, 1 + D_action)</span>
+<span class="sd">                - time_idx: Tensor of time indices with shape (batched_envs, 1)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">rl2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
+            <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reward</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">prev_action</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs</span><span class="p">,</span> <span class="n">rl2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_idx</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="Timestep.create_reset_version">
+<a class="viewcode-back" href="../../api/amago.hindsight.html#amago.hindsight.Timestep.create_reset_version">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_reset_version</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reset_idxs</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Timestep&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Manually assign indices of a batched timestep to be first in a new trajectory.</span>
+
+<span class="sd">        Creates a new Timestep object with rewards, time_idxs, and terminal signals reset as if</span>
+<span class="sd">        the environment was reset at the given reset_indices. Used for handling auto-resets in</span>
+<span class="sd">        vectorized environments.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            reset_idxs: Tensor of indices of parallel environments being reset.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Timestep: New Timestep object with reset values for specified environments.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># this must match AMAGOEnv/SequenceWrapper.reset</span>
+        <span class="k">assert</span> <span class="n">reset_idxs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">batched_envs</span>
+        <span class="n">new</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">new</span><span class="o">.</span><span class="n">reward</span><span class="p">[</span><span class="n">reset_idxs</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">new</span><span class="o">.</span><span class="n">time_idx</span><span class="p">[</span><span class="n">reset_idxs</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">new</span><span class="o">.</span><span class="n">terminal</span><span class="p">[</span><span class="n">reset_idxs</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">new</span><span class="o">.</span><span class="n">prev_action</span><span class="p">[</span><span class="n">reset_idxs</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">return</span> <span class="n">new</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="split_batched_timestep">
+<a class="viewcode-back" href="../../api/amago.hindsight.html#amago.hindsight.split_batched_timestep">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">split_batched_timestep</span><span class="p">(</span><span class="n">t</span><span class="p">:</span> <span class="n">Timestep</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Timestep</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Split a batched timestep into a list of unbatched timesteps.</span>
+
+<span class="sd">    Used to break up vectorized environments into independent trajectories.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        t: Batched timestep to split. Batch dim is t.batched_envs.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        List of timesteps with length equal to the number of environments in the batch.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">batched</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">batched_envs</span>
+    <span class="k">if</span> <span class="n">batched</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">t</span><span class="p">]</span>
+    <span class="n">obs</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">split_dict</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">obs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">prev_actions</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">split_batch</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">prev_action</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">rewards</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">split_batch</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">reward</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">time_idxs</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">split_batch</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">time_idx</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">terminals</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">split_batch</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">terminal</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">timesteps</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">Timestep</span><span class="p">(</span>
+            <span class="n">obs</span><span class="o">=</span><span class="n">obs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+            <span class="n">prev_action</span><span class="o">=</span><span class="n">prev_actions</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+            <span class="n">reward</span><span class="o">=</span><span class="n">rewards</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+            <span class="n">time_idx</span><span class="o">=</span><span class="n">time_idxs</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+            <span class="n">terminal</span><span class="o">=</span><span class="n">terminals</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+            <span class="n">batched_envs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batched</span><span class="p">)</span>
+    <span class="p">]</span>
+    <span class="k">return</span> <span class="n">timesteps</span></div>
+
+
+
+<div class="viewcode-block" id="FrozenTraj">
+<a class="viewcode-back" href="../../api/amago.hindsight.html#amago.hindsight.FrozenTraj">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">FrozenTraj</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A finished trajectory that is ready to be used as training data.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        obs: Dictionary of observations with shape (Batch, Length, dim_value)</span>
+<span class="sd">        rl2s: Tensor of meta-RL inputs (prev action, reward) with shape (Batch, Length, 1 + D_action)</span>
+<span class="sd">        time_idxs: Tensor of time indices with shape (Batch, Length, 1)</span>
+<span class="sd">        rews: Tensor of rewards with shape (Batch, Length, 1)</span>
+<span class="sd">        dones: Tensor of terminal signals with shape (Batch, Length, 1)</span>
+<span class="sd">        actions: Tensor of actions with shape (Batch, Length, D_action)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">obs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span>
+    <span class="n">rl2s</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="n">time_idxs</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="n">rews</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="n">dones</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="n">actions</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">rl2s</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_idxs</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">rews</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">dones</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">actions</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span>
+
+<div class="viewcode-block" id="FrozenTraj.to_dict">
+<a class="viewcode-back" href="../../api/amago.hindsight.html#amago.hindsight.FrozenTraj.to_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get all trajectory data as an easily serializable dictionary.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict: Flat dictionary with observation data prefixed with _OBS_KEY_ for</span>
+<span class="sd">                format restoration.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">obs_k</span><span class="p">,</span> <span class="n">obs_v</span> <span class="ow">in</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;obs&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1"># flatten obs dict but mark w/ special prefix</span>
+            <span class="n">d</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;_OBS_KEY_</span><span class="si">{</span><span class="n">obs_k</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">obs_v</span>
+        <span class="k">del</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;obs&quot;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">d</span></div>
+
+
+<div class="viewcode-block" id="FrozenTraj.from_dict">
+<a class="viewcode-back" href="../../api/amago.hindsight.html#amago.hindsight.FrozenTraj.from_dict">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">d</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;FrozenTraj&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Fold flattened observation dictionary back to original keys.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            d: Flat dictionary with observation data prefixed with _OBS_KEY_.</span>
+<span class="sd">                Typically output of FrozenTraj.to_dict.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            FrozenTraj: Object with original observation keys restored.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;obs&quot;</span><span class="p">:</span> <span class="p">{}}</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;_OBS_KEY_&quot;</span><span class="p">):</span>
+                <span class="c1"># fold the flattened obs dict back to original keys</span>
+                <span class="n">args</span><span class="p">[</span><span class="s2">&quot;obs&quot;</span><span class="p">][</span><span class="n">k</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_OBS_KEY_&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]</span> <span class="o">=</span> <span class="n">v</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">args</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="n">args</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Trajectory">
+<a class="viewcode-back" href="../../api/amago.hindsight.html#amago.hindsight.Trajectory">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Trajectory</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A sequence of timesteps.</span>
+
+<span class="sd">    Stores a rollout and handles disk saves when using the default :py:class:`~amago.loading.RLDataset`.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        timesteps: Iterable of :py:class:`Timestep` objects.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timesteps</span><span class="o">=</span><span class="n">Optional</span><span class="p">[</span><span class="n">Iterable</span><span class="p">[</span><span class="n">Timestep</span><span class="p">]]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timesteps</span> <span class="o">=</span> <span class="n">timesteps</span> <span class="ow">or</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="Trajectory.add_timestep">
+<a class="viewcode-back" href="../../api/amago.hindsight.html#amago.hindsight.Trajectory.add_timestep">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_timestep</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timestep</span><span class="p">:</span> <span class="n">Timestep</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a timestep to the trajectory.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            timestep: Timestep object to add.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">timestep</span><span class="p">,</span> <span class="n">Timestep</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">timestep</span><span class="o">.</span><span class="n">batched_envs</span> <span class="o">==</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timesteps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">timestep</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">total_return</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate the total return of this trajectory.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            float: Sum of all rewards in the trajectory.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">([</span><span class="n">t</span><span class="o">.</span><span class="n">reward</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">timesteps</span><span class="p">])</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Timestep</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">timesteps</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+
+<div class="viewcode-block" id="Trajectory.as_input_sequence">
+<a class="viewcode-back" href="../../api/amago.hindsight.html#amago.hindsight.Trajectory.as_input_sequence">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">as_input_sequence</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a sequence of observations, rl2s, and time_idxs.</span>
+
+<span class="sd">        Uses the trajectory data to gather the standard input sequences for the Agent.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            tuple: A tuple containing:</span>
+<span class="sd">                - obs: Dictionary of observations with shape (Batch, Length, dim_value)</span>
+<span class="sd">                - rl2s: Tensor of meta-RL inputs with shape (Batch, Length, 1 + D_action)</span>
+<span class="sd">                - time: Tensor of time indices with shape (Batch, Length, 1)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">obs</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">stack_list_array_dicts</span><span class="p">([</span><span class="n">t</span><span class="o">.</span><span class="n">obs</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">timesteps</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">actions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">t</span><span class="o">.</span><span class="n">prev_action</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">timesteps</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">rewards</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">t</span><span class="o">.</span><span class="n">reward</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">timesteps</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="o">...</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+        <span class="c1"># match cat order of `Timestep.as_input`</span>
+        <span class="n">rl2s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">rewards</span><span class="p">,</span> <span class="n">actions</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="n">time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">t</span><span class="o">.</span><span class="n">time_idx</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">timesteps</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="o">...</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">obs</span><span class="p">,</span> <span class="n">rl2s</span><span class="p">,</span> <span class="n">time</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The number of timesteps in this trajectory.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            int: The number of timesteps in this trajectory.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">timesteps</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Trajectory.save_to_disk">
+<a class="viewcode-back" href="../../api/amago.hindsight.html#amago.hindsight.Trajectory.save_to_disk">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">save_to_disk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">save_as</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Save the trajectory to disk.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            path: Path to save the trajectory to.</span>
+<span class="sd">            save_as: Format to save the trajectory in:</span>
+<span class="sd">                - &#39;trajectory&#39;: Pickle file storing entire object (now rarely used)</span>
+<span class="sd">                - &#39;npz&#39;: Standard numpy .npz file format</span>
+<span class="sd">                - &#39;npz-compressed&#39;: Compressed numpy .npz file format</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">save_as</span> <span class="o">==</span> <span class="s2">&quot;trajectory&quot;</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">.traj&quot;</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">save_as</span> <span class="o">==</span> <span class="s2">&quot;npz&quot;</span><span class="p">:</span>
+            <span class="n">frozen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">freeze</span><span class="p">()</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">savez</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="o">**</span><span class="n">frozen</span><span class="o">.</span><span class="n">to_dict</span><span class="p">())</span>
+        <span class="k">elif</span> <span class="n">save_as</span> <span class="o">==</span> <span class="s2">&quot;npz-compressed&quot;</span><span class="p">:</span>
+            <span class="n">frozen</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">freeze</span><span class="p">()</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">savez_compressed</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="o">**</span><span class="n">frozen</span><span class="o">.</span><span class="n">to_dict</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Unrecognized Trajectory `save_to_disk` format `save_as = </span><span class="si">{</span><span class="n">save_as</span><span class="si">}</span><span class="s2">` (options are: &#39;trajectory&#39; (slowest read/write, can relabel), &#39;npz&#39; (fastest, cannot relabel), &#39;npz-compressed&#39; (save space, cannot relabel)&quot;</span>
+            <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Trajectory.freeze">
+<a class="viewcode-back" href="../../api/amago.hindsight.html#amago.hindsight.Trajectory.freeze">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">freeze</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FrozenTraj</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Freeze the trajectory and return a :py:class:`FrozenTraj` object.</span>
+
+<span class="sd">        :py:class:`FrozenTraj` saves time by precomputing input sequences for the Agent.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            FrozenTraj: Frozen trajectory object with precomputed sequences.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># fmt: off</span>
+        <span class="n">obs</span><span class="p">,</span> <span class="n">rl2s</span><span class="p">,</span> <span class="n">time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">as_input_sequence</span><span class="p">()</span>
+        <span class="n">rews</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">t</span><span class="o">.</span><span class="n">reward</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">timesteps</span><span class="p">[</span><span class="mi">1</span><span class="p">:]],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)[</span><span class="o">...</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+        <span class="n">dones</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">t</span><span class="o">.</span><span class="n">terminal</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">timesteps</span><span class="p">[</span><span class="mi">1</span><span class="p">:]],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)[</span><span class="o">...</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+        <span class="n">actions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">t</span><span class="o">.</span><span class="n">prev_action</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">timesteps</span><span class="p">[</span><span class="mi">1</span><span class="p">:]],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="c1"># squeeze batch dimension here...</span>
+        <span class="n">batched</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="n">dim</span> <span class="o">=</span> <span class="n">rl2s</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">assert</span> <span class="n">batched</span> <span class="o">==</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;attempting to freeze a batched trajectory&quot;</span>
+        <span class="k">return</span> <span class="n">FrozenTraj</span><span class="p">(</span>
+            <span class="n">obs</span><span class="o">=</span><span class="p">{</span><span class="n">k</span><span class="p">:</span><span class="n">v</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">obs</span><span class="o">.</span><span class="n">items</span><span class="p">()},</span>
+            <span class="n">rl2s</span><span class="o">=</span><span class="n">rl2s</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
+            <span class="n">time_idxs</span><span class="o">=</span><span class="n">time</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
+            <span class="n">rews</span><span class="o">=</span><span class="n">rews</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
+            <span class="n">dones</span><span class="o">=</span><span class="n">dones</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
+            <span class="n">actions</span><span class="o">=</span><span class="n">actions</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
+        <span class="p">)</span></div>
+</div>
+
+        <span class="c1"># fmt: on</span>
+
+
+<div class="viewcode-block" id="Relabeler">
+<a class="viewcode-back" href="../../api/amago.hindsight.html#amago.hindsight.Relabeler">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Relabeler</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A hook for modifying trajectory data during training.</span>
+
+<span class="sd">    In the default :py:class:`~amago.loading.DiskTrajDataset`, Relabeler has the chance to edit input trajectories</span>
+<span class="sd">    before they are passed to an agent for training. Enables Hindsight Experience Replay</span>
+<span class="sd">    (HER) and variants. See examples/13_mazerunner_relabeling.py for an implementation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">traj</span><span class="p">:</span> <span class="n">Trajectory</span> <span class="o">|</span> <span class="n">FrozenTraj</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FrozenTraj</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">relabel</span><span class="p">(</span><span class="n">traj</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Relabeler.relabel">
+<a class="viewcode-back" href="../../api/amago.hindsight.html#amago.hindsight.Relabeler.relabel">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">relabel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">traj</span><span class="p">:</span> <span class="n">Trajectory</span> <span class="o">|</span> <span class="n">FrozenTraj</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FrozenTraj</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Relabel a trajectory.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            traj: Trajectory or FrozenTraj object to relabel. Can be modified in place.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            FrozenTraj: New FrozenTraj object with relabeled data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="NoOpRelabeler">
+<a class="viewcode-back" href="../../api/amago.hindsight.html#amago.hindsight.NoOpRelabeler">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">NoOpRelabeler</span><span class="p">(</span><span class="n">Relabeler</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A no-op relabeler that returns the input trajectory unchanged.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="NoOpRelabeler.relabel">
+<a class="viewcode-back" href="../../api/amago.hindsight.html#amago.hindsight.NoOpRelabeler.relabel">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">relabel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">traj</span><span class="p">:</span> <span class="n">Trajectory</span> <span class="o">|</span> <span class="n">FrozenTraj</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FrozenTraj</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">traj</span></div>
+</div>
+
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By UT Austin Robot Perception and Learning Lab
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

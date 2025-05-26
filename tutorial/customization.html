@@ -1,0 +1,589 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="light">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Customize &#8212; AMAGO</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "light";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/customization';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Multi-GPU and Asynchronous Training" href="async.html" />
+    <link rel="prev" title="Configure" href="configuration.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="light">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+    
+    <img src="../_static/amago_logo_3.png" class="logo__image only-light" alt="AMAGO - Home"/>
+    <script>document.write(`<img src="../_static/amago_logo_3.png" class="logo__image only-dark" alt="AMAGO - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Tutorial</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="setup_env.html">Setup the Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="create_dataset.html">Create a Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="create_experiment.html">Create an Experiment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track_results.html">Track the Results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html">Configure</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Customize</a></li>
+<li class="toctree-l2"><a class="reference internal" href="async.html">Multi-GPU and Asynchronous Training</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../examples/index.html">Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../examples/00_meta_frozen_lake.html">Meta Frozen Lake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/01_basic_gym.html">Basic Gymnasium</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/02_gymnax.html">Gymnax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/03_popgym_suite.html">POPGym</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/04_tmaze.html">T-Maze</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/05_dark_key_door.html">Dark Room Key Door</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/06_alchemy.html">Symbolic DM Alchemy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/07_metaworld.html">Meta-World ML1/ML10/ML45</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/08_ale.html">Multi-Game Atari</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/09_multitask_procgen.html">Multi-Game ProcGen</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/10_babyai.html">Multi-Task BabyAI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/11_xland_minigrid.html">XLand Mini-Grid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/12_half_cheetah_vel.html">HalfCheetah(v4)-Velocity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/13_mazerunner_relabeling.html">MazeRunner HER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/14_d4rl.html">D4RL</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/amago.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/amago.agent.html">amago.agent</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/amago.cli_utils.html">amago.cli_utils</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../api/amago.envs.html">amago.envs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.envs.amago_env.html">amago.envs.amago_env</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../api/amago.envs.builtin.html">amago.envs.builtin</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/amago.envs.builtin.half_cheetah_v4_vel.html">amago.envs.builtin.half_cheetah_v4_vel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/amago.envs.builtin.metaworld_ml.html">amago.envs.builtin.metaworld_ml</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/amago.envs.builtin.popgym_envs.html">amago.envs.builtin.popgym_envs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/amago.envs.builtin.toy_gym.html">amago.envs.builtin.toy_gym</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/amago.envs.builtin.xland_minigrid.html">amago.envs.builtin.xland_minigrid</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.envs.env_utils.html">amago.envs.env_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.envs.exploration.html">amago.envs.exploration</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/amago.experiment.html">amago.experiment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/amago.hindsight.html">amago.hindsight</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/amago.loading.html">amago.loading</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../api/amago.nets.html">amago.nets</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.nets.actor_critic.html">amago.nets.actor_critic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.nets.cnn.html">amago.nets.cnn</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.nets.ff.html">amago.nets.ff</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.nets.goal_embedders.html">amago.nets.goal_embedders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.nets.policy_dists.html">amago.nets.policy_dists</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.nets.traj_encoders.html">amago.nets.traj_encoders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.nets.transformer.html">amago.nets.transformer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.nets.tstep_encoders.html">amago.nets.tstep_encoders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.nets.utils.html">amago.nets.utils</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/amago.utils.html">amago.utils</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../citation.html">Citation</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/tutorial/customization.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Customize</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#timestep-encoder">Timestep Encoder</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#trajencoder-seq2seq">TrajEncoder (Seq2Seq)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#exploration-strategy">Exploration Strategy</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#agent">Agent</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#rldataset">RLDataset</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#continuous-action-distribution">(Continuous) Action Distribution</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="customize">
+<h1>Customize<a class="headerlink" href="#customize" title="Link to this heading">#</a></h1>
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+</div>
+<p>Almost anything else can be customized by inheriting from a base class and pointing <code class="docutils literal notranslate"><span class="pre">Experiment</span></code> to our custom version.</p>
+<section id="timestep-encoder">
+<h2>Timestep Encoder<a class="headerlink" href="#timestep-encoder" title="Link to this heading">#</a></h2>
+<p>For example, if we want a custom <code class="xref py py-obj docutils literal notranslate"><span class="pre">TstepEncoder</span></code>, we can implement the abstract methods and pass our module into the experiment:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">nn</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn.functional</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">F</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">amago</span><span class="w"> </span><span class="kn">import</span> <span class="n">TstepEncoder</span>
+<span class="c1"># there&#39;s no specific requirement to use AMAGO&#39;s pytorch modules, but</span>
+<span class="c1"># we&#39;ve built up a collection of common RL components that might be helpful!</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">amago.nets.cnn</span><span class="w"> </span><span class="kn">import</span> <span class="n">NatureishCNN</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">amago.nets.ff</span><span class="w"> </span><span class="kn">import</span> <span class="n">Normalization</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MultiModalRobotTstepEncoder</span><span class="p">(</span><span class="n">TstepEncoder</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">obs_space</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">spaces</span><span class="o">.</span><span class="n">Dict</span><span class="p">,</span>
+        <span class="n">rl2_space</span><span class="p">:</span> <span class="n">gym</span><span class="o">.</span><span class="n">spaces</span><span class="o">.</span><span class="n">Box</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">obs_space</span><span class="o">=</span><span class="n">obs_space</span><span class="p">,</span> <span class="n">rl2_space</span><span class="o">=</span><span class="n">rl2_space</span><span class="p">)</span>
+        <span class="n">img_space</span> <span class="o">=</span> <span class="n">obs_space</span><span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">]</span>
+        <span class="n">joint_space</span> <span class="o">=</span> <span class="n">obs_space</span><span class="p">[</span><span class="s2">&quot;joints&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cnn</span> <span class="o">=</span> <span class="n">NatureishCNN</span><span class="p">(</span><span class="n">img_shape</span><span class="o">=</span><span class="n">img_space</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">cnn_out_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cnn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cnn</span><span class="o">.</span><span class="n">blank_img</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">joint_rl2_emb</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">joint_space</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">rl2_space</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="mi">32</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">merge</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">cnn_out_shape</span> <span class="o">+</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">128</span><span class="p">)</span>
+        <span class="c1"># we&#39;ll represent each Timestep as a 64d vector</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_layer</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">64</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out_norm</span> <span class="o">=</span> <span class="n">Noramlization</span><span class="p">(</span><span class="s2">&quot;layer&quot;</span><span class="p">,</span> <span class="mi">64</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">emb_dim</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># tell the rest of the model what output shape to expect</span>
+        <span class="k">return</span> <span class="mi">64</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">inner_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obs</span><span class="p">,</span> <span class="n">rl2s</span><span class="p">,</span> <span class="n">log_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">img_features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cnn</span><span class="p">(</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;image&quot;</span><span class="p">])</span>
+        <span class="n">joints_and_rl2s</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">obs</span><span class="p">[</span><span class="s2">&quot;joints&quot;</span><span class="p">],</span> <span class="n">rl2s</span><span class="p">),</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">joint_features</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">leaky_relu</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">joint_rl2_emb</span><span class="p">(</span><span class="n">joints_and_rl2s</span><span class="p">))</span>
+        <span class="n">merged</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">img_features</span><span class="p">,</span> <span class="n">joint_features</span><span class="p">),</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">merged</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">leaky_relu</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">merged</span><span class="p">))</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_norm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_layer</span><span class="p">(</span><span class="n">merged</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+<span class="n">experiment</span> <span class="o">=</span> <span class="n">amago</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span>
+    <span class="o">...</span><span class="p">,</span>
+    <span class="n">tstep_encoder_type</span><span class="o">=</span><span class="n">MultiModalRobotTstepEncoder</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="../examples/10_babyai.html"><span class="doc">Multi-Task BabyAI</span></a> and <a class="reference internal" href="../examples/11_xland_minigrid.html"><span class="doc">XLand Mini-Grid</span></a> are relevant examples.</p>
+</section>
+<section id="trajencoder-seq2seq">
+<h2>TrajEncoder (Seq2Seq)<a class="headerlink" href="#trajencoder-seq2seq" title="Link to this heading">#</a></h2>
+<p><strong>Implement</strong>: <a class="reference internal" href="../api/amago.nets.traj_encoders.html#amago.nets.traj_encoders.TrajEncoder" title="amago.nets.traj_encoders.TrajEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrajEncoder</span></code></a></p>
+<p><strong>Substitute</strong>: <code class="docutils literal notranslate"><span class="pre">Experiment(traj_encoder_type=MyTrajEncoder,</span> <span class="pre">...)</span></code></p>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+</section>
+<section id="exploration-strategy">
+<h2>Exploration Strategy<a class="headerlink" href="#exploration-strategy" title="Link to this heading">#</a></h2>
+<p><strong>Implement</strong>: <a class="reference internal" href="../api/amago.envs.exploration.html#amago.envs.exploration.ExplorationWrapper" title="amago.envs.exploration.ExplorationWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExplorationWrapper</span></code></a></p>
+<p><strong>Substitute</strong>: <code class="docutils literal notranslate"><span class="pre">Experiment(exploration_wrapper_type=MyExplorationWrapper,</span> <span class="pre">....)</span></code></p>
+<p><a class="reference internal" href="../examples/04_tmaze.html"><span class="doc">T-Maze</span></a> demonstrates a custom exploration strategy.</p>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+</section>
+<section id="agent">
+<h2>Agent<a class="headerlink" href="#agent" title="Link to this heading">#</a></h2>
+<p><strong>Implement</strong>: <a class="reference internal" href="../api/amago.agent.html#amago.agent.Agent" title="amago.agent.Agent"><code class="xref py py-class docutils literal notranslate"><span class="pre">Agent</span></code></a></p>
+<p><strong>Substitute</strong>: <code class="docutils literal notranslate"><span class="pre">Experiment(agent_type=MyAgent,</span> <span class="pre">...)</span></code></p>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+</section>
+<section id="rldataset">
+<h2>RLDataset<a class="headerlink" href="#rldataset" title="Link to this heading">#</a></h2>
+<p><strong>Implement</strong>: <a class="reference internal" href="../api/amago.loading.html#amago.loading.RLDataset" title="amago.loading.RLDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">RLDataset</span></code></a></p>
+<p><strong>Substitute</strong>: <code class="docutils literal notranslate"><span class="pre">dset</span> <span class="pre">=</span> <span class="pre">MyDataset();</span> <span class="pre">experiment</span> <span class="pre">=</span> <span class="pre">Experiment(dataset=dset,</span> <span class="pre">...)</span></code></p>
+<p><a class="reference internal" href="../examples/14_d4rl.html"><span class="doc">D4RL</span></a> demonstrates a custom dataset.</p>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+</section>
+<section id="continuous-action-distribution">
+<h2>(Continuous) Action Distribution<a class="headerlink" href="#continuous-action-distribution" title="Link to this heading">#</a></h2>
+<p><strong>Implement</strong>: <a class="reference internal" href="../api/amago.nets.policy_dists.html#amago.nets.policy_dists.PolicyOutput" title="amago.nets.policy_dists.PolicyOutput"><code class="xref py py-class docutils literal notranslate"><span class="pre">PolicyOutput</span></code></a></p>
+<p><strong>Substitute</strong>: <code class="docutils literal notranslate"><span class="pre">config</span> <span class="pre">=</span> <span class="pre">{&quot;amago.nets.actor_critic.Actor.continuous_dist_type&quot;</span> <span class="pre">:</span> <span class="pre">MyPolicyOutput,</span> <span class="pre">...};</span> <span class="pre">use_config(config);</span> <span class="pre">experiment</span> <span class="pre">=</span> <span class="pre">Experiment(...)</span></code></p>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="configuration.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Configure</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="async.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Multi-GPU and Asynchronous Training</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#timestep-encoder">Timestep Encoder</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#trajencoder-seq2seq">TrajEncoder (Seq2Seq)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#exploration-strategy">Exploration Strategy</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#agent">Agent</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#rldataset">RLDataset</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#continuous-action-distribution">(Continuous) Action Distribution</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By UT Austin Robot Perception and Learning Lab
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,813 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="light">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>amago.envs.amago_env &#8212; AMAGO</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "light";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/amago.envs.amago_env';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="amago.envs.builtin" href="amago.envs.builtin.html" />
+    <link rel="prev" title="amago.envs" href="amago.envs.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="light">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+    
+    <img src="../_static/amago_logo_3.png" class="logo__image only-light" alt="AMAGO - Home"/>
+    <script>document.write(`<img src="../_static/amago_logo_3.png" class="logo__image only-dark" alt="AMAGO - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../tutorial/index.html">Tutorial</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/setup_env.html">Setup the Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/create_dataset.html">Create a Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/create_experiment.html">Create an Experiment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/track_results.html">Track the Results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/configuration.html">Configure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/customization.html">Customize</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/async.html">Multi-GPU and Asynchronous Training</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../examples/index.html">Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../examples/00_meta_frozen_lake.html">Meta Frozen Lake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/01_basic_gym.html">Basic Gymnasium</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/02_gymnax.html">Gymnax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/03_popgym_suite.html">POPGym</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/04_tmaze.html">T-Maze</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/05_dark_key_door.html">Dark Room Key Door</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/06_alchemy.html">Symbolic DM Alchemy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/07_metaworld.html">Meta-World ML1/ML10/ML45</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/08_ale.html">Multi-Game Atari</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/09_multitask_procgen.html">Multi-Game ProcGen</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/10_babyai.html">Multi-Task BabyAI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/11_xland_minigrid.html">XLand Mini-Grid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/12_half_cheetah_vel.html">HalfCheetah(v4)-Velocity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/13_mazerunner_relabeling.html">MazeRunner HER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/14_d4rl.html">D4RL</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="amago.html">API Reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="amago.agent.html">amago.agent</a></li>
+<li class="toctree-l2"><a class="reference internal" href="amago.cli_utils.html">amago.cli_utils</a></li>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="amago.envs.html">amago.envs</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">amago.envs.amago_env</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="amago.envs.builtin.html">amago.envs.builtin</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="amago.envs.builtin.half_cheetah_v4_vel.html">amago.envs.builtin.half_cheetah_v4_vel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="amago.envs.builtin.metaworld_ml.html">amago.envs.builtin.metaworld_ml</a></li>
+<li class="toctree-l4"><a class="reference internal" href="amago.envs.builtin.popgym_envs.html">amago.envs.builtin.popgym_envs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="amago.envs.builtin.toy_gym.html">amago.envs.builtin.toy_gym</a></li>
+<li class="toctree-l4"><a class="reference internal" href="amago.envs.builtin.xland_minigrid.html">amago.envs.builtin.xland_minigrid</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.envs.env_utils.html">amago.envs.env_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.envs.exploration.html">amago.envs.exploration</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="amago.experiment.html">amago.experiment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="amago.hindsight.html">amago.hindsight</a></li>
+<li class="toctree-l2"><a class="reference internal" href="amago.loading.html">amago.loading</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="amago.nets.html">amago.nets</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.actor_critic.html">amago.nets.actor_critic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.cnn.html">amago.nets.cnn</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.ff.html">amago.nets.ff</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.goal_embedders.html">amago.nets.goal_embedders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.policy_dists.html">amago.nets.policy_dists</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.traj_encoders.html">amago.nets.traj_encoders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.transformer.html">amago.nets.transformer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.tstep_encoders.html">amago.nets.tstep_encoders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.utils.html">amago.nets.utils</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="amago.utils.html">amago.utils</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../citation.html">Citation</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/api/amago.envs.amago_env.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>amago.envs.amago_env</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.AMAGOEnv"><code class="docutils literal notranslate"><span class="pre">AMAGOEnv</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.AMAGOEnv.env_name"><code class="docutils literal notranslate"><span class="pre">AMAGOEnv.env_name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.AMAGOEnv.inner_reset"><code class="docutils literal notranslate"><span class="pre">AMAGOEnv.inner_reset()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.AMAGOEnv.inner_step"><code class="docutils literal notranslate"><span class="pre">AMAGOEnv.inner_step()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.AMAGOEnv.make_action_rep"><code class="docutils literal notranslate"><span class="pre">AMAGOEnv.make_action_rep()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.AMAGOEnv.render"><code class="docutils literal notranslate"><span class="pre">AMAGOEnv.render()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.AMAGOEnv.reset"><code class="docutils literal notranslate"><span class="pre">AMAGOEnv.reset()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.AMAGOEnv.step"><code class="docutils literal notranslate"><span class="pre">AMAGOEnv.step()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.EnvCreator"><code class="docutils literal notranslate"><span class="pre">EnvCreator</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.EnvCreator.exploration_wrapper_type"><code class="docutils literal notranslate"><span class="pre">EnvCreator.exploration_wrapper_type</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.EnvCreator.make_env"><code class="docutils literal notranslate"><span class="pre">EnvCreator.make_env</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.EnvCreator.save_every_high"><code class="docutils literal notranslate"><span class="pre">EnvCreator.save_every_high</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.EnvCreator.save_every_low"><code class="docutils literal notranslate"><span class="pre">EnvCreator.save_every_low</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.EnvCreator.save_trajs_as"><code class="docutils literal notranslate"><span class="pre">EnvCreator.save_trajs_as</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.EnvCreator.save_trajs_to"><code class="docutils literal notranslate"><span class="pre">EnvCreator.save_trajs_to</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.ReturnHistory"><code class="docutils literal notranslate"><span class="pre">ReturnHistory</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.ReturnHistory.add_score"><code class="docutils literal notranslate"><span class="pre">ReturnHistory.add_score()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.SequenceWrapper"><code class="docutils literal notranslate"><span class="pre">SequenceWrapper</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.SequenceWrapper.current_timestep"><code class="docutils literal notranslate"><span class="pre">SequenceWrapper.current_timestep</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.SequenceWrapper.env_name"><code class="docutils literal notranslate"><span class="pre">SequenceWrapper.env_name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.SequenceWrapper.finish_active_traj"><code class="docutils literal notranslate"><span class="pre">SequenceWrapper.finish_active_traj()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.SequenceWrapper.random_traj_length"><code class="docutils literal notranslate"><span class="pre">SequenceWrapper.random_traj_length()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.SequenceWrapper.reset"><code class="docutils literal notranslate"><span class="pre">SequenceWrapper.reset()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.SequenceWrapper.reset_stats"><code class="docutils literal notranslate"><span class="pre">SequenceWrapper.reset_stats()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.SequenceWrapper.save_finished_trajs"><code class="docutils literal notranslate"><span class="pre">SequenceWrapper.save_finished_trajs()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.SequenceWrapper.step"><code class="docutils literal notranslate"><span class="pre">SequenceWrapper.step()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.SequenceWrapper.step_count"><code class="docutils literal notranslate"><span class="pre">SequenceWrapper.step_count</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.SequenceWrapper.total_frames"><code class="docutils literal notranslate"><span class="pre">SequenceWrapper.total_frames</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.SequenceWrapper.total_frames_by_env_name"><code class="docutils literal notranslate"><span class="pre">SequenceWrapper.total_frames_by_env_name</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.SpecialMetricHistory"><code class="docutils literal notranslate"><span class="pre">SpecialMetricHistory</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.SpecialMetricHistory.add_score"><code class="docutils literal notranslate"><span class="pre">SpecialMetricHistory.add_score()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.SpecialMetricHistory.log_prefix"><code class="docutils literal notranslate"><span class="pre">SpecialMetricHistory.log_prefix</span></code></a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-amago.envs.amago_env">
+<span id="amago-envs-amago-env"></span><h1>amago.envs.amago_env<a class="headerlink" href="#module-amago.envs.amago_env" title="Link to this heading">#</a></h1>
+<p class="rubric">Classes</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amago.envs.amago_env.AMAGOEnv" title="amago.envs.amago_env.AMAGOEnv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AMAGOEnv</span></code></a>(env[, env_name, batched_envs])</p></td>
+<td><p>A wrapper that connects <code class="xref py py-obj docutils literal notranslate"><span class="pre">gymnasium</span></code> envs to the <code class="xref py py-obj docutils literal notranslate"><span class="pre">Experiment</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amago.envs.amago_env.EnvCreator" title="amago.envs.amago_env.EnvCreator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">EnvCreator</span></code></a>(make_env, ...)</p></td>
+<td><p>Utility that builds the SequenceWrapper(AMAGOEnv()) wrapper stack for AsyncVectorEnv</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amago.envs.amago_env.ReturnHistory" title="amago.envs.amago_env.ReturnHistory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ReturnHistory</span></code></a>(env_name)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amago.envs.amago_env.SequenceWrapper" title="amago.envs.amago_env.SequenceWrapper"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SequenceWrapper</span></code></a>(env, save_trajs_to[, ...])</p></td>
+<td><p>A wrapper that saves trajectory files to disk and logs rollout metrics.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amago.envs.amago_env.SpecialMetricHistory" title="amago.envs.amago_env.SpecialMetricHistory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SpecialMetricHistory</span></code></a>(env_name)</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="amago.envs.amago_env.AMAGOEnv">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">AMAGOEnv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batched_envs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/envs/amago_env.html#AMAGOEnv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.envs.amago_env.AMAGOEnv" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Wrapper</span></code></p>
+<p>A wrapper that connects <code class="xref py py-obj docutils literal notranslate"><span class="pre">gymnasium</span></code> envs to the <code class="xref py py-obj docutils literal notranslate"><span class="pre">Experiment</span></code></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>env</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Env</span></code></span>) – The gymnasium env to wrap. Wraps the action space to [-1, 1] if continuous control.</p></li>
+<li><p><strong>env_name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – The name of the environment. Used for logging metrics.</p></li>
+<li><p><strong>batched_envs</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Alert the <code class="xref py py-obj docutils literal notranslate"><span class="pre">Experiment</span></code> that this env is vectorized with a batch dimension like (batched_envs, …)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="amago.envs.amago_env.AMAGOEnv.env_name">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">env_name</span></span><a class="headerlink" href="#amago.envs.amago_env.AMAGOEnv.env_name" title="Link to this definition">#</a></dt>
+<dd><p>Dynamically change the name of the current environment in a multi-task setting
+(for logging and saving .traj files)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.envs.amago_env.AMAGOEnv.inner_reset">
+<span class="sig-name descname"><span class="pre">inner_reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/envs/amago_env.html#AMAGOEnv.inner_reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.envs.amago_env.AMAGOEnv.inner_reset" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.envs.amago_env.AMAGOEnv.inner_step">
+<span class="sig-name descname"><span class="pre">inner_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/envs/amago_env.html#AMAGOEnv.inner_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.envs.amago_env.AMAGOEnv.inner_step" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.envs.amago_env.AMAGOEnv.make_action_rep">
+<span class="sig-name descname"><span class="pre">make_action_rep</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/envs/amago_env.html#AMAGOEnv.make_action_rep"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.envs.amago_env.AMAGOEnv.make_action_rep" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.envs.amago_env.AMAGOEnv.render">
+<span class="sig-name descname"><span class="pre">render</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/envs/amago_env.html#AMAGOEnv.render"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.envs.amago_env.AMAGOEnv.render" title="Link to this definition">#</a></dt>
+<dd><p>Uses the <a class="reference internal" href="#amago.envs.amago_env.AMAGOEnv.render" title="amago.envs.amago_env.AMAGOEnv.render"><code class="xref py py-meth docutils literal notranslate"><span class="pre">render()</span></code></a> of the <code class="xref py py-attr docutils literal notranslate"><span class="pre">env</span></code> that can be overwritten to change the returned data.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.envs.amago_env.AMAGOEnv.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/envs/amago_env.html#AMAGOEnv.reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.envs.amago_env.AMAGOEnv.reset" title="Link to this definition">#</a></dt>
+<dd><p>Uses the <a class="reference internal" href="#amago.envs.amago_env.AMAGOEnv.reset" title="amago.envs.amago_env.AMAGOEnv.reset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">reset()</span></code></a> of the <code class="xref py py-attr docutils literal notranslate"><span class="pre">env</span></code> that can be overwritten to change the returned data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="amago.hindsight.html#amago.hindsight.Timestep" title="amago.hindsight.Timestep"><code class="xref py py-class docutils literal notranslate"><span class="pre">Timestep</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.envs.amago_env.AMAGOEnv.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/envs/amago_env.html#AMAGOEnv.step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.envs.amago_env.AMAGOEnv.step" title="Link to this definition">#</a></dt>
+<dd><p>Uses the <a class="reference internal" href="#amago.envs.amago_env.AMAGOEnv.step" title="amago.envs.amago_env.AMAGOEnv.step"><code class="xref py py-meth docutils literal notranslate"><span class="pre">step()</span></code></a> of the <code class="xref py py-attr docutils literal notranslate"><span class="pre">env</span></code> that can be overwritten to change the returned data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<a class="reference internal" href="amago.hindsight.html#amago.hindsight.Timestep" title="amago.hindsight.Timestep"><code class="xref py py-class docutils literal notranslate"><span class="pre">Timestep</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="amago.envs.amago_env.EnvCreator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">EnvCreator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">make_env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exploration_wrapper_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_trajs_to</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_every_low</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_every_high</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_trajs_as</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/envs/amago_env.html#EnvCreator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.envs.amago_env.EnvCreator" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Utility that builds the SequenceWrapper(AMAGOEnv()) wrapper stack for AsyncVectorEnv</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.envs.amago_env.EnvCreator.exploration_wrapper_type">
+<span class="sig-name descname"><span class="pre">exploration_wrapper_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code><span class="pre">[</span><a class="reference internal" href="amago.envs.exploration.html#amago.envs.exploration.ExplorationWrapper" title="amago.envs.exploration.ExplorationWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExplorationWrapper</span></code></a><span class="pre">]</span></em><a class="headerlink" href="#amago.envs.amago_env.EnvCreator.exploration_wrapper_type" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.envs.amago_env.EnvCreator.make_env">
+<span class="sig-name descname"><span class="pre">make_env</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></em><a class="headerlink" href="#amago.envs.amago_env.EnvCreator.make_env" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.envs.amago_env.EnvCreator.save_every_high">
+<span class="sig-name descname"><span class="pre">save_every_high</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></em><a class="headerlink" href="#amago.envs.amago_env.EnvCreator.save_every_high" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.envs.amago_env.EnvCreator.save_every_low">
+<span class="sig-name descname"><span class="pre">save_every_low</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></em><a class="headerlink" href="#amago.envs.amago_env.EnvCreator.save_every_low" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.envs.amago_env.EnvCreator.save_trajs_as">
+<span class="sig-name descname"><span class="pre">save_trajs_as</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><a class="headerlink" href="#amago.envs.amago_env.EnvCreator.save_trajs_as" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.envs.amago_env.EnvCreator.save_trajs_to">
+<span class="sig-name descname"><span class="pre">save_trajs_to</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code> <span class="pre">|</span> <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></em><a class="headerlink" href="#amago.envs.amago_env.EnvCreator.save_trajs_to" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="amago.envs.amago_env.ReturnHistory">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ReturnHistory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/envs/amago_env.html#ReturnHistory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.envs.amago_env.ReturnHistory" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.envs.amago_env.ReturnHistory.add_score">
+<span class="sig-name descname"><span class="pre">add_score</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/envs/amago_env.html#ReturnHistory.add_score"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.envs.amago_env.ReturnHistory.add_score" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="amago.envs.amago_env.SequenceWrapper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SequenceWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_trajs_to</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_every</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_trajs_as</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'npz'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/envs/amago_env.html#SequenceWrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.envs.amago_env.SequenceWrapper" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Wrapper</span></code></p>
+<p>A wrapper that saves trajectory files to disk and logs rollout metrics.</p>
+<p>Automatically logs total return in all envs.</p>
+<p>We also log any metric from the gym env’s <code class="xref py py-obj docutils literal notranslate"><span class="pre">info</span></code> dict that begins with “AMAGO_LOG_METRIC”
+(<code class="xref py py-obj docutils literal notranslate"><span class="pre">amago.envs.env_utils.AMAGO_ENV_LOG_PREFIX</span></code>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>env</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#amago.envs.amago_env.AMAGOEnv" title="amago.envs.amago_env.AMAGOEnv"><code class="xref py py-class docutils literal notranslate"><span class="pre">AMAGOEnv</span></code></a></span>) – The <a class="reference internal" href="#amago.envs.amago_env.AMAGOEnv" title="amago.envs.amago_env.AMAGOEnv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AMAGOEnv</span></code></a> to wrap.</p></li>
+<li><p><strong>save_trajs_to</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – The directory to save trajectory files to.</p></li>
+<li><p><strong>save_every</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code>] | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – The number of steps between saving trajectory files (if they don’t terminate).</p></li>
+<li><p><strong>save_trajs_as</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – The format to save trajectory files as. “traj”, “npz”, or “npz-compressed”.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="amago.envs.amago_env.SequenceWrapper.current_timestep">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">current_timestep</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#amago.envs.amago_env.SequenceWrapper.current_timestep" title="Link to this definition">#</a></dt>
+<dd><p>Get the current timestep of this environment in the format expected by the Agent</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="amago.envs.amago_env.SequenceWrapper.env_name">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">env_name</span></span><a class="headerlink" href="#amago.envs.amago_env.SequenceWrapper.env_name" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.envs.amago_env.SequenceWrapper.finish_active_traj">
+<span class="sig-name descname"><span class="pre">finish_active_traj</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_init_timestep</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/envs/amago_env.html#SequenceWrapper.finish_active_traj"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.envs.amago_env.SequenceWrapper.finish_active_traj" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.envs.amago_env.SequenceWrapper.random_traj_length">
+<span class="sig-name descname"><span class="pre">random_traj_length</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/envs/amago_env.html#SequenceWrapper.random_traj_length"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.envs.amago_env.SequenceWrapper.random_traj_length" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.envs.amago_env.SequenceWrapper.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/envs/amago_env.html#SequenceWrapper.reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.envs.amago_env.SequenceWrapper.reset" title="Link to this definition">#</a></dt>
+<dd><p>Uses the <a class="reference internal" href="#amago.envs.amago_env.SequenceWrapper.reset" title="amago.envs.amago_env.SequenceWrapper.reset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">reset()</span></code></a> of the <code class="xref py py-attr docutils literal notranslate"><span class="pre">env</span></code> that can be overwritten to change the returned data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="amago.hindsight.html#amago.hindsight.Timestep" title="amago.hindsight.Timestep"><code class="xref py py-class docutils literal notranslate"><span class="pre">Timestep</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.envs.amago_env.SequenceWrapper.reset_stats">
+<span class="sig-name descname"><span class="pre">reset_stats</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/envs/amago_env.html#SequenceWrapper.reset_stats"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.envs.amago_env.SequenceWrapper.reset_stats" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.envs.amago_env.SequenceWrapper.save_finished_trajs">
+<span class="sig-name descname"><span class="pre">save_finished_trajs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/envs/amago_env.html#SequenceWrapper.save_finished_trajs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.envs.amago_env.SequenceWrapper.save_finished_trajs" title="Link to this definition">#</a></dt>
+<dd><p>Saves all completed trajectories to disk.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.envs.amago_env.SequenceWrapper.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/envs/amago_env.html#SequenceWrapper.step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.envs.amago_env.SequenceWrapper.step" title="Link to this definition">#</a></dt>
+<dd><p>Uses the <a class="reference internal" href="#amago.envs.amago_env.SequenceWrapper.step" title="amago.envs.amago_env.SequenceWrapper.step"><code class="xref py py-meth docutils literal notranslate"><span class="pre">step()</span></code></a> of the <code class="xref py py-attr docutils literal notranslate"><span class="pre">env</span></code> that can be overwritten to change the returned data.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="amago.envs.amago_env.SequenceWrapper.step_count">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">step_count</span></span><a class="headerlink" href="#amago.envs.amago_env.SequenceWrapper.step_count" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="amago.envs.amago_env.SequenceWrapper.total_frames">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">total_frames</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#amago.envs.amago_env.SequenceWrapper.total_frames" title="Link to this definition">#</a></dt>
+<dd><p>Returns the total number of env.step calls taken by this particular env wrapper.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="amago.envs.amago_env.SequenceWrapper.total_frames_by_env_name">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">total_frames_by_env_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#amago.envs.amago_env.SequenceWrapper.total_frames_by_env_name" title="Link to this definition">#</a></dt>
+<dd><p>total env.step calls in this env_name}</p>
+<p>Environment names are dynamically generated by the <a class="reference internal" href="#amago.envs.amago_env.AMAGOEnv" title="amago.envs.amago_env.AMAGOEnv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AMAGOEnv</span></code></a> in case they change on reset.
+For example, a multi-task setup might pick from N games every reset. This dict would reveal
+the total timesteps seen in each game.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Returns a dict of {env_name</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="amago.envs.amago_env.SpecialMetricHistory">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SpecialMetricHistory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/envs/amago_env.html#SpecialMetricHistory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.envs.amago_env.SpecialMetricHistory" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.envs.amago_env.SpecialMetricHistory.add_score">
+<span class="sig-name descname"><span class="pre">add_score</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/envs/amago_env.html#SpecialMetricHistory.add_score"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.envs.amago_env.SpecialMetricHistory.add_score" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.envs.amago_env.SpecialMetricHistory.log_prefix">
+<span class="sig-name descname"><span class="pre">log_prefix</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'AMAGO_LOG_METRIC'</span></em><a class="headerlink" href="#amago.envs.amago_env.SpecialMetricHistory.log_prefix" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="amago.envs.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">amago.envs</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="amago.envs.builtin.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">amago.envs.builtin</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.AMAGOEnv"><code class="docutils literal notranslate"><span class="pre">AMAGOEnv</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.AMAGOEnv.env_name"><code class="docutils literal notranslate"><span class="pre">AMAGOEnv.env_name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.AMAGOEnv.inner_reset"><code class="docutils literal notranslate"><span class="pre">AMAGOEnv.inner_reset()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.AMAGOEnv.inner_step"><code class="docutils literal notranslate"><span class="pre">AMAGOEnv.inner_step()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.AMAGOEnv.make_action_rep"><code class="docutils literal notranslate"><span class="pre">AMAGOEnv.make_action_rep()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.AMAGOEnv.render"><code class="docutils literal notranslate"><span class="pre">AMAGOEnv.render()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.AMAGOEnv.reset"><code class="docutils literal notranslate"><span class="pre">AMAGOEnv.reset()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.AMAGOEnv.step"><code class="docutils literal notranslate"><span class="pre">AMAGOEnv.step()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.EnvCreator"><code class="docutils literal notranslate"><span class="pre">EnvCreator</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.EnvCreator.exploration_wrapper_type"><code class="docutils literal notranslate"><span class="pre">EnvCreator.exploration_wrapper_type</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.EnvCreator.make_env"><code class="docutils literal notranslate"><span class="pre">EnvCreator.make_env</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.EnvCreator.save_every_high"><code class="docutils literal notranslate"><span class="pre">EnvCreator.save_every_high</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.EnvCreator.save_every_low"><code class="docutils literal notranslate"><span class="pre">EnvCreator.save_every_low</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.EnvCreator.save_trajs_as"><code class="docutils literal notranslate"><span class="pre">EnvCreator.save_trajs_as</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.EnvCreator.save_trajs_to"><code class="docutils literal notranslate"><span class="pre">EnvCreator.save_trajs_to</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.ReturnHistory"><code class="docutils literal notranslate"><span class="pre">ReturnHistory</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.ReturnHistory.add_score"><code class="docutils literal notranslate"><span class="pre">ReturnHistory.add_score()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.SequenceWrapper"><code class="docutils literal notranslate"><span class="pre">SequenceWrapper</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.SequenceWrapper.current_timestep"><code class="docutils literal notranslate"><span class="pre">SequenceWrapper.current_timestep</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.SequenceWrapper.env_name"><code class="docutils literal notranslate"><span class="pre">SequenceWrapper.env_name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.SequenceWrapper.finish_active_traj"><code class="docutils literal notranslate"><span class="pre">SequenceWrapper.finish_active_traj()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.SequenceWrapper.random_traj_length"><code class="docutils literal notranslate"><span class="pre">SequenceWrapper.random_traj_length()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.SequenceWrapper.reset"><code class="docutils literal notranslate"><span class="pre">SequenceWrapper.reset()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.SequenceWrapper.reset_stats"><code class="docutils literal notranslate"><span class="pre">SequenceWrapper.reset_stats()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.SequenceWrapper.save_finished_trajs"><code class="docutils literal notranslate"><span class="pre">SequenceWrapper.save_finished_trajs()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.SequenceWrapper.step"><code class="docutils literal notranslate"><span class="pre">SequenceWrapper.step()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.SequenceWrapper.step_count"><code class="docutils literal notranslate"><span class="pre">SequenceWrapper.step_count</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.SequenceWrapper.total_frames"><code class="docutils literal notranslate"><span class="pre">SequenceWrapper.total_frames</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.SequenceWrapper.total_frames_by_env_name"><code class="docutils literal notranslate"><span class="pre">SequenceWrapper.total_frames_by_env_name</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.SpecialMetricHistory"><code class="docutils literal notranslate"><span class="pre">SpecialMetricHistory</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.SpecialMetricHistory.add_score"><code class="docutils literal notranslate"><span class="pre">SpecialMetricHistory.add_score()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.envs.amago_env.SpecialMetricHistory.log_prefix"><code class="docutils literal notranslate"><span class="pre">SpecialMetricHistory.log_prefix</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By UT Austin Robot Perception and Learning Lab
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

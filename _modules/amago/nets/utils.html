@@ -1,0 +1,653 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" data-theme="light">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>amago.nets.utils &#8212; AMAGO</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "light";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/custom.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/custom.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/amago/nets/utils';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="light">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+    
+    <img src="../../../_static/amago_logo_3.png" class="logo__image only-light" alt="AMAGO - Home"/>
+    <script>document.write(`<img src="../../../_static/amago_logo_3.png" class="logo__image only-dark" alt="AMAGO - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../tutorial/index.html">Tutorial</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial/setup_env.html">Setup the Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial/create_dataset.html">Create a Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial/create_experiment.html">Create an Experiment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial/track_results.html">Track the Results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial/configuration.html">Configure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial/customization.html">Customize</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial/async.html">Multi-GPU and Asynchronous Training</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../examples/index.html">Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/00_meta_frozen_lake.html">Meta Frozen Lake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/01_basic_gym.html">Basic Gymnasium</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/02_gymnax.html">Gymnax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/03_popgym_suite.html">POPGym</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/04_tmaze.html">T-Maze</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/05_dark_key_door.html">Dark Room Key Door</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/06_alchemy.html">Symbolic DM Alchemy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/07_metaworld.html">Meta-World ML1/ML10/ML45</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/08_ale.html">Multi-Game Atari</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/09_multitask_procgen.html">Multi-Game ProcGen</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/10_babyai.html">Multi-Task BabyAI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/11_xland_minigrid.html">XLand Mini-Grid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/12_half_cheetah_vel.html">HalfCheetah(v4)-Velocity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/13_mazerunner_relabeling.html">MazeRunner HER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/14_d4rl.html">D4RL</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../api/amago.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/amago.agent.html">amago.agent</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/amago.cli_utils.html">amago.cli_utils</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../api/amago.envs.html">amago.envs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/amago.envs.amago_env.html">amago.envs.amago_env</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../api/amago.envs.builtin.html">amago.envs.builtin</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/amago.envs.builtin.half_cheetah_v4_vel.html">amago.envs.builtin.half_cheetah_v4_vel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/amago.envs.builtin.metaworld_ml.html">amago.envs.builtin.metaworld_ml</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/amago.envs.builtin.popgym_envs.html">amago.envs.builtin.popgym_envs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/amago.envs.builtin.toy_gym.html">amago.envs.builtin.toy_gym</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/amago.envs.builtin.xland_minigrid.html">amago.envs.builtin.xland_minigrid</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/amago.envs.env_utils.html">amago.envs.env_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/amago.envs.exploration.html">amago.envs.exploration</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/amago.experiment.html">amago.experiment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/amago.hindsight.html">amago.hindsight</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/amago.loading.html">amago.loading</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../api/amago.nets.html">amago.nets</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/amago.nets.actor_critic.html">amago.nets.actor_critic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/amago.nets.cnn.html">amago.nets.cnn</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/amago.nets.ff.html">amago.nets.ff</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/amago.nets.goal_embedders.html">amago.nets.goal_embedders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/amago.nets.policy_dists.html">amago.nets.policy_dists</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/amago.nets.traj_encoders.html">amago.nets.traj_encoders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/amago.nets.transformer.html">amago.nets.transformer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/amago.nets.tstep_encoders.html">amago.nets.tstep_encoders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/amago.nets.utils.html">amago.nets.utils</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/amago.utils.html">amago.utils</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citation.html">Citation</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for amago.nets.utils</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Miscellaneous utilities for neural network modules.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">nn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="kn">import</span> <span class="n">functional</span> <span class="k">as</span> <span class="n">F</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">gin</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">amago.loading</span><span class="w"> </span><span class="kn">import</span> <span class="n">MAGIC_PAD_VAL</span>
+
+
+<div class="viewcode-block" id="symlog">
+<a class="viewcode-back" href="../../../api/amago.nets.utils.html#amago.nets.utils.symlog">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">symlog</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Symmetric log transform.</span>
+
+<span class="sd">    Applies sign(x) * log(|x| + 1) to the input. This transform is useful for</span>
+<span class="sd">    rescaling ~unbounded ranges to a suitable range for network inputs/outputs.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        x: Input tensor or scalar value.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        symlog(x) as a Tensor if x is a Tensor, otherwise symlog(x) as a float.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">not_torch</span> <span class="o">=</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">not_torch</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">([</span><span class="n">x</span><span class="p">])</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">not_torch</span><span class="p">:</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+
+<div class="viewcode-block" id="symexp">
+<a class="viewcode-back" href="../../../api/amago.nets.utils.html#amago.nets.utils.symexp">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">symexp</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Symmetric exponential transform.</span>
+
+<span class="sd">    Applies sign(x) * (exp(|x|) - 1) to the input. This is the inverse of the</span>
+<span class="sd">    symmetric log transform.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        x: Input tensor or scalar value.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        symexp(x) as a Tensor if x is a Tensor, otherwise symexp(x) as a float.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">not_torch</span> <span class="o">=</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">not_torch</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">([</span><span class="n">x</span><span class="p">])</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">not_torch</span><span class="p">:</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">out</span></div>
+
+
+
+<div class="viewcode-block" id="add_activation_log">
+<a class="viewcode-back" href="../../../api/amago.nets.utils.html#amago.nets.utils.add_activation_log">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_activation_log</span><span class="p">(</span>
+    <span class="n">root_key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">activation</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">log_dict</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Add activation statistics to a logging dictionary.</span>
+
+<span class="sd">    Logs the maximum, minimum, standard deviation, and mean of the activation</span>
+<span class="sd">    tensor under the key prefix &quot;activation-{root_key}-&quot;.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        root_key: Prefix for the log keys.</span>
+<span class="sd">        activation: Tensor to compute statistics from.</span>
+<span class="sd">        log_dict: Dictionary to add statistics to. If None, no logging is</span>
+<span class="sd">            performed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">log_dict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+        <span class="n">log_dict</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;activation-</span><span class="si">{</span><span class="n">root_key</span><span class="si">}</span><span class="s2">-max&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">activation</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="n">log_dict</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;activation-</span><span class="si">{</span><span class="n">root_key</span><span class="si">}</span><span class="s2">-min&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">activation</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+        <span class="n">log_dict</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;activation-</span><span class="si">{</span><span class="n">root_key</span><span class="si">}</span><span class="s2">-std&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">activation</span><span class="o">.</span><span class="n">std</span><span class="p">()</span>
+        <span class="n">log_dict</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;activation-</span><span class="si">{</span><span class="n">root_key</span><span class="si">}</span><span class="s2">-mean&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">activation</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="InputNorm">
+<a class="viewcode-back" href="../../../api/amago.nets.utils.html#amago.nets.utils.InputNorm">[docs]</a>
+<span class="nd">@gin</span><span class="o">.</span><span class="n">configurable</span><span class="p">(</span><span class="n">denylist</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;skip&quot;</span><span class="p">])</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">InputNorm</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Moving-average feature normalization.</span>
+
+<span class="sd">    Normalizes input features using a moving average of their statistics. This</span>
+<span class="sd">    helps stabilize training by keeping the input distribution relatively</span>
+<span class="sd">    constant.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        dim: Dimension of the input feature.</span>
+
+<span class="sd">    Keyword Args:</span>
+<span class="sd">        beta: Smoothing parameter for the moving average. Defaults to 1e-4.</span>
+<span class="sd">        init_nu: Initial value for the moving average of the squared feature</span>
+<span class="sd">            values. Defaults to 1.0.</span>
+<span class="sd">        skip (no gin): Whether to skip normalization. Defaults to False. Cannot be</span>
+<span class="sd">            configured via gin (disable input norm in the TstepEncoder config).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span> <span class="n">init_nu</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">skip</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">skip</span> <span class="o">=</span> <span class="n">skip</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s2">&quot;mu&quot;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">dim</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s2">&quot;nu&quot;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span> <span class="o">*</span> <span class="n">init_nu</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s2">&quot;_t&quot;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">1</span><span class="p">,)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">beta</span> <span class="o">=</span> <span class="n">beta</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pad_val</span> <span class="o">=</span> <span class="n">MAGIC_PAD_VAL</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sigma</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">sigma_</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nu</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mf">1e-5</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">sigma_</span><span class="p">)</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="mf">1e-3</span><span class="p">,</span> <span class="mf">1e6</span><span class="p">)</span>
+
+<div class="viewcode-block" id="InputNorm.normalize_values">
+<a class="viewcode-back" href="../../../api/amago.nets.utils.html#amago.nets.utils.InputNorm.normalize_values">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">normalize_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">skip</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">val</span>
+        <span class="n">sigma</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span>
+        <span class="n">normalized</span> <span class="o">=</span> <span class="p">((</span><span class="n">val</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">)</span> <span class="o">/</span> <span class="n">sigma</span><span class="p">)</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="o">-</span><span class="mf">1e4</span><span class="p">,</span> <span class="mf">1e4</span><span class="p">)</span>
+        <span class="n">not_nan</span> <span class="o">=</span> <span class="o">~</span><span class="n">torch</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">normalized</span><span class="p">)</span>
+        <span class="n">stable</span> <span class="o">=</span> <span class="p">(</span><span class="n">sigma</span> <span class="o">&gt;</span> <span class="mf">0.01</span><span class="p">)</span><span class="o">.</span><span class="n">expand_as</span><span class="p">(</span><span class="n">not_nan</span><span class="p">)</span>
+        <span class="n">use_norm</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="n">stable</span><span class="p">,</span> <span class="n">not_nan</span><span class="p">)</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">use_norm</span><span class="p">,</span> <span class="n">normalized</span><span class="p">,</span> <span class="p">(</span><span class="n">val</span> <span class="o">-</span> <span class="n">torch</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">output</span></div>
+
+
+<div class="viewcode-block" id="InputNorm.denormalize_values">
+<a class="viewcode-back" href="../../../api/amago.nets.utils.html#amago.nets.utils.InputNorm.denormalize_values">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">denormalize_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">skip</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">val</span>
+        <span class="n">sigma</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span>
+        <span class="n">denormalized</span> <span class="o">=</span> <span class="p">(</span><span class="n">val</span> <span class="o">*</span> <span class="n">sigma</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span>
+        <span class="n">stable</span> <span class="o">=</span> <span class="p">(</span><span class="n">sigma</span> <span class="o">&gt;</span> <span class="mf">0.01</span><span class="p">)</span><span class="o">.</span><span class="n">expand_as</span><span class="p">(</span><span class="n">denormalized</span><span class="p">)</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">stable</span><span class="p">,</span> <span class="n">denormalized</span><span class="p">,</span> <span class="p">(</span><span class="n">val</span> <span class="o">+</span> <span class="n">torch</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">output</span></div>
+
+
+<div class="viewcode-block" id="InputNorm.masked_stats">
+<a class="viewcode-back" href="../../../api/amago.nets.utils.html#amago.nets.utils.InputNorm.masked_stats">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">masked_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
+        <span class="c1"># make sure the padding value doesn&#39;t impact statistics</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span><span class="o">~</span><span class="p">((</span><span class="n">val</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad_val</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)))</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+        <span class="n">sum_</span> <span class="o">=</span> <span class="p">(</span><span class="n">val</span> <span class="o">*</span> <span class="n">mask</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">square_sum</span> <span class="o">=</span> <span class="p">((</span><span class="n">val</span> <span class="o">*</span> <span class="n">mask</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">total</span> <span class="o">=</span> <span class="n">mask</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">mean</span> <span class="o">=</span> <span class="n">sum_</span> <span class="o">/</span> <span class="n">total</span>
+        <span class="n">square_mean</span> <span class="o">=</span> <span class="n">square_sum</span> <span class="o">/</span> <span class="n">total</span>
+        <span class="k">return</span> <span class="n">mean</span><span class="p">,</span> <span class="n">square_mean</span></div>
+
+
+<div class="viewcode-block" id="InputNorm.update_stats">
+<a class="viewcode-back" href="../../../api/amago.nets.utils.html#amago.nets.utils.InputNorm.update_stats">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_stats</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_t</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">old_sigma</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sigma</span>
+        <span class="n">old_mu</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span>
+        <span class="n">beta_t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">)</span> <span class="o">**</span> <span class="bp">self</span><span class="o">.</span><span class="n">_t</span><span class="p">)</span>
+        <span class="n">mean</span><span class="p">,</span> <span class="n">square_mean</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">masked_stats</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mu</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">beta_t</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">mu</span> <span class="o">+</span> <span class="p">(</span><span class="n">beta_t</span> <span class="o">*</span> <span class="n">mean</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nu</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">beta_t</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">nu</span> <span class="o">+</span> <span class="p">(</span><span class="n">beta_t</span> <span class="o">*</span> <span class="n">square_mean</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="InputNorm.forward">
+<a class="viewcode-back" href="../../../api/amago.nets.utils.html#amago.nets.utils.InputNorm.forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">denormalize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">denormalize</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">denormalize_values</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">normalize_values</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="SlowAdaptiveRational">
+<a class="viewcode-back" href="../../../api/amago.nets.utils.html#amago.nets.utils.SlowAdaptiveRational">[docs]</a>
+<span class="nd">@gin</span><span class="o">.</span><span class="n">configurable</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SlowAdaptiveRational</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adaptive Rational Activation.</span>
+
+<span class="sd">    A slow non-cuda version of &quot;Adaptive Rational Activations to Boost Deep</span>
+<span class="sd">    Reinforcement Learning&quot;, Delfosse et al., 2021</span>
+<span class="sd">    (https://arxiv.org/pdf/2102.09407.pdf). Hardcoded to the Leaky Relu version.</span>
+
+<span class="sd">    Keyword Args:</span>
+<span class="sd">        trainable: Whether to train the parameters of the activation. Defaults to</span>
+<span class="sd">            True.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trainable</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="c1"># hardcoded to leaky relu version</span>
+        <span class="n">degrees</span> <span class="o">=</span> <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+        <span class="n">num_init</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="mf">0.029792778657264946</span><span class="p">,</span>
+            <span class="mf">0.6183735264987601</span><span class="p">,</span>
+            <span class="mf">2.323309062531321</span><span class="p">,</span>
+            <span class="mf">3.051936237265109</span><span class="p">,</span>
+            <span class="mf">1.4854203263828845</span><span class="p">,</span>
+            <span class="mf">0.2510244961111299</span><span class="p">,</span>
+        <span class="p">]</span>
+
+        <span class="n">den_init</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="o">-</span><span class="mf">1.1419548357285474</span><span class="p">,</span>
+            <span class="mf">4.393159974992486</span><span class="p">,</span>
+            <span class="mf">0.8714712309957245</span><span class="p">,</span>
+            <span class="mf">0.34719662339598834</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">numerator</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">num_init</span><span class="p">),</span> <span class="n">requires_grad</span><span class="o">=</span><span class="n">trainable</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">denominator</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">den_init</span><span class="p">),</span> <span class="n">requires_grad</span><span class="o">=</span><span class="n">trainable</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_d</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">den_d</span> <span class="o">=</span> <span class="n">degrees</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_d</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">degrees</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SlowAdaptiveRational.forward">
+<a class="viewcode-back" href="../../../api/amago.nets.utils.html#amago.nets.utils.SlowAdaptiveRational.forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="n">pows</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">vander</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">N</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_d</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">num</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">numerator</span> <span class="o">*</span> <span class="n">pows</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_d</span><span class="p">])</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">den</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">denominator</span> <span class="o">*</span> <span class="n">pows</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span> <span class="p">:</span> <span class="mi">1</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">den_d</span><span class="p">])</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">num</span> <span class="o">/</span> <span class="n">den</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="activation_switch">
+<a class="viewcode-back" href="../../../api/amago.nets.utils.html#amago.nets.utils.activation_switch">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">activation_switch</span><span class="p">(</span><span class="n">activation</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">callable</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Quick switch for the activation function.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        activation: The activation function name. Options are:</span>
+<span class="sd">            - &quot;leaky_relu&quot; (Leaky ReLU)</span>
+<span class="sd">            - &quot;relu&quot; (ReLU)</span>
+<span class="sd">            - &quot;gelu&quot; (GeLU)</span>
+<span class="sd">            - &quot;adaptive&quot; (SlowAdaptiveRational)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The activation function (callable).</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If the activation function name is not recognized.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">activation</span> <span class="o">==</span> <span class="s2">&quot;leaky_relu&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">F</span><span class="o">.</span><span class="n">leaky_relu</span>
+    <span class="k">elif</span> <span class="n">activation</span> <span class="o">==</span> <span class="s2">&quot;relu&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">F</span><span class="o">.</span><span class="n">relu</span>
+    <span class="k">elif</span> <span class="n">activation</span> <span class="o">==</span> <span class="s2">&quot;gelu&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">F</span><span class="o">.</span><span class="n">gelu</span>
+    <span class="k">elif</span> <span class="n">activation</span> <span class="o">==</span> <span class="s2">&quot;adaptive&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">SlowAdaptiveRational</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unrecognized `activation` func: </span><span class="si">{</span><span class="n">activation</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By UT Austin Robot Perception and Learning Lab
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

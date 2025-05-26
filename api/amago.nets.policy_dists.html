@@ -1,0 +1,1129 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="light">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>amago.nets.policy_dists &#8212; AMAGO</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "light";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/amago.nets.policy_dists';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="amago.nets.traj_encoders" href="amago.nets.traj_encoders.html" />
+    <link rel="prev" title="amago.nets.goal_embedders" href="amago.nets.goal_embedders.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="light">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+    
+    <img src="../_static/amago_logo_3.png" class="logo__image only-light" alt="AMAGO - Home"/>
+    <script>document.write(`<img src="../_static/amago_logo_3.png" class="logo__image only-dark" alt="AMAGO - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../tutorial/index.html">Tutorial</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/setup_env.html">Setup the Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/create_dataset.html">Create a Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/create_experiment.html">Create an Experiment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/track_results.html">Track the Results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/configuration.html">Configure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/customization.html">Customize</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/async.html">Multi-GPU and Asynchronous Training</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../examples/index.html">Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../examples/00_meta_frozen_lake.html">Meta Frozen Lake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/01_basic_gym.html">Basic Gymnasium</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/02_gymnax.html">Gymnax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/03_popgym_suite.html">POPGym</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/04_tmaze.html">T-Maze</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/05_dark_key_door.html">Dark Room Key Door</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/06_alchemy.html">Symbolic DM Alchemy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/07_metaworld.html">Meta-World ML1/ML10/ML45</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/08_ale.html">Multi-Game Atari</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/09_multitask_procgen.html">Multi-Game ProcGen</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/10_babyai.html">Multi-Task BabyAI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/11_xland_minigrid.html">XLand Mini-Grid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/12_half_cheetah_vel.html">HalfCheetah(v4)-Velocity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/13_mazerunner_relabeling.html">MazeRunner HER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/14_d4rl.html">D4RL</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="amago.html">API Reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="amago.agent.html">amago.agent</a></li>
+<li class="toctree-l2"><a class="reference internal" href="amago.cli_utils.html">amago.cli_utils</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="amago.envs.html">amago.envs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="amago.envs.amago_env.html">amago.envs.amago_env</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="amago.envs.builtin.html">amago.envs.builtin</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="amago.envs.builtin.half_cheetah_v4_vel.html">amago.envs.builtin.half_cheetah_v4_vel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="amago.envs.builtin.metaworld_ml.html">amago.envs.builtin.metaworld_ml</a></li>
+<li class="toctree-l4"><a class="reference internal" href="amago.envs.builtin.popgym_envs.html">amago.envs.builtin.popgym_envs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="amago.envs.builtin.toy_gym.html">amago.envs.builtin.toy_gym</a></li>
+<li class="toctree-l4"><a class="reference internal" href="amago.envs.builtin.xland_minigrid.html">amago.envs.builtin.xland_minigrid</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.envs.env_utils.html">amago.envs.env_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.envs.exploration.html">amago.envs.exploration</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="amago.experiment.html">amago.experiment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="amago.hindsight.html">amago.hindsight</a></li>
+<li class="toctree-l2"><a class="reference internal" href="amago.loading.html">amago.loading</a></li>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="amago.nets.html">amago.nets</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.actor_critic.html">amago.nets.actor_critic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.cnn.html">amago.nets.cnn</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.ff.html">amago.nets.ff</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.goal_embedders.html">amago.nets.goal_embedders</a></li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">amago.nets.policy_dists</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.traj_encoders.html">amago.nets.traj_encoders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.transformer.html">amago.nets.transformer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.tstep_encoders.html">amago.nets.tstep_encoders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.utils.html">amago.nets.utils</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="amago.utils.html">amago.utils</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../citation.html">Citation</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/api/amago.nets.policy_dists.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>amago.nets.policy_dists</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.Beta"><code class="docutils literal notranslate"><span class="pre">Beta</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.Beta.actions_differentiable"><code class="docutils literal notranslate"><span class="pre">Beta.actions_differentiable</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.Beta.forward"><code class="docutils literal notranslate"><span class="pre">Beta.forward()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.Beta.input_dimension"><code class="docutils literal notranslate"><span class="pre">Beta.input_dimension</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.Beta.is_discrete"><code class="docutils literal notranslate"><span class="pre">Beta.is_discrete</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.Discrete"><code class="docutils literal notranslate"><span class="pre">Discrete</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.Discrete.actions_differentiable"><code class="docutils literal notranslate"><span class="pre">Discrete.actions_differentiable</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.Discrete.forward"><code class="docutils literal notranslate"><span class="pre">Discrete.forward()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.Discrete.input_dimension"><code class="docutils literal notranslate"><span class="pre">Discrete.input_dimension</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.Discrete.is_discrete"><code class="docutils literal notranslate"><span class="pre">Discrete.is_discrete</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.DiscreteLikeContinuous"><code class="docutils literal notranslate"><span class="pre">DiscreteLikeContinuous</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.DiscreteLikeContinuous.entropy"><code class="docutils literal notranslate"><span class="pre">DiscreteLikeContinuous.entropy()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.DiscreteLikeContinuous.log_prob"><code class="docutils literal notranslate"><span class="pre">DiscreteLikeContinuous.log_prob()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.DiscreteLikeContinuous.logits"><code class="docutils literal notranslate"><span class="pre">DiscreteLikeContinuous.logits</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.DiscreteLikeContinuous.probs"><code class="docutils literal notranslate"><span class="pre">DiscreteLikeContinuous.probs</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.DiscreteLikeContinuous.rsample"><code class="docutils literal notranslate"><span class="pre">DiscreteLikeContinuous.rsample()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.DiscreteLikeContinuous.sample"><code class="docutils literal notranslate"><span class="pre">DiscreteLikeContinuous.sample()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.GMM"><code class="docutils literal notranslate"><span class="pre">GMM</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.GMM.actions_differentiable"><code class="docutils literal notranslate"><span class="pre">GMM.actions_differentiable</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.GMM.forward"><code class="docutils literal notranslate"><span class="pre">GMM.forward()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.GMM.input_dimension"><code class="docutils literal notranslate"><span class="pre">GMM.input_dimension</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.GMM.is_discrete"><code class="docutils literal notranslate"><span class="pre">GMM.is_discrete</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.Multibinary"><code class="docutils literal notranslate"><span class="pre">Multibinary</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.Multibinary.actions_differentiable"><code class="docutils literal notranslate"><span class="pre">Multibinary.actions_differentiable</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.Multibinary.forward"><code class="docutils literal notranslate"><span class="pre">Multibinary.forward()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.Multibinary.input_dimension"><code class="docutils literal notranslate"><span class="pre">Multibinary.input_dimension</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.Multibinary.is_discrete"><code class="docutils literal notranslate"><span class="pre">Multibinary.is_discrete</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.PolicyOutput"><code class="docutils literal notranslate"><span class="pre">PolicyOutput</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.PolicyOutput.actions_differentiable"><code class="docutils literal notranslate"><span class="pre">PolicyOutput.actions_differentiable</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.PolicyOutput.forward"><code class="docutils literal notranslate"><span class="pre">PolicyOutput.forward()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.PolicyOutput.input_dimension"><code class="docutils literal notranslate"><span class="pre">PolicyOutput.input_dimension</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.PolicyOutput.is_discrete"><code class="docutils literal notranslate"><span class="pre">PolicyOutput.is_discrete</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.TanhGaussian"><code class="docutils literal notranslate"><span class="pre">TanhGaussian</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.TanhGaussian.actions_differentiable"><code class="docutils literal notranslate"><span class="pre">TanhGaussian.actions_differentiable</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.TanhGaussian.forward"><code class="docutils literal notranslate"><span class="pre">TanhGaussian.forward()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.TanhGaussian.input_dimension"><code class="docutils literal notranslate"><span class="pre">TanhGaussian.input_dimension</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.TanhGaussian.is_discrete"><code class="docutils literal notranslate"><span class="pre">TanhGaussian.is_discrete</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.softplus_bounded_positive"><code class="docutils literal notranslate"><span class="pre">softplus_bounded_positive()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.tanh_bounded_positive"><code class="docutils literal notranslate"><span class="pre">tanh_bounded_positive()</span></code></a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-amago.nets.policy_dists">
+<span id="amago-nets-policy-dists"></span><h1>amago.nets.policy_dists<a class="headerlink" href="#module-amago.nets.policy_dists" title="Link to this heading">#</a></h1>
+<p>Stochastic policy output distributions.</p>
+<p class="rubric">Functions</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amago.nets.policy_dists.softplus_bounded_positive" title="amago.nets.policy_dists.softplus_bounded_positive"><code class="xref py py-obj docutils literal notranslate"><span class="pre">softplus_bounded_positive</span></code></a>(x, low[, high])</p></td>
+<td><p>Map network output activations to a positive value (to parameterize a distribution).</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amago.nets.policy_dists.tanh_bounded_positive" title="amago.nets.policy_dists.tanh_bounded_positive"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tanh_bounded_positive</span></code></a>(x, low, high)</p></td>
+<td><p>Map network output activations to a positive value (to parameterize a distribution).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Classes</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amago.nets.policy_dists.Beta" title="amago.nets.policy_dists.Beta"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Beta</span></code></a>(d_action[, alpha_low, alpha_high, ...])</p></td>
+<td><p>Generates a Beta distribution rescaled to [-1, 1].</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amago.nets.policy_dists.Discrete" title="amago.nets.policy_dists.Discrete"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Discrete</span></code></a>(d_action[, clip_prob_low, ...])</p></td>
+<td><p>Generates a categorical distribution over actions.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amago.nets.policy_dists.DiscreteLikeContinuous" title="amago.nets.policy_dists.DiscreteLikeContinuous"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DiscreteLikeContinuous</span></code></a>(categorical[, ...])</p></td>
+<td><p>Wrapper around <code class="xref py py-obj docutils literal notranslate"><span class="pre">Categorical</span></code> used by <code class="xref py py-obj docutils literal notranslate"><span class="pre">MultiTaskAgent</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amago.nets.policy_dists.GMM" title="amago.nets.policy_dists.GMM"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GMM</span></code></a>(d_action[, gmm_modes, std_low, ...])</p></td>
+<td><p>Generates a Gaussian Mixture Model with a tanh transform.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amago.nets.policy_dists.Multibinary" title="amago.nets.policy_dists.Multibinary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Multibinary</span></code></a>(d_action)</p></td>
+<td><p>Multi-binary action space support.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amago.nets.policy_dists.PolicyOutput" title="amago.nets.policy_dists.PolicyOutput"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PolicyOutput</span></code></a>(d_action)</p></td>
+<td><p>Abstract base class for mapping network outputs to a distribution over actions.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amago.nets.policy_dists.TanhGaussian" title="amago.nets.policy_dists.TanhGaussian"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TanhGaussian</span></code></a>(d_action[, std_low, std_high, ...])</p></td>
+<td><p>Generates a multivariate normal with a tanh transform to sample in [-1, 1].</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="amago.nets.policy_dists.Beta">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Beta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d_action</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_low=1.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_high=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta_low=1.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta_high=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std_activation=&lt;function</span> <span class="pre">softplus_bounded_positive&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clip_actions_on_log_prob=(-0.99</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">0.99)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/nets/policy_dists.html#Beta"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.nets.policy_dists.Beta" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#amago.nets.policy_dists.PolicyOutput" title="amago.nets.policy_dists.PolicyOutput"><code class="xref py py-class docutils literal notranslate"><span class="pre">PolicyOutput</span></code></a></p>
+<p>Generates a Beta distribution rescaled to [-1, 1].</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>This class is <code class="docutils literal notranslate"><span class="pre">&#64;gin.configurable</span></code>. Default values of kwargs can be overridden using <a class="reference external" href="https://github.com/google/gin-config">gin</a>.</p>
+</div>
+<p>(<a class="reference external" href="https://proceedings.mlr.press/v70/chou17a/chou17a.pdf">https://proceedings.mlr.press/v70/chou17a/chou17a.pdf</a>)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>d_action</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Dimension of the action space.</p></li>
+<li><p><strong>alpha_low</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Minimum value of alpha. Default is 1.0001.</p></li>
+<li><p><strong>alpha_high</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Maximum value of alpha. Default is None.</p></li>
+<li><p><strong>beta_low</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Minimum value of beta. Default is 1.0001.</p></li>
+<li><p><strong>beta_high</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Maximum value of beta. Default is None.</p></li>
+<li><p><strong>std_activation</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[<code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code>]</span>) – Activation function to produce a valid standard
+deviation from the raw network output.</p></li>
+<li><p><strong>clip_actions_on_log_prob</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]</span>) – Tuple of floats that clips the actions
+before computing dist.log_prob(action). Addresses numerical
+stability issues when computing log_probs at the boundary of
+the action space.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>alpha_low &gt; 1 and beta_low &gt; 1 keeps the distribution unimodal.
+(<a class="reference external" href="https://mathlets.org/mathlets/beta-distribution/">https://mathlets.org/mathlets/beta-distribution/</a>)</p>
+</div>
+<dl class="py property">
+<dt class="sig sig-object py" id="amago.nets.policy_dists.Beta.actions_differentiable">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">actions_differentiable</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#amago.nets.policy_dists.Beta.actions_differentiable" title="Link to this definition">#</a></dt>
+<dd><p>Does the output distribution have <code class="xref py py-obj docutils literal notranslate"><span class="pre">rsample</span></code>?</p>
+<p>Used to answer the question: “can we optimize -Q(s, a ~ pi) as an actor
+loss?”</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.nets.policy_dists.Beta.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/nets/policy_dists.html#Beta.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.nets.policy_dists.Beta.forward" title="Link to this definition">#</a></dt>
+<dd><p>Maps the output of the actor network to a distribution over actions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vec</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span>) – Output of the actor network</p></li>
+<li><p><strong>log_dict</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – If None, this is not a log step and any log value computation can be skipped. If provided, any data added added to the dict will be automatically logged. Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">_ShiftedBeta</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A torch.distributions.Distribution that at least has a <code class="xref py py-obj docutils literal notranslate"><span class="pre">log_prob()</span></code> and
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">sample()</span></code>, and would be expected to have <code class="xref py py-obj docutils literal notranslate"><span class="pre">rsample()</span></code> if
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">self.actions_differentiable</span></code> is True.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="amago.nets.policy_dists.Beta.input_dimension">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_dimension</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#amago.nets.policy_dists.Beta.input_dimension" title="Link to this definition">#</a></dt>
+<dd><p>Required input dimension for this policy distribution.</p>
+<p>This is used to determine the output of the actor network. How many values
+does the actor network need to produce to parameterize this policy
+distribution?</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="amago.nets.policy_dists.Beta.is_discrete">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_discrete</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#amago.nets.policy_dists.Beta.is_discrete" title="Link to this definition">#</a></dt>
+<dd><p>Whether the action space is discrete.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="amago.nets.policy_dists.Discrete">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Discrete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d_action</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clip_prob_low</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clip_prob_high</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.99</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/nets/policy_dists.html#Discrete"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.nets.policy_dists.Discrete" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#amago.nets.policy_dists.PolicyOutput" title="amago.nets.policy_dists.PolicyOutput"><code class="xref py py-class docutils literal notranslate"><span class="pre">PolicyOutput</span></code></a></p>
+<p>Generates a categorical distribution over actions.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>This class is <code class="docutils literal notranslate"><span class="pre">&#64;gin.configurable</span></code>. Default values of kwargs can be overridden using <a class="reference external" href="https://github.com/google/gin-config">gin</a>.</p>
+</div>
+<p>Returns a thin wrapper around torch <code class="xref py py-obj docutils literal notranslate"><span class="pre">Categorical</span></code> that unsqueezes the last dimension of <code class="xref py py-obj docutils literal notranslate"><span class="pre">sample()</span></code> actions to be 1.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>d_action</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Dimension of the action space.</p></li>
+<li><p><strong>clip_prob_low</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Clips action probabilities to this value before
+renormalizing. Default is 0.001.</p></li>
+<li><p><strong>clip_prob_high</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Clips action probabilities to this value before
+renormalizing. Default is 0.99, which is left for backwards
+compatibility but is now thought to be too conservative. .999 or 1.0
+is fine.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="amago.nets.policy_dists.Discrete.actions_differentiable">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">actions_differentiable</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#amago.nets.policy_dists.Discrete.actions_differentiable" title="Link to this definition">#</a></dt>
+<dd><p>Does the output distribution have <code class="xref py py-obj docutils literal notranslate"><span class="pre">rsample</span></code>?</p>
+<p>Used to answer the question: “can we optimize -Q(s, a ~ pi) as an actor
+loss?”</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.nets.policy_dists.Discrete.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/nets/policy_dists.html#Discrete.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.nets.policy_dists.Discrete.forward" title="Link to this definition">#</a></dt>
+<dd><p>Maps the output of the actor network to a distribution over actions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vec</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span>) – Output of the actor network</p></li>
+<li><p><strong>log_dict</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – If None, this is not a log step and any log value computation can be skipped. If provided, any data added added to the dict will be automatically logged. Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">_Categorical</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A torch.distributions.Distribution that at least has a <code class="xref py py-obj docutils literal notranslate"><span class="pre">log_prob()</span></code> and
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">sample()</span></code>, and would be expected to have <code class="xref py py-obj docutils literal notranslate"><span class="pre">rsample()</span></code> if
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">self.actions_differentiable</span></code> is True.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="amago.nets.policy_dists.Discrete.input_dimension">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_dimension</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#amago.nets.policy_dists.Discrete.input_dimension" title="Link to this definition">#</a></dt>
+<dd><p>Required input dimension for this policy distribution.</p>
+<p>This is used to determine the output of the actor network. How many values
+does the actor network need to produce to parameterize this policy
+distribution?</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="amago.nets.policy_dists.Discrete.is_discrete">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_discrete</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#amago.nets.policy_dists.Discrete.is_discrete" title="Link to this definition">#</a></dt>
+<dd><p>Whether the action space is discrete.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="amago.nets.policy_dists.DiscreteLikeContinuous">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DiscreteLikeContinuous</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">categorical</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gumbel_softmax_temperature</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/nets/policy_dists.html#DiscreteLikeContinuous"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.nets.policy_dists.DiscreteLikeContinuous" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Wrapper around <code class="xref py py-obj docutils literal notranslate"><span class="pre">Categorical</span></code> used by <code class="xref py py-obj docutils literal notranslate"><span class="pre">MultiTaskAgent</span></code>.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>This class is <code class="docutils literal notranslate"><span class="pre">&#64;gin.configurable</span></code>. Default values of kwargs can be overridden using <a class="reference external" href="https://github.com/google/gin-config">gin</a>.</p>
+</div>
+<p>Lets us use discrete actions in a continuous actor-critic setup where the
+critic takes action vectors as input and outputs a scalar value.</p>
+<p>Categorial –&gt; OneHotCategorical + <a class="reference internal" href="#amago.nets.policy_dists.DiscreteLikeContinuous.rsample" title="amago.nets.policy_dists.DiscreteLikeContinuous.rsample"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rsample()</span></code></a> as F.gumbel_softmax with straight-through <code class="xref py py-obj docutils literal notranslate"><span class="pre">hard</span></code> sampling.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>categorical</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Categorical</span></code> | <code class="xref py py-class docutils literal notranslate"><span class="pre">_Categorical</span></code></span>) – A <code class="xref py py-obj docutils literal notranslate"><span class="pre">Categorical</span></code> distribution.</p></li>
+<li><p><strong>gumbel_softmax_temperature</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Temperature for the Gumbel-Softmax trick that enables <a class="reference internal" href="#amago.nets.policy_dists.DiscreteLikeContinuous.rsample" title="amago.nets.policy_dists.DiscreteLikeContinuous.rsample"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rsample()</span></code></a>. Default is 0.5.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.nets.policy_dists.DiscreteLikeContinuous.entropy">
+<span class="sig-name descname"><span class="pre">entropy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/nets/policy_dists.html#DiscreteLikeContinuous.entropy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.nets.policy_dists.DiscreteLikeContinuous.entropy" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.nets.policy_dists.DiscreteLikeContinuous.log_prob">
+<span class="sig-name descname"><span class="pre">log_prob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/nets/policy_dists.html#DiscreteLikeContinuous.log_prob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.nets.policy_dists.DiscreteLikeContinuous.log_prob" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="amago.nets.policy_dists.DiscreteLikeContinuous.logits">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">logits</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span></em><a class="headerlink" href="#amago.nets.policy_dists.DiscreteLikeContinuous.logits" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="amago.nets.policy_dists.DiscreteLikeContinuous.probs">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">probs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tensor</span></em><a class="headerlink" href="#amago.nets.policy_dists.DiscreteLikeContinuous.probs" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.nets.policy_dists.DiscreteLikeContinuous.rsample">
+<span class="sig-name descname"><span class="pre">rsample</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/nets/policy_dists.html#DiscreteLikeContinuous.rsample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.nets.policy_dists.DiscreteLikeContinuous.rsample" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.nets.policy_dists.DiscreteLikeContinuous.sample">
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/nets/policy_dists.html#DiscreteLikeContinuous.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.nets.policy_dists.DiscreteLikeContinuous.sample" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="amago.nets.policy_dists.GMM">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GMM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d_action</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gmm_modes=5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std_low=0.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std_high=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std_activation=&lt;function</span> <span class="pre">softplus_bounded_positive&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/nets/policy_dists.html#GMM"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.nets.policy_dists.GMM" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#amago.nets.policy_dists.PolicyOutput" title="amago.nets.policy_dists.PolicyOutput"><code class="xref py py-class docutils literal notranslate"><span class="pre">PolicyOutput</span></code></a></p>
+<p>Generates a Gaussian Mixture Model with a tanh transform.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>This class is <code class="docutils literal notranslate"><span class="pre">&#64;gin.configurable</span></code>. Default values of kwargs can be overridden using <a class="reference external" href="https://github.com/google/gin-config">gin</a>.</p>
+</div>
+<p>A more expressive policy than TanhGaussian, but output does not support <code class="xref py py-obj docutils literal notranslate"><span class="pre">rsample()</span></code>
+or the DPG -Q(s, a ~ pi) loss. Often used in offline or imitation learning
+(IL) settings. Heavily based on robomimic’s robot IL setup.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>d_action</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Dimension of the action space.</p></li>
+<li><p><strong>gmm_modes</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Number of modes in the GMM. Default is 5.</p></li>
+<li><p><strong>std_low</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Minimum standard deviation. Default is 1e-4.</p></li>
+<li><p><strong>std_high</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Maximum standard deviation. Default is None.</p></li>
+<li><p><strong>std_activation</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[<code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code>]</span>) – Activation function to produce a std from the raw network
+output.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="amago.nets.policy_dists.GMM.actions_differentiable">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">actions_differentiable</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#amago.nets.policy_dists.GMM.actions_differentiable" title="Link to this definition">#</a></dt>
+<dd><p>Does the output distribution have <code class="xref py py-obj docutils literal notranslate"><span class="pre">rsample</span></code>?</p>
+<p>Used to answer the question: “can we optimize -Q(s, a ~ pi) as an actor
+loss?”</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.nets.policy_dists.GMM.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/nets/policy_dists.html#GMM.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.nets.policy_dists.GMM.forward" title="Link to this definition">#</a></dt>
+<dd><p>Maps the output of the actor network to a distribution over actions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vec</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span>) – Output of the actor network</p></li>
+<li><p><strong>log_dict</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – If None, this is not a log step and any log value computation can be skipped. If provided, any data added added to the dict will be automatically logged. Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">_TanhWrappedDistribution</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A torch.distributions.Distribution that at least has a <code class="xref py py-obj docutils literal notranslate"><span class="pre">log_prob()</span></code> and
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">sample()</span></code>, and would be expected to have <code class="xref py py-obj docutils literal notranslate"><span class="pre">rsample()</span></code> if
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">self.actions_differentiable</span></code> is True.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="amago.nets.policy_dists.GMM.input_dimension">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_dimension</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#amago.nets.policy_dists.GMM.input_dimension" title="Link to this definition">#</a></dt>
+<dd><p>Required input dimension for this policy distribution.</p>
+<p>This is used to determine the output of the actor network. How many values
+does the actor network need to produce to parameterize this policy
+distribution?</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="amago.nets.policy_dists.GMM.is_discrete">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_discrete</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#amago.nets.policy_dists.GMM.is_discrete" title="Link to this definition">#</a></dt>
+<dd><p>Whether the action space is discrete.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="amago.nets.policy_dists.Multibinary">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Multibinary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d_action</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/nets/policy_dists.html#Multibinary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.nets.policy_dists.Multibinary" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#amago.nets.policy_dists.PolicyOutput" title="amago.nets.policy_dists.PolicyOutput"><code class="xref py py-class docutils literal notranslate"><span class="pre">PolicyOutput</span></code></a></p>
+<p>Multi-binary action space support.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>This class is <code class="docutils literal notranslate"><span class="pre">&#64;gin.configurable</span></code>. Default values of kwargs can be overridden using <a class="reference external" href="https://github.com/google/gin-config">gin</a>.</p>
+</div>
+<dl class="py property">
+<dt class="sig sig-object py" id="amago.nets.policy_dists.Multibinary.actions_differentiable">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">actions_differentiable</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#amago.nets.policy_dists.Multibinary.actions_differentiable" title="Link to this definition">#</a></dt>
+<dd><p>Does the output distribution have <code class="xref py py-obj docutils literal notranslate"><span class="pre">rsample</span></code>?</p>
+<p>Used to answer the question: “can we optimize -Q(s, a ~ pi) as an actor
+loss?”</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.nets.policy_dists.Multibinary.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/nets/policy_dists.html#Multibinary.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.nets.policy_dists.Multibinary.forward" title="Link to this definition">#</a></dt>
+<dd><p>Maps the output of the actor network to a distribution over actions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vec</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span>) – Output of the actor network</p></li>
+<li><p><strong>log_dict</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – If None, this is not a log step and any log value computation can be skipped. If provided, any data added added to the dict will be automatically logged. Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Bernoulli</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A torch.distributions.Distribution that at least has a <code class="xref py py-obj docutils literal notranslate"><span class="pre">log_prob()</span></code> and
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">sample()</span></code>, and would be expected to have <code class="xref py py-obj docutils literal notranslate"><span class="pre">rsample()</span></code> if
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">self.actions_differentiable</span></code> is True.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="amago.nets.policy_dists.Multibinary.input_dimension">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_dimension</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#amago.nets.policy_dists.Multibinary.input_dimension" title="Link to this definition">#</a></dt>
+<dd><p>Required input dimension for this policy distribution.</p>
+<p>This is used to determine the output of the actor network. How many values
+does the actor network need to produce to parameterize this policy
+distribution?</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="amago.nets.policy_dists.Multibinary.is_discrete">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_discrete</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#amago.nets.policy_dists.Multibinary.is_discrete" title="Link to this definition">#</a></dt>
+<dd><p>Whether the action space is discrete.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="amago.nets.policy_dists.PolicyOutput">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PolicyOutput</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d_action</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/nets/policy_dists.html#PolicyOutput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.nets.policy_dists.PolicyOutput" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Abstract base class for mapping network outputs to a distribution over actions.</p>
+<p>Actor networks use a PolicyOutput to produce a distribution over actions
+that is compatible with the Agent’s loss function.</p>
+<p>Pretends to be a torch.nn.Module (<a class="reference internal" href="#amago.nets.policy_dists.PolicyOutput.forward" title="amago.nets.policy_dists.PolicyOutput.forward"><code class="xref py py-obj docutils literal notranslate"><span class="pre">forward</span></code></a> == <code class="xref py py-obj docutils literal notranslate"><span class="pre">__call__</span></code>) but is not. Has no
+parameters and can be swapped without breaking checkpoints.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>d_action</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Dimension of the action space.</p>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="amago.nets.policy_dists.PolicyOutput.actions_differentiable">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">actions_differentiable</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#amago.nets.policy_dists.PolicyOutput.actions_differentiable" title="Link to this definition">#</a></dt>
+<dd><p>Does the output distribution have <code class="xref py py-obj docutils literal notranslate"><span class="pre">rsample</span></code>?</p>
+<p>Used to answer the question: “can we optimize -Q(s, a ~ pi) as an actor
+loss?”</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.nets.policy_dists.PolicyOutput.forward">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/nets/policy_dists.html#PolicyOutput.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.nets.policy_dists.PolicyOutput.forward" title="Link to this definition">#</a></dt>
+<dd><p>Maps the output of the actor network to a distribution over actions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vec</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span>) – Output of the actor network</p></li>
+<li><p><strong>log_dict</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – If None, this is not a log step and any log value computation can be skipped. If provided, any data added added to the dict will be automatically logged. Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Distribution</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A torch.distributions.Distribution that at least has a <code class="xref py py-obj docutils literal notranslate"><span class="pre">log_prob()</span></code> and
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">sample()</span></code>, and would be expected to have <code class="xref py py-obj docutils literal notranslate"><span class="pre">rsample()</span></code> if
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">self.actions_differentiable</span></code> is True.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="amago.nets.policy_dists.PolicyOutput.input_dimension">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_dimension</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#amago.nets.policy_dists.PolicyOutput.input_dimension" title="Link to this definition">#</a></dt>
+<dd><p>Required input dimension for this policy distribution.</p>
+<p>This is used to determine the output of the actor network. How many values
+does the actor network need to produce to parameterize this policy
+distribution?</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="amago.nets.policy_dists.PolicyOutput.is_discrete">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_discrete</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#amago.nets.policy_dists.PolicyOutput.is_discrete" title="Link to this definition">#</a></dt>
+<dd><p>Whether the action space is discrete.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="amago.nets.policy_dists.TanhGaussian">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">TanhGaussian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d_action</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std_low=0.006737946999085467</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std_high=7.38905609893065</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">std_activation=&lt;function</span> <span class="pre">tanh_bounded_positive&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clip_actions_on_log_prob=(-0.99</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">0.99)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/nets/policy_dists.html#TanhGaussian"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.nets.policy_dists.TanhGaussian" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#amago.nets.policy_dists.PolicyOutput" title="amago.nets.policy_dists.PolicyOutput"><code class="xref py py-class docutils literal notranslate"><span class="pre">PolicyOutput</span></code></a></p>
+<p>Generates a multivariate normal with a tanh transform to sample in [-1, 1].</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>This class is <code class="docutils literal notranslate"><span class="pre">&#64;gin.configurable</span></code>. Default values of kwargs can be overridden using <a class="reference external" href="https://github.com/google/gin-config">gin</a>.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>d_action</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Dimension of the action space.</p></li>
+<li><p><strong>std_low</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Minimum standard deviation. Default is exp(-5.0).</p></li>
+<li><p><strong>std_high</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Maximum standard deviation. Default is exp(2.0).</p></li>
+<li><p><strong>std_activation</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code>[[<code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>], <code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code>]</span>) – Activation function to produce a valid standard deviation from the raw network
+output.</p></li>
+<li><p><strong>clip_actions_on_log_prob</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]</span>) – Tuple of floats that clips the actions before
+computing dist.log_prob(action). Adresses numerical stability issues
+when computing log_probs at or near saturation points of Tanh
+transforms. Default is (-0.99, 0.99).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="amago.nets.policy_dists.TanhGaussian.actions_differentiable">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">actions_differentiable</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#amago.nets.policy_dists.TanhGaussian.actions_differentiable" title="Link to this definition">#</a></dt>
+<dd><p>Does the output distribution have <code class="xref py py-obj docutils literal notranslate"><span class="pre">rsample</span></code>?</p>
+<p>Used to answer the question: “can we optimize -Q(s, a ~ pi) as an actor
+loss?”</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.nets.policy_dists.TanhGaussian.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/nets/policy_dists.html#TanhGaussian.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.nets.policy_dists.TanhGaussian.forward" title="Link to this definition">#</a></dt>
+<dd><p>Maps the output of the actor network to a distribution over actions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vec</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span>) – Output of the actor network</p></li>
+<li><p><strong>log_dict</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – If None, this is not a log step and any log value computation can be skipped. If provided, any data added added to the dict will be automatically logged. Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">_SquashedNormal</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A torch.distributions.Distribution that at least has a <code class="xref py py-obj docutils literal notranslate"><span class="pre">log_prob()</span></code> and
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">sample()</span></code>, and would be expected to have <code class="xref py py-obj docutils literal notranslate"><span class="pre">rsample()</span></code> if
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">self.actions_differentiable</span></code> is True.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="amago.nets.policy_dists.TanhGaussian.input_dimension">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_dimension</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#amago.nets.policy_dists.TanhGaussian.input_dimension" title="Link to this definition">#</a></dt>
+<dd><p>Required input dimension for this policy distribution.</p>
+<p>This is used to determine the output of the actor network. How many values
+does the actor network need to produce to parameterize this policy
+distribution?</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="amago.nets.policy_dists.TanhGaussian.is_discrete">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_discrete</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#amago.nets.policy_dists.TanhGaussian.is_discrete" title="Link to this definition">#</a></dt>
+<dd><p>Whether the action space is discrete.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amago.nets.policy_dists.softplus_bounded_positive">
+<span class="sig-name descname"><span class="pre">softplus_bounded_positive</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">low</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/nets/policy_dists.html#softplus_bounded_positive"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.nets.policy_dists.softplus_bounded_positive" title="Link to this definition">#</a></dt>
+<dd><p>Map network output activations to a positive value (to parameterize a distribution).</p>
+<p>Uses softplus to output positive values <code class="docutils literal notranslate"><span class="pre">&gt;</span> <span class="pre">low</span></code> (required) and <code class="docutils literal notranslate"><span class="pre">&lt;</span> <span class="pre">high</span></code> (if provided).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amago.nets.policy_dists.tanh_bounded_positive">
+<span class="sig-name descname"><span class="pre">tanh_bounded_positive</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">low</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">high</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/nets/policy_dists.html#tanh_bounded_positive"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.nets.policy_dists.tanh_bounded_positive" title="Link to this definition">#</a></dt>
+<dd><p>Map network output activations to a positive value (to parameterize a distribution).</p>
+<p>Uses tanh to scale values between <code class="docutils literal notranslate"><span class="pre">low</span></code> and <code class="docutils literal notranslate"><span class="pre">high</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="amago.nets.goal_embedders.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">amago.nets.goal_embedders</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="amago.nets.traj_encoders.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">amago.nets.traj_encoders</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.Beta"><code class="docutils literal notranslate"><span class="pre">Beta</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.Beta.actions_differentiable"><code class="docutils literal notranslate"><span class="pre">Beta.actions_differentiable</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.Beta.forward"><code class="docutils literal notranslate"><span class="pre">Beta.forward()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.Beta.input_dimension"><code class="docutils literal notranslate"><span class="pre">Beta.input_dimension</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.Beta.is_discrete"><code class="docutils literal notranslate"><span class="pre">Beta.is_discrete</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.Discrete"><code class="docutils literal notranslate"><span class="pre">Discrete</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.Discrete.actions_differentiable"><code class="docutils literal notranslate"><span class="pre">Discrete.actions_differentiable</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.Discrete.forward"><code class="docutils literal notranslate"><span class="pre">Discrete.forward()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.Discrete.input_dimension"><code class="docutils literal notranslate"><span class="pre">Discrete.input_dimension</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.Discrete.is_discrete"><code class="docutils literal notranslate"><span class="pre">Discrete.is_discrete</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.DiscreteLikeContinuous"><code class="docutils literal notranslate"><span class="pre">DiscreteLikeContinuous</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.DiscreteLikeContinuous.entropy"><code class="docutils literal notranslate"><span class="pre">DiscreteLikeContinuous.entropy()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.DiscreteLikeContinuous.log_prob"><code class="docutils literal notranslate"><span class="pre">DiscreteLikeContinuous.log_prob()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.DiscreteLikeContinuous.logits"><code class="docutils literal notranslate"><span class="pre">DiscreteLikeContinuous.logits</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.DiscreteLikeContinuous.probs"><code class="docutils literal notranslate"><span class="pre">DiscreteLikeContinuous.probs</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.DiscreteLikeContinuous.rsample"><code class="docutils literal notranslate"><span class="pre">DiscreteLikeContinuous.rsample()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.DiscreteLikeContinuous.sample"><code class="docutils literal notranslate"><span class="pre">DiscreteLikeContinuous.sample()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.GMM"><code class="docutils literal notranslate"><span class="pre">GMM</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.GMM.actions_differentiable"><code class="docutils literal notranslate"><span class="pre">GMM.actions_differentiable</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.GMM.forward"><code class="docutils literal notranslate"><span class="pre">GMM.forward()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.GMM.input_dimension"><code class="docutils literal notranslate"><span class="pre">GMM.input_dimension</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.GMM.is_discrete"><code class="docutils literal notranslate"><span class="pre">GMM.is_discrete</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.Multibinary"><code class="docutils literal notranslate"><span class="pre">Multibinary</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.Multibinary.actions_differentiable"><code class="docutils literal notranslate"><span class="pre">Multibinary.actions_differentiable</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.Multibinary.forward"><code class="docutils literal notranslate"><span class="pre">Multibinary.forward()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.Multibinary.input_dimension"><code class="docutils literal notranslate"><span class="pre">Multibinary.input_dimension</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.Multibinary.is_discrete"><code class="docutils literal notranslate"><span class="pre">Multibinary.is_discrete</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.PolicyOutput"><code class="docutils literal notranslate"><span class="pre">PolicyOutput</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.PolicyOutput.actions_differentiable"><code class="docutils literal notranslate"><span class="pre">PolicyOutput.actions_differentiable</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.PolicyOutput.forward"><code class="docutils literal notranslate"><span class="pre">PolicyOutput.forward()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.PolicyOutput.input_dimension"><code class="docutils literal notranslate"><span class="pre">PolicyOutput.input_dimension</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.PolicyOutput.is_discrete"><code class="docutils literal notranslate"><span class="pre">PolicyOutput.is_discrete</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.TanhGaussian"><code class="docutils literal notranslate"><span class="pre">TanhGaussian</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.TanhGaussian.actions_differentiable"><code class="docutils literal notranslate"><span class="pre">TanhGaussian.actions_differentiable</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.TanhGaussian.forward"><code class="docutils literal notranslate"><span class="pre">TanhGaussian.forward()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.TanhGaussian.input_dimension"><code class="docutils literal notranslate"><span class="pre">TanhGaussian.input_dimension</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.TanhGaussian.is_discrete"><code class="docutils literal notranslate"><span class="pre">TanhGaussian.is_discrete</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.softplus_bounded_positive"><code class="docutils literal notranslate"><span class="pre">softplus_bounded_positive()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.policy_dists.tanh_bounded_positive"><code class="docutils literal notranslate"><span class="pre">tanh_bounded_positive()</span></code></a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By UT Austin Robot Perception and Learning Lab
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

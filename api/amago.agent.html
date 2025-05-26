@@ -1,0 +1,848 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="light">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>amago.agent &#8212; AMAGO</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "light";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/amago.agent';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="amago.cli_utils" href="amago.cli_utils.html" />
+    <link rel="prev" title="amago" href="amago.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="light">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+    
+    <img src="../_static/amago_logo_3.png" class="logo__image only-light" alt="AMAGO - Home"/>
+    <script>document.write(`<img src="../_static/amago_logo_3.png" class="logo__image only-dark" alt="AMAGO - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../tutorial/index.html">Tutorial</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/setup_env.html">Setup the Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/create_dataset.html">Create a Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/create_experiment.html">Create an Experiment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/track_results.html">Track the Results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/configuration.html">Configure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/customization.html">Customize</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/async.html">Multi-GPU and Asynchronous Training</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../examples/index.html">Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../examples/00_meta_frozen_lake.html">Meta Frozen Lake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/01_basic_gym.html">Basic Gymnasium</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/02_gymnax.html">Gymnax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/03_popgym_suite.html">POPGym</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/04_tmaze.html">T-Maze</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/05_dark_key_door.html">Dark Room Key Door</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/06_alchemy.html">Symbolic DM Alchemy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/07_metaworld.html">Meta-World ML1/ML10/ML45</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/08_ale.html">Multi-Game Atari</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/09_multitask_procgen.html">Multi-Game ProcGen</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/10_babyai.html">Multi-Task BabyAI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/11_xland_minigrid.html">XLand Mini-Grid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/12_half_cheetah_vel.html">HalfCheetah(v4)-Velocity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/13_mazerunner_relabeling.html">MazeRunner HER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/14_d4rl.html">D4RL</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="amago.html">API Reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">amago.agent</a></li>
+<li class="toctree-l2"><a class="reference internal" href="amago.cli_utils.html">amago.cli_utils</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="amago.envs.html">amago.envs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="amago.envs.amago_env.html">amago.envs.amago_env</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="amago.envs.builtin.html">amago.envs.builtin</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="amago.envs.builtin.half_cheetah_v4_vel.html">amago.envs.builtin.half_cheetah_v4_vel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="amago.envs.builtin.metaworld_ml.html">amago.envs.builtin.metaworld_ml</a></li>
+<li class="toctree-l4"><a class="reference internal" href="amago.envs.builtin.popgym_envs.html">amago.envs.builtin.popgym_envs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="amago.envs.builtin.toy_gym.html">amago.envs.builtin.toy_gym</a></li>
+<li class="toctree-l4"><a class="reference internal" href="amago.envs.builtin.xland_minigrid.html">amago.envs.builtin.xland_minigrid</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.envs.env_utils.html">amago.envs.env_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.envs.exploration.html">amago.envs.exploration</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="amago.experiment.html">amago.experiment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="amago.hindsight.html">amago.hindsight</a></li>
+<li class="toctree-l2"><a class="reference internal" href="amago.loading.html">amago.loading</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="amago.nets.html">amago.nets</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.actor_critic.html">amago.nets.actor_critic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.cnn.html">amago.nets.cnn</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.ff.html">amago.nets.ff</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.goal_embedders.html">amago.nets.goal_embedders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.policy_dists.html">amago.nets.policy_dists</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.traj_encoders.html">amago.nets.traj_encoders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.transformer.html">amago.nets.transformer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.tstep_encoders.html">amago.nets.tstep_encoders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.utils.html">amago.nets.utils</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="amago.utils.html">amago.utils</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../citation.html">Citation</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/api/amago.agent.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>amago.agent</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.agent.Agent"><code class="docutils literal notranslate"><span class="pre">Agent</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.agent.Agent.forward"><code class="docutils literal notranslate"><span class="pre">Agent.forward()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.agent.Agent.get_actions"><code class="docutils literal notranslate"><span class="pre">Agent.get_actions()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.agent.Agent.hard_sync_targets"><code class="docutils literal notranslate"><span class="pre">Agent.hard_sync_targets()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.agent.Agent.soft_sync_targets"><code class="docutils literal notranslate"><span class="pre">Agent.soft_sync_targets()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.agent.Agent.trainable_params"><code class="docutils literal notranslate"><span class="pre">Agent.trainable_params</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.agent.MultiTaskAgent"><code class="docutils literal notranslate"><span class="pre">MultiTaskAgent</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.agent.MultiTaskAgent.forward"><code class="docutils literal notranslate"><span class="pre">MultiTaskAgent.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.agent.Multigammas"><code class="docutils literal notranslate"><span class="pre">Multigammas</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.agent.binary_filter"><code class="docutils literal notranslate"><span class="pre">binary_filter()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.agent.exp_filter"><code class="docutils literal notranslate"><span class="pre">exp_filter()</span></code></a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-amago.agent">
+<span id="amago-agent"></span><h1>amago.agent<a class="headerlink" href="#module-amago.agent" title="Link to this heading">#</a></h1>
+<p>Actor-Critic agents and RL objectives.</p>
+<p class="rubric">Functions</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amago.agent.binary_filter" title="amago.agent.binary_filter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">binary_filter</span></code></a>(adv[, threshold])</p></td>
+<td><p>Weights policy regression data according to <code class="xref py py-obj docutils literal notranslate"><span class="pre">(adv</span> <span class="pre">&gt;</span> <span class="pre">threshold).float()</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amago.agent.exp_filter" title="amago.agent.exp_filter"><code class="xref py py-obj docutils literal notranslate"><span class="pre">exp_filter</span></code></a>(adv[, beta, clip_adv_low, ...])</p></td>
+<td><p>Weights policy regression data according to <code class="xref py py-obj docutils literal notranslate"><span class="pre">exp(beta</span> <span class="pre">*</span> <span class="pre">adv)</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Classes</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amago.agent.Agent" title="amago.agent.Agent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Agent</span></code></a>(obs_space, rl2_space, action_space, ...)</p></td>
+<td><p>Actor-Critic with a shared sequence model backbone.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amago.agent.MultiTaskAgent" title="amago.agent.MultiTaskAgent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MultiTaskAgent</span></code></a>(obs_space, rl2_space, ...[, ...])</p></td>
+<td><p>A variant of Agent aimed at learning from distinct reward functions.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amago.agent.Multigammas" title="amago.agent.Multigammas"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Multigammas</span></code></a>([discrete, continuous])</p></td>
+<td><p>A hook for gin configuration of Multi-gamma values.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="amago.agent.Agent">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Agent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs_space</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rl2_space</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action_space</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_seq_len</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tstep_encoder_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">traj_encoder_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_critics=4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_critics_td=2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">online_coeff=1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offline_coeff=0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma=0.999</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reward_multiplier=10.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau=0.003</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fake_filter=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_actions_for_value_in_critic_loss=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_actions_for_value_in_actor_loss=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fbc_filter_func=&lt;function</span> <span class="pre">binary_filter&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">popart=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_target_actor=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_multigamma=True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/agent.html#Agent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.agent.Agent" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p>Actor-Critic with a shared sequence model backbone.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>This class is <code class="docutils literal notranslate"><span class="pre">&#64;gin.configurable</span></code>. Default values of kwargs can be overridden using <a class="reference external" href="https://github.com/google/gin-config">gin</a>.</p>
+</div>
+<p><a class="reference internal" href="#amago.agent.Agent" title="amago.agent.Agent"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Agent</span></code></a> manages the training and inference of a sequence model policy. The base learning
+update is a heavily parallelized/ensembled version of DDPG/TD3/REDQ/etc. + CRR/AWAC.</p>
+<p>Given a sequence of trajectory data <code class="xref py py-obj docutils literal notranslate"><span class="pre">traj_seq</span></code>, we embed and encode the sequence as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">emb_seq</span> <span class="o">=</span> <span class="n">timestep_encoder</span><span class="p">(</span><span class="n">traj_seq</span><span class="p">)</span> <span class="c1"># [B, L, dim]</span>
+<span class="n">state_emb_seq</span> <span class="o">=</span> <span class="n">traj_encoder</span><span class="p">(</span><span class="n">emb_seq</span><span class="p">)</span>  <span class="c1"># [B, L, dim]</span>
+<span class="n">action_dist</span> <span class="o">=</span> <span class="n">actor</span><span class="p">(</span><span class="n">state_emb_seq</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If using a discrete action space, the critic outputs a vector of Q-values (one per action),
+and continuous actions follow the (state + action) –&gt; scalar setup.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">discrete</span><span class="p">:</span>
+    <span class="n">value_pred</span> <span class="o">=</span> <span class="n">critic</span><span class="p">(</span><span class="n">state_emb_seq</span><span class="p">)[</span><span class="n">action_dist</span><span class="o">.</span><span class="n">sample</span><span class="p">()]</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">value_pred</span> <span class="o">=</span> <span class="n">critic</span><span class="p">(</span><span class="n">state_emb_seq</span><span class="p">,</span> <span class="n">action_dist</span><span class="o">.</span><span class="n">sample</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>Value estimates are derived from Q-vals according to:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">Q</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">critic</span><span class="p">,</span> <span class="n">action</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">discrete</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">critic</span><span class="p">(</span><span class="n">state</span><span class="p">)[</span><span class="n">action</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">critic</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">action</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">V</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">critic</span><span class="p">,</span> <span class="n">action_dist</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">discrete</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">critic</span><span class="p">(</span><span class="n">state</span><span class="p">)</span> <span class="o">*</span> <span class="n">action_dist</span><span class="o">.</span><span class="n">probs</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">k</span> <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span><span class="n">Q</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">critic</span><span class="p">,</span> <span class="n">action_dist</span><span class="o">.</span><span class="n">sample</span><span class="p">())</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="p">))</span>
+
+<span class="n">k_c</span> <span class="o">=</span> <span class="n">num_actions_for_value_in_critic_loss</span>
+<span class="n">td_target</span> <span class="o">=</span> <span class="n">mean_or_min_over_ensemble</span><span class="p">(</span>
+    <span class="n">r</span> <span class="o">+</span> <span class="n">gamma</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">d</span><span class="p">)</span> <span class="o">*</span> <span class="n">V</span><span class="p">(</span><span class="n">next_state_emb</span><span class="p">,</span> <span class="n">target_critic</span><span class="p">,</span> <span class="n">target_actor</span><span class="p">(</span><span class="n">next_state_emb</span><span class="p">),</span> <span class="n">k_c</span><span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The advantage estimate and corresponding losses are:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">k_a</span> <span class="o">=</span> <span class="n">num_actions_for_value_in_actor_loss</span>
+<span class="n">advantages</span> <span class="o">=</span> <span class="n">Q</span><span class="p">(</span><span class="n">state_emb</span><span class="p">,</span> <span class="n">critic</span><span class="p">,</span> <span class="n">action</span><span class="p">)</span> <span class="o">-</span> <span class="n">V</span><span class="p">(</span><span class="n">state_emb</span><span class="p">,</span> <span class="n">critic</span><span class="p">,</span> <span class="n">action_dist</span><span class="p">,</span> <span class="n">k_a</span><span class="p">)</span>
+
+<span class="n">offline_loss</span> <span class="o">=</span> <span class="o">-</span><span class="n">fbc_filter_func</span><span class="p">(</span><span class="n">advantages</span><span class="p">)</span> <span class="o">*</span> <span class="n">actor</span><span class="p">(</span><span class="n">state_emb</span><span class="p">)</span><span class="o">.</span><span class="n">log_prob</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+<span class="n">online_loss</span> <span class="o">=</span> <span class="o">-</span><span class="n">V</span><span class="p">(</span><span class="n">state_emb</span><span class="p">,</span> <span class="n">critic</span><span class="o">.</span><span class="n">detach</span><span class="p">(),</span> <span class="n">actor</span><span class="p">(</span><span class="n">state_emb</span><span class="p">),</span> <span class="n">k_a</span><span class="p">)</span>
+
+<span class="n">actor_loss</span> <span class="o">=</span> <span class="n">online_coeff</span> <span class="o">*</span> <span class="n">offline_loss</span> <span class="o">+</span> <span class="n">online_coeff</span> <span class="o">*</span> <span class="n">online_loss</span>
+<span class="n">critic_loss</span> <span class="o">=</span> <span class="p">(</span><span class="n">Q</span><span class="p">(</span><span class="n">state_emb</span><span class="p">,</span> <span class="n">critic</span><span class="p">,</span> <span class="n">action</span><span class="p">)</span> <span class="o">-</span> <span class="n">td_target</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+</pre></div>
+</div>
+<p>And this is done in parallel across every timestep and multiple values of the discount factor gamma.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obs_space</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></span>) – Environment observation space (for creating input layers).</p></li>
+<li><p><strong>rl2_space</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Box</span></code></span>) – A gymnasium space that is automatically generated by <a class="reference internal" href="amago.envs.amago_env.html#amago.envs.amago_env.AMAGOEnv" title="amago.envs.amago_env.AMAGOEnv"><code class="xref py py-class docutils literal notranslate"><span class="pre">AMAGOEnv</span></code></a>
+to represent the shape of extra input features for the previous action and reward.</p></li>
+<li><p><strong>action_space</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Space</span></code></span>) – Environment action space (for creating output layers).</p></li>
+<li><p><strong>max_seq_len</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Maximum context length of the policy (in timesteps).</p></li>
+<li><p><strong>tstep_encoder_type</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code>[<a class="reference internal" href="amago.nets.tstep_encoders.html#amago.nets.tstep_encoders.TstepEncoder" title="amago.nets.tstep_encoders.TstepEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">TstepEncoder</span></code></a>]</span>) – Type of <a class="reference internal" href="amago.nets.tstep_encoders.html#amago.nets.tstep_encoders.TstepEncoder" title="amago.nets.tstep_encoders.TstepEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">TstepEncoder</span></code></a> to use. Initialized based
+on provided gym spaces.</p></li>
+<li><p><strong>traj_encoder_type</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code>[<a class="reference internal" href="amago.nets.traj_encoders.html#amago.nets.traj_encoders.TrajEncoder" title="amago.nets.traj_encoders.TrajEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrajEncoder</span></code></a>]</span>) – Type of <a class="reference internal" href="amago.nets.traj_encoders.html#amago.nets.traj_encoders.TrajEncoder" title="amago.nets.traj_encoders.TrajEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrajEncoder</span></code></a> to use. Initialized based on
+provided gym spaces.</p></li>
+<li><p><strong>num_critics</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Number of critics in the ensemble. Defaults to 4.</p></li>
+<li><p><strong>num_critics_td</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Number of critics from the (larger) ensemble used to create
+clipped double q targets (REDQ). Defaults to 2.</p></li>
+<li><p><strong>online_coeff</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Weight of the “online” aka DPG/TD3-like actor loss
+-Q(s, a ~ pi(s)). Defaults to 1.0.</p></li>
+<li><p><strong>offline_coeff</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Weight of the “offline” aka advantage weighted/”filtered”
+regression term (CRR/AWAC). Defaults to 0.1.</p></li>
+<li><p><strong>gamma</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Discount factor <em>of the policy we sample during rollouts/evals</em>.
+Defaults to 0.999.</p></li>
+<li><p><strong>reward_multiplier</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Scale every reward by a constant (for loss function only).
+Only relevant for numerical stability in value normalization. Avoid large (&gt; 1e5)
+and small (&lt; 1) absolute values of returns when reward functions are known.
+Defaults to 10.0.</p></li>
+<li><p><strong>tau</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Polyak averaging factor for target network updates (DDPG-like). Defaults to 0.003.</p></li>
+<li><p><strong>fake_filter</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, skips computation of the advantage weights/”filter”. Speeds up
+pure behavior cloning. Defaults to False.</p></li>
+<li><p><strong>num_actions_for_value_in_critic_loss</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Number of actions used to estimate E_[Q(s, a ~ pi)]
+for continuous action spaces in critic loss (TD targets). Defaults to 1.</p></li>
+<li><p><strong>num_actions_for_value_in_actor_loss</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Number of actions used to estimate E_[Q(s, a ~ pi)]
+for continuous action spaces in the actor loss. Defaults to 1.</p></li>
+<li><p><strong>fbc_filter_func</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">callable</span></code></span>) – Function that takes seq of advantage estimates and outputs the regression
+weights. See <a class="reference internal" href="#amago.agent.binary_filter" title="amago.agent.binary_filter"><code class="xref py py-func docutils literal notranslate"><span class="pre">binary_filter()</span></code></a> or <a class="reference internal" href="#amago.agent.exp_filter" title="amago.agent.exp_filter"><code class="xref py py-func docutils literal notranslate"><span class="pre">exp_filter()</span></code></a>. Defaults to <a class="reference internal" href="#amago.agent.binary_filter" title="amago.agent.binary_filter"><code class="xref py py-func docutils literal notranslate"><span class="pre">binary_filter()</span></code></a>.</p></li>
+<li><p><strong>popart</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, use <a class="reference internal" href="amago.nets.actor_critic.html#amago.nets.actor_critic.PopArtLayer" title="amago.nets.actor_critic.PopArtLayer"><code class="xref py py-class docutils literal notranslate"><span class="pre">PopArtLayer</span></code></a> normalization for value network outputs. Defaults to True.</p></li>
+<li><p><strong>use_target_actor</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, use a target actor to sample actions used in TD targets.
+Defaults to True.</p></li>
+<li><p><strong>use_multigamma</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, train on multiple discount horizons (<a class="reference internal" href="#amago.agent.Multigammas" title="amago.agent.Multigammas"><code class="xref py py-class docutils literal notranslate"><span class="pre">Multigammas</span></code></a>) in parallel. Defaults to True.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.agent.Agent.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_step</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/agent.html#Agent.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.agent.Agent.forward" title="Link to this definition">#</a></dt>
+<dd><p>Computes actor and critic losses from a Batch of trajectory data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="amago.loading.html#amago.loading.Batch" title="amago.loading.Batch"><code class="xref py py-class docutils literal notranslate"><span class="pre">Batch</span></code></a></span>) – Batch object containing trajectory data including observations,
+actions, rewards, dones, etc.</p></li>
+<li><p><strong>log_step</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, computes and stores additional statistics in
+self.update_info for wandb logging.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><dl class="simple">
+<dt>critic_loss: Tensor of shape (B, L-1, num_critics, G, 1) where B is batch size,</dt><dd><p>L is sequence length, G is number of discount factors</p>
+</dd>
+</dl>
+</li>
+<li><p>actor_loss: Tensor of shape (B, L-1, G, 1)</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A tuple containing</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.agent.Agent.get_actions">
+<span class="sig-name descname"><span class="pre">get_actions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rl2s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_idxs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/agent.html#Agent.get_actions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.agent.Agent.get_actions" title="Link to this definition">#</a></dt>
+<dd><p>Get rollout actions from the current policy.</p>
+<p>Note the standard torch <a class="reference internal" href="#amago.agent.Agent.forward" title="amago.agent.Agent.forward"><code class="xref py py-obj docutils literal notranslate"><span class="pre">forward</span></code></a> implements the training step, while <a class="reference internal" href="#amago.agent.Agent.get_actions" title="amago.agent.Agent.get_actions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_actions</span></code></a>
+is the inference step. Most of the arguments here are easily gathered from the
+AMAGOEnv gymnasium wrapper. See <a class="reference internal" href="amago.experiment.html#amago.experiment.Experiment.interact" title="amago.experiment.Experiment.interact"><code class="xref py py-obj docutils literal notranslate"><span class="pre">amago.experiment.Experiment.interact</span></code></a> for an example.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obs</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code>]</span>) – Dictionary of (batched) observation tensors. AMAGOEnv makes all
+observations into dicts.</p></li>
+<li><p><strong>rl2s</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span>) – Batched Tensor of previous action and reward. AMAGOEnv makes these.</p></li>
+<li><p><strong>time_idxs</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span>) – Batched Tensor indicating the global timestep of the episode.
+Mainly used for position embeddings when the sequence length is much shorter
+than the episode length.</p></li>
+<li><p><strong>hidden_state</strong> – Hidden state of the TrajEncoder. Defaults to None.</p></li>
+<li><p><strong>sample</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Whether to sample from the action distribution or take the argmax
+(discrete) or mean (continuous). Defaults to True.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>Batched Tensor of actions to take in each parallel env <em>for the primary
+(“test-time”) discount factor</em> <code class="xref py py-obj docutils literal notranslate"><span class="pre">Agent.gamma</span></code>.</p></li>
+<li><p>Updated hidden state of the TrajEncoder.</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.agent.Agent.hard_sync_targets">
+<span class="sig-name descname"><span class="pre">hard_sync_targets</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/agent.html#Agent.hard_sync_targets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.agent.Agent.hard_sync_targets" title="Link to this definition">#</a></dt>
+<dd><p>Hard copy online actor/critics to target actor/critics</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.agent.Agent.soft_sync_targets">
+<span class="sig-name descname"><span class="pre">soft_sync_targets</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/agent.html#Agent.soft_sync_targets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.agent.Agent.soft_sync_targets" title="Link to this definition">#</a></dt>
+<dd><p>EMA copy online actor/critics to target actor/critics (DDPG-style)</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="amago.agent.Agent.trainable_params">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">trainable_params</span></span><a class="headerlink" href="#amago.agent.Agent.trainable_params" title="Link to this definition">#</a></dt>
+<dd><p>Iterable over all trainable parameters, which should be passed to the optimizer.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="amago.agent.MultiTaskAgent">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MultiTaskAgent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs_space</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rl2_space</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action_space</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tstep_encoder_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">traj_encoder_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_seq_len</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_critics=4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_critics_td=2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">online_coeff=0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offline_coeff=1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma=0.999</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reward_multiplier=10.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau=0.003</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fake_filter=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_actions_for_value_in_critic_loss=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_actions_for_value_in_actor_loss=3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fbc_filter_func=&lt;function</span> <span class="pre">binary_filter&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">popart=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_target_actor=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_multigamma=True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/agent.html#MultiTaskAgent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.agent.MultiTaskAgent" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#amago.agent.Agent" title="amago.agent.Agent"><code class="xref py py-class docutils literal notranslate"><span class="pre">Agent</span></code></a></p>
+<p>A variant of Agent aimed at learning from distinct reward functions.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>This class is <code class="docutils literal notranslate"><span class="pre">&#64;gin.configurable</span></code>. Default values of kwargs can be overridden using <a class="reference external" href="https://github.com/google/gin-config">gin</a>.</p>
+</div>
+<p>Strives to balance the training loss across tasks with different return scales
+without resorting to one-hot task IDs. Standard multi-task RL (e.g., N atari games)
+are all good examples, but so are multi-domain meta-RL problems like Meta-World ML45.
+This is the agent discussed in the AMAGO-2 paper.</p>
+<p>Follows the same learning update as Agent, with three main differences:</p>
+<ol class="arabic simple">
+<li><p>Converts critic regression to classification of two-hot encoded labels representing
+bins spaced across a fixed range (see amago.nets.actor_critic.NCriticsTwoHot). The
+version here closely follows Dreamer-V3.</p></li>
+<li><p>Converts the discrete setup of Agent (where critics output a vector of vals per action)
+to the same format as continuous actions (state + action) –&gt; scalar. This avoids large
+critic outputs layers but removes our ability to directly compute E_{a ~ π}[Q(s, a)].</p></li>
+<li><p>Defaults to an online_coeff of 0 and an offline_coeff of 1.0. This is because the
+“online” loss (-Q(s, a ~ pi)) scales with the magnitude of Q. The online loss is
+still available as long as the output of the actor network uses the reparameterization
+trick. Discrete actions are supported via a gumbel softmax, but this has seen limited
+testing.</p></li>
+</ol>
+<p>The combination of points 2 and 3 stresses accurate advantage estimates and motivates a change
+in the default value of num_actions_for_value_in_critic_loss from 1 –&gt; 3. Arguments otherwise
+follow the information listed in amago.agent.Agent.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.agent.MultiTaskAgent.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_step</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/agent.html#MultiTaskAgent.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.agent.MultiTaskAgent.forward" title="Link to this definition">#</a></dt>
+<dd><p>Computes actor and critic losses from a Batch of trajectory data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="amago.loading.html#amago.loading.Batch" title="amago.loading.Batch"><code class="xref py py-class docutils literal notranslate"><span class="pre">Batch</span></code></a></span>) – Batch object containing trajectory data including observations,
+actions, rewards, dones, etc.</p></li>
+<li><p><strong>log_step</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, computes and stores additional statistics in
+self.update_info for wandb logging.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><dl class="simple">
+<dt>critic_loss: Tensor of shape (B, L-1, num_critics, G, 1) where B is batch size,</dt><dd><p>L is sequence length, G is number of discount factors</p>
+</dd>
+</dl>
+</li>
+<li><p>actor_loss: Tensor of shape (B, L-1, G, 1)</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A tuple containing</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="amago.agent.Multigammas">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Multigammas</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">discrete</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0.1,</span> <span class="pre">0.9,</span> <span class="pre">0.95,</span> <span class="pre">0.97,</span> <span class="pre">0.99,</span> <span class="pre">0.995]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">continuous</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[0.1,</span> <span class="pre">0.9,</span> <span class="pre">0.95,</span> <span class="pre">0.97,</span> <span class="pre">0.99,</span> <span class="pre">0.995]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/agent.html#Multigammas"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.agent.Multigammas" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A hook for gin configuration of Multi-gamma values.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>This class is <code class="docutils literal notranslate"><span class="pre">&#64;gin.configurable</span></code>. Default values of kwargs can be overridden using <a class="reference external" href="https://github.com/google/gin-config">gin</a>.</p>
+</div>
+<p>Defines the list of gamma values used during training in addition to the main gamma
+parameter in <a class="reference internal" href="#amago.agent.Agent" title="amago.agent.Agent"><code class="xref py py-class docutils literal notranslate"><span class="pre">Agent</span></code></a>, which is the value used during rollouts/evals by default.
+Settings are divided into discrete and continuous action spaces versions, because
+the cost of adding gammas tends to be much higher for continuous action critics,
+where they multiply the effective batch size of the actor/critic loss computation.
+Note that adding gammas has no effect on the batch size of the heavier sequence model
+backbone. Therefore the relative cost of this trick decreases as the overall model
+size increases.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>discrete</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]</span>) – List of gamma values for discrete action spaces</p></li>
+<li><p><strong>continuous</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]</span>) – List of gamma values for continuous action spaces</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amago.agent.binary_filter">
+<span class="sig-name descname"><span class="pre">binary_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/agent.html#binary_filter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.agent.binary_filter" title="Link to this definition">#</a></dt>
+<dd><p>Weights policy regression data according to <code class="xref py py-obj docutils literal notranslate"><span class="pre">(adv</span> <span class="pre">&gt;</span> <span class="pre">threshold).float()</span></code></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>adv</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span>) – Tensor of advantages (Batch, Length, Gammas, 1)</p></li>
+<li><p><strong>threshold</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Float, the threshold for the binary filter. Defaults to 0.0.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amago.agent.exp_filter">
+<span class="sig-name descname"><span class="pre">exp_filter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">adv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clip_adv_low</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clip_adv_high</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clip_weights_low</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-07</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clip_weights_high</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/agent.html#exp_filter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.agent.exp_filter" title="Link to this definition">#</a></dt>
+<dd><p>Weights policy regression data according to <code class="xref py py-obj docutils literal notranslate"><span class="pre">exp(beta</span> <span class="pre">*</span> <span class="pre">adv)</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>adv</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span>) – Tensor of advantages (Batch, Length, Gammas, 1)</p></li>
+<li><p><strong>beta</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Float, the beta parameter for the exponential filter. Note that some papers define the beta hparam according to
+exp( 1/beta * adv ), so check whether you need to invert the value
+to match their setting. Defaults to 1.0.</p></li>
+<li><p><strong>clip_adv_low</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – If provided, clip input advantages below this value. Defaults to None.</p></li>
+<li><p><strong>clip_adv_high</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – If provided, clip input advantages above this value. Defaults to None.</p></li>
+<li><p><strong>clip_weights_low</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – If provided, clip output weights below this value. Defaults to 1e-7.</p></li>
+<li><p><strong>clip_weights_high</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – If provided, clip output weights above this value. Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="amago.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">amago</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="amago.cli_utils.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">amago.cli_utils</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.agent.Agent"><code class="docutils literal notranslate"><span class="pre">Agent</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.agent.Agent.forward"><code class="docutils literal notranslate"><span class="pre">Agent.forward()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.agent.Agent.get_actions"><code class="docutils literal notranslate"><span class="pre">Agent.get_actions()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.agent.Agent.hard_sync_targets"><code class="docutils literal notranslate"><span class="pre">Agent.hard_sync_targets()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.agent.Agent.soft_sync_targets"><code class="docutils literal notranslate"><span class="pre">Agent.soft_sync_targets()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.agent.Agent.trainable_params"><code class="docutils literal notranslate"><span class="pre">Agent.trainable_params</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.agent.MultiTaskAgent"><code class="docutils literal notranslate"><span class="pre">MultiTaskAgent</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.agent.MultiTaskAgent.forward"><code class="docutils literal notranslate"><span class="pre">MultiTaskAgent.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.agent.Multigammas"><code class="docutils literal notranslate"><span class="pre">Multigammas</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.agent.binary_filter"><code class="docutils literal notranslate"><span class="pre">binary_filter()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.agent.exp_filter"><code class="docutils literal notranslate"><span class="pre">exp_filter()</span></code></a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By UT Austin Robot Perception and Learning Lab
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

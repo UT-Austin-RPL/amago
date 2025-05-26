@@ -1,0 +1,997 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" data-theme="light">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>amago.nets.traj_encoders &#8212; AMAGO</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "light";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/custom.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/custom.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/amago/nets/traj_encoders';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="light">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+    
+    <img src="../../../_static/amago_logo_3.png" class="logo__image only-light" alt="AMAGO - Home"/>
+    <script>document.write(`<img src="../../../_static/amago_logo_3.png" class="logo__image only-dark" alt="AMAGO - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../tutorial/index.html">Tutorial</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial/setup_env.html">Setup the Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial/create_dataset.html">Create a Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial/create_experiment.html">Create an Experiment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial/track_results.html">Track the Results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial/configuration.html">Configure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial/customization.html">Customize</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial/async.html">Multi-GPU and Asynchronous Training</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../examples/index.html">Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/00_meta_frozen_lake.html">Meta Frozen Lake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/01_basic_gym.html">Basic Gymnasium</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/02_gymnax.html">Gymnax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/03_popgym_suite.html">POPGym</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/04_tmaze.html">T-Maze</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/05_dark_key_door.html">Dark Room Key Door</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/06_alchemy.html">Symbolic DM Alchemy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/07_metaworld.html">Meta-World ML1/ML10/ML45</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/08_ale.html">Multi-Game Atari</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/09_multitask_procgen.html">Multi-Game ProcGen</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/10_babyai.html">Multi-Task BabyAI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/11_xland_minigrid.html">XLand Mini-Grid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/12_half_cheetah_vel.html">HalfCheetah(v4)-Velocity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/13_mazerunner_relabeling.html">MazeRunner HER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/14_d4rl.html">D4RL</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../api/amago.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/amago.agent.html">amago.agent</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/amago.cli_utils.html">amago.cli_utils</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../api/amago.envs.html">amago.envs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/amago.envs.amago_env.html">amago.envs.amago_env</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../api/amago.envs.builtin.html">amago.envs.builtin</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/amago.envs.builtin.half_cheetah_v4_vel.html">amago.envs.builtin.half_cheetah_v4_vel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/amago.envs.builtin.metaworld_ml.html">amago.envs.builtin.metaworld_ml</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/amago.envs.builtin.popgym_envs.html">amago.envs.builtin.popgym_envs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/amago.envs.builtin.toy_gym.html">amago.envs.builtin.toy_gym</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/amago.envs.builtin.xland_minigrid.html">amago.envs.builtin.xland_minigrid</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/amago.envs.env_utils.html">amago.envs.env_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/amago.envs.exploration.html">amago.envs.exploration</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/amago.experiment.html">amago.experiment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/amago.hindsight.html">amago.hindsight</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/amago.loading.html">amago.loading</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../api/amago.nets.html">amago.nets</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/amago.nets.actor_critic.html">amago.nets.actor_critic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/amago.nets.cnn.html">amago.nets.cnn</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/amago.nets.ff.html">amago.nets.ff</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/amago.nets.goal_embedders.html">amago.nets.goal_embedders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/amago.nets.policy_dists.html">amago.nets.policy_dists</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/amago.nets.traj_encoders.html">amago.nets.traj_encoders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/amago.nets.transformer.html">amago.nets.transformer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/amago.nets.tstep_encoders.html">amago.nets.tstep_encoders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/amago.nets.utils.html">amago.nets.utils</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/amago.utils.html">amago.utils</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citation.html">Citation</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for amago.nets.traj_encoders</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Seq2Seq models for long-term memory.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">nn</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">gin</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">amago.nets</span><span class="w"> </span><span class="kn">import</span> <span class="n">ff</span><span class="p">,</span> <span class="n">transformer</span><span class="p">,</span> <span class="n">utils</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">amago.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">amago_warning</span>
+
+
+<div class="viewcode-block" id="TrajEncoder">
+<a class="viewcode-back" href="../../../api/amago.nets.traj_encoders.html#amago.nets.traj_encoders.TrajEncoder">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TrajEncoder</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Abstract base class for trajectory encoders.</span>
+
+<span class="sd">    An agent&#39;s &quot;TrajEncoder&quot; is the sequence model in charge of mapping the output</span>
+<span class="sd">    of the &quot;TstepEncoder&quot; for each timestep of the trajectory to the latent</span>
+<span class="sd">    dimension where actor-critic learning takes place. Because the actor and</span>
+<span class="sd">    critic are feed-forward networks, this is the place to add long-term memory</span>
+<span class="sd">    over previous timesteps.</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        It would *not* make sense for the sequence model defined here to be</span>
+<span class="sd">        bi-directional or non-causal.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        tstep_dim: Dimension of the input timestep representation (last dim of</span>
+<span class="sd">            the input sequence). Defined by the output of the TstepEncoder.</span>
+<span class="sd">        max_seq_len: Maximum sequence length of the model. Any inputs will have</span>
+<span class="sd">            been trimmed to this length before reaching the TrajEncoder.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tstep_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">max_seq_len</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tstep_dim</span> <span class="o">=</span> <span class="n">tstep_dim</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_seq_len</span> <span class="o">=</span> <span class="n">max_seq_len</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">emb_dim</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Defines the expected output dim of this model.</span>
+
+<span class="sd">        Used to infer the input dim of actor/critics.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            int: The embedding dimension.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+
+<div class="viewcode-block" id="TrajEncoder.init_hidden_state">
+<a class="viewcode-back" href="../../../api/amago.nets.traj_encoders.html#amago.nets.traj_encoders.TrajEncoder.init_hidden_state">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">init_hidden_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Hook to create an architecture-specific hidden state.</span>
+
+<span class="sd">        Return value is passed as `TrajEncoder.forward(..., hidden_state=self.init_hidden_state(...))`</span>
+<span class="sd">        when the agent begins to interact with the environment.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            batch_size: Number of parallel environments.</span>
+<span class="sd">            device: Device to store hidden state tensors (if applicable).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Optional[Any]: Some hidden state object, or None if not applicable.</span>
+<span class="sd">                Defaults to None.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="TrajEncoder.reset_hidden_state">
+<a class="viewcode-back" href="../../../api/amago.nets.traj_encoders.html#amago.nets.traj_encoders.TrajEncoder.reset_hidden_state">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset_hidden_state</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">hidden_state</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="n">dones</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Hook to implement architecture-specific hidden state reset.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            hidden_state: We only expect to see hidden states that were created</span>
+<span class="sd">                by `self.init_hidden_state()`.</span>
+<span class="sd">            dones: A bool array of shape (num_parallel_envs,) where True</span>
+<span class="sd">                indicates the agent loop has finished this episode and expects</span>
+<span class="sd">                the hidden state for this batch index to be reset.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Optional[Any]: Architecture-specific hidden state. Defaults to a</span>
+<span class="sd">                no-op: `new_hidden_state = hidden_state`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">hidden_state</span></div>
+
+
+<div class="viewcode-block" id="TrajEncoder.forward">
+<a class="viewcode-back" href="../../../api/amago.nets.traj_encoders.html#amago.nets.traj_encoders.TrajEncoder.forward">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">seq</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">time_idxs</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">hidden_state</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">log_dict</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Sequence model forward pass.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            seq: [Batch, Num Timesteps, TstepDim]. TstepDim is defined by the</span>
+<span class="sd">                output of the TstepEncoder.</span>
+<span class="sd">            time_idxs: [Batch, Num Timesteps, 1]. A sequence of ints tying the</span>
+<span class="sd">                input seq to the number of steps that have passed since the start</span>
+<span class="sd">                of the episode. Can be used to compute position embeddings or</span>
+<span class="sd">                other temporal features.</span>
+<span class="sd">            hidden_state: Architecture-specific hidden state. Defaults to None.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tuple[torch.Tensor, Optional[Any]]: A tuple containing:</span>
+<span class="sd">                - output_seq: [Batch, Timestep, self.emb_dim]. Output of our</span>
+<span class="sd">                    seq2seq model.</span>
+<span class="sd">                - new_hidden_state: Architecture-specific hidden state. Expected to</span>
+<span class="sd">                    be `None` if input `hidden_state` is `None`. Otherwise, we</span>
+<span class="sd">                    assume we are at inference time and that this `forward`</span>
+<span class="sd">                    method has handled any updates to the hidden state that were</span>
+<span class="sd">                    needed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="FFTrajEncoder">
+<a class="viewcode-back" href="../../../api/amago.nets.traj_encoders.html#amago.nets.traj_encoders.FFTrajEncoder">[docs]</a>
+<span class="nd">@gin</span><span class="o">.</span><span class="n">configurable</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">FFTrajEncoder</span><span class="p">(</span><span class="n">TrajEncoder</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Feed-forward (memory-free) trajectory encoder.</span>
+
+<span class="sd">    A useful tool for applying AMAGO to standard MDPs and benchmarking general</span>
+<span class="sd">    RL details/hyperparamters on common benchmarks. The feed-forward architecture</span>
+<span class="sd">    is designed to be close to an attention-less Transformer (residual blocks,</span>
+<span class="sd">    norm, dropout, etc.). This makes it easy to create perfect 1:1 ablations of</span>
+<span class="sd">    &quot;memory vs. no memory&quot; by only changing the TrajEncoder and without touching</span>
+<span class="sd">    the `max_seq_len`, which would have the side-effect of changing the effective</span>
+<span class="sd">    batch size of actor-critic learning.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        tstep_dim: Dimension of the input timestep representation (last dim of</span>
+<span class="sd">            the input sequence). Defined by the output of the TstepEncoder.</span>
+<span class="sd">        max_seq_len: Maximum sequence length of the model. Any inputs will have</span>
+<span class="sd">            been trimmed to this length before reaching the TrajEncoder.</span>
+
+<span class="sd">    Keyword Args:</span>
+<span class="sd">        d_model: Dimension of the main residual stream and output. 1:1 with how</span>
+<span class="sd">            this would be defined in a Transformer. Defaults to 256.</span>
+<span class="sd">        d_ff: Hidden dim of the feed-forward network along each residual block.</span>
+<span class="sd">            1:1 with how this would be defined in a Transformer. Defaults to</span>
+<span class="sd">            `4 * d_model`.</span>
+<span class="sd">        n_layers: Number of residual feed-forward blocks. 1:1 with how this would</span>
+<span class="sd">            be defined in a Transformer. Defaults to 1.</span>
+<span class="sd">        dropout: Dropout rate. Equivalent to the dropout paramter of feed-forward</span>
+<span class="sd">            blocks in a Transformer, but is also applied to the first and last</span>
+<span class="sd">            linear layers (inp --&gt; d_model and d_model --&gt; out). Defaults to 0.0.</span>
+<span class="sd">        activation: Activation function. Defaults to &quot;leaky_relu&quot;.</span>
+<span class="sd">        norm: Normalization function. Defaults to &quot;layer&quot; (LayerNorm).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">tstep_dim</span><span class="p">,</span>
+        <span class="n">max_seq_len</span><span class="p">,</span>
+        <span class="n">d_model</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">256</span><span class="p">,</span>
+        <span class="n">d_ff</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">n_layers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">dropout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">activation</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;leaky_relu&quot;</span><span class="p">,</span>
+        <span class="n">norm</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;layer&quot;</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">tstep_dim</span><span class="p">,</span> <span class="n">max_seq_len</span><span class="p">)</span>
+        <span class="n">d_ff</span> <span class="o">=</span> <span class="n">d_ff</span> <span class="ow">or</span> <span class="n">d_model</span> <span class="o">*</span> <span class="mi">4</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">traj_emb</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">tstep_dim</span><span class="p">,</span> <span class="n">d_model</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">traj_blocks</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="n">ff</span><span class="o">.</span><span class="n">FFBlock</span><span class="p">(</span><span class="n">d_model</span><span class="p">,</span> <span class="n">d_ff</span><span class="p">,</span> <span class="n">dropout</span><span class="o">=</span><span class="n">dropout</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="n">activation</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_layers</span><span class="p">)</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">traj_last</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">d_model</span><span class="p">,</span> <span class="n">d_model</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">norm</span> <span class="o">=</span> <span class="n">ff</span><span class="o">.</span><span class="n">Normalization</span><span class="p">(</span><span class="n">norm</span><span class="p">,</span> <span class="n">d_model</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">activation</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">activation_switch</span><span class="p">(</span><span class="n">activation</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dropout</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="n">dropout</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_emb_dim</span> <span class="o">=</span> <span class="n">d_model</span>
+
+    <span class="nd">@torch</span><span class="o">.</span><span class="n">compile</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_traj_blocks_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seq</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="n">traj_emb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">activation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">traj_emb</span><span class="p">(</span><span class="n">seq</span><span class="p">)))</span>
+        <span class="k">for</span> <span class="n">traj_block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">traj_blocks</span><span class="p">:</span>
+            <span class="n">traj_emb</span> <span class="o">=</span> <span class="n">traj_block</span><span class="p">(</span><span class="n">traj_emb</span><span class="p">)</span>
+        <span class="n">traj_emb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">traj_last</span><span class="p">(</span><span class="n">traj_emb</span><span class="p">)</span>
+        <span class="n">traj_emb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">traj_emb</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">traj_emb</span>
+
+<div class="viewcode-block" id="FFTrajEncoder.forward">
+<a class="viewcode-back" href="../../../api/amago.nets.traj_encoders.html#amago.nets.traj_encoders.FFTrajEncoder.forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">seq</span><span class="p">,</span> <span class="n">time_idxs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hidden_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">log_dict</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_traj_blocks_forward</span><span class="p">(</span><span class="n">seq</span><span class="p">),</span> <span class="n">hidden_state</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">emb_dim</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_emb_dim</span></div>
+
+
+
+<div class="viewcode-block" id="GRUTrajEncoder">
+<a class="viewcode-back" href="../../../api/amago.nets.traj_encoders.html#amago.nets.traj_encoders.GRUTrajEncoder">[docs]</a>
+<span class="nd">@gin</span><span class="o">.</span><span class="n">configurable</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">GRUTrajEncoder</span><span class="p">(</span><span class="n">TrajEncoder</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;RNN (GRU) Trajectory Encoder.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        tstep_dim: Dimension of the input timestep representation (last dim of</span>
+<span class="sd">            the input sequence). Defined by the output of the TstepEncoder.</span>
+<span class="sd">        max_seq_len: Maximum sequence length of the model. Any inputs will have</span>
+<span class="sd">            been trimmed to this length before reaching the TrajEncoder.</span>
+
+<span class="sd">    Keyword Args:</span>
+<span class="sd">        d_hidden: Dimension of the hidden state of the GRU. Defaults to 256.</span>
+<span class="sd">        n_layers: Number of layers in the GRU. Defaults to 2.</span>
+<span class="sd">        d_output: Dimension of the output linear layer after the GRU. Defaults to</span>
+<span class="sd">            256.</span>
+<span class="sd">        norm: Normalization applied after the final linear layer. Defaults to</span>
+<span class="sd">            &quot;layer&quot; (LayerNorm).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">tstep_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">max_seq_len</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">d_hidden</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">256</span><span class="p">,</span>
+        <span class="n">n_layers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="n">d_output</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">256</span><span class="p">,</span>
+        <span class="n">norm</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;layer&quot;</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">tstep_dim</span><span class="p">,</span> <span class="n">max_seq_len</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rnn</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">GRU</span><span class="p">(</span>
+            <span class="n">input_size</span><span class="o">=</span><span class="n">tstep_dim</span><span class="p">,</span>
+            <span class="n">hidden_size</span><span class="o">=</span><span class="n">d_hidden</span><span class="p">,</span>
+            <span class="n">num_layers</span><span class="o">=</span><span class="n">n_layers</span><span class="p">,</span>
+            <span class="n">bias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">batch_first</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">bidirectional</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">d_hidden</span><span class="p">,</span> <span class="n">d_output</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out_norm</span> <span class="o">=</span> <span class="n">ff</span><span class="o">.</span><span class="n">Normalization</span><span class="p">(</span><span class="n">norm</span><span class="p">,</span> <span class="n">d_output</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_emb_dim</span> <span class="o">=</span> <span class="n">d_output</span>
+
+<div class="viewcode-block" id="GRUTrajEncoder.reset_hidden_state">
+<a class="viewcode-back" href="../../../api/amago.nets.traj_encoders.html#amago.nets.traj_encoders.GRUTrajEncoder.reset_hidden_state">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset_hidden_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hidden_state</span><span class="p">,</span> <span class="n">dones</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">hidden_state</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="n">hidden_state</span><span class="p">[:,</span> <span class="n">dones</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">return</span> <span class="n">hidden_state</span></div>
+
+
+<div class="viewcode-block" id="GRUTrajEncoder.forward">
+<a class="viewcode-back" href="../../../api/amago.nets.traj_encoders.html#amago.nets.traj_encoders.GRUTrajEncoder.forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">seq</span><span class="p">,</span> <span class="n">time_idxs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hidden_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">log_dict</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">):</span>
+        <span class="n">output_seq</span><span class="p">,</span> <span class="n">new_hidden_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rnn</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">hidden_state</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_norm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">out</span><span class="p">(</span><span class="n">output_seq</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">out</span><span class="p">,</span> <span class="n">new_hidden_state</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">emb_dim</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_emb_dim</span></div>
+
+
+
+<div class="viewcode-block" id="TformerTrajEncoder">
+<a class="viewcode-back" href="../../../tutorial/configuration.html#amago.nets.traj_encoders.TformerTrajEncoder">[docs]</a>
+<span class="nd">@gin</span><span class="o">.</span><span class="n">configurable</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">TformerTrajEncoder</span><span class="p">(</span><span class="n">TrajEncoder</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Transformer Trajectory Encoder.</span>
+
+<span class="sd">    A pre-norm Transformer decoder-only model that processes sequences of timestep</span>
+<span class="sd">    embeddings.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        tstep_dim: Dimension of the input timestep representation (last dim of</span>
+<span class="sd">            the input sequence). Defined by the output of the TstepEncoder.</span>
+<span class="sd">        max_seq_len: Maximum sequence length of the model. The max context length</span>
+<span class="sd">            of the model during training.</span>
+
+<span class="sd">    Keyword Args:</span>
+<span class="sd">        d_model: Dimension of the main residual stream and output. Defaults to</span>
+<span class="sd">            256.</span>
+<span class="sd">        n_heads: Number of self-attention heads. Each head has dimension</span>
+<span class="sd">            d_model/n_heads. Defaults to 8.</span>
+<span class="sd">        d_ff: Dimension of feed-forward network in residual blocks. Defaults to</span>
+<span class="sd">            4*d_model.</span>
+<span class="sd">        n_layers: Number of Transformer layers. Defaults to 3.</span>
+<span class="sd">        dropout_ff: Dropout rate for linear layers within Transformer. Defaults to</span>
+<span class="sd">            0.05.</span>
+<span class="sd">        dropout_emb: Dropout rate for input embedding (combined input sequence and</span>
+<span class="sd">            position embeddings passed to Transformer). Defaults to 0.05.</span>
+<span class="sd">        dropout_attn: Dropout rate for attention matrix. Defaults to 0.00.</span>
+<span class="sd">        dropout_qkv: Dropout rate for query/key/value projections. Defaults to</span>
+<span class="sd">            0.00.</span>
+<span class="sd">        activation: Activation function. Defaults to &quot;leaky_relu&quot;.</span>
+<span class="sd">        norm: Normalization function. Defaults to &quot;layer&quot; (LayerNorm).</span>
+<span class="sd">        pos_emb: Position embedding type. &quot;fixed&quot; (default) uses sinusoidal</span>
+<span class="sd">            embeddings, &quot;learned&quot; uses trainable embeddings per timestep.</span>
+<span class="sd">        causal: Whether to use causal attention mask. Defaults to True.</span>
+<span class="sd">        sigma_reparam: Whether to use :math:`\sigma`-reparam feed-forward layers</span>
+<span class="sd">            from https://arxiv.org/abs/2303.06296. Defaults to True.</span>
+<span class="sd">        normformer_norms: Whether to use extra norm layers from NormFormer</span>
+<span class="sd">            (https://arxiv.org/abs/2110.09456). Always uses pre-norm Transformer.</span>
+<span class="sd">        head_scaling: Whether to use head scaling from NormFormer. Defaults to</span>
+<span class="sd">            True.</span>
+<span class="sd">        attention_type: Attention layer type. Defaults to</span>
+<span class="sd">            transformer.FlashAttention. transformer.VanillaAttention provided as</span>
+<span class="sd">            backup. New types can inherit from transformer.SelfAttention.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">tstep_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">max_seq_len</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">d_model</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">256</span><span class="p">,</span>
+        <span class="n">n_heads</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span>
+        <span class="n">d_ff</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1024</span><span class="p">,</span>
+        <span class="n">n_layers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="n">dropout_ff</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
+        <span class="n">dropout_emb</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
+        <span class="n">dropout_attn</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.00</span><span class="p">,</span>
+        <span class="n">dropout_qkv</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.00</span><span class="p">,</span>
+        <span class="n">activation</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;leaky_relu&quot;</span><span class="p">,</span>
+        <span class="n">norm</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;layer&quot;</span><span class="p">,</span>
+        <span class="n">pos_emb</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;fixed&quot;</span><span class="p">,</span>
+        <span class="n">sigma_reparam</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">normformer_norms</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">head_scaling</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">attention_type</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">transformer</span><span class="o">.</span><span class="n">SelfAttention</span><span class="p">]</span> <span class="o">=</span> <span class="n">transformer</span><span class="o">.</span><span class="n">FlashAttention</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">tstep_dim</span><span class="p">,</span> <span class="n">max_seq_len</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">head_dim</span> <span class="o">=</span> <span class="n">d_model</span> <span class="o">//</span> <span class="n">n_heads</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_heads</span> <span class="o">=</span> <span class="n">n_heads</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_layers</span> <span class="o">=</span> <span class="n">n_layers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attention_type</span> <span class="o">=</span> <span class="n">attention_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">d_model</span> <span class="o">=</span> <span class="n">d_model</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">make_layer</span><span class="p">():</span>
+            <span class="k">return</span> <span class="n">transformer</span><span class="o">.</span><span class="n">TransformerLayer</span><span class="p">(</span>
+                <span class="n">attention_layer</span><span class="o">=</span><span class="n">transformer</span><span class="o">.</span><span class="n">AttentionLayer</span><span class="p">(</span>
+                    <span class="n">self_attention</span><span class="o">=</span><span class="n">attention_type</span><span class="p">(</span><span class="n">causal</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dropout</span><span class="o">=</span><span class="n">dropout_attn</span><span class="p">),</span>
+                    <span class="n">d_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">d_model</span><span class="p">,</span>
+                    <span class="n">d_qkv</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">head_dim</span><span class="p">,</span>
+                    <span class="n">n_heads</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_heads</span><span class="p">,</span>
+                    <span class="n">dropout_qkv</span><span class="o">=</span><span class="n">dropout_qkv</span><span class="p">,</span>
+                    <span class="n">head_scaling</span><span class="o">=</span><span class="n">head_scaling</span><span class="p">,</span>
+                    <span class="n">sigma_reparam</span><span class="o">=</span><span class="n">sigma_reparam</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="n">d_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">d_model</span><span class="p">,</span>
+                <span class="n">d_ff</span><span class="o">=</span><span class="n">d_ff</span><span class="p">,</span>
+                <span class="n">dropout_ff</span><span class="o">=</span><span class="n">dropout_ff</span><span class="p">,</span>
+                <span class="n">activation</span><span class="o">=</span><span class="n">activation</span><span class="p">,</span>
+                <span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span>
+                <span class="n">sigma_reparam</span><span class="o">=</span><span class="n">sigma_reparam</span><span class="p">,</span>
+                <span class="n">normformer_norms</span><span class="o">=</span><span class="n">normformer_norms</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="n">layers</span> <span class="o">=</span> <span class="p">[</span><span class="n">make_layer</span><span class="p">()</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_layers</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tformer</span> <span class="o">=</span> <span class="n">transformer</span><span class="o">.</span><span class="n">Transformer</span><span class="p">(</span>
+            <span class="n">inp_dim</span><span class="o">=</span><span class="n">tstep_dim</span><span class="p">,</span>
+            <span class="n">d_model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">d_model</span><span class="p">,</span>
+            <span class="n">layers</span><span class="o">=</span><span class="n">layers</span><span class="p">,</span>
+            <span class="n">dropout_emb</span><span class="o">=</span><span class="n">dropout_emb</span><span class="p">,</span>
+            <span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span>
+            <span class="n">pos_emb</span><span class="o">=</span><span class="n">pos_emb</span><span class="p">,</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="TformerTrajEncoder.init_hidden_state">
+<a class="viewcode-back" href="../../../api/amago.nets.traj_encoders.html#amago.nets.traj_encoders.TformerTrajEncoder.init_hidden_state">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">init_hidden_state</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">transformer</span><span class="o">.</span><span class="n">TformerHiddenState</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">make_cache</span><span class="p">():</span>
+            <span class="n">dtype</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">bfloat16</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">attention_type</span> <span class="o">==</span> <span class="n">transformer</span><span class="o">.</span><span class="n">FlashAttention</span>
+                <span class="k">else</span> <span class="n">torch</span><span class="o">.</span><span class="n">float32</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">transformer</span><span class="o">.</span><span class="n">Cache</span><span class="p">(</span>
+                <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
+                <span class="n">layers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_layers</span><span class="p">,</span>
+                <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+                <span class="n">max_seq_len</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_seq_len</span><span class="p">,</span>
+                <span class="n">n_heads</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_heads</span><span class="p">,</span>
+                <span class="n">head_dim</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">head_dim</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="n">hidden_state</span> <span class="o">=</span> <span class="n">transformer</span><span class="o">.</span><span class="n">TformerHiddenState</span><span class="p">(</span>
+            <span class="n">key_cache</span><span class="o">=</span><span class="n">make_cache</span><span class="p">(),</span>
+            <span class="n">val_cache</span><span class="o">=</span><span class="n">make_cache</span><span class="p">(),</span>
+            <span class="n">seq_lens</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">batch_size</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">hidden_state</span></div>
+
+
+<div class="viewcode-block" id="TformerTrajEncoder.reset_hidden_state">
+<a class="viewcode-back" href="../../../api/amago.nets.traj_encoders.html#amago.nets.traj_encoders.TformerTrajEncoder.reset_hidden_state">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset_hidden_state</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">hidden_state</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">transformer</span><span class="o">.</span><span class="n">TformerHiddenState</span><span class="p">],</span> <span class="n">dones</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">transformer</span><span class="o">.</span><span class="n">TformerHiddenState</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">hidden_state</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">hidden_state</span><span class="p">,</span> <span class="n">transformer</span><span class="o">.</span><span class="n">TformerHiddenState</span><span class="p">)</span>
+        <span class="n">hidden_state</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">idxs</span><span class="o">=</span><span class="n">dones</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">hidden_state</span></div>
+
+
+<div class="viewcode-block" id="TformerTrajEncoder.forward">
+<a class="viewcode-back" href="../../../api/amago.nets.traj_encoders.html#amago.nets.traj_encoders.TformerTrajEncoder.forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">seq</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">time_idxs</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">hidden_state</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">transformer</span><span class="o">.</span><span class="n">TformerHiddenState</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">log_dict</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">transformer</span><span class="o">.</span><span class="n">TformerHiddenState</span><span class="p">]]:</span>
+        <span class="k">assert</span> <span class="n">time_idxs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">tformer</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">pos_idxs</span><span class="o">=</span><span class="n">time_idxs</span><span class="p">,</span> <span class="n">hidden_state</span><span class="o">=</span><span class="n">hidden_state</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">emb_dim</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">d_model</span></div>
+
+
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">mamba_ssm</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mamba</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">Mamba</span> <span class="o">=</span> <span class="kc">None</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_MambaBlock</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d_model</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">d_state</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">d_conv</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">expand</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">norm</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">norm</span> <span class="o">=</span> <span class="n">ff</span><span class="o">.</span><span class="n">Normalization</span><span class="p">(</span><span class="n">norm</span><span class="p">,</span> <span class="n">d_model</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mamba</span> <span class="o">=</span> <span class="n">Mamba</span><span class="p">(</span>
+            <span class="n">d_model</span><span class="o">=</span><span class="n">d_model</span><span class="p">,</span> <span class="n">d_state</span><span class="o">=</span><span class="n">d_state</span><span class="p">,</span> <span class="n">d_conv</span><span class="o">=</span><span class="n">d_conv</span><span class="p">,</span> <span class="n">expand</span><span class="o">=</span><span class="n">expand</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seq</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">seq</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">mamba</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">seq</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seq</span><span class="p">,</span> <span class="n">conv_state</span><span class="p">,</span> <span class="n">ssm_state</span><span class="p">):</span>
+        <span class="n">res</span><span class="p">,</span> <span class="n">new_conv_state</span><span class="p">,</span> <span class="n">new_ssm_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mamba</span><span class="o">.</span><span class="n">step</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">seq</span><span class="p">),</span> <span class="n">conv_state</span><span class="p">,</span> <span class="n">ssm_state</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">seq</span> <span class="o">+</span> <span class="n">res</span><span class="p">,</span> <span class="n">new_conv_state</span><span class="p">,</span> <span class="n">new_ssm_state</span>
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_MambaHiddenState</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conv_states</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">ssm_states</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]):</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">conv_states</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">ssm_states</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_layers</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">conv_states</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv_states</span> <span class="o">=</span> <span class="n">conv_states</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ssm_states</span> <span class="o">=</span> <span class="n">ssm_states</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idxs</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_layers</span><span class="p">):</span>
+            <span class="c1"># hidden states are initialized to zero</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">conv_states</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">idxs</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ssm_states</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">idxs</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">layer_idx</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_layers</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv_states</span><span class="p">[</span><span class="n">layer_idx</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">ssm_states</span><span class="p">[</span><span class="n">layer_idx</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">conv_ssm</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]):</span>
+        <span class="n">conv</span><span class="p">,</span> <span class="n">ssm</span> <span class="o">=</span> <span class="n">conv_ssm</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv_states</span><span class="p">[</span><span class="n">layer_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">conv</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ssm_states</span><span class="p">[</span><span class="n">layer_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">ssm</span>
+
+
+<div class="viewcode-block" id="MambaTrajEncoder">
+<a class="viewcode-back" href="../../../api/amago.nets.traj_encoders.html#amago.nets.traj_encoders.MambaTrajEncoder">[docs]</a>
+<span class="nd">@gin</span><span class="o">.</span><span class="n">configurable</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MambaTrajEncoder</span><span class="p">(</span><span class="n">TrajEncoder</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Mamba Trajectory Encoder.</span>
+
+<span class="sd">    Implementation of the Mamba architecture from &quot;Mamba: Linear-Time Sequence</span>
+<span class="sd">    Modeling with Selective State Spaces&quot; (https://arxiv.org/abs/2312.00752).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        tstep_dim: Dimension of the input timestep representation (last dim of</span>
+<span class="sd">            the input sequence). Defined by the output of the TstepEncoder.</span>
+<span class="sd">        max_seq_len: Maximum sequence length of the model. The max context length</span>
+<span class="sd">            of the model during training.</span>
+
+<span class="sd">    Keyword Args:</span>
+<span class="sd">        d_model: Dimension of the main residual stream and output, analogous to</span>
+<span class="sd">            the d_model in a Transformer. Defaults to 256.</span>
+<span class="sd">        d_state: Dimension of the SSM in Mamba blocks. Defaults to 16.</span>
+<span class="sd">        d_conv: Dimension of the convolution layer in Mamba blocks. Defaults to 4.</span>
+<span class="sd">        expand: Expansion factor of the SSM. Defaults to 2.</span>
+<span class="sd">        n_layers: Number of Mamba blocks. Defaults to 3.</span>
+<span class="sd">        norm: Normalization function. Defaults to &quot;layer&quot; (LayerNorm).</span>
+
+<span class="sd">    References:</span>
+<span class="sd">        - https://github.com/state-spaces/mamba/blob/main/mamba_ssm/modules/mamba_simple.py</span>
+<span class="sd">        - https://github.com/johnma2006/mamba-minimal/tree/master</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">tstep_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">max_seq_len</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">d_model</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">256</span><span class="p">,</span>
+        <span class="n">d_state</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">16</span><span class="p">,</span>
+        <span class="n">d_conv</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
+        <span class="n">expand</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="n">n_layers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="n">norm</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;layer&quot;</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">tstep_dim</span><span class="p">,</span> <span class="n">max_seq_len</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="n">Mamba</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="p">),</span> <span class="s2">&quot;Missing Mamba installation (pip install amago[mamba])&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inp</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">tstep_dim</span><span class="p">,</span> <span class="n">d_model</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">mambas</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="n">_MambaBlock</span><span class="p">(</span>
+                    <span class="n">d_model</span><span class="o">=</span><span class="n">d_model</span><span class="p">,</span>
+                    <span class="n">d_state</span><span class="o">=</span><span class="n">d_state</span><span class="p">,</span>
+                    <span class="n">d_conv</span><span class="o">=</span><span class="n">d_conv</span><span class="p">,</span>
+                    <span class="n">expand</span><span class="o">=</span><span class="n">expand</span><span class="p">,</span>
+                    <span class="n">norm</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_layers</span><span class="p">)</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out_norm</span> <span class="o">=</span> <span class="n">ff</span><span class="o">.</span><span class="n">Normalization</span><span class="p">(</span><span class="n">norm</span><span class="p">,</span> <span class="n">d_model</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_emb_dim</span> <span class="o">=</span> <span class="n">d_model</span>
+
+<div class="viewcode-block" id="MambaTrajEncoder.init_hidden_state">
+<a class="viewcode-back" href="../../../api/amago.nets.traj_encoders.html#amago.nets.traj_encoders.MambaTrajEncoder.init_hidden_state">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">init_hidden_state</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_MambaHiddenState</span><span class="p">:</span>
+        <span class="n">conv_states</span><span class="p">,</span> <span class="n">ssm_states</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">mamba_block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mambas</span><span class="p">:</span>
+            <span class="n">conv_state</span><span class="p">,</span> <span class="n">ssm_state</span> <span class="o">=</span> <span class="n">mamba_block</span><span class="o">.</span><span class="n">mamba</span><span class="o">.</span><span class="n">allocate_inference_cache</span><span class="p">(</span>
+                <span class="n">batch_size</span><span class="p">,</span> <span class="n">max_seqlen</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_seq_len</span>
+            <span class="p">)</span>
+            <span class="n">conv_states</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">conv_state</span><span class="p">)</span>
+            <span class="n">ssm_states</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ssm_state</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_MambaHiddenState</span><span class="p">(</span><span class="n">conv_states</span><span class="p">,</span> <span class="n">ssm_states</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MambaTrajEncoder.reset_hidden_state">
+<a class="viewcode-back" href="../../../api/amago.nets.traj_encoders.html#amago.nets.traj_encoders.MambaTrajEncoder.reset_hidden_state">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset_hidden_state</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">hidden_state</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">_MambaHiddenState</span><span class="p">],</span> <span class="n">dones</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">_MambaHiddenState</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">hidden_state</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">hidden_state</span><span class="p">,</span> <span class="n">_MambaHiddenState</span><span class="p">)</span>
+        <span class="n">hidden_state</span><span class="o">.</span><span class="n">reset</span><span class="p">(</span><span class="n">idxs</span><span class="o">=</span><span class="n">dones</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">hidden_state</span></div>
+
+
+<div class="viewcode-block" id="MambaTrajEncoder.forward">
+<a class="viewcode-back" href="../../../api/amago.nets.traj_encoders.html#amago.nets.traj_encoders.MambaTrajEncoder.forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">seq</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">time_idxs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">hidden_state</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">_MambaHiddenState</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">log_dict</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">_MambaHiddenState</span><span class="p">]]:</span>
+        <span class="n">seq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inp</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">hidden_state</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">mamba</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mambas</span><span class="p">:</span>
+                <span class="n">seq</span> <span class="o">=</span> <span class="n">mamba</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">hidden_state</span><span class="p">,</span> <span class="n">_MambaHiddenState</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">mamba</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mambas</span><span class="p">):</span>
+                <span class="n">conv_state_i</span><span class="p">,</span> <span class="n">ssm_state_i</span> <span class="o">=</span> <span class="n">hidden_state</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                <span class="n">seq</span><span class="p">,</span> <span class="n">new_conv_state_i</span><span class="p">,</span> <span class="n">new_ssm_state_i</span> <span class="o">=</span> <span class="n">mamba</span><span class="o">.</span><span class="n">step</span><span class="p">(</span>
+                    <span class="n">seq</span><span class="p">,</span> <span class="n">conv_state</span><span class="o">=</span><span class="n">conv_state_i</span><span class="p">,</span> <span class="n">ssm_state</span><span class="o">=</span><span class="n">ssm_state_i</span>
+                <span class="p">)</span>
+                <span class="n">hidden_state</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_conv_state_i</span><span class="p">,</span> <span class="n">new_ssm_state_i</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_norm</span><span class="p">(</span><span class="n">seq</span><span class="p">),</span> <span class="n">hidden_state</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">emb_dim</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_emb_dim</span></div>
+
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By UT Austin Robot Perception and Learning Lab
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

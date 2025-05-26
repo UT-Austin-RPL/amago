@@ -1,0 +1,1446 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="light">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>amago.experiment &#8212; AMAGO</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "light";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/amago.experiment';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="amago.hindsight" href="amago.hindsight.html" />
+    <link rel="prev" title="amago.envs.exploration" href="amago.envs.exploration.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="light">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+    
+    <img src="../_static/amago_logo_3.png" class="logo__image only-light" alt="AMAGO - Home"/>
+    <script>document.write(`<img src="../_static/amago_logo_3.png" class="logo__image only-dark" alt="AMAGO - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../tutorial/index.html">Tutorial</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/setup_env.html">Setup the Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/create_dataset.html">Create a Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/create_experiment.html">Create an Experiment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/track_results.html">Track the Results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/configuration.html">Configure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/customization.html">Customize</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/async.html">Multi-GPU and Asynchronous Training</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../examples/index.html">Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../examples/00_meta_frozen_lake.html">Meta Frozen Lake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/01_basic_gym.html">Basic Gymnasium</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/02_gymnax.html">Gymnax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/03_popgym_suite.html">POPGym</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/04_tmaze.html">T-Maze</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/05_dark_key_door.html">Dark Room Key Door</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/06_alchemy.html">Symbolic DM Alchemy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/07_metaworld.html">Meta-World ML1/ML10/ML45</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/08_ale.html">Multi-Game Atari</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/09_multitask_procgen.html">Multi-Game ProcGen</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/10_babyai.html">Multi-Task BabyAI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/11_xland_minigrid.html">XLand Mini-Grid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/12_half_cheetah_vel.html">HalfCheetah(v4)-Velocity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/13_mazerunner_relabeling.html">MazeRunner HER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/14_d4rl.html">D4RL</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="amago.html">API Reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="amago.agent.html">amago.agent</a></li>
+<li class="toctree-l2"><a class="reference internal" href="amago.cli_utils.html">amago.cli_utils</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="amago.envs.html">amago.envs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="amago.envs.amago_env.html">amago.envs.amago_env</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="amago.envs.builtin.html">amago.envs.builtin</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="amago.envs.builtin.half_cheetah_v4_vel.html">amago.envs.builtin.half_cheetah_v4_vel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="amago.envs.builtin.metaworld_ml.html">amago.envs.builtin.metaworld_ml</a></li>
+<li class="toctree-l4"><a class="reference internal" href="amago.envs.builtin.popgym_envs.html">amago.envs.builtin.popgym_envs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="amago.envs.builtin.toy_gym.html">amago.envs.builtin.toy_gym</a></li>
+<li class="toctree-l4"><a class="reference internal" href="amago.envs.builtin.xland_minigrid.html">amago.envs.builtin.xland_minigrid</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.envs.env_utils.html">amago.envs.env_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.envs.exploration.html">amago.envs.exploration</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">amago.experiment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="amago.hindsight.html">amago.hindsight</a></li>
+<li class="toctree-l2"><a class="reference internal" href="amago.loading.html">amago.loading</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="amago.nets.html">amago.nets</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.actor_critic.html">amago.nets.actor_critic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.cnn.html">amago.nets.cnn</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.ff.html">amago.nets.ff</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.goal_embedders.html">amago.nets.goal_embedders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.policy_dists.html">amago.nets.policy_dists</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.traj_encoders.html">amago.nets.traj_encoders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.transformer.html">amago.nets.transformer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.tstep_encoders.html">amago.nets.tstep_encoders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.utils.html">amago.nets.utils</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="amago.utils.html">amago.utils</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../citation.html">Citation</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/api/amago.experiment.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>amago.experiment</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment"><code class="docutils literal notranslate"><span class="pre">Experiment</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.DEVICE"><code class="docutils literal notranslate"><span class="pre">Experiment.DEVICE</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.agent_type"><code class="docutils literal notranslate"><span class="pre">Experiment.agent_type</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.always_load_latest"><code class="docutils literal notranslate"><span class="pre">Experiment.always_load_latest</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.always_save_latest"><code class="docutils literal notranslate"><span class="pre">Experiment.always_save_latest</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.async_env_mp_context"><code class="docutils literal notranslate"><span class="pre">Experiment.async_env_mp_context</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.batch_size"><code class="docutils literal notranslate"><span class="pre">Experiment.batch_size</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.batches_per_update"><code class="docutils literal notranslate"><span class="pre">Experiment.batches_per_update</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.caster"><code class="docutils literal notranslate"><span class="pre">Experiment.caster()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.ckpt_base_dir"><code class="docutils literal notranslate"><span class="pre">Experiment.ckpt_base_dir</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.ckpt_interval"><code class="docutils literal notranslate"><span class="pre">Experiment.ckpt_interval</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.collect_new_training_data"><code class="docutils literal notranslate"><span class="pre">Experiment.collect_new_training_data()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.compute_loss"><code class="docutils literal notranslate"><span class="pre">Experiment.compute_loss()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.critic_loss_weight"><code class="docutils literal notranslate"><span class="pre">Experiment.critic_loss_weight</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.dataset"><code class="docutils literal notranslate"><span class="pre">Experiment.dataset</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.delete_buffer_from_disk"><code class="docutils literal notranslate"><span class="pre">Experiment.delete_buffer_from_disk()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.dloader_workers"><code class="docutils literal notranslate"><span class="pre">Experiment.dloader_workers</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.edit_actor_mask"><code class="docutils literal notranslate"><span class="pre">Experiment.edit_actor_mask()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.edit_critic_mask"><code class="docutils literal notranslate"><span class="pre">Experiment.edit_critic_mask()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.env_mode"><code class="docutils literal notranslate"><span class="pre">Experiment.env_mode</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.epochs"><code class="docutils literal notranslate"><span class="pre">Experiment.epochs</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.evaluate_test"><code class="docutils literal notranslate"><span class="pre">Experiment.evaluate_test()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.evaluate_val"><code class="docutils literal notranslate"><span class="pre">Experiment.evaluate_val()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.exploration_wrapper_type"><code class="docutils literal notranslate"><span class="pre">Experiment.exploration_wrapper_type</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.force_reset_train_envs_every"><code class="docutils literal notranslate"><span class="pre">Experiment.force_reset_train_envs_every</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.grad_clip"><code class="docutils literal notranslate"><span class="pre">Experiment.grad_clip</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.has_dset_edit_rights"><code class="docutils literal notranslate"><span class="pre">Experiment.has_dset_edit_rights</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.init_checkpoints"><code class="docutils literal notranslate"><span class="pre">Experiment.init_checkpoints()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.init_dloaders"><code class="docutils literal notranslate"><span class="pre">Experiment.init_dloaders()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.init_dsets"><code class="docutils literal notranslate"><span class="pre">Experiment.init_dsets()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.init_envs"><code class="docutils literal notranslate"><span class="pre">Experiment.init_envs()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.init_logger"><code class="docutils literal notranslate"><span class="pre">Experiment.init_logger()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.init_model"><code class="docutils literal notranslate"><span class="pre">Experiment.init_model()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.init_optimizer"><code class="docutils literal notranslate"><span class="pre">Experiment.init_optimizer()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.interact"><code class="docutils literal notranslate"><span class="pre">Experiment.interact()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.l2_coeff"><code class="docutils literal notranslate"><span class="pre">Experiment.l2_coeff</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.learn"><code class="docutils literal notranslate"><span class="pre">Experiment.learn()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.learning_rate"><code class="docutils literal notranslate"><span class="pre">Experiment.learning_rate</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.load_checkpoint"><code class="docutils literal notranslate"><span class="pre">Experiment.load_checkpoint()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.load_checkpoint_from_path"><code class="docutils literal notranslate"><span class="pre">Experiment.load_checkpoint_from_path()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.log"><code class="docutils literal notranslate"><span class="pre">Experiment.log()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.log_interval"><code class="docutils literal notranslate"><span class="pre">Experiment.log_interval</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.log_to_wandb"><code class="docutils literal notranslate"><span class="pre">Experiment.log_to_wandb</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.lr_warmup_steps"><code class="docutils literal notranslate"><span class="pre">Experiment.lr_warmup_steps</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.make_train_env"><code class="docutils literal notranslate"><span class="pre">Experiment.make_train_env</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.make_val_env"><code class="docutils literal notranslate"><span class="pre">Experiment.make_val_env</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.max_seq_len"><code class="docutils literal notranslate"><span class="pre">Experiment.max_seq_len</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.mixed_precision"><code class="docutils literal notranslate"><span class="pre">Experiment.mixed_precision</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.padded_sampling"><code class="docutils literal notranslate"><span class="pre">Experiment.padded_sampling</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.parallel_actors"><code class="docutils literal notranslate"><span class="pre">Experiment.parallel_actors</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.policy"><code class="docutils literal notranslate"><span class="pre">Experiment.policy</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.policy_metrics"><code class="docutils literal notranslate"><span class="pre">Experiment.policy_metrics()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.read_latest_policy"><code class="docutils literal notranslate"><span class="pre">Experiment.read_latest_policy()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.run_name"><code class="docutils literal notranslate"><span class="pre">Experiment.run_name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.sample_actions"><code class="docutils literal notranslate"><span class="pre">Experiment.sample_actions</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.save_checkpoint"><code class="docutils literal notranslate"><span class="pre">Experiment.save_checkpoint()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.save_trajs_as"><code class="docutils literal notranslate"><span class="pre">Experiment.save_trajs_as</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.stagger_traj_file_lengths"><code class="docutils literal notranslate"><span class="pre">Experiment.stagger_traj_file_lengths</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.start"><code class="docutils literal notranslate"><span class="pre">Experiment.start()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.start_collecting_at_epoch"><code class="docutils literal notranslate"><span class="pre">Experiment.start_collecting_at_epoch</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.start_learning_at_epoch"><code class="docutils literal notranslate"><span class="pre">Experiment.start_learning_at_epoch</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.summary"><code class="docutils literal notranslate"><span class="pre">Experiment.summary()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.train_batches_per_epoch"><code class="docutils literal notranslate"><span class="pre">Experiment.train_batches_per_epoch</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.train_step"><code class="docutils literal notranslate"><span class="pre">Experiment.train_step()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.train_timesteps_per_epoch"><code class="docutils literal notranslate"><span class="pre">Experiment.train_timesteps_per_epoch</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.traj_encoder_type"><code class="docutils literal notranslate"><span class="pre">Experiment.traj_encoder_type</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.traj_save_len"><code class="docutils literal notranslate"><span class="pre">Experiment.traj_save_len</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.tstep_encoder_type"><code class="docutils literal notranslate"><span class="pre">Experiment.tstep_encoder_type</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.val_interval"><code class="docutils literal notranslate"><span class="pre">Experiment.val_interval</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.val_timesteps_per_epoch"><code class="docutils literal notranslate"><span class="pre">Experiment.val_timesteps_per_epoch</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.verbose"><code class="docutils literal notranslate"><span class="pre">Experiment.verbose</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.wandb_entity"><code class="docutils literal notranslate"><span class="pre">Experiment.wandb_entity</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.wandb_group_name"><code class="docutils literal notranslate"><span class="pre">Experiment.wandb_group_name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.wandb_project"><code class="docutils literal notranslate"><span class="pre">Experiment.wandb_project</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.write_latest_policy"><code class="docutils literal notranslate"><span class="pre">Experiment.write_latest_policy()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.x_axis_metrics"><code class="docutils literal notranslate"><span class="pre">Experiment.x_axis_metrics()</span></code></a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-amago.experiment">
+<span id="amago-experiment"></span><h1>amago.experiment<a class="headerlink" href="#module-amago.experiment" title="Link to this heading">#</a></h1>
+<p>Start and launch training runs (main <a class="reference internal" href="#amago.experiment.Experiment" title="amago.experiment.Experiment"><code class="xref py py-class docutils literal notranslate"><span class="pre">Experiment</span></code></a>).</p>
+<p class="rubric">Classes</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amago.experiment.Experiment" title="amago.experiment.Experiment"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Experiment</span></code></a>(run_name, ckpt_base_dir, ...[, ...])</p></td>
+<td><p>Build, train, and evaluate an <a class="reference internal" href="amago.agent.html#amago.agent.Agent" title="amago.agent.Agent"><code class="xref py py-class docutils literal notranslate"><span class="pre">Agent</span></code></a>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="amago.experiment.Experiment">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Experiment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ckpt_base_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_seq_len</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tstep_encoder_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">traj_encoder_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">agent_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_timesteps_per_epoch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">make_train_env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">make_val_env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallel_actors=12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">env_mode='async'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">async_env_mp_context=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exploration_wrapper_type=&lt;class</span> <span class="pre">'amago.envs.exploration.EpsilonGreedy'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_actions=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_reset_train_envs_every=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_to_wandb=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wandb_project=&quot;os.environ['AMAGO_WANDB_PROJECT']&quot;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wandb_entity=&quot;os.environ['AMAGO_WANDB_ENTITY']&quot;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wandb_group_name=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_interval=300</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">traj_save_len=10000000000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">has_dset_edit_rights=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stagger_traj_file_lengths=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_trajs_as='npz'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padded_sampling='none'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dloader_workers=6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epochs=1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_learning_at_epoch=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_collecting_at_epoch=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_timesteps_per_epoch=1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_batches_per_epoch=1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">val_interval=20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ckpt_interval=50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">always_save_latest=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">always_load_latest=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size=24</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batches_per_update=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate=0.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">critic_loss_weight=10.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr_warmup_steps=500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grad_clip=1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">l2_coeff=0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mixed_precision='no'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/experiment.html#Experiment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.experiment.Experiment" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Build, train, and evaluate an <a class="reference internal" href="amago.agent.html#amago.agent.Agent" title="amago.agent.Agent"><code class="xref py py-class docutils literal notranslate"><span class="pre">Agent</span></code></a>.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>This class is <code class="docutils literal notranslate"><span class="pre">&#64;gin.configurable</span></code>. Default values of kwargs can be overridden using <a class="reference external" href="https://github.com/google/gin-config">gin</a>.</p>
+</div>
+<p class="rubric">Required</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>run_name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Name of the experiment. Used to create checkpoint and log directories.</p></li>
+<li><p><strong>ckpt_base_dir</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Base directory to store checkpoints and logs. Checkpoints are saved to <code class="docutils literal notranslate"><span class="pre">ckpt_base_dir/run_name</span></code>.</p></li>
+<li><p><strong>max_seq_len</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Maximum sequence length for training. Determines effective batch size (Batch Size × Sequence Length).</p></li>
+<li><p><strong>dataset</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="amago.loading.html#amago.loading.RLDataset" title="amago.loading.RLDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">RLDataset</span></code></a></span>) – <a class="reference internal" href="amago.loading.html#amago.loading.RLDataset" title="amago.loading.RLDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">RLDataset</span></code></a> for loading training sequences.</p></li>
+<li><p><strong>tstep_encoder_type</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">type</span></code>[<a class="reference internal" href="amago.nets.tstep_encoders.html#amago.nets.tstep_encoders.TstepEncoder" title="amago.nets.tstep_encoders.TstepEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">TstepEncoder</span></code></a>]</span>) – a type of <a class="reference internal" href="amago.nets.tstep_encoders.html#amago.nets.tstep_encoders.TstepEncoder" title="amago.nets.tstep_encoders.TstepEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">TstepEncoder</span></code></a> (will be created with default kwargs — edit via gin).</p></li>
+<li><p><strong>traj_encoder_type</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">type</span></code>[<a class="reference internal" href="amago.nets.traj_encoders.html#amago.nets.traj_encoders.TrajEncoder" title="amago.nets.traj_encoders.TrajEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrajEncoder</span></code></a>]</span>) – a type of <a class="reference internal" href="amago.nets.traj_encoders.html#amago.nets.traj_encoders.TrajEncoder" title="amago.nets.traj_encoders.TrajEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrajEncoder</span></code></a> (will be created with default kwargs — edit via gin).</p></li>
+<li><p><strong>agent_type</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">type</span></code>[<a class="reference internal" href="amago.agent.html#amago.agent.Agent" title="amago.agent.Agent"><code class="xref py py-class docutils literal notranslate"><span class="pre">Agent</span></code></a>]</span>) – a type of <a class="reference internal" href="amago.agent.html#amago.agent.Agent" title="amago.agent.Agent"><code class="xref py py-class docutils literal notranslate"><span class="pre">Agent</span></code></a> (will be created with default kwargs — edit via gin).</p></li>
+<li><p><strong>make_train_env</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">callable</span></code> | <code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">callable</span></code>]</span>) – Callable returning an <a class="reference internal" href="amago.envs.amago_env.html#amago.envs.amago_env.AMAGOEnv" title="amago.envs.amago_env.AMAGOEnv"><code class="xref py py-class docutils literal notranslate"><span class="pre">AMAGOEnv</span></code></a>. If not a list, repeated <code class="docutils literal notranslate"><span class="pre">parallel_actors</span></code> times. List gives manual assignment across actors.</p></li>
+<li><p><strong>make_val_env</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">callable</span></code> | <code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">callable</span></code>]</span>) – Like <code class="docutils literal notranslate"><span class="pre">make_train_env</span></code>, but only used for evaluation (trajectories never saved).</p></li>
+<li><p><strong>val_timesteps_per_epoch</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Number of steps per parallel environment for evaluation. Determines metric sample size. Should be enough time for at least one episode to finish per actor.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Environment</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>parallel_actors</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Number of parallel envs for batched inference. <strong>Default:</strong> 12.</p></li>
+<li><p><strong>env_mode</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – <code class="docutils literal notranslate"><span class="pre">&quot;async&quot;</span></code> (default), wraps envs in async pool. <code class="docutils literal notranslate"><span class="pre">&quot;already_vectorized&quot;</span></code> for jax/gpu batch envs. <code class="docutils literal notranslate"><span class="pre">&quot;sync&quot;</span></code> for debug. <strong>Default:</strong> “async”.</p></li>
+<li><p><strong>exploration_wrapper_type</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">type</span></code>[<a class="reference internal" href="amago.envs.exploration.html#amago.envs.exploration.ExplorationWrapper" title="amago.envs.exploration.ExplorationWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExplorationWrapper</span></code></a>] | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Exploration wrapper for training envs. <strong>Default:</strong> <code class="docutils literal notranslate"><span class="pre">EpsilonGreedy</span></code>.</p></li>
+<li><p><strong>sample_actions</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Whether to sample from stochastic actor during eval, or take argmax/mean. <strong>Default:</strong> True.</p></li>
+<li><p><strong>force_reset_train_envs_every</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – If set, forces call to <code class="docutils literal notranslate"><span class="pre">reset</span></code> every N epochs for already_vectorized envs. <strong>Default:</strong> None.</p></li>
+<li><p><strong>async_env_mp_context</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Multiprocessing spawn method for <code class="docutils literal notranslate"><span class="pre">AsyncVectorEnv</span></code> (e.g., <code class="docutils literal notranslate"><span class="pre">&quot;forkserver&quot;</span></code>). Only relevant for <code class="docutils literal notranslate"><span class="pre">env_mode=&quot;async&quot;</span></code>. Set to None for default method. <strong>Default:</strong> None.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Logging</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>log_to_wandb</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Enable or disable wandb logging. <strong>Default:</strong> False.</p></li>
+<li><p><strong>wandb_project</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – wandb project. <strong>Default:</strong> <code class="docutils literal notranslate"><span class="pre">AMAGO_WANDB_PROJECT</span></code> env var.</p></li>
+<li><p><strong>wandb_entity</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – wandb entity (username/team). <strong>Default:</strong> <code class="docutils literal notranslate"><span class="pre">AMAGO_WANDB_ENTITY</span></code> env var.</p></li>
+<li><p><strong>wandb_group_name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Group runs on wandb dashboard. <strong>Default:</strong> None.</p></li>
+<li><p><strong>verbose</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Print tqdm bars and info to console. <strong>Default:</strong> True.</p></li>
+<li><p><strong>log_interval</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Log extra metrics every N batches. <strong>Default:</strong> 300.</p></li>
+<li><p><strong>padded_sampling</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Padding for sampling training subsequences. “none”, “left”, “right”, “both”. <strong>Default:</strong> “none”.</p></li>
+<li><p><strong>dloader_workers</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Number of DataLoader workers for disk loading. Increase for compressed/large trajs.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The parameters below are only relevant when doing online data collection. They determine
+how parallel environments write finished trajectories to disk. The <a class="reference internal" href="amago.loading.html#amago.loading.DiskTrajDataset" title="amago.loading.DiskTrajDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">DiskTrajDataset</span></code></a>
+reads these files for training.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>traj_save_len</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Save trajectory on episode end or after this many steps (whichever comes first). Larger values save whole trajectories. <strong>Default:</strong> large value.</p></li>
+<li><p><strong>has_dset_edit_rights</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Turn off for collect-only runs where another process manages the replay buffer. <strong>Default:</strong> True.</p></li>
+<li><p><strong>stagger_traj_file_lengths</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Randomizes file lengths when <code class="docutils literal notranslate"><span class="pre">traj_save_len</span></code> is short snippets. <strong>Default:</strong> False.</p></li>
+<li><p><strong>save_trajs_as</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Format for saved trajectories. “npz”, “npz-compressed”, or “traj”. <strong>Default:</strong> “npz”.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Learning Schedule</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>epochs</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Epochs (each = one data collection + one training round). <strong>Default:</strong> 500.</p></li>
+<li><p><strong>start_learning_at_epoch</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Number of epochs to skip before gradient updates (for replay buffer warmup). <strong>Default:</strong> 0.</p></li>
+<li><p><strong>start_collecting_at_epoch</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Number of epochs to skip data collection (for offline→online finetune or full offline). <strong>Default:</strong> 0.</p></li>
+<li><p><strong>train_timesteps_per_epoch</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Number of steps in each parallel env per epoch. <strong>Default:</strong> 1000.</p></li>
+<li><p><strong>train_batches_per_epoch</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Number of training batches per epoch. <strong>Default:</strong> 1000.</p></li>
+<li><p><strong>val_interval</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – How many epochs between evaluation rollouts. <strong>Default:</strong> 20.</p></li>
+<li><p><strong>ckpt_interval</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – How many epochs between saving checkpoints. <strong>Default:</strong> 50.</p></li>
+<li><p><strong>always_save_latest</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Whether to always save the latest weights (for distributed usage). <strong>Default:</strong> True.</p></li>
+<li><p><strong>always_load_latest</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Whether to always load the latest weights (for distributed usage). <strong>Default:</strong> False.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Optimization</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch_size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Batch size <em>per GPU</em> (in sequences). <strong>Default:</strong> 24.</p></li>
+<li><p><strong>batches_per_update</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Number of batches to accumulate gradients over before optimizer update. <strong>Default:</strong> 1.</p></li>
+<li><p><strong>learning_rate</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Optimizer learning rate. <strong>Default:</strong> 1e-4 (defaults to AdamW).</p></li>
+<li><p><strong>critic_loss_weight</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Weight for critic loss vs actor loss in encoders. <strong>Default:</strong> 10.</p></li>
+<li><p><strong>lr_warmup_steps</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Number of warmup steps for learning rate scheduler. <strong>Default:</strong> 500.</p></li>
+<li><p><strong>grad_clip</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Gradient norm clipping value. <strong>Default:</strong> 1.0.</p></li>
+<li><p><strong>l2_coeff</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – L2 regularization coefficient (AdamW). <strong>Default:</strong> 1e-3.</p></li>
+<li><p><strong>mixed_precision</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Mixed precision mode for <code class="docutils literal notranslate"><span class="pre">accelerate</span></code> (“no”, “fp16”, “bf16”). <strong>Default:</strong> “no”.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.DEVICE">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DEVICE</span></span><a class="headerlink" href="#amago.experiment.Experiment.DEVICE" title="Link to this definition">#</a></dt>
+<dd><p>Return the device (cpu/gpu) that the experiment is running on.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.agent_type">
+<span class="sig-name descname"><span class="pre">agent_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">type</span></code><span class="pre">[</span><a class="reference internal" href="amago.agent.html#amago.agent.Agent" title="amago.agent.Agent"><code class="xref py py-class docutils literal notranslate"><span class="pre">Agent</span></code></a><span class="pre">]</span></em><a class="headerlink" href="#amago.experiment.Experiment.agent_type" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.always_load_latest">
+<span class="sig-name descname"><span class="pre">always_load_latest</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#amago.experiment.Experiment.always_load_latest" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.always_save_latest">
+<span class="sig-name descname"><span class="pre">always_save_latest</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#amago.experiment.Experiment.always_save_latest" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.async_env_mp_context">
+<span class="sig-name descname"><span class="pre">async_env_mp_context</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code> <span class="pre">|</span> <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#amago.experiment.Experiment.async_env_mp_context" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.batch_size">
+<span class="sig-name descname"><span class="pre">batch_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">24</span></em><a class="headerlink" href="#amago.experiment.Experiment.batch_size" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.batches_per_update">
+<span class="sig-name descname"><span class="pre">batches_per_update</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#amago.experiment.Experiment.batches_per_update" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.caster">
+<span class="sig-name descname"><span class="pre">caster</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/experiment.html#Experiment.caster"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.experiment.Experiment.caster" title="Link to this definition">#</a></dt>
+<dd><p>Get the context manager for mixed precision training.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.ckpt_base_dir">
+<span class="sig-name descname"><span class="pre">ckpt_base_dir</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><a class="headerlink" href="#amago.experiment.Experiment.ckpt_base_dir" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.ckpt_interval">
+<span class="sig-name descname"><span class="pre">ckpt_interval</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code> <span class="pre">|</span> <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">50</span></em><a class="headerlink" href="#amago.experiment.Experiment.ckpt_interval" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.collect_new_training_data">
+<span class="sig-name descname"><span class="pre">collect_new_training_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/experiment.html#Experiment.collect_new_training_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.experiment.Experiment.collect_new_training_data" title="Link to this definition">#</a></dt>
+<dd><p>Generate train_timesteps_per_epoch * parallel_actors timesteps of new environment
+interaction that will be saved to the replay buffer when the rollouts finishes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.compute_loss">
+<span class="sig-name descname"><span class="pre">compute_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_step</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/experiment.html#Experiment.compute_loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.experiment.Experiment.compute_loss" title="Link to this definition">#</a></dt>
+<dd><p>Core computation of the actor and critic RL loss terms from a <code class="xref py py-obj docutils literal notranslate"><span class="pre">Batch</span></code> of data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="amago.loading.html#amago.loading.Batch" title="amago.loading.Batch"><code class="xref py py-class docutils literal notranslate"><span class="pre">Batch</span></code></a></span>) – The batch of data.</p></li>
+<li><p><strong>log_step</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Whether to compute extra metrics for wandb logging.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>loss terms and any logging metrics. “Actor Loss”, “Critic Loss”, “Sequence</dt><dd><p>Length”, “Batch Size (in Timesteps)”, “Unmasked Batch Size (in Timesteps)” are
+always provided. Additional keys are determined by what is logged in the
+Agent.forward method.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.critic_loss_weight">
+<span class="sig-name descname"><span class="pre">critic_loss_weight</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">10.0</span></em><a class="headerlink" href="#amago.experiment.Experiment.critic_loss_weight" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.dataset">
+<span class="sig-name descname"><span class="pre">dataset</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="amago.loading.html#amago.loading.RLDataset" title="amago.loading.RLDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">RLDataset</span></code></a></em><a class="headerlink" href="#amago.experiment.Experiment.dataset" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.delete_buffer_from_disk">
+<span class="sig-name descname"><span class="pre">delete_buffer_from_disk</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/experiment.html#Experiment.delete_buffer_from_disk"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.experiment.Experiment.delete_buffer_from_disk" title="Link to this definition">#</a></dt>
+<dd><p>Clear the replay buffer from disk (mainly for <code class="xref py py-obj docutils literal notranslate"><span class="pre">examples/</span></code>).</p>
+<p>Calls <code class="xref py py-obj docutils literal notranslate"><span class="pre">self.dataset.delete()</span></code> if the current process is the main process.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.dloader_workers">
+<span class="sig-name descname"><span class="pre">dloader_workers</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">6</span></em><a class="headerlink" href="#amago.experiment.Experiment.dloader_workers" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.edit_actor_mask">
+<span class="sig-name descname"><span class="pre">edit_actor_mask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">actor_loss</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad_mask</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/experiment.html#Experiment.edit_actor_mask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.experiment.Experiment.edit_actor_mask" title="Link to this definition">#</a></dt>
+<dd><p>Customize the actor loss mask.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="amago.loading.html#amago.loading.Batch" title="amago.loading.Batch"><code class="xref py py-class docutils literal notranslate"><span class="pre">Batch</span></code></a></span>) – The batch of data.</p></li>
+<li><p><strong>actor_loss</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">FloatTensor</span></code></span>) – The unmasked actor loss. Shape: (Batch, Length, Num Gammas, 1)</p></li>
+<li><p><strong>pad_mask</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">BoolTensor</span></code></span>) – The default mask. True where the sequence was not padded out of the
+dataloader.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">BoolTensor</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The mask. True where the actor loss should count, False where it should be ignored.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.edit_critic_mask">
+<span class="sig-name descname"><span class="pre">edit_critic_mask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">critic_loss</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad_mask</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/experiment.html#Experiment.edit_critic_mask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.experiment.Experiment.edit_critic_mask" title="Link to this definition">#</a></dt>
+<dd><p>Customize the critic loss mask.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="amago.loading.html#amago.loading.Batch" title="amago.loading.Batch"><code class="xref py py-class docutils literal notranslate"><span class="pre">Batch</span></code></a></span>) – The batch of data.</p></li>
+<li><p><strong>critic_loss</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">FloatTensor</span></code></span>) – The unmasked critic loss. Shape: (Batch, Length, Num Critics, Num
+Gammas, 1)</p></li>
+<li><p><strong>pad_mask</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">BoolTensor</span></code></span>) – The default mask. True where the sequence was not padded out of the
+dataloader.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">BoolTensor</span></code></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The mask. True where the critic loss should count, False where it should be ignored.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.env_mode">
+<span class="sig-name descname"><span class="pre">env_mode</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'async'</span></em><a class="headerlink" href="#amago.experiment.Experiment.env_mode" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.epochs">
+<span class="sig-name descname"><span class="pre">epochs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1000</span></em><a class="headerlink" href="#amago.experiment.Experiment.epochs" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.evaluate_test">
+<span class="sig-name descname"><span class="pre">evaluate_test</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">make_test_env</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timesteps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">render</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_trajs_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">episodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/experiment.html#Experiment.evaluate_test"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.experiment.Experiment.evaluate_test" title="Link to this definition">#</a></dt>
+<dd><p>One-off evaluation of a new environment callable for testing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>make_test_env</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">callable</span></code> | <code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">callable</span></code>]</span>) – A callable or iterable of callables that make and return a test
+environment. If an iterable, it must be of length <a class="reference internal" href="#amago.experiment.Experiment.parallel_actors" title="amago.experiment.Experiment.parallel_actors"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Experiment.parallel_actors</span></code></a>.</p></li>
+<li><p><strong>timesteps</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – The number of timesteps to interact with each environment.</p></li>
+<li><p><strong>render</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Whether to render the environment. Defaults to False.</p></li>
+<li><p><strong>save_trajs_to</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – The directory to save trajectories. Useful when using evaluate_test to
+gather demonstration data for another run. If None, no data is saved. Defaults to
+None.</p></li>
+<li><p><strong>episodes</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – The number of episodes to interact with the environment. If provided, the
+loop will terminate after this many episodes have been completed OR we hit the
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">timesteps</span></code> limit, whichever comes first. Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dictionary of evaluation metrics.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict[str, float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.evaluate_val">
+<span class="sig-name descname"><span class="pre">evaluate_val</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/experiment.html#Experiment.evaluate_val"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.experiment.Experiment.evaluate_val" title="Link to this definition">#</a></dt>
+<dd><p>Evaluate the current policy without exploration noise on the validation environments,
+and averages the performance metrics across <code class="xref py py-obj docutils literal notranslate"><span class="pre">accelerate</span></code> processes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.exploration_wrapper_type">
+<span class="sig-name descname"><span class="pre">exploration_wrapper_type</span></span><a class="headerlink" href="#amago.experiment.Experiment.exploration_wrapper_type" title="Link to this definition">#</a></dt>
+<dd><p>alias of <a class="reference internal" href="amago.envs.exploration.html#amago.envs.exploration.EpsilonGreedy" title="amago.envs.exploration.EpsilonGreedy"><code class="xref py py-class docutils literal notranslate"><span class="pre">EpsilonGreedy</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.force_reset_train_envs_every">
+<span class="sig-name descname"><span class="pre">force_reset_train_envs_every</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code> <span class="pre">|</span> <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#amago.experiment.Experiment.force_reset_train_envs_every" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.grad_clip">
+<span class="sig-name descname"><span class="pre">grad_clip</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1.0</span></em><a class="headerlink" href="#amago.experiment.Experiment.grad_clip" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.has_dset_edit_rights">
+<span class="sig-name descname"><span class="pre">has_dset_edit_rights</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#amago.experiment.Experiment.has_dset_edit_rights" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.init_checkpoints">
+<span class="sig-name descname"><span class="pre">init_checkpoints</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/experiment.html#Experiment.init_checkpoints"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.experiment.Experiment.init_checkpoints" title="Link to this definition">#</a></dt>
+<dd><p>Create ckpts/training_states, ckpts/policy_weights, and ckpts/latest dirs</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.init_dloaders">
+<span class="sig-name descname"><span class="pre">init_dloaders</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/experiment.html#Experiment.init_dloaders"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.experiment.Experiment.init_dloaders" title="Link to this definition">#</a></dt>
+<dd><p>Create pytorch dataloaders to batch trajectories in parallel.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataLoader</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.init_dsets">
+<span class="sig-name descname"><span class="pre">init_dsets</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/experiment.html#Experiment.init_dsets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.experiment.Experiment.init_dsets" title="Link to this definition">#</a></dt>
+<dd><p>Modifies the provided RLDataset (in place) to use important info configured by the
+experiment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="amago.loading.html#amago.loading.RLDataset" title="amago.loading.RLDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">RLDataset</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.init_envs">
+<span class="sig-name descname"><span class="pre">init_envs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/experiment.html#Experiment.init_envs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.experiment.Experiment.init_envs" title="Link to this definition">#</a></dt>
+<dd><p>Construct parallel training and validation environments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><dl class="simple">
+<dt>Description of the environment setup printed to the console when</dt><dd><p>Experiment.verbose is True.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.init_logger">
+<span class="sig-name descname"><span class="pre">init_logger</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/experiment.html#Experiment.init_logger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.experiment.Experiment.init_logger" title="Link to this definition">#</a></dt>
+<dd><p>Configure log dir and wandb compatibility.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.init_model">
+<span class="sig-name descname"><span class="pre">init_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/experiment.html#Experiment.init_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.experiment.Experiment.init_model" title="Link to this definition">#</a></dt>
+<dd><p>Build an initial policy based on observation shapes</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.init_optimizer">
+<span class="sig-name descname"><span class="pre">init_optimizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">policy</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/experiment.html#Experiment.init_optimizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.experiment.Experiment.init_optimizer" title="Link to this definition">#</a></dt>
+<dd><p>Defines the optimizer.</p>
+<p>Override to switch from AdamW.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Optimizer</span></code></span></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>torch.optim.Optimizer in charge of updating the Agent’s parameters</dt><dd><p>(Agent.trainable_params)</p>
+</dd>
+</dl>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.interact">
+<span class="sig-name descname"><span class="pre">interact</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">envs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timesteps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">render</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_on_done</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">episodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/experiment.html#Experiment.interact"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.experiment.Experiment.interact" title="Link to this definition">#</a></dt>
+<dd><p>Main policy loop for interacting with the environment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>envs</strong> – The (parallel) environments to interact with.</p></li>
+<li><p><strong>timesteps</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – The number of timesteps to interact with each environment.</p></li>
+<li><p><strong>hidden_state</strong> – The hidden state of the policy. If None, a fresh hidden state is
+initialized. Defaults to None.</p></li>
+<li><p><strong>render</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Whether to render the environment. Defaults to False.</p></li>
+<li><p><strong>save_on_done</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – If True, save completed trajectory sequences to disk as soon as they
+are finished. If False, wait until all rollouts are completed. Only applicable
+if the provided envs are configured to save rollouts to disk. Defaults to False.</p></li>
+<li><p><strong>episodes</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – The number of episodes to interact with the environment. If provided, the
+loop will terminate after this many episodes have been completed OR we hit the
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">timesteps</span></code> limit, whichever comes first. Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Objects that keep track of standard</dt><dd><p>eval stats (average returns) and any additional eval metrics the envs have been
+configured to record.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[<a class="reference internal" href="amago.envs.amago_env.html#amago.envs.amago_env.ReturnHistory" title="amago.envs.amago_env.ReturnHistory">ReturnHistory</a>, <a class="reference internal" href="amago.envs.amago_env.html#amago.envs.amago_env.SpecialMetricHistory" title="amago.envs.amago_env.SpecialMetricHistory">SpecialMetricHistory</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.l2_coeff">
+<span class="sig-name descname"><span class="pre">l2_coeff</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.001</span></em><a class="headerlink" href="#amago.experiment.Experiment.l2_coeff" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.learn">
+<span class="sig-name descname"><span class="pre">learn</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/experiment.html#Experiment.learn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.experiment.Experiment.learn" title="Link to this definition">#</a></dt>
+<dd><p>Main training loop for the experiment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+<dl class="simple">
+<dt>For every epoch, we:</dt><dd><ol class="arabic simple">
+<li><p>Load the latest policy checkpoint if <a class="reference internal" href="#amago.experiment.Experiment.always_load_latest" title="amago.experiment.Experiment.always_load_latest"><code class="xref py py-obj docutils literal notranslate"><span class="pre">always_load_latest</span></code></a> is True.</p></li>
+<li><dl class="simple">
+<dt>Evaluate the policy on the validation set if <a class="reference internal" href="#amago.experiment.Experiment.val_interval" title="amago.experiment.Experiment.val_interval"><code class="xref py py-obj docutils literal notranslate"><span class="pre">val_interval</span></code></a> is not None and the</dt><dd><p>current epoch is divisible by <a class="reference internal" href="#amago.experiment.Experiment.val_interval" title="amago.experiment.Experiment.val_interval"><code class="xref py py-obj docutils literal notranslate"><span class="pre">val_interval</span></code></a>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Collect new training data if <a class="reference internal" href="#amago.experiment.Experiment.train_timesteps_per_epoch" title="amago.experiment.Experiment.train_timesteps_per_epoch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">train_timesteps_per_epoch</span></code></a> is not None and the</dt><dd><p>current epoch &gt;= to <a class="reference internal" href="#amago.experiment.Experiment.start_collecting_at_epoch" title="amago.experiment.Experiment.start_collecting_at_epoch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">start_collecting_at_epoch</span></code></a>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Train the policy on the training data for <a class="reference internal" href="#amago.experiment.Experiment.train_batches_per_epoch" title="amago.experiment.Experiment.train_batches_per_epoch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">train_batches_per_epoch</span></code></a> batches if</dt><dd><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">self.dataset.ready_for_training</span></code> is True.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Save the policy checkpoint if <a class="reference internal" href="#amago.experiment.Experiment.ckpt_interval" title="amago.experiment.Experiment.ckpt_interval"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ckpt_interval</span></code></a> is not None and the current epoch</dt><dd><p>is divisible by <a class="reference internal" href="#amago.experiment.Experiment.ckpt_interval" title="amago.experiment.Experiment.ckpt_interval"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ckpt_interval</span></code></a>.</p>
+</dd>
+</dl>
+</li>
+<li><p>Write the latest policy checkpoint if <a class="reference internal" href="#amago.experiment.Experiment.always_save_latest" title="amago.experiment.Experiment.always_save_latest"><code class="xref py py-obj docutils literal notranslate"><span class="pre">always_save_latest</span></code></a> is True.</p></li>
+</ol>
+</dd>
+</dl>
+<p>Experiment be configured so that processes do some or all of the above. For example, an
+actor process might only do steps 1, 2, and 3, while a learner process might only do
+steps 4, 5, and 6.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.learning_rate">
+<span class="sig-name descname"><span class="pre">learning_rate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.0001</span></em><a class="headerlink" href="#amago.experiment.Experiment.learning_rate" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.load_checkpoint">
+<span class="sig-name descname"><span class="pre">load_checkpoint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resume_training_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/experiment.html#Experiment.load_checkpoint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.experiment.Experiment.load_checkpoint" title="Link to this definition">#</a></dt>
+<dd><p>Load a historical checkpoint from the <code class="xref py py-obj docutils literal notranslate"><span class="pre">ckpts</span></code> directory of this experiment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>epoch</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – The epoch number of the checkpoint to load.</p></li>
+<li><p><strong>resume_training_state</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Whether to resume the entire training process (True) or only
+the policy weights (False). Defaults to True.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.load_checkpoint_from_path">
+<span class="sig-name descname"><span class="pre">load_checkpoint_from_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_accelerate_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/experiment.html#Experiment.load_checkpoint_from_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.experiment.Experiment.load_checkpoint_from_path" title="Link to this definition">#</a></dt>
+<dd><p>Load a checkpoint from a given path.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Full path to the checkpoint fle to load.</p></li>
+<li><p><strong>is_accelerate_state</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Whether the checkpoint is a full accelerate state (True) or
+pytorch weights only (False). Defaults to True.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.log">
+<span class="sig-name descname"><span class="pre">log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">metrics_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/experiment.html#Experiment.log"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.experiment.Experiment.log" title="Link to this definition">#</a></dt>
+<dd><p>Log a dict of metrics to the <code class="xref py py-obj docutils literal notranslate"><span class="pre">key</span></code> panel of the wandb console alongisde current
+x-axis metrics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.log_interval">
+<span class="sig-name descname"><span class="pre">log_interval</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">300</span></em><a class="headerlink" href="#amago.experiment.Experiment.log_interval" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.log_to_wandb">
+<span class="sig-name descname"><span class="pre">log_to_wandb</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#amago.experiment.Experiment.log_to_wandb" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.lr_warmup_steps">
+<span class="sig-name descname"><span class="pre">lr_warmup_steps</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">500</span></em><a class="headerlink" href="#amago.experiment.Experiment.lr_warmup_steps" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.make_train_env">
+<span class="sig-name descname"><span class="pre">make_train_env</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">callable</span></code> <span class="pre">|</span> <code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">callable</span></code><span class="pre">]</span></em><a class="headerlink" href="#amago.experiment.Experiment.make_train_env" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.make_val_env">
+<span class="sig-name descname"><span class="pre">make_val_env</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">callable</span></code> <span class="pre">|</span> <code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">callable</span></code><span class="pre">]</span></em><a class="headerlink" href="#amago.experiment.Experiment.make_val_env" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.max_seq_len">
+<span class="sig-name descname"><span class="pre">max_seq_len</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></em><a class="headerlink" href="#amago.experiment.Experiment.max_seq_len" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.mixed_precision">
+<span class="sig-name descname"><span class="pre">mixed_precision</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'no'</span></em><a class="headerlink" href="#amago.experiment.Experiment.mixed_precision" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.padded_sampling">
+<span class="sig-name descname"><span class="pre">padded_sampling</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'none'</span></em><a class="headerlink" href="#amago.experiment.Experiment.padded_sampling" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.parallel_actors">
+<span class="sig-name descname"><span class="pre">parallel_actors</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">12</span></em><a class="headerlink" href="#amago.experiment.Experiment.parallel_actors" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.policy">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">policy</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="amago.agent.html#amago.agent.Agent" title="amago.agent.Agent"><span class="pre">Agent</span></a></em><a class="headerlink" href="#amago.experiment.Experiment.policy" title="Link to this definition">#</a></dt>
+<dd><p>Returns the current Agent policy free from the accelerator wrapper.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.policy_metrics">
+<span class="sig-name descname"><span class="pre">policy_metrics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">returns</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">specials</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/experiment.html#Experiment.policy_metrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.experiment.Experiment.policy_metrics" title="Link to this definition">#</a></dt>
+<dd><p>Gather policy performance metrics across parallel environments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>returns</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code>[<a class="reference internal" href="amago.envs.amago_env.html#amago.envs.amago_env.ReturnHistory" title="amago.envs.amago_env.ReturnHistory"><code class="xref py py-class docutils literal notranslate"><span class="pre">ReturnHistory</span></code></a>]</span>) – The return history logger froms the environments.</p></li>
+<li><p><strong>specials</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code>[<a class="reference internal" href="amago.envs.amago_env.html#amago.envs.amago_env.SpecialMetricHistory" title="amago.envs.amago_env.SpecialMetricHistory"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpecialMetricHistory</span></code></a>]</span>) – The special metrics history loggers from the environments.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dictionary of policy performance metrics.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.read_latest_policy">
+<span class="sig-name descname"><span class="pre">read_latest_policy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/experiment.html#Experiment.read_latest_policy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.experiment.Experiment.read_latest_policy" title="Link to this definition">#</a></dt>
+<dd><p>Read the latest policy – used to communicate weight updates between
+learning/collecting processes</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.run_name">
+<span class="sig-name descname"><span class="pre">run_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><a class="headerlink" href="#amago.experiment.Experiment.run_name" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.sample_actions">
+<span class="sig-name descname"><span class="pre">sample_actions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#amago.experiment.Experiment.sample_actions" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.save_checkpoint">
+<span class="sig-name descname"><span class="pre">save_checkpoint</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/experiment.html#Experiment.save_checkpoint"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.experiment.Experiment.save_checkpoint" title="Link to this definition">#</a></dt>
+<dd><p>Save both the training state and the policy weights to the ckpt_dir.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.save_trajs_as">
+<span class="sig-name descname"><span class="pre">save_trajs_as</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'npz'</span></em><a class="headerlink" href="#amago.experiment.Experiment.save_trajs_as" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.stagger_traj_file_lengths">
+<span class="sig-name descname"><span class="pre">stagger_traj_file_lengths</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#amago.experiment.Experiment.stagger_traj_file_lengths" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.start">
+<span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/experiment.html#Experiment.start"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.experiment.Experiment.start" title="Link to this definition">#</a></dt>
+<dd><p>Manual initialization after __init__ to give time for gin configuration.</p>
+<p>Call before Experiment.learn()</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.start_collecting_at_epoch">
+<span class="sig-name descname"><span class="pre">start_collecting_at_epoch</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#amago.experiment.Experiment.start_collecting_at_epoch" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.start_learning_at_epoch">
+<span class="sig-name descname"><span class="pre">start_learning_at_epoch</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#amago.experiment.Experiment.start_learning_at_epoch" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.summary">
+<span class="sig-name descname"><span class="pre">summary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">env_summary</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/experiment.html#Experiment.summary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.experiment.Experiment.summary" title="Link to this definition">#</a></dt>
+<dd><p>Print key hparams to the console for reference.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.train_batches_per_epoch">
+<span class="sig-name descname"><span class="pre">train_batches_per_epoch</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1000</span></em><a class="headerlink" href="#amago.experiment.Experiment.train_batches_per_epoch" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.train_step">
+<span class="sig-name descname"><span class="pre">train_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_step</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/experiment.html#Experiment.train_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.experiment.Experiment.train_step" title="Link to this definition">#</a></dt>
+<dd><p>Take a single training step on a <code class="xref py py-obj docutils literal notranslate"><span class="pre">batch</span></code> of data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="amago.loading.html#amago.loading.Batch" title="amago.loading.Batch"><code class="xref py py-class docutils literal notranslate"><span class="pre">Batch</span></code></a></span>) – The batch of data.</p></li>
+<li><p><strong>log_step</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Whether to compute extra metrics for wandb logging.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>metrics from the compute_loss method.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.train_timesteps_per_epoch">
+<span class="sig-name descname"><span class="pre">train_timesteps_per_epoch</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1000</span></em><a class="headerlink" href="#amago.experiment.Experiment.train_timesteps_per_epoch" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.traj_encoder_type">
+<span class="sig-name descname"><span class="pre">traj_encoder_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">type</span></code><span class="pre">[</span><a class="reference internal" href="amago.nets.traj_encoders.html#amago.nets.traj_encoders.TrajEncoder" title="amago.nets.traj_encoders.TrajEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrajEncoder</span></code></a><span class="pre">]</span></em><a class="headerlink" href="#amago.experiment.Experiment.traj_encoder_type" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.traj_save_len">
+<span class="sig-name descname"><span class="pre">traj_save_len</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">10000000000.0</span></em><a class="headerlink" href="#amago.experiment.Experiment.traj_save_len" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.tstep_encoder_type">
+<span class="sig-name descname"><span class="pre">tstep_encoder_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">type</span></code><span class="pre">[</span><a class="reference internal" href="amago.nets.tstep_encoders.html#amago.nets.tstep_encoders.TstepEncoder" title="amago.nets.tstep_encoders.TstepEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">TstepEncoder</span></code></a><span class="pre">]</span></em><a class="headerlink" href="#amago.experiment.Experiment.tstep_encoder_type" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.val_interval">
+<span class="sig-name descname"><span class="pre">val_interval</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code> <span class="pre">|</span> <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">20</span></em><a class="headerlink" href="#amago.experiment.Experiment.val_interval" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.val_timesteps_per_epoch">
+<span class="sig-name descname"><span class="pre">val_timesteps_per_epoch</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></em><a class="headerlink" href="#amago.experiment.Experiment.val_timesteps_per_epoch" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.verbose">
+<span class="sig-name descname"><span class="pre">verbose</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#amago.experiment.Experiment.verbose" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.wandb_entity">
+<span class="sig-name descname"><span class="pre">wandb_entity</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&quot;os.environ['AMAGO_WANDB_ENTITY']&quot;</span></em><a class="headerlink" href="#amago.experiment.Experiment.wandb_entity" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.wandb_group_name">
+<span class="sig-name descname"><span class="pre">wandb_group_name</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#amago.experiment.Experiment.wandb_group_name" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.wandb_project">
+<span class="sig-name descname"><span class="pre">wandb_project</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&quot;os.environ['AMAGO_WANDB_PROJECT']&quot;</span></em><a class="headerlink" href="#amago.experiment.Experiment.wandb_project" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.write_latest_policy">
+<span class="sig-name descname"><span class="pre">write_latest_policy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/experiment.html#Experiment.write_latest_policy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.experiment.Experiment.write_latest_policy" title="Link to this definition">#</a></dt>
+<dd><p>Write absolute latest policy to a hardcoded location used by <a class="reference internal" href="#amago.experiment.Experiment.read_latest_policy" title="amago.experiment.Experiment.read_latest_policy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_latest_policy</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.experiment.Experiment.x_axis_metrics">
+<span class="sig-name descname"><span class="pre">x_axis_metrics</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/experiment.html#Experiment.x_axis_metrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.experiment.Experiment.x_axis_metrics" title="Link to this definition">#</a></dt>
+<dd><p>Get current x-axis metrics for wandb.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code> | <code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="amago.envs.exploration.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">amago.envs.exploration</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="amago.hindsight.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">amago.hindsight</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment"><code class="docutils literal notranslate"><span class="pre">Experiment</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.DEVICE"><code class="docutils literal notranslate"><span class="pre">Experiment.DEVICE</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.agent_type"><code class="docutils literal notranslate"><span class="pre">Experiment.agent_type</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.always_load_latest"><code class="docutils literal notranslate"><span class="pre">Experiment.always_load_latest</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.always_save_latest"><code class="docutils literal notranslate"><span class="pre">Experiment.always_save_latest</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.async_env_mp_context"><code class="docutils literal notranslate"><span class="pre">Experiment.async_env_mp_context</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.batch_size"><code class="docutils literal notranslate"><span class="pre">Experiment.batch_size</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.batches_per_update"><code class="docutils literal notranslate"><span class="pre">Experiment.batches_per_update</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.caster"><code class="docutils literal notranslate"><span class="pre">Experiment.caster()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.ckpt_base_dir"><code class="docutils literal notranslate"><span class="pre">Experiment.ckpt_base_dir</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.ckpt_interval"><code class="docutils literal notranslate"><span class="pre">Experiment.ckpt_interval</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.collect_new_training_data"><code class="docutils literal notranslate"><span class="pre">Experiment.collect_new_training_data()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.compute_loss"><code class="docutils literal notranslate"><span class="pre">Experiment.compute_loss()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.critic_loss_weight"><code class="docutils literal notranslate"><span class="pre">Experiment.critic_loss_weight</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.dataset"><code class="docutils literal notranslate"><span class="pre">Experiment.dataset</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.delete_buffer_from_disk"><code class="docutils literal notranslate"><span class="pre">Experiment.delete_buffer_from_disk()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.dloader_workers"><code class="docutils literal notranslate"><span class="pre">Experiment.dloader_workers</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.edit_actor_mask"><code class="docutils literal notranslate"><span class="pre">Experiment.edit_actor_mask()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.edit_critic_mask"><code class="docutils literal notranslate"><span class="pre">Experiment.edit_critic_mask()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.env_mode"><code class="docutils literal notranslate"><span class="pre">Experiment.env_mode</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.epochs"><code class="docutils literal notranslate"><span class="pre">Experiment.epochs</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.evaluate_test"><code class="docutils literal notranslate"><span class="pre">Experiment.evaluate_test()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.evaluate_val"><code class="docutils literal notranslate"><span class="pre">Experiment.evaluate_val()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.exploration_wrapper_type"><code class="docutils literal notranslate"><span class="pre">Experiment.exploration_wrapper_type</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.force_reset_train_envs_every"><code class="docutils literal notranslate"><span class="pre">Experiment.force_reset_train_envs_every</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.grad_clip"><code class="docutils literal notranslate"><span class="pre">Experiment.grad_clip</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.has_dset_edit_rights"><code class="docutils literal notranslate"><span class="pre">Experiment.has_dset_edit_rights</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.init_checkpoints"><code class="docutils literal notranslate"><span class="pre">Experiment.init_checkpoints()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.init_dloaders"><code class="docutils literal notranslate"><span class="pre">Experiment.init_dloaders()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.init_dsets"><code class="docutils literal notranslate"><span class="pre">Experiment.init_dsets()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.init_envs"><code class="docutils literal notranslate"><span class="pre">Experiment.init_envs()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.init_logger"><code class="docutils literal notranslate"><span class="pre">Experiment.init_logger()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.init_model"><code class="docutils literal notranslate"><span class="pre">Experiment.init_model()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.init_optimizer"><code class="docutils literal notranslate"><span class="pre">Experiment.init_optimizer()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.interact"><code class="docutils literal notranslate"><span class="pre">Experiment.interact()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.l2_coeff"><code class="docutils literal notranslate"><span class="pre">Experiment.l2_coeff</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.learn"><code class="docutils literal notranslate"><span class="pre">Experiment.learn()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.learning_rate"><code class="docutils literal notranslate"><span class="pre">Experiment.learning_rate</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.load_checkpoint"><code class="docutils literal notranslate"><span class="pre">Experiment.load_checkpoint()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.load_checkpoint_from_path"><code class="docutils literal notranslate"><span class="pre">Experiment.load_checkpoint_from_path()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.log"><code class="docutils literal notranslate"><span class="pre">Experiment.log()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.log_interval"><code class="docutils literal notranslate"><span class="pre">Experiment.log_interval</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.log_to_wandb"><code class="docutils literal notranslate"><span class="pre">Experiment.log_to_wandb</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.lr_warmup_steps"><code class="docutils literal notranslate"><span class="pre">Experiment.lr_warmup_steps</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.make_train_env"><code class="docutils literal notranslate"><span class="pre">Experiment.make_train_env</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.make_val_env"><code class="docutils literal notranslate"><span class="pre">Experiment.make_val_env</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.max_seq_len"><code class="docutils literal notranslate"><span class="pre">Experiment.max_seq_len</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.mixed_precision"><code class="docutils literal notranslate"><span class="pre">Experiment.mixed_precision</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.padded_sampling"><code class="docutils literal notranslate"><span class="pre">Experiment.padded_sampling</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.parallel_actors"><code class="docutils literal notranslate"><span class="pre">Experiment.parallel_actors</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.policy"><code class="docutils literal notranslate"><span class="pre">Experiment.policy</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.policy_metrics"><code class="docutils literal notranslate"><span class="pre">Experiment.policy_metrics()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.read_latest_policy"><code class="docutils literal notranslate"><span class="pre">Experiment.read_latest_policy()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.run_name"><code class="docutils literal notranslate"><span class="pre">Experiment.run_name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.sample_actions"><code class="docutils literal notranslate"><span class="pre">Experiment.sample_actions</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.save_checkpoint"><code class="docutils literal notranslate"><span class="pre">Experiment.save_checkpoint()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.save_trajs_as"><code class="docutils literal notranslate"><span class="pre">Experiment.save_trajs_as</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.stagger_traj_file_lengths"><code class="docutils literal notranslate"><span class="pre">Experiment.stagger_traj_file_lengths</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.start"><code class="docutils literal notranslate"><span class="pre">Experiment.start()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.start_collecting_at_epoch"><code class="docutils literal notranslate"><span class="pre">Experiment.start_collecting_at_epoch</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.start_learning_at_epoch"><code class="docutils literal notranslate"><span class="pre">Experiment.start_learning_at_epoch</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.summary"><code class="docutils literal notranslate"><span class="pre">Experiment.summary()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.train_batches_per_epoch"><code class="docutils literal notranslate"><span class="pre">Experiment.train_batches_per_epoch</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.train_step"><code class="docutils literal notranslate"><span class="pre">Experiment.train_step()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.train_timesteps_per_epoch"><code class="docutils literal notranslate"><span class="pre">Experiment.train_timesteps_per_epoch</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.traj_encoder_type"><code class="docutils literal notranslate"><span class="pre">Experiment.traj_encoder_type</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.traj_save_len"><code class="docutils literal notranslate"><span class="pre">Experiment.traj_save_len</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.tstep_encoder_type"><code class="docutils literal notranslate"><span class="pre">Experiment.tstep_encoder_type</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.val_interval"><code class="docutils literal notranslate"><span class="pre">Experiment.val_interval</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.val_timesteps_per_epoch"><code class="docutils literal notranslate"><span class="pre">Experiment.val_timesteps_per_epoch</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.verbose"><code class="docutils literal notranslate"><span class="pre">Experiment.verbose</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.wandb_entity"><code class="docutils literal notranslate"><span class="pre">Experiment.wandb_entity</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.wandb_group_name"><code class="docutils literal notranslate"><span class="pre">Experiment.wandb_group_name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.wandb_project"><code class="docutils literal notranslate"><span class="pre">Experiment.wandb_project</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.write_latest_policy"><code class="docutils literal notranslate"><span class="pre">Experiment.write_latest_policy()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.experiment.Experiment.x_axis_metrics"><code class="docutils literal notranslate"><span class="pre">Experiment.x_axis_metrics()</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By UT Austin Robot Perception and Learning Lab
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

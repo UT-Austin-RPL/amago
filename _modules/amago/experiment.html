@@ -1,0 +1,1519 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" data-theme="light">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>amago.experiment &#8212; AMAGO</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "light";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/amago/experiment';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="light">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+    
+    <img src="../../_static/amago_logo_3.png" class="logo__image only-light" alt="AMAGO - Home"/>
+    <script>document.write(`<img src="../../_static/amago_logo_3.png" class="logo__image only-dark" alt="AMAGO - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../tutorial/index.html">Tutorial</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorial/setup_env.html">Setup the Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorial/create_dataset.html">Create a Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorial/create_experiment.html">Create an Experiment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorial/track_results.html">Track the Results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorial/configuration.html">Configure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorial/customization.html">Customize</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorial/async.html">Multi-GPU and Asynchronous Training</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../examples/index.html">Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/00_meta_frozen_lake.html">Meta Frozen Lake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/01_basic_gym.html">Basic Gymnasium</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/02_gymnax.html">Gymnax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/03_popgym_suite.html">POPGym</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/04_tmaze.html">T-Maze</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/05_dark_key_door.html">Dark Room Key Door</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/06_alchemy.html">Symbolic DM Alchemy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/07_metaworld.html">Meta-World ML1/ML10/ML45</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/08_ale.html">Multi-Game Atari</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/09_multitask_procgen.html">Multi-Game ProcGen</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/10_babyai.html">Multi-Task BabyAI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/11_xland_minigrid.html">XLand Mini-Grid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/12_half_cheetah_vel.html">HalfCheetah(v4)-Velocity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/13_mazerunner_relabeling.html">MazeRunner HER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/14_d4rl.html">D4RL</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../api/amago.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api/amago.agent.html">amago.agent</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/amago.cli_utils.html">amago.cli_utils</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../api/amago.envs.html">amago.envs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.envs.amago_env.html">amago.envs.amago_env</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../api/amago.envs.builtin.html">amago.envs.builtin</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api/amago.envs.builtin.half_cheetah_v4_vel.html">amago.envs.builtin.half_cheetah_v4_vel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/amago.envs.builtin.metaworld_ml.html">amago.envs.builtin.metaworld_ml</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/amago.envs.builtin.popgym_envs.html">amago.envs.builtin.popgym_envs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/amago.envs.builtin.toy_gym.html">amago.envs.builtin.toy_gym</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/amago.envs.builtin.xland_minigrid.html">amago.envs.builtin.xland_minigrid</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.envs.env_utils.html">amago.envs.env_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.envs.exploration.html">amago.envs.exploration</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/amago.experiment.html">amago.experiment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/amago.hindsight.html">amago.hindsight</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/amago.loading.html">amago.loading</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../api/amago.nets.html">amago.nets</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.nets.actor_critic.html">amago.nets.actor_critic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.nets.cnn.html">amago.nets.cnn</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.nets.ff.html">amago.nets.ff</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.nets.goal_embedders.html">amago.nets.goal_embedders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.nets.policy_dists.html">amago.nets.policy_dists</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.nets.traj_encoders.html">amago.nets.traj_encoders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.nets.transformer.html">amago.nets.transformer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.nets.tstep_encoders.html">amago.nets.tstep_encoders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.nets.utils.html">amago.nets.utils</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/amago.utils.html">amago.utils</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citation.html">Citation</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for amago.experiment</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Start and launch training runs (main :class:`Experiment`).</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">contextlib</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Iterable</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">gin</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">termcolor</span><span class="w"> </span><span class="kn">import</span> <span class="n">colored</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataLoader</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">einops</span><span class="w"> </span><span class="kn">import</span> <span class="n">repeat</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">gymnasium</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">gym</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">accelerate</span><span class="w"> </span><span class="kn">import</span> <span class="n">Accelerator</span><span class="p">,</span> <span class="n">DistributedDataParallelKwargs</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">accelerate.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">tqdm</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">utils</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.envs.env_utils</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DummyAsyncVectorEnv</span><span class="p">,</span>
+    <span class="n">AlreadyVectorizedEnv</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.envs.exploration</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ExplorationWrapper</span><span class="p">,</span>
+    <span class="n">EpsilonGreedy</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.envs</span><span class="w"> </span><span class="kn">import</span> <span class="n">SequenceWrapper</span><span class="p">,</span> <span class="n">ReturnHistory</span><span class="p">,</span> <span class="n">SpecialMetricHistory</span><span class="p">,</span> <span class="n">EnvCreator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.loading</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Batch</span><span class="p">,</span>
+    <span class="n">RLDataset</span><span class="p">,</span>
+    <span class="n">RLData_pad_collate</span><span class="p">,</span>
+    <span class="n">MAGIC_PAD_VAL</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.agent</span><span class="w"> </span><span class="kn">import</span> <span class="n">Agent</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.nets</span><span class="w"> </span><span class="kn">import</span> <span class="n">TstepEncoder</span><span class="p">,</span> <span class="n">TrajEncoder</span>
+
+
+<div class="viewcode-block" id="Experiment">
+<a class="viewcode-back" href="../../api/amago.experiment.html#amago.experiment.Experiment">[docs]</a>
+<span class="nd">@gin</span><span class="o">.</span><span class="n">configurable</span>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Experiment</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Build, train, and evaluate an :py:class:`~amago.agent.Agent`.</span>
+
+<span class="sd">    .. rubric:: Required</span>
+
+<span class="sd">    :param run_name: Name of the experiment. Used to create checkpoint and log directories.</span>
+<span class="sd">    :param ckpt_base_dir: Base directory to store checkpoints and logs. Checkpoints are saved to ``ckpt_base_dir/run_name``.</span>
+<span class="sd">    :param max_seq_len: Maximum sequence length for training. Determines effective batch size (Batch Size × Sequence Length).</span>
+<span class="sd">    :param dataset: :py:class:`~amago.loading.RLDataset` for loading training sequences.</span>
+<span class="sd">    :param tstep_encoder_type: a type of :py:class:`~amago.nets.tstep_encoders.TstepEncoder` (will be created with default kwargs --- edit via gin).</span>
+<span class="sd">    :param traj_encoder_type: a type of :py:class:`~amago.nets.traj_encoders.TrajEncoder` (will be created with default kwargs --- edit via gin).</span>
+<span class="sd">    :param agent_type: a type of :py:class:`~amago.agent.Agent` (will be created with default kwargs --- edit via gin).</span>
+<span class="sd">    :param make_train_env: Callable returning an :py:class:`~amago.envs.amago_env.AMAGOEnv`. If not a list, repeated ``parallel_actors`` times. List gives manual assignment across actors.</span>
+<span class="sd">    :param make_val_env: Like ``make_train_env``, but only used for evaluation (trajectories never saved).</span>
+<span class="sd">    :param val_timesteps_per_epoch: Number of steps per parallel environment for evaluation. Determines metric sample size. Should be enough time for at least one episode to finish per actor.</span>
+
+<span class="sd">    .. rubric:: Environment</span>
+
+<span class="sd">    :param parallel_actors: Number of parallel envs for batched inference. **Default:** 12.</span>
+<span class="sd">    :param env_mode: ``&quot;async&quot;`` (default), wraps envs in async pool. ``&quot;already_vectorized&quot;`` for jax/gpu batch envs. ``&quot;sync&quot;`` for debug. **Default:** &quot;async&quot;.</span>
+<span class="sd">    :param exploration_wrapper_type: Exploration wrapper for training envs. **Default:** ``EpsilonGreedy``.</span>
+<span class="sd">    :param sample_actions: Whether to sample from stochastic actor during eval, or take argmax/mean. **Default:** True.</span>
+<span class="sd">    :param force_reset_train_envs_every: If set, forces call to ``reset`` every N epochs for already_vectorized envs. **Default:** None.</span>
+<span class="sd">    :param async_env_mp_context: Multiprocessing spawn method for ``AsyncVectorEnv`` (e.g., ``&quot;forkserver&quot;``). Only relevant for ``env_mode=&quot;async&quot;``. Set to None for default method. **Default:** None.</span>
+
+
+<span class="sd">    .. rubric:: Logging</span>
+
+<span class="sd">    :param log_to_wandb: Enable or disable wandb logging. **Default:** False.</span>
+<span class="sd">    :param wandb_project: wandb project. **Default:** ``AMAGO_WANDB_PROJECT`` env var.</span>
+<span class="sd">    :param wandb_entity: wandb entity (username/team). **Default:** ``AMAGO_WANDB_ENTITY`` env var.</span>
+<span class="sd">    :param wandb_group_name: Group runs on wandb dashboard. **Default:** None.</span>
+<span class="sd">    :param verbose: Print tqdm bars and info to console. **Default:** True.</span>
+<span class="sd">    :param log_interval: Log extra metrics every N batches. **Default:** 300.</span>
+<span class="sd">    :param padded_sampling: Padding for sampling training subsequences. &quot;none&quot;, &quot;left&quot;, &quot;right&quot;, &quot;both&quot;. **Default:** &quot;none&quot;.</span>
+<span class="sd">    :param dloader_workers: Number of DataLoader workers for disk loading. Increase for compressed/large trajs.</span>
+
+<span class="sd">    .. note::</span>
+
+<span class="sd">        The parameters below are only relevant when doing online data collection. They determine</span>
+<span class="sd">        how parallel environments write finished trajectories to disk. The :py:class:`~amago.loading.DiskTrajDataset`</span>
+<span class="sd">        reads these files for training.</span>
+
+<span class="sd">    :param traj_save_len: Save trajectory on episode end or after this many steps (whichever comes first). Larger values save whole trajectories. **Default:** large value.</span>
+<span class="sd">    :param has_dset_edit_rights: Turn off for collect-only runs where another process manages the replay buffer. **Default:** True.</span>
+<span class="sd">    :param stagger_traj_file_lengths: Randomizes file lengths when ``traj_save_len`` is short snippets. **Default:** False.</span>
+<span class="sd">    :param save_trajs_as: Format for saved trajectories. &quot;npz&quot;, &quot;npz-compressed&quot;, or &quot;traj&quot;. **Default:** &quot;npz&quot;.</span>
+
+<span class="sd">    .. rubric:: Learning Schedule</span>
+
+<span class="sd">    :param epochs: Epochs (each = one data collection + one training round). **Default:** 500.</span>
+<span class="sd">    :param start_learning_at_epoch: Number of epochs to skip before gradient updates (for replay buffer warmup). **Default:** 0.</span>
+<span class="sd">    :param start_collecting_at_epoch: Number of epochs to skip data collection (for offline→online finetune or full offline). **Default:** 0.</span>
+<span class="sd">    :param train_timesteps_per_epoch: Number of steps in each parallel env per epoch. **Default:** 1000.</span>
+<span class="sd">    :param train_batches_per_epoch: Number of training batches per epoch. **Default:** 1000.</span>
+<span class="sd">    :param val_interval: How many epochs between evaluation rollouts. **Default:** 20.</span>
+<span class="sd">    :param ckpt_interval: How many epochs between saving checkpoints. **Default:** 50.</span>
+<span class="sd">    :param always_save_latest: Whether to always save the latest weights (for distributed usage). **Default:** True.</span>
+<span class="sd">    :param always_load_latest: Whether to always load the latest weights (for distributed usage). **Default:** False.</span>
+
+<span class="sd">    .. rubric:: Optimization</span>
+
+<span class="sd">    :param batch_size: Batch size *per GPU* (in sequences). **Default:** 24.</span>
+<span class="sd">    :param batches_per_update: Number of batches to accumulate gradients over before optimizer update. **Default:** 1.</span>
+<span class="sd">    :param learning_rate: Optimizer learning rate. **Default:** 1e-4 (defaults to AdamW).</span>
+<span class="sd">    :param critic_loss_weight: Weight for critic loss vs actor loss in encoders. **Default:** 10.</span>
+<span class="sd">    :param lr_warmup_steps: Number of warmup steps for learning rate scheduler. **Default:** 500.</span>
+<span class="sd">    :param grad_clip: Gradient norm clipping value. **Default:** 1.0.</span>
+<span class="sd">    :param l2_coeff: L2 regularization coefficient (AdamW). **Default:** 1e-3.</span>
+<span class="sd">    :param mixed_precision: Mixed precision mode for ``accelerate`` (&quot;no&quot;, &quot;fp16&quot;, &quot;bf16&quot;). **Default:** &quot;no&quot;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1">#############</span>
+    <span class="c1">## Required ##</span>
+    <span class="c1">#############</span>
+    <span class="n">run_name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">ckpt_base_dir</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">max_seq_len</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">dataset</span><span class="p">:</span> <span class="n">RLDataset</span>
+    <span class="n">tstep_encoder_type</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">TstepEncoder</span><span class="p">]</span>
+    <span class="n">traj_encoder_type</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">TrajEncoder</span><span class="p">]</span>
+    <span class="n">agent_type</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">Agent</span><span class="p">]</span>
+    <span class="n">val_timesteps_per_epoch</span><span class="p">:</span> <span class="nb">int</span>
+
+    <span class="c1">#################</span>
+    <span class="c1">## Environment ##</span>
+    <span class="c1">#################</span>
+    <span class="n">make_train_env</span><span class="p">:</span> <span class="nb">callable</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">callable</span><span class="p">]</span>
+    <span class="n">make_val_env</span><span class="p">:</span> <span class="nb">callable</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">callable</span><span class="p">]</span>
+    <span class="n">parallel_actors</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">12</span>
+    <span class="n">env_mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;async&quot;</span>
+    <span class="n">async_env_mp_context</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">exploration_wrapper_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">type</span><span class="p">[</span><span class="n">ExplorationWrapper</span><span class="p">]]</span> <span class="o">=</span> <span class="n">EpsilonGreedy</span>
+    <span class="n">sample_actions</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">force_reset_train_envs_every</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1">#############</span>
+    <span class="c1">## Logging ##</span>
+    <span class="c1">#############</span>
+    <span class="n">log_to_wandb</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">wandb_project</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;AMAGO_WANDB_PROJECT&quot;</span><span class="p">)</span>
+    <span class="n">wandb_entity</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;AMAGO_WANDB_ENTITY&quot;</span><span class="p">)</span>
+    <span class="n">wandb_group_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">log_interval</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">300</span>
+
+    <span class="c1">############</span>
+    <span class="c1">## Replay ##</span>
+    <span class="c1">############</span>
+    <span class="n">traj_save_len</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mf">1e10</span>
+    <span class="n">has_dset_edit_rights</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">stagger_traj_file_lengths</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">save_trajs_as</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;npz&quot;</span>
+    <span class="n">padded_sampling</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;none&quot;</span>
+    <span class="n">dloader_workers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">6</span>
+
+    <span class="c1">#######################</span>
+    <span class="c1">## Learning Schedule ##</span>
+    <span class="c1">#######################</span>
+    <span class="n">epochs</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span>
+    <span class="n">start_learning_at_epoch</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">start_collecting_at_epoch</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">train_timesteps_per_epoch</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span>
+    <span class="n">train_batches_per_epoch</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1000</span>
+    <span class="n">val_interval</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">20</span>
+    <span class="n">ckpt_interval</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">50</span>
+    <span class="n">always_save_latest</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">always_load_latest</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="c1">##################</span>
+    <span class="c1">## Optimization ##</span>
+    <span class="c1">##################</span>
+    <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">24</span>
+    <span class="n">batches_per_update</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">learning_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-4</span>
+    <span class="n">critic_loss_weight</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">10.0</span>
+    <span class="n">lr_warmup_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">500</span>
+    <span class="n">grad_clip</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">l2_coeff</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-3</span>
+    <span class="n">mixed_precision</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;no&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">accelerator</span> <span class="o">=</span> <span class="n">Accelerator</span><span class="p">(</span>
+            <span class="n">gradient_accumulation_steps</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batches_per_update</span><span class="p">,</span>
+            <span class="n">device_placement</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">log_with</span><span class="o">=</span><span class="s2">&quot;wandb&quot;</span><span class="p">,</span>
+            <span class="n">kwargs_handlers</span><span class="o">=</span><span class="p">[</span>
+                <span class="n">DistributedDataParallelKwargs</span><span class="p">(</span><span class="n">find_unused_parameters</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="p">],</span>
+            <span class="n">mixed_precision</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mixed_precision</span><span class="p">,</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="Experiment.start">
+<a class="viewcode-back" href="../../api/amago.experiment.html#amago.experiment.Experiment.start">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Manual initialization after __init__ to give time for gin configuration.</span>
+
+<span class="sd">        Call before Experiment.learn()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_dsets</span><span class="p">()</span>
+        <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;always&quot;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="n">utils</span><span class="o">.</span><span class="n">AmagoWarning</span><span class="p">)</span>
+            <span class="n">env_summary</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_envs</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_dloaders</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_model</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_checkpoints</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_logger</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">summary</span><span class="p">(</span><span class="n">env_summary</span><span class="o">=</span><span class="n">env_summary</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">DEVICE</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the device (cpu/gpu) that the experiment is running on.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">accelerator</span><span class="o">.</span><span class="n">device</span>
+
+<div class="viewcode-block" id="Experiment.summary">
+<a class="viewcode-back" href="../../api/amago.experiment.html#amago.experiment.Experiment.summary">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">summary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">env_summary</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Print key hparams to the console for reference.&quot;&quot;&quot;</span>
+        <span class="n">total_params</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">count_params</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">policy</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">traj_save_len</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_seq_len</span>
+        <span class="p">),</span> <span class="s2">&quot;Save longer trajectories than the model can process&quot;</span>
+
+        <span class="n">expl_str</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">exploration_wrapper_type</span><span class="o">.</span><span class="vm">__name__</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">exploration_wrapper_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">else</span> <span class="s2">&quot;None&quot;</span>
+        <span class="p">)</span>
+        <span class="n">dset_str</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n\t\t\t</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">get_description</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">accelerator</span><span class="o">.</span><span class="n">print</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;&quot;&quot;</span><span class="se">\n\n</span><span class="s2"> </span><span class="se">\t\t</span><span class="s2"> </span><span class="si">{</span><span class="n">colored</span><span class="p">(</span><span class="s1">&#39;AMAGO v3.1&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;green&#39;</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">            </span><span class="se">\t</span><span class="s2"> -------------------------</span>
+<span class="s2">            </span><span class="se">\t</span><span class="s2"> Agent: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">policy</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span>
+<span class="s2">            </span><span class="se">\t\t</span><span class="s2"> Max Sequence Length: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_seq_len</span><span class="si">}</span>
+<span class="s2">            </span><span class="se">\t\t</span><span class="s2"> TstepEncoder Type: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">tstep_encoder_type</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span>
+<span class="s2">            </span><span class="se">\t\t</span><span class="s2"> TrajEncoder Type: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">traj_encoder_type</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span>
+<span class="s2">            </span><span class="se">\t\t</span><span class="s2"> Total Parameters: </span><span class="si">{</span><span class="n">total_params</span><span class="si">:</span><span class="s2">,d</span><span class="si">}</span>
+<span class="s2">            </span><span class="se">\t\t</span><span class="s2"> Offline Loss Weight: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">policy</span><span class="o">.</span><span class="n">offline_coeff</span><span class="si">}</span>
+<span class="s2">            </span><span class="se">\t\t</span><span class="s2"> Online Loss Weight: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">policy</span><span class="o">.</span><span class="n">online_coeff</span><span class="si">}</span>
+<span class="s2">            </span><span class="se">\t\t</span><span class="s2"> Mixed Precision: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mixed_precision</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}</span>
+<span class="s2">            </span><span class="se">\t\t</span><span class="s2"> Checkpoint Path: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">ckpt_dir</span><span class="si">}</span>
+<span class="s2">            </span><span class="se">\t</span><span class="s2"> Environment:</span>
+<span class="s2">            </span><span class="se">\t\t</span><span class="s2"> </span><span class="si">{</span><span class="n">env_summary</span><span class="si">}</span>
+<span class="s2">            </span><span class="se">\t\t</span><span class="s2"> Exploration Type: </span><span class="si">{</span><span class="n">expl_str</span><span class="si">}</span>
+<span class="s2">            </span><span class="se">\t</span><span class="s2"> Dataset: </span><span class="si">{</span><span class="n">dset_str</span><span class="si">}</span>
+<span class="s2">            </span><span class="se">\t</span><span class="s2"> Accelerate Processes: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">accelerator</span><span class="o">.</span><span class="n">num_processes</span><span class="si">}</span><span class="s2"> </span><span class="se">\n\n</span><span class="s2">&quot;&quot;&quot;</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Experiment.init_envs">
+<a class="viewcode-back" href="../../api/amago.experiment.html#amago.experiment.Experiment.init_envs">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">init_envs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Construct parallel training and validation environments.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            str: Description of the environment setup printed to the console when</span>
+<span class="sd">                Experiment.verbose is True.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">traj_save_len</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_seq_len</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_mode</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;async&quot;</span><span class="p">,</span> <span class="s2">&quot;sync&quot;</span><span class="p">]:</span>
+            <span class="c1"># default environment mode wrapping individual gym environments in a pool of async processes</span>
+            <span class="c1"># and handling resets by waiting for the termination signal to reach the highest wrapper level</span>
+            <span class="n">to_env_list</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">e</span><span class="p">:</span> <span class="p">(</span>
+                <span class="p">[</span><span class="n">e</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">parallel_actors</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">)</span> <span class="k">else</span> <span class="n">e</span>
+            <span class="p">)</span>
+            <span class="n">make_val_envs</span> <span class="o">=</span> <span class="n">to_env_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">make_val_env</span><span class="p">)</span>
+            <span class="n">make_train_envs</span> <span class="o">=</span> <span class="n">to_env_list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">make_train_env</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">make_train_envs</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">parallel_actors</span><span class="p">:</span>
+                <span class="n">utils</span><span class="o">.</span><span class="n">amago_warning</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;`Experiment.parallel_actors` is </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">parallel_actors</span><span class="si">}</span><span class="s2"> but `make_train_env` is a list of length </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">make_train_envs</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">make_val_envs</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">parallel_actors</span><span class="p">:</span>
+                <span class="n">utils</span><span class="o">.</span><span class="n">amago_warning</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;`Experiment.parallel_actors` is </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">parallel_actors</span><span class="si">}</span><span class="s2"> but `make_val_env` is a list of length </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">make_val_envs</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_mode</span> <span class="o">==</span> <span class="s2">&quot;async&quot;</span><span class="p">:</span>
+                <span class="n">Par</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">vector</span><span class="o">.</span><span class="n">AsyncVectorEnv</span>
+                <span class="n">par_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">context</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">async_env_mp_context</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">Par</span> <span class="o">=</span> <span class="n">DummyAsyncVectorEnv</span>
+                <span class="n">par_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_mode</span> <span class="o">==</span> <span class="s2">&quot;already_vectorized&quot;</span><span class="p">:</span>
+            <span class="c1"># alternate environment mode designed for jax / gpu-accelerated envs that handle parallelization</span>
+            <span class="c1"># with a batch dimension on the lowest wrapper level. These envs must auto-reset and treat the last</span>
+            <span class="c1"># timestep of a trajectory as the first timestep of the next trajectory.</span>
+            <span class="n">make_train_envs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">make_train_env</span><span class="p">]</span>
+            <span class="n">make_val_envs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">make_val_env</span><span class="p">]</span>
+            <span class="n">Par</span> <span class="o">=</span> <span class="n">AlreadyVectorizedEnv</span>
+            <span class="n">par_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid `env_mode` </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">env_mode</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">exploration_wrapper_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">issubclass</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">exploration_wrapper_type</span><span class="p">,</span> <span class="n">ExplorationWrapper</span>
+        <span class="p">):</span>
+            <span class="n">utils</span><span class="o">.</span><span class="n">amago_warning</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Implement exploration strategies by subclassing `ExplorationWrapper` and setting the `Experiment.exploration_wrapper_type`&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_seq_len</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">traj_save_len</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">stagger_traj_file_lengths</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            If the rollout length of the environment is much longer than the `traj_save_len`,</span>
+<span class="sd">            almost every datapoint will be exactly `traj_save_len` long and spaced `traj_save_len` apart.</span>
+<span class="sd">            For example if the `traj_save_len` is 100 the trajectory files will all be snippets from</span>
+<span class="sd">            [0, 100], [100, 200], [200, 300], etc. This can lead to a problem at test-time because the model</span>
+<span class="sd">            has never seen a sequence from timesteps [50, 150] or [150, 250], etc. We can mitigate this by</span>
+<span class="sd">            randomizing the trajectory lengths in a range around `traj_save_len`.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">save_every_low</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">traj_save_len</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_seq_len</span>
+            <span class="n">save_every_high</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">traj_save_len</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_seq_len</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">save_every_low</span> <span class="o">=</span> <span class="n">save_every_high</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">traj_save_len</span>
+
+        <span class="c1"># wrap environments to save trajectories to replay buffer</span>
+        <span class="n">shared_env_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">save_trajs_as</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">save_trajs_as</span><span class="p">,</span>
+            <span class="n">save_every_low</span><span class="o">=</span><span class="n">save_every_low</span><span class="p">,</span>
+            <span class="n">save_every_high</span><span class="o">=</span><span class="n">save_every_high</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">make_train</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">EnvCreator</span><span class="p">(</span>
+                <span class="n">make_env</span><span class="o">=</span><span class="n">env_func</span><span class="p">,</span>
+                <span class="c1"># save trajectories to disk</span>
+                <span class="n">save_trajs_to</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">save_new_trajs_to</span><span class="p">,</span>
+                <span class="c1"># adds exploration noise</span>
+                <span class="n">exploration_wrapper_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">exploration_wrapper_type</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">shared_env_kwargs</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">env_func</span> <span class="ow">in</span> <span class="n">make_train_envs</span>
+        <span class="p">]</span>
+        <span class="n">make_val</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">EnvCreator</span><span class="p">(</span>
+                <span class="n">make_env</span><span class="o">=</span><span class="n">env_func</span><span class="p">,</span>
+                <span class="c1"># do not save trajectories to disk</span>
+                <span class="n">save_trajs_to</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="c1"># no exploration noise</span>
+                <span class="n">exploration_wrapper_type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="o">**</span><span class="n">shared_env_kwargs</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">env_func</span> <span class="ow">in</span> <span class="n">make_val_envs</span>
+        <span class="p">]</span>
+
+        <span class="c1"># make parallel envs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">train_envs</span> <span class="o">=</span> <span class="n">Par</span><span class="p">(</span><span class="n">make_train</span><span class="p">,</span> <span class="o">**</span><span class="n">par_kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">val_envs</span> <span class="o">=</span> <span class="n">Par</span><span class="p">(</span><span class="n">make_val</span><span class="p">,</span> <span class="o">**</span><span class="n">par_kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">train_envs</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rl2_space</span> <span class="o">=</span> <span class="n">make_train</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">rl2_space</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hidden_state</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># holds train_env hidden state between epochs</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_mode</span> <span class="o">==</span> <span class="s2">&quot;already_vectorized&quot;</span><span class="p">:</span>
+            <span class="n">_inner</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Vectorized Gym Env x</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">parallel_actors</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">_desc</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Par</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="n">_inner</span><span class="si">}</span><span class="s2">)&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">_inner</span> <span class="o">=</span> <span class="s2">&quot;Gym Env&quot;</span>
+            <span class="n">_desc</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Par</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="n">_inner</span><span class="si">}</span><span class="s2"> x </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">parallel_actors</span><span class="si">}</span><span class="s2">)&quot;</span>
+        <span class="k">return</span> <span class="n">_desc</span></div>
+
+
+<div class="viewcode-block" id="Experiment.init_checkpoints">
+<a class="viewcode-back" href="../../api/amago.experiment.html#amago.experiment.Experiment.init_checkpoints">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">init_checkpoints</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create ckpts/training_states, ckpts/policy_weights, and ckpts/latest dirs&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ckpt_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ckpt_base_dir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_name</span><span class="p">,</span> <span class="s2">&quot;ckpts&quot;</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ckpt_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ckpt_dir</span><span class="p">,</span> <span class="s2">&quot;training_states&quot;</span><span class="p">),</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ckpt_dir</span><span class="p">,</span> <span class="s2">&quot;policy_weights&quot;</span><span class="p">),</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ckpt_dir</span><span class="p">,</span> <span class="s2">&quot;latest&quot;</span><span class="p">),</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epoch</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+
+<div class="viewcode-block" id="Experiment.load_checkpoint_from_path">
+<a class="viewcode-back" href="../../api/amago.experiment.html#amago.experiment.Experiment.load_checkpoint_from_path">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_checkpoint_from_path</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">is_accelerate_state</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load a checkpoint from a given path.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            path: Full path to the checkpoint fle to load.</span>
+<span class="sd">            is_accelerate_state: Whether the checkpoint is a full accelerate state (True) or</span>
+<span class="sd">                pytorch weights only (False). Defaults to True.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_accelerate_state</span><span class="p">:</span>
+            <span class="n">ckpt</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">retry_load_checkpoint</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">map_location</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">DEVICE</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">policy</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">ckpt</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">accelerator</span><span class="o">.</span><span class="n">load_state</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Experiment.load_checkpoint">
+<a class="viewcode-back" href="../../api/amago.experiment.html#amago.experiment.Experiment.load_checkpoint">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_checkpoint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epoch</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">resume_training_state</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load a historical checkpoint from the `ckpts` directory of this experiment.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            epoch: The epoch number of the checkpoint to load.</span>
+<span class="sd">            resume_training_state: Whether to resume the entire training process (True) or only</span>
+<span class="sd">                the policy weights (False). Defaults to True.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">resume_training_state</span><span class="p">:</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">ckpt_dir</span><span class="p">,</span> <span class="s2">&quot;policy_weights&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;policy_epoch_</span><span class="si">{</span><span class="n">epoch</span><span class="si">}</span><span class="s2">.pt&quot;</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">load_checkpoint_from_path</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">is_accelerate_state</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ckpt_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">run_name</span><span class="si">}</span><span class="s2">_epoch_</span><span class="si">{</span><span class="n">epoch</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">ckpt_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ckpt_dir</span><span class="p">,</span> <span class="s2">&quot;training_states&quot;</span><span class="p">,</span> <span class="n">ckpt_name</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">load_checkpoint_from_path</span><span class="p">(</span><span class="n">ckpt_path</span><span class="p">,</span> <span class="n">is_accelerate_state</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">epoch</span> <span class="o">=</span> <span class="n">epoch</span></div>
+
+
+<div class="viewcode-block" id="Experiment.save_checkpoint">
+<a class="viewcode-back" href="../../api/amago.experiment.html#amago.experiment.Experiment.save_checkpoint">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">save_checkpoint</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Save both the training state and the policy weights to the ckpt_dir.&quot;&quot;&quot;</span>
+        <span class="n">ckpt_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">run_name</span><span class="si">}</span><span class="s2">_epoch_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">epoch</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">accelerator</span><span class="o">.</span><span class="n">save_state</span><span class="p">(</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ckpt_dir</span><span class="p">,</span> <span class="s2">&quot;training_states&quot;</span><span class="p">,</span> <span class="n">ckpt_name</span><span class="p">),</span>
+            <span class="n">safe_serialization</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">accelerator</span><span class="o">.</span><span class="n">is_main_process</span><span class="p">:</span>
+            <span class="c1"># create backup of raw weights unrelated to the more complex process of resuming an accelerate state</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">policy</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">ckpt_dir</span><span class="p">,</span> <span class="s2">&quot;policy_weights&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;policy_epoch_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">epoch</span><span class="si">}</span><span class="s2">.pt&quot;</span>
+                <span class="p">),</span>
+            <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Experiment.write_latest_policy">
+<a class="viewcode-back" href="../../api/amago.experiment.html#amago.experiment.Experiment.write_latest_policy">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">write_latest_policy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write absolute latest policy to a hardcoded location used by `read_latest_policy`&quot;&quot;&quot;</span>
+        <span class="n">ckpt_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ckpt_dir</span><span class="p">,</span> <span class="s2">&quot;latest&quot;</span><span class="p">,</span> <span class="s2">&quot;policy.pt&quot;</span><span class="p">)</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">policy</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span> <span class="n">ckpt_name</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Experiment.read_latest_policy">
+<a class="viewcode-back" href="../../api/amago.experiment.html#amago.experiment.Experiment.read_latest_policy">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">read_latest_policy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Read the latest policy -- used to communicate weight updates between</span>
+<span class="sd">        learning/collecting processes&quot;&quot;&quot;</span>
+        <span class="n">ckpt_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ckpt_dir</span><span class="p">,</span> <span class="s2">&quot;latest&quot;</span><span class="p">,</span> <span class="s2">&quot;policy.pt&quot;</span><span class="p">)</span>
+        <span class="n">ckpt</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">retry_load_checkpoint</span><span class="p">(</span><span class="n">ckpt_name</span><span class="p">,</span> <span class="n">map_location</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">DEVICE</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ckpt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">accelerator</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Loading latest policy....&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">policy</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">ckpt</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">utils</span><span class="o">.</span><span class="n">amago_warning</span><span class="p">(</span><span class="s2">&quot;Latest policy checkpoint was not loaded.&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Experiment.delete_buffer_from_disk">
+<a class="viewcode-back" href="../../api/amago.experiment.html#amago.experiment.Experiment.delete_buffer_from_disk">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete_buffer_from_disk</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Clear the replay buffer from disk (mainly for `examples/`).</span>
+
+<span class="sd">        Calls `self.dataset.delete()` if the current process is the main process.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">accelerator</span><span class="o">.</span><span class="n">is_main_process</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Experiment.init_dsets">
+<a class="viewcode-back" href="../../api/amago.experiment.html#amago.experiment.Experiment.init_dsets">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">init_dsets</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RLDataset</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Modifies the provided RLDataset (in place) to use important info configured by the</span>
+<span class="sd">        experiment.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">configure_from_experiment</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span></div>
+
+
+<div class="viewcode-block" id="Experiment.init_dloaders">
+<a class="viewcode-back" href="../../api/amago.experiment.html#amago.experiment.Experiment.init_dloaders">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">init_dloaders</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DataLoader</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create pytorch dataloaders to batch trajectories in parallel.&quot;&quot;&quot;</span>
+        <span class="n">train_dloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
+            <span class="n">num_workers</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dloader_workers</span><span class="p">,</span>
+            <span class="n">collate_fn</span><span class="o">=</span><span class="n">RLData_pad_collate</span><span class="p">,</span>
+            <span class="n">pin_memory</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">train_dloader</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">accelerator</span><span class="o">.</span><span class="n">prepare</span><span class="p">(</span><span class="n">train_dloader</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_dloader</span></div>
+
+
+<div class="viewcode-block" id="Experiment.init_logger">
+<a class="viewcode-back" href="../../api/amago.experiment.html#amago.experiment.Experiment.init_logger">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">init_logger</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Configure log dir and wandb compatibility.&quot;&quot;&quot;</span>
+        <span class="n">gin_config</span> <span class="o">=</span> <span class="n">gin</span><span class="o">.</span><span class="n">operative_config_str</span><span class="p">()</span>
+        <span class="n">config_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ckpt_dir</span><span class="p">,</span> <span class="s2">&quot;config.txt&quot;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_path</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">gin_config</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_to_wandb</span><span class="p">:</span>
+            <span class="c1"># records the gin config on the wandb dashboard</span>
+            <span class="n">gin_as_wandb</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">gin_as_wandb_config</span><span class="p">()</span>
+            <span class="n">log_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ckpt_base_dir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_name</span><span class="p">,</span> <span class="s2">&quot;wandb_logs&quot;</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">log_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">accelerator</span><span class="o">.</span><span class="n">init_trackers</span><span class="p">(</span>
+                <span class="n">project_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">wandb_project</span><span class="p">,</span>
+                <span class="n">config</span><span class="o">=</span><span class="n">gin_as_wandb</span><span class="p">,</span>
+                <span class="n">init_kwargs</span><span class="o">=</span><span class="p">{</span>
+                    <span class="s2">&quot;wandb&quot;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span>
+                        <span class="n">entity</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">wandb_entity</span><span class="p">,</span>
+                        <span class="nb">dir</span><span class="o">=</span><span class="n">log_dir</span><span class="p">,</span>
+                        <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">run_name</span><span class="p">,</span>
+                        <span class="n">group</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">wandb_group_name</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">},</span>
+            <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Experiment.init_optimizer">
+<a class="viewcode-back" href="../../api/amago.experiment.html#amago.experiment.Experiment.init_optimizer">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">init_optimizer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">policy</span><span class="p">:</span> <span class="n">Agent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Defines the optimizer.</span>
+
+<span class="sd">        Override to switch from AdamW.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            torch.optim.Optimizer in charge of updating the Agent&#39;s parameters</span>
+<span class="sd">                (Agent.trainable_params)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">adamw_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">lr</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">learning_rate</span><span class="p">,</span> <span class="n">weight_decay</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">l2_coeff</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">AdamW</span><span class="p">(</span><span class="n">policy</span><span class="o">.</span><span class="n">trainable_params</span><span class="p">,</span> <span class="o">**</span><span class="n">adamw_kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Experiment.init_model">
+<a class="viewcode-back" href="../../api/amago.experiment.html#amago.experiment.Experiment.init_model">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">init_model</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build an initial policy based on observation shapes&quot;&quot;&quot;</span>
+        <span class="n">policy_kwargs</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;tstep_encoder_type&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">tstep_encoder_type</span><span class="p">,</span>
+            <span class="s2">&quot;traj_encoder_type&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">traj_encoder_type</span><span class="p">,</span>
+            <span class="s2">&quot;obs_space&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">rl2_space</span><span class="p">[</span><span class="s2">&quot;obs&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;rl2_space&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">rl2_space</span><span class="p">[</span><span class="s2">&quot;rl2&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;action_space&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_envs</span><span class="o">.</span><span class="n">single_action_space</span><span class="p">,</span>
+            <span class="s2">&quot;max_seq_len&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_seq_len</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="n">policy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent_type</span><span class="p">(</span><span class="o">**</span><span class="n">policy_kwargs</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">policy</span><span class="p">,</span> <span class="n">Agent</span><span class="p">)</span>
+        <span class="n">optimizer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_optimizer</span><span class="p">(</span><span class="n">policy</span><span class="p">)</span>
+        <span class="n">lr_schedule</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_constant_schedule_with_warmup</span><span class="p">(</span>
+            <span class="n">optimizer</span><span class="o">=</span><span class="n">optimizer</span><span class="p">,</span> <span class="n">num_warmup_steps</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lr_warmup_steps</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">policy_aclr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lr_schedule</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">accelerator</span><span class="o">.</span><span class="n">prepare</span><span class="p">(</span>
+            <span class="n">policy</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">lr_schedule</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">accelerator</span><span class="o">.</span><span class="n">register_for_checkpointing</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lr_schedule</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grad_update_counter</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">policy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Agent</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the current Agent policy free from the accelerator wrapper.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">accelerator</span><span class="o">.</span><span class="n">unwrap_model</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">policy_aclr</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Experiment.interact">
+<a class="viewcode-back" href="../../api/amago.experiment.html#amago.experiment.Experiment.interact">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">interact</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">envs</span><span class="p">,</span>
+        <span class="n">timesteps</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">hidden_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">render</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">save_on_done</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">episodes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">ReturnHistory</span><span class="p">,</span> <span class="n">SpecialMetricHistory</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Main policy loop for interacting with the environment.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            envs: The (parallel) environments to interact with.</span>
+<span class="sd">            timesteps: The number of timesteps to interact with each environment.</span>
+
+<span class="sd">        Keyword Args:</span>
+<span class="sd">            hidden_state: The hidden state of the policy. If None, a fresh hidden state is</span>
+<span class="sd">                initialized. Defaults to None.</span>
+<span class="sd">            render: Whether to render the environment. Defaults to False.</span>
+<span class="sd">            save_on_done: If True, save completed trajectory sequences to disk as soon as they</span>
+<span class="sd">                are finished. If False, wait until all rollouts are completed. Only applicable</span>
+<span class="sd">                if the provided envs are configured to save rollouts to disk. Defaults to False.</span>
+<span class="sd">            episodes: The number of episodes to interact with the environment. If provided, the</span>
+<span class="sd">                loop will terminate after this many episodes have been completed OR we hit the</span>
+<span class="sd">                `timesteps` limit, whichever comes first. Defaults to None.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            tuple[ReturnHistory, SpecialMetricHistory]: Objects that keep track of standard</span>
+<span class="sd">                eval stats (average returns) and any additional eval metrics the envs have been</span>
+<span class="sd">                configured to record.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">policy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">policy</span>
+        <span class="n">policy</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="n">iter_</span> <span class="o">=</span> <span class="n">tqdm</span><span class="p">(</span>
+                <span class="nb">range</span><span class="p">(</span><span class="n">timesteps</span><span class="p">),</span>
+                <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;Env Interaction&quot;</span><span class="p">,</span>
+                <span class="n">total</span><span class="o">=</span><span class="n">timesteps</span><span class="p">,</span>
+                <span class="n">leave</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">colour</span><span class="o">=</span><span class="s2">&quot;yellow&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">iter_</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">timesteps</span><span class="p">)</span>
+
+        <span class="c1"># clear results statistics</span>
+        <span class="c1"># (can make train-time stats useless depending on horizon vs. `timesteps`)</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">call_async_env</span><span class="p">(</span><span class="n">envs</span><span class="p">,</span> <span class="s2">&quot;reset_stats&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">hidden_state</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># init new hidden state</span>
+            <span class="n">hidden_state</span> <span class="o">=</span> <span class="n">policy</span><span class="o">.</span><span class="n">traj_encoder</span><span class="o">.</span><span class="n">init_hidden_state</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">parallel_actors</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">DEVICE</span>
+            <span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">get_t</span><span class="p">():</span>
+            <span class="c1"># fetch `Timestep.make_sequence` from all envs</span>
+            <span class="n">par_obs_rl2_time</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">call_async_env</span><span class="p">(</span><span class="n">envs</span><span class="p">,</span> <span class="s2">&quot;current_timestep&quot;</span><span class="p">)</span>
+            <span class="n">_obs</span><span class="p">,</span> <span class="n">_rl2s</span><span class="p">,</span> <span class="n">_time_idxs</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">_o</span><span class="p">,</span> <span class="n">_r</span><span class="p">,</span> <span class="n">_t</span> <span class="ow">in</span> <span class="n">par_obs_rl2_time</span><span class="p">:</span>
+                <span class="n">_obs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_o</span><span class="p">)</span>
+                <span class="n">_rl2s</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_r</span><span class="p">)</span>
+                <span class="n">_time_idxs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_t</span><span class="p">)</span>
+            <span class="c1"># stack all the results</span>
+            <span class="n">_obs</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">stack_list_array_dicts</span><span class="p">(</span><span class="n">_obs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">cat</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">_rl2s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">_rl2s</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">_time_idxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">_time_idxs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="c1"># ---&gt; torch --&gt; GPU --&gt; dummy length dim</span>
+            <span class="n">_obs</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="n">k</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">DEVICE</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">_obs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="p">}</span>
+            <span class="n">_rl2s</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">_rl2s</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">DEVICE</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">_time_idxs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">_time_idxs</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">DEVICE</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">_obs</span><span class="p">,</span> <span class="n">_rl2s</span><span class="p">,</span> <span class="n">_time_idxs</span>
+
+        <span class="n">obs</span><span class="p">,</span> <span class="n">rl2s</span><span class="p">,</span> <span class="n">time_idxs</span> <span class="o">=</span> <span class="n">get_t</span><span class="p">()</span>
+        <span class="n">episodes_finished</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">iter_</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+                <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">caster</span><span class="p">():</span>
+                    <span class="n">actions</span><span class="p">,</span> <span class="n">hidden_state</span> <span class="o">=</span> <span class="n">policy</span><span class="o">.</span><span class="n">get_actions</span><span class="p">(</span>
+                        <span class="n">obs</span><span class="o">=</span><span class="n">obs</span><span class="p">,</span>
+                        <span class="n">rl2s</span><span class="o">=</span><span class="n">rl2s</span><span class="p">,</span>
+                        <span class="n">time_idxs</span><span class="o">=</span><span class="n">time_idxs</span><span class="p">,</span>
+                        <span class="n">sample</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sample_actions</span><span class="p">,</span>
+                        <span class="n">hidden_state</span><span class="o">=</span><span class="n">hidden_state</span><span class="p">,</span>
+                    <span class="p">)</span>
+            <span class="o">*</span><span class="n">_</span><span class="p">,</span> <span class="n">terminated</span><span class="p">,</span> <span class="n">truncated</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">envs</span><span class="o">.</span><span class="n">step</span><span class="p">(</span><span class="n">actions</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
+            <span class="n">done</span> <span class="o">=</span> <span class="n">terminated</span> <span class="o">|</span> <span class="n">truncated</span>
+            <span class="k">if</span> <span class="n">done</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">done</span> <span class="o">=</span> <span class="n">done</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">done</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">save_on_done</span><span class="p">:</span>
+                    <span class="n">utils</span><span class="o">.</span><span class="n">call_async_env</span><span class="p">(</span><span class="n">envs</span><span class="p">,</span> <span class="s2">&quot;save_finished_trajs&quot;</span><span class="p">)</span>
+                <span class="n">episodes_finished</span> <span class="o">+=</span> <span class="n">done</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+            <span class="n">obs</span><span class="p">,</span> <span class="n">rl2s</span><span class="p">,</span> <span class="n">time_idxs</span> <span class="o">=</span> <span class="n">get_t</span><span class="p">()</span>
+            <span class="n">hidden_state</span> <span class="o">=</span> <span class="n">policy</span><span class="o">.</span><span class="n">traj_encoder</span><span class="o">.</span><span class="n">reset_hidden_state</span><span class="p">(</span><span class="n">hidden_state</span><span class="p">,</span> <span class="n">done</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">render</span><span class="p">:</span>
+                <span class="n">envs</span><span class="o">.</span><span class="n">render</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">episodes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">episodes_finished</span> <span class="o">&gt;=</span> <span class="n">episodes</span><span class="p">:</span>
+                <span class="k">break</span>
+
+        <span class="n">return_history</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">call_async_env</span><span class="p">(</span><span class="n">envs</span><span class="p">,</span> <span class="s2">&quot;return_history&quot;</span><span class="p">)</span>
+        <span class="n">special_history</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">call_async_env</span><span class="p">(</span><span class="n">envs</span><span class="p">,</span> <span class="s2">&quot;special_history&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">hidden_state</span><span class="p">,</span> <span class="p">(</span><span class="n">return_history</span><span class="p">,</span> <span class="n">special_history</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Experiment.collect_new_training_data">
+<a class="viewcode-back" href="../../api/amago.experiment.html#amago.experiment.Experiment.collect_new_training_data">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">collect_new_training_data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate train_timesteps_per_epoch * parallel_actors timesteps of new environment</span>
+<span class="sd">        interaction that will be saved to the replay buffer when the rollouts finishes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">force_reset_train_envs_every</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">epoch</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">force_reset_train_envs_every</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">train_envs</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">hidden_state</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hidden_state</span><span class="p">,</span> <span class="p">(</span><span class="n">returns</span><span class="p">,</span> <span class="n">specials</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">interact</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">train_envs</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">train_timesteps_per_epoch</span><span class="p">,</span>
+            <span class="n">hidden_state</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">hidden_state</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">utils</span><span class="o">.</span><span class="n">call_async_env</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">train_envs</span><span class="p">,</span> <span class="s2">&quot;save_finished_trajs&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Experiment.evaluate_val">
+<a class="viewcode-back" href="../../api/amago.experiment.html#amago.experiment.Experiment.evaluate_val">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_val</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Evaluate the current policy without exploration noise on the validation environments,</span>
+<span class="sd">        and averages the performance metrics across `accelerate` processes.&quot;&quot;&quot;</span>
+        <span class="c1"># reset envs first</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">val_envs</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+        <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="c1"># interact from a blank hidden state that is discarded</span>
+        <span class="n">_</span><span class="p">,</span> <span class="p">(</span><span class="n">returns</span><span class="p">,</span> <span class="n">specials</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">interact</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">val_envs</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">val_timesteps_per_epoch</span><span class="p">,</span>
+            <span class="n">hidden_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">end_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">fps</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">val_timesteps_per_epoch</span>
+            <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">parallel_actors</span>
+            <span class="o">/</span> <span class="p">(</span><span class="n">end_time</span> <span class="o">-</span> <span class="n">start_time</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">logs_per_process</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">policy_metrics</span><span class="p">(</span><span class="n">returns</span><span class="p">,</span> <span class="n">specials</span><span class="o">=</span><span class="n">specials</span><span class="p">)</span>
+        <span class="n">logs_per_process</span><span class="p">[</span><span class="s2">&quot;Env FPS (per_process)&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fps</span>
+        <span class="c1"># validation metrics are averaged over all processes</span>
+        <span class="n">logs_global</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">avg_over_accelerate</span><span class="p">(</span><span class="n">logs_per_process</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="n">cur_return</span> <span class="o">=</span> <span class="n">logs_global</span><span class="p">[</span><span class="s2">&quot;Average Total Return (Across All Env Names)&quot;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">accelerator</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Average Return : </span><span class="si">{</span><span class="n">cur_return</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">accelerator</span><span class="o">.</span><span class="n">print</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Env FPS : </span><span class="si">{</span><span class="n">fps</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="bp">self</span><span class="o">.</span><span class="n">accelerator</span><span class="o">.</span><span class="n">num_processes</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">logs_global</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;val&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Experiment.evaluate_test">
+<a class="viewcode-back" href="../../api/amago.experiment.html#amago.experiment.Experiment.evaluate_test">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_test</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">make_test_env</span><span class="p">:</span> <span class="nb">callable</span> <span class="o">|</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">callable</span><span class="p">],</span>
+        <span class="n">timesteps</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">render</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">save_trajs_to</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">episodes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;One-off evaluation of a new environment callable for testing.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            make_test_env: A callable or iterable of callables that make and return a test</span>
+<span class="sd">                environment. If an iterable, it must be of length `Experiment.parallel_actors`.</span>
+<span class="sd">            timesteps: The number of timesteps to interact with each environment.</span>
+<span class="sd">            render: Whether to render the environment. Defaults to False.</span>
+<span class="sd">            save_trajs_to: The directory to save trajectories. Useful when using evaluate_test to</span>
+<span class="sd">                gather demonstration data for another run. If None, no data is saved. Defaults to</span>
+<span class="sd">                None.</span>
+<span class="sd">            episodes: The number of episodes to interact with the environment. If provided, the</span>
+<span class="sd">                loop will terminate after this many episodes have been completed OR we hit the</span>
+<span class="sd">                `timesteps` limit, whichever comes first. Defaults to None.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict[str, float]: A dictionary of evaluation metrics.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">is_saving</span> <span class="o">=</span> <span class="n">save_trajs_to</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">wrap</span><span class="p">(</span><span class="n">m</span><span class="p">):</span>
+            <span class="k">return</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">SequenceWrapper</span><span class="p">(</span>
+                <span class="n">m</span><span class="p">(),</span>
+                <span class="n">save_trajs_to</span><span class="o">=</span><span class="n">save_trajs_to</span><span class="p">,</span>
+                <span class="n">save_every</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_mode</span> <span class="o">==</span> <span class="s2">&quot;already_vectorized&quot;</span><span class="p">:</span>
+            <span class="n">Par</span> <span class="o">=</span> <span class="n">AlreadyVectorizedEnv</span>
+            <span class="n">env_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">wrap</span><span class="p">(</span><span class="n">make_test_env</span><span class="p">)]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">make_test_env</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">):</span>
+                <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">make_test_env</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">parallel_actors</span>
+                <span class="n">env_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">wrap</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">make_test_env</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">env_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">wrap</span><span class="p">(</span><span class="n">make_test_env</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parallel_actors</span><span class="p">)]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_mode</span> <span class="o">==</span> <span class="s2">&quot;async&quot;</span><span class="p">:</span>
+                <span class="n">Par</span> <span class="o">=</span> <span class="n">gym</span><span class="o">.</span><span class="n">vector</span><span class="o">.</span><span class="n">AsyncVectorEnv</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">env_mode</span> <span class="o">==</span> <span class="s2">&quot;sync&quot;</span><span class="p">:</span>
+                <span class="n">Par</span> <span class="o">=</span> <span class="n">DummyAsyncVectorEnv</span>
+        <span class="n">test_envs</span> <span class="o">=</span> <span class="n">Par</span><span class="p">(</span><span class="n">env_list</span><span class="p">)</span>
+        <span class="n">test_envs</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+        <span class="n">_</span><span class="p">,</span> <span class="p">(</span><span class="n">returns</span><span class="p">,</span> <span class="n">specials</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">interact</span><span class="p">(</span>
+            <span class="n">test_envs</span><span class="p">,</span>
+            <span class="n">timesteps</span><span class="p">,</span>
+            <span class="n">hidden_state</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">render</span><span class="o">=</span><span class="n">render</span><span class="p">,</span>
+            <span class="c1"># saves trajectories as soon as they&#39;re finished instead of waiting until the end of eval</span>
+            <span class="n">save_on_done</span><span class="o">=</span><span class="n">is_saving</span><span class="p">,</span>
+            <span class="n">episodes</span><span class="o">=</span><span class="n">episodes</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">logs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">policy_metrics</span><span class="p">(</span><span class="n">returns</span><span class="p">,</span> <span class="n">specials</span><span class="p">)</span>
+        <span class="n">logs_global</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">avg_over_accelerate</span><span class="p">(</span><span class="n">logs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">logs_global</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;test&quot;</span><span class="p">)</span>
+        <span class="n">test_envs</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="n">cur_return</span> <span class="o">=</span> <span class="n">logs_global</span><span class="p">[</span><span class="s2">&quot;Average Total Return (Across All Env Names)&quot;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">accelerator</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Test Average Return : </span><span class="si">{</span><span class="n">cur_return</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">logs</span></div>
+
+
+<div class="viewcode-block" id="Experiment.x_axis_metrics">
+<a class="viewcode-back" href="../../api/amago.experiment.html#amago.experiment.Experiment.x_axis_metrics">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">x_axis_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get current x-axis metrics for wandb.&quot;&quot;&quot;</span>
+        <span class="n">metrics</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;train_envs&quot;</span><span class="p">):</span>
+            <span class="c1"># overall total frames per process</span>
+            <span class="n">total_frames</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">utils</span><span class="o">.</span><span class="n">call_async_env</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">train_envs</span><span class="p">,</span> <span class="s2">&quot;total_frames&quot;</span><span class="p">))</span>
+            <span class="c1"># total frames by env_name per process</span>
+            <span class="n">frames_by_env_name</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">call_async_env</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">train_envs</span><span class="p">,</span> <span class="s2">&quot;total_frames_by_env_name&quot;</span>
+            <span class="p">)</span>
+            <span class="n">total_frames_by_env_name</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">env_frames</span> <span class="ow">in</span> <span class="n">frames_by_env_name</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">env_name</span><span class="p">,</span> <span class="n">frames</span> <span class="ow">in</span> <span class="n">env_frames</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">total_frames_by_env_name</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;total_frames-</span><span class="si">{</span><span class="n">env_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">frames</span>
+            <span class="n">total_frames_by_env_name</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">total_frames_by_env_name</span><span class="p">)</span>
+            <span class="n">total_frames_by_env_name</span><span class="p">[</span><span class="s2">&quot;total_frames&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">total_frames</span>
+            <span class="c1"># sum over processes</span>
+            <span class="n">total_frames_global</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">sum_over_accelerate</span><span class="p">(</span><span class="n">total_frames_by_env_name</span><span class="p">)</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">total_frames_global</span><span class="p">)</span>
+
+        <span class="c1"># add epoch</span>
+        <span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;Epoch&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">epoch</span>
+        <span class="n">metrics</span><span class="p">[</span><span class="s2">&quot;gradient_steps&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">grad_update_counter</span>
+        <span class="k">return</span> <span class="n">metrics</span></div>
+
+
+<div class="viewcode-block" id="Experiment.log">
+<a class="viewcode-back" href="../../api/amago.experiment.html#amago.experiment.Experiment.log">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">log</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">metrics_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">|</span> <span class="nb">int</span> <span class="o">|</span> <span class="nb">float</span><span class="p">],</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Log a dict of metrics to the `key` panel of the wandb console alongisde current</span>
+<span class="sd">        x-axis metrics.&quot;&quot;&quot;</span>
+        <span class="n">log_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">metrics_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">log_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">log_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_to_wandb</span><span class="p">:</span>
+            <span class="n">wandb_dict</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">subkey</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">:</span> <span class="n">val</span> <span class="k">for</span> <span class="n">subkey</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">log_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="p">}</span> <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_axis_metrics</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">accelerator</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">wandb_dict</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Experiment.policy_metrics">
+<a class="viewcode-back" href="../../api/amago.experiment.html#amago.experiment.Experiment.policy_metrics">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">policy_metrics</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">returns</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">ReturnHistory</span><span class="p">],</span>
+        <span class="n">specials</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">SpecialMetricHistory</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Gather policy performance metrics across parallel environments.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            returns: The return history logger froms the environments.</span>
+<span class="sd">            specials: The special metrics history loggers from the environments.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict: A dictionary of policy performance metrics.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">returns_by_env_name</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+        <span class="n">specials_by_env_name</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">ret</span><span class="p">,</span> <span class="n">spe</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">returns</span><span class="p">,</span> <span class="n">specials</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">env_name</span><span class="p">,</span> <span class="n">scores</span> <span class="ow">in</span> <span class="n">ret</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">returns_by_env_name</span><span class="p">[</span><span class="n">env_name</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">env_name</span><span class="p">,</span> <span class="n">specials_dict</span> <span class="ow">in</span> <span class="n">spe</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">special_key</span><span class="p">,</span> <span class="n">special_val</span> <span class="ow">in</span> <span class="n">specials_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">specials_by_env_name</span><span class="p">[</span><span class="n">env_name</span><span class="p">][</span><span class="n">special_key</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">special_val</span><span class="p">)</span>
+
+        <span class="n">avg_ret_per_env</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="sa">f</span><span class="s2">&quot;Average Total Return in </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">scores</span> <span class="ow">in</span> <span class="n">returns_by_env_name</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
+        <span class="n">bottom_quintile_ret_per_env</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="sa">f</span><span class="s2">&quot;Bottom Quintile Total Return in </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">scores</span> <span class="ow">in</span> <span class="n">returns_by_env_name</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
+        <span class="n">avg_special_per_env</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="sa">f</span><span class="s2">&quot;Average </span><span class="si">{</span><span class="n">special_key</span><span class="si">}</span><span class="s2"> in </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">special_vals</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">specials_dict</span> <span class="ow">in</span> <span class="n">specials_by_env_name</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">special_key</span><span class="p">,</span> <span class="n">special_vals</span> <span class="ow">in</span> <span class="n">specials_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
+        <span class="n">avg_return_overall</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;Average Total Return (Across All Env Names)&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="nb">list</span><span class="p">(</span><span class="n">avg_ret_per_env</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">avg_ret_per_env</span>
+            <span class="o">|</span> <span class="n">avg_return_overall</span>
+            <span class="o">|</span> <span class="n">avg_special_per_env</span>
+            <span class="o">|</span> <span class="n">bottom_quintile_ret_per_env</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Experiment.edit_actor_mask">
+<a class="viewcode-back" href="../../api/amago.experiment.html#amago.experiment.Experiment.edit_actor_mask">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">edit_actor_mask</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="n">Batch</span><span class="p">,</span> <span class="n">actor_loss</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">,</span> <span class="n">pad_mask</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">BoolTensor</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">BoolTensor</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Customize the actor loss mask.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            batch: The batch of data.</span>
+<span class="sd">            actor_loss: The unmasked actor loss. Shape: (Batch, Length, Num Gammas, 1)</span>
+<span class="sd">            pad_mask: The default mask. True where the sequence was not padded out of the</span>
+<span class="sd">                dataloader.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The mask. True where the actor loss should count, False where it should be ignored.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">pad_mask</span></div>
+
+
+<div class="viewcode-block" id="Experiment.edit_critic_mask">
+<a class="viewcode-back" href="../../api/amago.experiment.html#amago.experiment.Experiment.edit_critic_mask">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">edit_critic_mask</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="n">Batch</span><span class="p">,</span> <span class="n">critic_loss</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">,</span> <span class="n">pad_mask</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">BoolTensor</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">BoolTensor</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Customize the critic loss mask.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            batch: The batch of data.</span>
+<span class="sd">            critic_loss: The unmasked critic loss. Shape: (Batch, Length, Num Critics, Num</span>
+<span class="sd">                Gammas, 1)</span>
+<span class="sd">            pad_mask: The default mask. True where the sequence was not padded out of the</span>
+<span class="sd">                dataloader.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The mask. True where the critic loss should count, False where it should be ignored.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">pad_mask</span></div>
+
+
+<div class="viewcode-block" id="Experiment.compute_loss">
+<a class="viewcode-back" href="../../api/amago.experiment.html#amago.experiment.Experiment.compute_loss">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="n">Batch</span><span class="p">,</span> <span class="n">log_step</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Core computation of the actor and critic RL loss terms from a `Batch` of data.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            batch: The batch of data.</span>
+<span class="sd">            log_step: Whether to compute extra metrics for wandb logging.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict: loss terms and any logging metrics. &quot;Actor Loss&quot;, &quot;Critic Loss&quot;, &quot;Sequence</span>
+<span class="sd">                Length&quot;, &quot;Batch Size (in Timesteps)&quot;, &quot;Unmasked Batch Size (in Timesteps)&quot; are</span>
+<span class="sd">                always provided. Additional keys are determined by what is logged in the</span>
+<span class="sd">                Agent.forward method.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Agent.forward handles most of the work</span>
+        <span class="n">critic_loss</span><span class="p">,</span> <span class="n">actor_loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">policy_aclr</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">log_step</span><span class="o">=</span><span class="n">log_step</span><span class="p">)</span>
+        <span class="n">update_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">policy</span><span class="o">.</span><span class="n">update_info</span>
+        <span class="n">B</span><span class="p">,</span> <span class="n">L_1</span><span class="p">,</span> <span class="n">G</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">actor_loss</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">C</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">policy</span><span class="o">.</span><span class="n">critics</span><span class="p">)</span>
+
+        <span class="c1"># mask sequence losses</span>
+        <span class="n">state_mask</span> <span class="o">=</span> <span class="p">(</span><span class="o">~</span><span class="p">((</span><span class="n">batch</span><span class="o">.</span><span class="n">rl2s</span> <span class="o">==</span> <span class="n">MAGIC_PAD_VAL</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)))</span><span class="o">.</span><span class="n">bool</span><span class="p">()</span>
+        <span class="n">critic_state_mask</span> <span class="o">=</span> <span class="n">repeat</span><span class="p">(</span><span class="n">state_mask</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:,</span> <span class="o">...</span><span class="p">],</span> <span class="sa">f</span><span class="s2">&quot;B L 1 -&gt; B L </span><span class="si">{</span><span class="n">C</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">G</span><span class="si">}</span><span class="s2"> 1&quot;</span><span class="p">)</span>
+        <span class="n">actor_state_mask</span> <span class="o">=</span> <span class="n">repeat</span><span class="p">(</span><span class="n">state_mask</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:,</span> <span class="o">...</span><span class="p">],</span> <span class="sa">f</span><span class="s2">&quot;B L 1 -&gt; B L </span><span class="si">{</span><span class="n">G</span><span class="si">}</span><span class="s2"> 1&quot;</span><span class="p">)</span>
+        <span class="c1"># hook to allow custom masks</span>
+        <span class="n">actor_state_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">edit_actor_mask</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">actor_loss</span><span class="p">,</span> <span class="n">actor_state_mask</span><span class="p">)</span>
+        <span class="n">critic_state_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">edit_critic_mask</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">critic_loss</span><span class="p">,</span> <span class="n">critic_state_mask</span><span class="p">)</span>
+        <span class="n">batch_size</span> <span class="o">=</span> <span class="n">B</span> <span class="o">*</span> <span class="n">L_1</span>
+        <span class="n">unmasked_batch_size</span> <span class="o">=</span> <span class="n">actor_state_mask</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+        <span class="n">masked_actor_loss</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">masked_avg</span><span class="p">(</span><span class="n">actor_loss</span><span class="p">,</span> <span class="n">actor_state_mask</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">critic_loss</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+            <span class="n">masked_critic_loss</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">masked_avg</span><span class="p">(</span><span class="n">critic_loss</span><span class="p">,</span> <span class="n">critic_state_mask</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">critic_loss</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="n">masked_critic_loss</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+        <span class="c1"># all of this is logged</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;Critic Loss&quot;</span><span class="p">:</span> <span class="n">masked_critic_loss</span><span class="p">,</span>
+            <span class="s2">&quot;Actor Loss&quot;</span><span class="p">:</span> <span class="n">masked_actor_loss</span><span class="p">,</span>
+            <span class="s2">&quot;Sequence Length&quot;</span><span class="p">:</span> <span class="n">L_1</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="s2">&quot;Batch Size (in Timesteps)&quot;</span><span class="p">:</span> <span class="n">batch_size</span><span class="p">,</span>
+            <span class="s2">&quot;Unmasked Batch Size (in Timesteps)&quot;</span><span class="p">:</span> <span class="n">unmasked_batch_size</span><span class="p">,</span>
+        <span class="p">}</span> <span class="o">|</span> <span class="n">update_info</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_grad_norms</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get gradient norms for logging.&quot;&quot;&quot;</span>
+        <span class="n">ggn</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_grad_norm</span>
+        <span class="n">pi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">policy</span>
+        <span class="n">grads</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;Actor Grad Norm&quot;</span><span class="p">:</span> <span class="n">ggn</span><span class="p">(</span><span class="n">pi</span><span class="o">.</span><span class="n">actor</span><span class="p">),</span>
+            <span class="s2">&quot;Critic Grad Norm&quot;</span><span class="p">:</span> <span class="n">ggn</span><span class="p">(</span><span class="n">pi</span><span class="o">.</span><span class="n">critics</span><span class="p">),</span>
+            <span class="s2">&quot;TrajEncoder Grad Norm&quot;</span><span class="p">:</span> <span class="n">ggn</span><span class="p">(</span><span class="n">pi</span><span class="o">.</span><span class="n">traj_encoder</span><span class="p">),</span>
+            <span class="s2">&quot;TstepEncoder Grad Norm&quot;</span><span class="p">:</span> <span class="n">ggn</span><span class="p">(</span><span class="n">pi</span><span class="o">.</span><span class="n">tstep_encoder</span><span class="p">),</span>
+        <span class="p">}</span>
+        <span class="k">return</span> <span class="n">grads</span>
+
+<div class="viewcode-block" id="Experiment.train_step">
+<a class="viewcode-back" href="../../api/amago.experiment.html#amago.experiment.Experiment.train_step">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">train_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="n">Batch</span><span class="p">,</span> <span class="n">log_step</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Take a single training step on a `batch` of data.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            batch: The batch of data.</span>
+<span class="sd">            log_step: Whether to compute extra metrics for wandb logging.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            dict: metrics from the compute_loss method.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">accelerator</span><span class="o">.</span><span class="n">accumulate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">policy_aclr</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+            <span class="n">l</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_loss</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">log_step</span><span class="o">=</span><span class="n">log_step</span><span class="p">)</span>
+            <span class="n">loss</span> <span class="o">=</span> <span class="n">l</span><span class="p">[</span><span class="s2">&quot;Actor Loss&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">critic_loss_weight</span> <span class="o">*</span> <span class="n">l</span><span class="p">[</span><span class="s2">&quot;Critic Loss&quot;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">accelerator</span><span class="o">.</span><span class="n">backward</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">accelerator</span><span class="o">.</span><span class="n">sync_gradients</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">accelerator</span><span class="o">.</span><span class="n">clip_grad_norm_</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">policy_aclr</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">grad_clip</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">policy</span><span class="o">.</span><span class="n">soft_sync_targets</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">grad_update_counter</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="n">log_step</span><span class="p">:</span>
+                    <span class="n">l</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                        <span class="p">{</span><span class="s2">&quot;Learning Rate&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">lr_schedule</span><span class="o">.</span><span class="n">get_last_lr</span><span class="p">()[</span><span class="mi">0</span><span class="p">]}</span>
+                        <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_grad_norms</span><span class="p">()</span>
+                    <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lr_schedule</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">l</span></div>
+
+
+<div class="viewcode-block" id="Experiment.caster">
+<a class="viewcode-back" href="../../api/amago.experiment.html#amago.experiment.Experiment.caster">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">caster</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the context manager for mixed precision training.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mixed_precision</span> <span class="o">!=</span> <span class="s2">&quot;no&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">autocast</span><span class="p">(</span><span class="n">device_type</span><span class="o">=</span><span class="s2">&quot;cuda&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">contextlib</span><span class="o">.</span><span class="n">suppress</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="Experiment.learn">
+<a class="viewcode-back" href="../../api/amago.experiment.html#amago.experiment.Experiment.learn">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">learn</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Main training loop for the experiment.</span>
+
+<span class="sd">        For every epoch, we:</span>
+<span class="sd">            1. Load the latest policy checkpoint if `always_load_latest` is True.</span>
+<span class="sd">            2. Evaluate the policy on the validation set if `val_interval` is not None and the</span>
+<span class="sd">                current epoch is divisible by `val_interval`.</span>
+<span class="sd">            3. Collect new training data if `train_timesteps_per_epoch` is not None and the</span>
+<span class="sd">                current epoch &gt;= to `start_collecting_at_epoch`.</span>
+<span class="sd">            4. Train the policy on the training data for `train_batches_per_epoch` batches if</span>
+<span class="sd">                `self.dataset.ready_for_training` is True.</span>
+<span class="sd">            5. Save the policy checkpoint if `ckpt_interval` is not None and the current epoch</span>
+<span class="sd">                is divisible by `ckpt_interval`.</span>
+<span class="sd">            6. Write the latest policy checkpoint if `always_save_latest` is True.</span>
+
+<span class="sd">        Experiment be configured so that processes do some or all of the above. For example, an</span>
+<span class="sd">        actor process might only do steps 1, 2, and 3, while a learner process might only do</span>
+<span class="sd">        steps 4, 5, and 6.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">make_pbar</span><span class="p">(</span><span class="n">loader</span><span class="p">,</span> <span class="n">epoch_num</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">tqdm</span><span class="p">(</span>
+                    <span class="nb">enumerate</span><span class="p">(</span><span class="n">loader</span><span class="p">),</span>
+                    <span class="n">desc</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">run_name</span><span class="si">}</span><span class="s2"> Epoch </span><span class="si">{</span><span class="n">epoch_num</span><span class="si">}</span><span class="s2"> Train&quot;</span><span class="p">,</span>
+                    <span class="n">total</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">train_batches_per_epoch</span><span class="p">,</span>
+                    <span class="n">colour</span><span class="o">=</span><span class="s2">&quot;green&quot;</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">loader</span><span class="p">)</span>
+
+        <span class="n">start_epoch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">epoch</span>
+        <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">start_epoch</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">epochs</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">always_load_latest</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">read_latest_policy</span><span class="p">()</span>
+
+            <span class="c1"># environment interaction</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">policy_aclr</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">val_interval</span>
+                <span class="ow">and</span> <span class="n">epoch</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">val_interval</span> <span class="o">==</span> <span class="mi">0</span>
+                <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">val_timesteps_per_epoch</span> <span class="o">&gt;</span> <span class="mi">0</span>
+            <span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">evaluate_val</span><span class="p">()</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">epoch</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_collecting_at_epoch</span>
+                <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_timesteps_per_epoch</span> <span class="o">&gt;</span> <span class="mi">0</span>
+            <span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">collect_new_training_data</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">accelerator</span><span class="o">.</span><span class="n">wait_for_everyone</span><span class="p">()</span>
+
+            <span class="n">dset_log</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">on_end_of_collection</span><span class="p">(</span><span class="n">experiment</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">dset_log</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;dataset&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">init_dloaders</span><span class="p">()</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">ready_for_training</span><span class="p">:</span>
+                <span class="n">utils</span><span class="o">.</span><span class="n">amago_warning</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Skipping training on epoch </span><span class="si">{</span><span class="n">epoch</span><span class="si">}</span><span class="s2"> because `dataset.ready_for_training` is False&quot;</span>
+                <span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="c1"># training</span>
+            <span class="k">elif</span> <span class="n">epoch</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_learning_at_epoch</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_batches_per_epoch</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">policy_aclr</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">train_step</span><span class="p">,</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">make_pbar</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">train_dloader</span><span class="p">,</span> <span class="n">epoch</span><span class="p">):</span>
+                    <span class="n">total_step</span> <span class="o">=</span> <span class="p">(</span><span class="n">epoch</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_batches_per_epoch</span><span class="p">)</span> <span class="o">+</span> <span class="n">train_step</span>
+                    <span class="n">log_step</span> <span class="o">=</span> <span class="n">total_step</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_interval</span> <span class="o">==</span> <span class="mi">0</span>
+                    <span class="n">loss_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_step</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">log_step</span><span class="o">=</span><span class="n">log_step</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">log_step</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">loss_dict</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;train-update&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">accelerator</span><span class="o">.</span><span class="n">wait_for_everyone</span><span class="p">()</span>
+            <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_dloader</span>
+
+            <span class="c1"># end epoch</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">epoch</span> <span class="o">=</span> <span class="n">epoch</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ckpt_interval</span> <span class="ow">and</span> <span class="n">epoch</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">ckpt_interval</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">save_checkpoint</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">always_save_latest</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">write_latest_policy</span><span class="p">()</span></div>
+</div>
+
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By UT Austin Robot Perception and Learning Lab
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

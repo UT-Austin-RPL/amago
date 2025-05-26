@@ -1,0 +1,936 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="light">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>amago.hindsight &#8212; AMAGO</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "light";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/amago.hindsight';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="amago.loading" href="amago.loading.html" />
+    <link rel="prev" title="amago.experiment" href="amago.experiment.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="light">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+    
+    <img src="../_static/amago_logo_3.png" class="logo__image only-light" alt="AMAGO - Home"/>
+    <script>document.write(`<img src="../_static/amago_logo_3.png" class="logo__image only-dark" alt="AMAGO - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../tutorial/index.html">Tutorial</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/setup_env.html">Setup the Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/create_dataset.html">Create a Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/create_experiment.html">Create an Experiment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/track_results.html">Track the Results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/configuration.html">Configure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/customization.html">Customize</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/async.html">Multi-GPU and Asynchronous Training</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../examples/index.html">Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../examples/00_meta_frozen_lake.html">Meta Frozen Lake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/01_basic_gym.html">Basic Gymnasium</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/02_gymnax.html">Gymnax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/03_popgym_suite.html">POPGym</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/04_tmaze.html">T-Maze</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/05_dark_key_door.html">Dark Room Key Door</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/06_alchemy.html">Symbolic DM Alchemy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/07_metaworld.html">Meta-World ML1/ML10/ML45</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/08_ale.html">Multi-Game Atari</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/09_multitask_procgen.html">Multi-Game ProcGen</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/10_babyai.html">Multi-Task BabyAI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/11_xland_minigrid.html">XLand Mini-Grid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/12_half_cheetah_vel.html">HalfCheetah(v4)-Velocity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/13_mazerunner_relabeling.html">MazeRunner HER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/14_d4rl.html">D4RL</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="amago.html">API Reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="amago.agent.html">amago.agent</a></li>
+<li class="toctree-l2"><a class="reference internal" href="amago.cli_utils.html">amago.cli_utils</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="amago.envs.html">amago.envs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="amago.envs.amago_env.html">amago.envs.amago_env</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="amago.envs.builtin.html">amago.envs.builtin</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="amago.envs.builtin.half_cheetah_v4_vel.html">amago.envs.builtin.half_cheetah_v4_vel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="amago.envs.builtin.metaworld_ml.html">amago.envs.builtin.metaworld_ml</a></li>
+<li class="toctree-l4"><a class="reference internal" href="amago.envs.builtin.popgym_envs.html">amago.envs.builtin.popgym_envs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="amago.envs.builtin.toy_gym.html">amago.envs.builtin.toy_gym</a></li>
+<li class="toctree-l4"><a class="reference internal" href="amago.envs.builtin.xland_minigrid.html">amago.envs.builtin.xland_minigrid</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.envs.env_utils.html">amago.envs.env_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.envs.exploration.html">amago.envs.exploration</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="amago.experiment.html">amago.experiment</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">amago.hindsight</a></li>
+<li class="toctree-l2"><a class="reference internal" href="amago.loading.html">amago.loading</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="amago.nets.html">amago.nets</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.actor_critic.html">amago.nets.actor_critic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.cnn.html">amago.nets.cnn</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.ff.html">amago.nets.ff</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.goal_embedders.html">amago.nets.goal_embedders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.policy_dists.html">amago.nets.policy_dists</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.traj_encoders.html">amago.nets.traj_encoders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.transformer.html">amago.nets.transformer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.tstep_encoders.html">amago.nets.tstep_encoders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.utils.html">amago.nets.utils</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="amago.utils.html">amago.utils</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../citation.html">Citation</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/api/amago.hindsight.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>amago.hindsight</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.FrozenTraj"><code class="docutils literal notranslate"><span class="pre">FrozenTraj</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.FrozenTraj.actions"><code class="docutils literal notranslate"><span class="pre">FrozenTraj.actions</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.FrozenTraj.dones"><code class="docutils literal notranslate"><span class="pre">FrozenTraj.dones</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.FrozenTraj.from_dict"><code class="docutils literal notranslate"><span class="pre">FrozenTraj.from_dict()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.FrozenTraj.obs"><code class="docutils literal notranslate"><span class="pre">FrozenTraj.obs</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.FrozenTraj.rews"><code class="docutils literal notranslate"><span class="pre">FrozenTraj.rews</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.FrozenTraj.rl2s"><code class="docutils literal notranslate"><span class="pre">FrozenTraj.rl2s</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.FrozenTraj.time_idxs"><code class="docutils literal notranslate"><span class="pre">FrozenTraj.time_idxs</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.FrozenTraj.to_dict"><code class="docutils literal notranslate"><span class="pre">FrozenTraj.to_dict()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.NoOpRelabeler"><code class="docutils literal notranslate"><span class="pre">NoOpRelabeler</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.NoOpRelabeler.relabel"><code class="docutils literal notranslate"><span class="pre">NoOpRelabeler.relabel()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.Relabeler"><code class="docutils literal notranslate"><span class="pre">Relabeler</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.Relabeler.relabel"><code class="docutils literal notranslate"><span class="pre">Relabeler.relabel()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.Timestep"><code class="docutils literal notranslate"><span class="pre">Timestep</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.Timestep.as_input"><code class="docutils literal notranslate"><span class="pre">Timestep.as_input()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.Timestep.batched_envs"><code class="docutils literal notranslate"><span class="pre">Timestep.batched_envs</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.Timestep.create_reset_version"><code class="docutils literal notranslate"><span class="pre">Timestep.create_reset_version()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.Timestep.obs"><code class="docutils literal notranslate"><span class="pre">Timestep.obs</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.Timestep.prev_action"><code class="docutils literal notranslate"><span class="pre">Timestep.prev_action</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.Timestep.reward"><code class="docutils literal notranslate"><span class="pre">Timestep.reward</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.Timestep.terminal"><code class="docutils literal notranslate"><span class="pre">Timestep.terminal</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.Timestep.time_idx"><code class="docutils literal notranslate"><span class="pre">Timestep.time_idx</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.Trajectory"><code class="docutils literal notranslate"><span class="pre">Trajectory</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.Trajectory.add_timestep"><code class="docutils literal notranslate"><span class="pre">Trajectory.add_timestep()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.Trajectory.as_input_sequence"><code class="docutils literal notranslate"><span class="pre">Trajectory.as_input_sequence()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.Trajectory.freeze"><code class="docutils literal notranslate"><span class="pre">Trajectory.freeze()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.Trajectory.save_to_disk"><code class="docutils literal notranslate"><span class="pre">Trajectory.save_to_disk()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.Trajectory.total_return"><code class="docutils literal notranslate"><span class="pre">Trajectory.total_return</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.split_batched_timestep"><code class="docutils literal notranslate"><span class="pre">split_batched_timestep()</span></code></a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-amago.hindsight">
+<span id="amago-hindsight"></span><h1>amago.hindsight<a class="headerlink" href="#module-amago.hindsight" title="Link to this heading">#</a></h1>
+<p>Trajectory datastructures</p>
+<p class="rubric">Functions</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amago.hindsight.split_batched_timestep" title="amago.hindsight.split_batched_timestep"><code class="xref py py-obj docutils literal notranslate"><span class="pre">split_batched_timestep</span></code></a>(t)</p></td>
+<td><p>Split a batched timestep into a list of unbatched timesteps.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Classes</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amago.hindsight.FrozenTraj" title="amago.hindsight.FrozenTraj"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FrozenTraj</span></code></a>(obs, rl2s, time_idxs, rews, ...)</p></td>
+<td><p>A finished trajectory that is ready to be used as training data.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amago.hindsight.NoOpRelabeler" title="amago.hindsight.NoOpRelabeler"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NoOpRelabeler</span></code></a>()</p></td>
+<td><p>A no-op relabeler that returns the input trajectory unchanged.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amago.hindsight.Relabeler" title="amago.hindsight.Relabeler"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Relabeler</span></code></a>()</p></td>
+<td><p>A hook for modifying trajectory data during training.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amago.hindsight.Timestep" title="amago.hindsight.Timestep"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Timestep</span></code></a>(obs, prev_action, reward, time_idx, ...)</p></td>
+<td><p>Stores a single timestep of rollout data.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amago.hindsight.Trajectory" title="amago.hindsight.Trajectory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Trajectory</span></code></a>([timesteps])</p></td>
+<td><p>A sequence of timesteps.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="amago.hindsight.FrozenTraj">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">FrozenTraj</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rl2s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_idxs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rews</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dones</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">actions</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/hindsight.html#FrozenTraj"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.hindsight.FrozenTraj" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A finished trajectory that is ready to be used as training data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obs</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>]</span>) – Dictionary of observations with shape (Batch, Length, dim_value)</p></li>
+<li><p><strong>rl2s</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></span>) – Tensor of meta-RL inputs (prev action, reward) with shape (Batch, Length, 1 + D_action)</p></li>
+<li><p><strong>time_idxs</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></span>) – Tensor of time indices with shape (Batch, Length, 1)</p></li>
+<li><p><strong>rews</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></span>) – Tensor of rewards with shape (Batch, Length, 1)</p></li>
+<li><p><strong>dones</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></span>) – Tensor of terminal signals with shape (Batch, Length, 1)</p></li>
+<li><p><strong>actions</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></span>) – Tensor of actions with shape (Batch, Length, D_action)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.hindsight.FrozenTraj.actions">
+<span class="sig-name descname"><span class="pre">actions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></em><a class="headerlink" href="#amago.hindsight.FrozenTraj.actions" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.hindsight.FrozenTraj.dones">
+<span class="sig-name descname"><span class="pre">dones</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></em><a class="headerlink" href="#amago.hindsight.FrozenTraj.dones" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.hindsight.FrozenTraj.from_dict">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/hindsight.html#FrozenTraj.from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.hindsight.FrozenTraj.from_dict" title="Link to this definition">#</a></dt>
+<dd><p>Fold flattened observation dictionary back to original keys.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>d</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>]</span>) – Flat dictionary with observation data prefixed with _OBS_KEY_.
+Typically output of FrozenTraj.to_dict.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Object with original observation keys restored.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#amago.hindsight.FrozenTraj" title="amago.hindsight.FrozenTraj">FrozenTraj</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.hindsight.FrozenTraj.obs">
+<span class="sig-name descname"><span class="pre">obs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">,</span> <code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code><span class="pre">]</span></em><a class="headerlink" href="#amago.hindsight.FrozenTraj.obs" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.hindsight.FrozenTraj.rews">
+<span class="sig-name descname"><span class="pre">rews</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></em><a class="headerlink" href="#amago.hindsight.FrozenTraj.rews" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.hindsight.FrozenTraj.rl2s">
+<span class="sig-name descname"><span class="pre">rl2s</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></em><a class="headerlink" href="#amago.hindsight.FrozenTraj.rl2s" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.hindsight.FrozenTraj.time_idxs">
+<span class="sig-name descname"><span class="pre">time_idxs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></em><a class="headerlink" href="#amago.hindsight.FrozenTraj.time_idxs" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.hindsight.FrozenTraj.to_dict">
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/hindsight.html#FrozenTraj.to_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.hindsight.FrozenTraj.to_dict" title="Link to this definition">#</a></dt>
+<dd><p>Get all trajectory data as an easily serializable dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><dl class="simple">
+<dt>Flat dictionary with observation data prefixed with _OBS_KEY_ for</dt><dd><p>format restoration.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="amago.hindsight.NoOpRelabeler">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">NoOpRelabeler</span></span><a class="reference internal" href="../_modules/amago/hindsight.html#NoOpRelabeler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.hindsight.NoOpRelabeler" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#amago.hindsight.Relabeler" title="amago.hindsight.Relabeler"><code class="xref py py-class docutils literal notranslate"><span class="pre">Relabeler</span></code></a></p>
+<p>A no-op relabeler that returns the input trajectory unchanged.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.hindsight.NoOpRelabeler.relabel">
+<span class="sig-name descname"><span class="pre">relabel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">traj</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/hindsight.html#NoOpRelabeler.relabel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.hindsight.NoOpRelabeler.relabel" title="Link to this definition">#</a></dt>
+<dd><p>Relabel a trajectory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>traj</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#amago.hindsight.Trajectory" title="amago.hindsight.Trajectory"><code class="xref py py-class docutils literal notranslate"><span class="pre">Trajectory</span></code></a> | <a class="reference internal" href="#amago.hindsight.FrozenTraj" title="amago.hindsight.FrozenTraj"><code class="xref py py-class docutils literal notranslate"><span class="pre">FrozenTraj</span></code></a></span>) – Trajectory or FrozenTraj object to relabel. Can be modified in place.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>New FrozenTraj object with relabeled data.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#amago.hindsight.FrozenTraj" title="amago.hindsight.FrozenTraj">FrozenTraj</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="amago.hindsight.Relabeler">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Relabeler</span></span><a class="reference internal" href="../_modules/amago/hindsight.html#Relabeler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.hindsight.Relabeler" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>A hook for modifying trajectory data during training.</p>
+<p>In the default <a class="reference internal" href="amago.loading.html#amago.loading.DiskTrajDataset" title="amago.loading.DiskTrajDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">DiskTrajDataset</span></code></a>, Relabeler has the chance to edit input trajectories
+before they are passed to an agent for training. Enables Hindsight Experience Replay
+(HER) and variants. See examples/13_mazerunner_relabeling.py for an implementation.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.hindsight.Relabeler.relabel">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">relabel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">traj</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/hindsight.html#Relabeler.relabel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.hindsight.Relabeler.relabel" title="Link to this definition">#</a></dt>
+<dd><p>Relabel a trajectory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>traj</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#amago.hindsight.Trajectory" title="amago.hindsight.Trajectory"><code class="xref py py-class docutils literal notranslate"><span class="pre">Trajectory</span></code></a> | <a class="reference internal" href="#amago.hindsight.FrozenTraj" title="amago.hindsight.FrozenTraj"><code class="xref py py-class docutils literal notranslate"><span class="pre">FrozenTraj</span></code></a></span>) – Trajectory or FrozenTraj object to relabel. Can be modified in place.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>New FrozenTraj object with relabeled data.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#amago.hindsight.FrozenTraj" title="amago.hindsight.FrozenTraj">FrozenTraj</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="amago.hindsight.Timestep">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Timestep</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prev_action</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reward</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">terminal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batched_envs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/hindsight.html#Timestep"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.hindsight.Timestep" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Stores a single timestep of rollout data.</p>
+<p>Time-aligned to the input format of the policy. Agents learn from sequences of timesteps.
+Each timestep contains the current observation and time_idx as well as everything that
+has happened since the last observation was revealed (previous action, reward, terminal).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obs</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code>]</span>) – Dictionary of current observation keys and values.</p></li>
+<li><p><strong>prev_action</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></span>) – The <em>previous</em> action taken by the agent.</p></li>
+<li><p><strong>reward</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></span>) – The reward received by the agent after it took prev_action.</p></li>
+<li><p><strong>time_idx</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></span>) – The integer index of the current timestep.</p></li>
+<li><p><strong>terminal</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></span>) – The terminal signal of the environment. True if this is the final observation.</p></li>
+<li><p><strong>batched_envs</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – The number of environments in the batch. Used to disambiguate batch dimension.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.hindsight.Timestep.as_input">
+<span class="sig-name descname"><span class="pre">as_input</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/hindsight.html#Timestep.as_input"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.hindsight.Timestep.as_input" title="Link to this definition">#</a></dt>
+<dd><p>Outputs Timestep data in the input format of the Agent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><dl class="simple">
+<dt>A tuple containing:</dt><dd><ul class="simple">
+<li><p>obs: Dictionary of observations with shape (batched_envs, dim_value)</p></li>
+<li><p>rl2s: Tensor of meta-RL inputs (prev action, reward) with shape
+(batched_envs, 1 + D_action)</p></li>
+<li><p>time_idx: Tensor of time indices with shape (batched_envs, 1)</p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.hindsight.Timestep.batched_envs">
+<span class="sig-name descname"><span class="pre">batched_envs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></em><a class="headerlink" href="#amago.hindsight.Timestep.batched_envs" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.hindsight.Timestep.create_reset_version">
+<span class="sig-name descname"><span class="pre">create_reset_version</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reset_idxs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/hindsight.html#Timestep.create_reset_version"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.hindsight.Timestep.create_reset_version" title="Link to this definition">#</a></dt>
+<dd><p>Manually assign indices of a batched timestep to be first in a new trajectory.</p>
+<p>Creates a new Timestep object with rewards, time_idxs, and terminal signals reset as if
+the environment was reset at the given reset_indices. Used for handling auto-resets in
+vectorized environments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>reset_idxs</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></span>) – Tensor of indices of parallel environments being reset.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>New Timestep object with reset values for specified environments.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#amago.hindsight.Timestep" title="amago.hindsight.Timestep">Timestep</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.hindsight.Timestep.obs">
+<span class="sig-name descname"><span class="pre">obs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">,</span> <code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code><span class="pre">]</span></em><a class="headerlink" href="#amago.hindsight.Timestep.obs" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.hindsight.Timestep.prev_action">
+<span class="sig-name descname"><span class="pre">prev_action</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></em><a class="headerlink" href="#amago.hindsight.Timestep.prev_action" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.hindsight.Timestep.reward">
+<span class="sig-name descname"><span class="pre">reward</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></em><a class="headerlink" href="#amago.hindsight.Timestep.reward" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.hindsight.Timestep.terminal">
+<span class="sig-name descname"><span class="pre">terminal</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></em><a class="headerlink" href="#amago.hindsight.Timestep.terminal" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.hindsight.Timestep.time_idx">
+<span class="sig-name descname"><span class="pre">time_idx</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></em><a class="headerlink" href="#amago.hindsight.Timestep.time_idx" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="amago.hindsight.Trajectory">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Trajectory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timesteps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">typing.Optional[typing.Iterable[amago.hindsight.Timestep]]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/hindsight.html#Trajectory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.hindsight.Trajectory" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A sequence of timesteps.</p>
+<p>Stores a rollout and handles disk saves when using the default <a class="reference internal" href="amago.loading.html#amago.loading.RLDataset" title="amago.loading.RLDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">RLDataset</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>timesteps</strong> – Iterable of <a class="reference internal" href="#amago.hindsight.Timestep" title="amago.hindsight.Timestep"><code class="xref py py-class docutils literal notranslate"><span class="pre">Timestep</span></code></a> objects.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.hindsight.Trajectory.add_timestep">
+<span class="sig-name descname"><span class="pre">add_timestep</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestep</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/hindsight.html#Trajectory.add_timestep"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.hindsight.Trajectory.add_timestep" title="Link to this definition">#</a></dt>
+<dd><p>Add a timestep to the trajectory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>timestep</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#amago.hindsight.Timestep" title="amago.hindsight.Timestep"><code class="xref py py-class docutils literal notranslate"><span class="pre">Timestep</span></code></a></span>) – Timestep object to add.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.hindsight.Trajectory.as_input_sequence">
+<span class="sig-name descname"><span class="pre">as_input_sequence</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/hindsight.html#Trajectory.as_input_sequence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.hindsight.Trajectory.as_input_sequence" title="Link to this definition">#</a></dt>
+<dd><p>Returns a sequence of observations, rl2s, and time_idxs.</p>
+<p>Uses the trajectory data to gather the standard input sequences for the Agent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><dl class="simple">
+<dt>A tuple containing:</dt><dd><ul class="simple">
+<li><p>obs: Dictionary of observations with shape (Batch, Length, dim_value)</p></li>
+<li><p>rl2s: Tensor of meta-RL inputs with shape (Batch, Length, 1 + D_action)</p></li>
+<li><p>time: Tensor of time indices with shape (Batch, Length, 1)</p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.hindsight.Trajectory.freeze">
+<span class="sig-name descname"><span class="pre">freeze</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/hindsight.html#Trajectory.freeze"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.hindsight.Trajectory.freeze" title="Link to this definition">#</a></dt>
+<dd><p>Freeze the trajectory and return a <a class="reference internal" href="#amago.hindsight.FrozenTraj" title="amago.hindsight.FrozenTraj"><code class="xref py py-class docutils literal notranslate"><span class="pre">FrozenTraj</span></code></a> object.</p>
+<p><a class="reference internal" href="#amago.hindsight.FrozenTraj" title="amago.hindsight.FrozenTraj"><code class="xref py py-class docutils literal notranslate"><span class="pre">FrozenTraj</span></code></a> saves time by precomputing input sequences for the Agent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Frozen trajectory object with precomputed sequences.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#amago.hindsight.FrozenTraj" title="amago.hindsight.FrozenTraj">FrozenTraj</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.hindsight.Trajectory.save_to_disk">
+<span class="sig-name descname"><span class="pre">save_to_disk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_as</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/hindsight.html#Trajectory.save_to_disk"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.hindsight.Trajectory.save_to_disk" title="Link to this definition">#</a></dt>
+<dd><p>Save the trajectory to disk.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Path to save the trajectory to.</p></li>
+<li><p><strong>save_as</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Format to save the trajectory in:
+- ‘trajectory’: Pickle file storing entire object (now rarely used)
+- ‘npz’: Standard numpy .npz file format
+- ‘npz-compressed’: Compressed numpy .npz file format</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="amago.hindsight.Trajectory.total_return">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">total_return</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#amago.hindsight.Trajectory.total_return" title="Link to this definition">#</a></dt>
+<dd><p>Calculate the total return of this trajectory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Sum of all rewards in the trajectory.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amago.hindsight.split_batched_timestep">
+<span class="sig-name descname"><span class="pre">split_batched_timestep</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/hindsight.html#split_batched_timestep"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.hindsight.split_batched_timestep" title="Link to this definition">#</a></dt>
+<dd><p>Split a batched timestep into a list of unbatched timesteps.</p>
+<p>Used to break up vectorized environments into independent trajectories.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>t</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#amago.hindsight.Timestep" title="amago.hindsight.Timestep"><code class="xref py py-class docutils literal notranslate"><span class="pre">Timestep</span></code></a></span>) – Batched timestep to split. Batch dim is t.batched_envs.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="#amago.hindsight.Timestep" title="amago.hindsight.Timestep"><code class="xref py py-class docutils literal notranslate"><span class="pre">Timestep</span></code></a>]</span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of timesteps with length equal to the number of environments in the batch.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="amago.experiment.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">amago.experiment</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="amago.loading.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">amago.loading</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.FrozenTraj"><code class="docutils literal notranslate"><span class="pre">FrozenTraj</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.FrozenTraj.actions"><code class="docutils literal notranslate"><span class="pre">FrozenTraj.actions</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.FrozenTraj.dones"><code class="docutils literal notranslate"><span class="pre">FrozenTraj.dones</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.FrozenTraj.from_dict"><code class="docutils literal notranslate"><span class="pre">FrozenTraj.from_dict()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.FrozenTraj.obs"><code class="docutils literal notranslate"><span class="pre">FrozenTraj.obs</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.FrozenTraj.rews"><code class="docutils literal notranslate"><span class="pre">FrozenTraj.rews</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.FrozenTraj.rl2s"><code class="docutils literal notranslate"><span class="pre">FrozenTraj.rl2s</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.FrozenTraj.time_idxs"><code class="docutils literal notranslate"><span class="pre">FrozenTraj.time_idxs</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.FrozenTraj.to_dict"><code class="docutils literal notranslate"><span class="pre">FrozenTraj.to_dict()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.NoOpRelabeler"><code class="docutils literal notranslate"><span class="pre">NoOpRelabeler</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.NoOpRelabeler.relabel"><code class="docutils literal notranslate"><span class="pre">NoOpRelabeler.relabel()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.Relabeler"><code class="docutils literal notranslate"><span class="pre">Relabeler</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.Relabeler.relabel"><code class="docutils literal notranslate"><span class="pre">Relabeler.relabel()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.Timestep"><code class="docutils literal notranslate"><span class="pre">Timestep</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.Timestep.as_input"><code class="docutils literal notranslate"><span class="pre">Timestep.as_input()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.Timestep.batched_envs"><code class="docutils literal notranslate"><span class="pre">Timestep.batched_envs</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.Timestep.create_reset_version"><code class="docutils literal notranslate"><span class="pre">Timestep.create_reset_version()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.Timestep.obs"><code class="docutils literal notranslate"><span class="pre">Timestep.obs</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.Timestep.prev_action"><code class="docutils literal notranslate"><span class="pre">Timestep.prev_action</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.Timestep.reward"><code class="docutils literal notranslate"><span class="pre">Timestep.reward</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.Timestep.terminal"><code class="docutils literal notranslate"><span class="pre">Timestep.terminal</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.Timestep.time_idx"><code class="docutils literal notranslate"><span class="pre">Timestep.time_idx</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.Trajectory"><code class="docutils literal notranslate"><span class="pre">Trajectory</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.Trajectory.add_timestep"><code class="docutils literal notranslate"><span class="pre">Trajectory.add_timestep()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.Trajectory.as_input_sequence"><code class="docutils literal notranslate"><span class="pre">Trajectory.as_input_sequence()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.Trajectory.freeze"><code class="docutils literal notranslate"><span class="pre">Trajectory.freeze()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.Trajectory.save_to_disk"><code class="docutils literal notranslate"><span class="pre">Trajectory.save_to_disk()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.Trajectory.total_return"><code class="docutils literal notranslate"><span class="pre">Trajectory.total_return</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.hindsight.split_batched_timestep"><code class="docutils literal notranslate"><span class="pre">split_batched_timestep()</span></code></a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By UT Austin Robot Perception and Learning Lab
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

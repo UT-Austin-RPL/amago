@@ -1,0 +1,1183 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../" data-theme="light">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>amago.nets.transformer &#8212; AMAGO</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "light";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/custom.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/custom.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/amago/nets/transformer';</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="light">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+  
+    
+    
+    
+    <img src="../../../_static/amago_logo_3.png" class="logo__image only-light" alt="AMAGO - Home"/>
+    <script>document.write(`<img src="../../../_static/amago_logo_3.png" class="logo__image only-dark" alt="AMAGO - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../tutorial/index.html">Tutorial</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial/setup_env.html">Setup the Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial/create_dataset.html">Create a Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial/create_experiment.html">Create an Experiment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial/track_results.html">Track the Results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial/configuration.html">Configure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial/customization.html">Customize</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../tutorial/async.html">Multi-GPU and Asynchronous Training</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../examples/index.html">Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/00_meta_frozen_lake.html">Meta Frozen Lake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/01_basic_gym.html">Basic Gymnasium</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/02_gymnax.html">Gymnax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/03_popgym_suite.html">POPGym</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/04_tmaze.html">T-Maze</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/05_dark_key_door.html">Dark Room Key Door</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/06_alchemy.html">Symbolic DM Alchemy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/07_metaworld.html">Meta-World ML1/ML10/ML45</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/08_ale.html">Multi-Game Atari</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/09_multitask_procgen.html">Multi-Game ProcGen</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/10_babyai.html">Multi-Task BabyAI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/11_xland_minigrid.html">XLand Mini-Grid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/12_half_cheetah_vel.html">HalfCheetah(v4)-Velocity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/13_mazerunner_relabeling.html">MazeRunner HER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/14_d4rl.html">D4RL</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../api/amago.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/amago.agent.html">amago.agent</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/amago.cli_utils.html">amago.cli_utils</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../api/amago.envs.html">amago.envs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/amago.envs.amago_env.html">amago.envs.amago_env</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../api/amago.envs.builtin.html">amago.envs.builtin</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/amago.envs.builtin.half_cheetah_v4_vel.html">amago.envs.builtin.half_cheetah_v4_vel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/amago.envs.builtin.metaworld_ml.html">amago.envs.builtin.metaworld_ml</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/amago.envs.builtin.popgym_envs.html">amago.envs.builtin.popgym_envs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/amago.envs.builtin.toy_gym.html">amago.envs.builtin.toy_gym</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/amago.envs.builtin.xland_minigrid.html">amago.envs.builtin.xland_minigrid</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/amago.envs.env_utils.html">amago.envs.env_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/amago.envs.exploration.html">amago.envs.exploration</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/amago.experiment.html">amago.experiment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/amago.hindsight.html">amago.hindsight</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/amago.loading.html">amago.loading</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../api/amago.nets.html">amago.nets</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/amago.nets.actor_critic.html">amago.nets.actor_critic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/amago.nets.cnn.html">amago.nets.cnn</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/amago.nets.ff.html">amago.nets.ff</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/amago.nets.goal_embedders.html">amago.nets.goal_embedders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/amago.nets.policy_dists.html">amago.nets.policy_dists</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/amago.nets.traj_encoders.html">amago.nets.traj_encoders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/amago.nets.transformer.html">amago.nets.transformer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/amago.nets.tstep_encoders.html">amago.nets.tstep_encoders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/amago.nets.utils.html">amago.nets.utils</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/amago.utils.html">amago.utils</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../citation.html">Citation</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for amago.nets.transformer</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Custom Transformer components.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">lru_cache</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Iterable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">nn</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn.functional</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">F</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">einops</span><span class="w"> </span><span class="kn">import</span> <span class="n">repeat</span><span class="p">,</span> <span class="n">rearrange</span><span class="p">,</span> <span class="n">einsum</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">gin</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">activation_switch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">amago.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">amago_warning</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">amago.nets.ff</span><span class="w"> </span><span class="kn">import</span> <span class="n">Normalization</span>
+
+<span class="c1"># Flex Attention</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">torch.nn.attention.flex_attention</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+        <span class="n">create_block_mask</span><span class="p">,</span>
+        <span class="n">flex_attention</span><span class="p">,</span>
+        <span class="n">and_masks</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">flex_attention</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="c1"># Flash Attention 2</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">flash_attn</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">flash_attn</span><span class="w"> </span><span class="kn">import</span> <span class="n">flash_attn_qkvpacked_func</span><span class="p">,</span> <span class="n">flash_attn_with_kvcache</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">amago_warning</span><span class="p">(</span><span class="s2">&quot;Missing FlashAttention (2.0) Install&quot;</span><span class="p">)</span>
+    <span class="n">flash_attn</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">torch</span><span class="o">.</span><span class="n">set_float32_matmul_precision</span><span class="p">(</span><span class="s2">&quot;high&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="SelfAttention">
+<a class="viewcode-back" href="../../../api/amago.nets.transformer.html#amago.nets.transformer.SelfAttention">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SelfAttention</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A base class for self-attention layers.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        causal: Whether to use a causal mask.</span>
+<span class="sd">        dropout: The dropout rate of the attention matrix.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">causal</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">dropout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">causal</span> <span class="o">=</span> <span class="n">causal</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dropout</span> <span class="o">=</span> <span class="n">dropout</span>
+
+<div class="viewcode-block" id="SelfAttention.forward">
+<a class="viewcode-back" href="../../../api/amago.nets.transformer.html#amago.nets.transformer.SelfAttention.forward">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">qkv</span><span class="p">,</span> <span class="n">key_cache</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">val_cache</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cache_seqlens</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Map queries keys and values to attention output.</span>
+
+<span class="sd">        Should implement full training pass when key_cache/val_cache/cache_seqlens are</span>
+<span class="sd">        None, and (cached) inference when provided.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            qkv: A tensor of shape (batch_size, sequence_length, 3, num_heads, head_dim).</span>
+<span class="sd">                Packed queries, keys, and values.</span>
+
+<span class="sd">        Keyword Args:</span>
+<span class="sd">            key_cache: A tensor of shape (batch_size, max_sequence_length, num_heads,</span>
+<span class="sd">                head_dim).</span>
+<span class="sd">            val_cache: A tensor of shape (batch_size, max_sequence_length, num_heads,</span>
+<span class="sd">                head_dim).</span>
+<span class="sd">            cache_seqlens: A tensor of shape (batch_size,) that defines the current index</span>
+<span class="sd">                of the k/v cache.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A tensor of shape (batch_size, sequence_length, num_heads, head_dim).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="VanillaAttention">
+<a class="viewcode-back" href="../../../api/amago.nets.transformer.html#amago.nets.transformer.VanillaAttention">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">VanillaAttention</span><span class="p">(</span><span class="n">SelfAttention</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Unoptimized self-attention in regular pytorch.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        causal: Whether to use a causal mask.</span>
+<span class="sd">        dropout: The dropout rate of the attention matrix.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">causal</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">dropout</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">causal</span><span class="o">=</span><span class="n">causal</span><span class="p">,</span> <span class="n">dropout</span><span class="o">=</span><span class="n">dropout</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dropout</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dropout</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mask</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@torch</span><span class="o">.</span><span class="n">compile</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_inference_with_cache</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">qkv</span><span class="p">,</span> <span class="n">key_cache</span><span class="p">,</span> <span class="n">val_cache</span><span class="p">,</span> <span class="n">cache_seqlens</span><span class="p">):</span>
+        <span class="c1"># fmt: off</span>
+        <span class="n">queries</span><span class="p">,</span> <span class="n">keys</span><span class="p">,</span> <span class="n">values</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">unbind</span><span class="p">(</span><span class="n">qkv</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">B</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">E</span> <span class="o">=</span> <span class="n">queries</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">assert</span> <span class="n">L</span> <span class="o">==</span> <span class="mi">1</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">E</span><span class="p">)</span>
+        <span class="c1"># fill cache, trim sequences</span>
+        <span class="n">cache_idxs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">key_cache</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">device</span><span class="o">=</span><span class="n">key_cache</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">key_cache</span><span class="p">[</span><span class="n">cache_idxs</span><span class="p">,</span> <span class="n">cache_seqlens</span><span class="p">]</span> <span class="o">=</span> <span class="n">keys</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">val_cache</span><span class="p">[</span><span class="n">cache_idxs</span><span class="p">,</span> <span class="n">cache_seqlens</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="n">cache_seqlens</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">max_len</span> <span class="o">=</span> <span class="n">end</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="n">k_cache</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">key_cache</span><span class="p">[:,</span> <span class="p">:</span><span class="n">max_len</span><span class="p">])</span>
+        <span class="n">v_cache</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span><span class="n">val_cache</span><span class="p">[:,</span> <span class="p">:</span><span class="n">max_len</span><span class="p">])</span>
+        <span class="c1"># attention scores + masking</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="n">scale</span> <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">&quot;blhe,blhe-&gt;blh&quot;</span><span class="p">,</span> <span class="n">queries</span><span class="p">,</span> <span class="n">k_cache</span><span class="p">)</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">max_len</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">cache_seqlens</span><span class="o">.</span><span class="n">device</span><span class="p">)[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span> <span class="o">&gt;=</span> <span class="n">end</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
+        <span class="n">scores</span><span class="o">.</span><span class="n">masked_fill_</span><span class="p">(</span><span class="n">mask</span><span class="p">[:,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">],</span> <span class="o">-</span><span class="n">torch</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+        <span class="c1"># output</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropout</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">V</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">&quot;blh,blhd-&gt;bhd&quot;</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">v_cache</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># fmt: on</span>
+        <span class="k">return</span> <span class="n">V</span>
+
+    <span class="nd">@torch</span><span class="o">.</span><span class="n">compile</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_forward_without_cache</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">qkv</span><span class="p">,</span> <span class="n">mask</span><span class="p">):</span>
+        <span class="n">queries</span><span class="p">,</span> <span class="n">keys</span><span class="p">,</span> <span class="n">values</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">unbind</span><span class="p">(</span><span class="n">qkv</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">B</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">E</span> <span class="o">=</span> <span class="n">queries</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">D</span> <span class="o">=</span> <span class="n">values</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">scale</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">E</span><span class="p">)</span>
+        <span class="n">scores</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">&quot;blhe,bshe-&gt;bhls&quot;</span><span class="p">,</span> <span class="n">queries</span><span class="p">,</span> <span class="n">keys</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">causal</span><span class="p">:</span>
+            <span class="n">scores</span><span class="o">.</span><span class="n">masked_fill_</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="o">-</span><span class="n">torch</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropout</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">scale</span> <span class="o">*</span> <span class="n">scores</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">V</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">&quot;bhls,bshd-&gt;blhd&quot;</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">V</span>
+
+<div class="viewcode-block" id="VanillaAttention.forward">
+<a class="viewcode-back" href="../../../api/amago.nets.transformer.html#amago.nets.transformer.VanillaAttention.forward">[docs]</a>
+    <span class="nd">@torch</span><span class="o">.</span><span class="n">compiler</span><span class="o">.</span><span class="n">disable</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">qkv</span><span class="p">,</span> <span class="n">key_cache</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">val_cache</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cache_seqlens</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">key_cache</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">val_cache</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">cache_seqlens</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">B</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="o">*</span><span class="n">_</span> <span class="o">=</span> <span class="n">qkv</span><span class="o">.</span><span class="n">shape</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="n">L</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">triu</span><span class="p">(</span>
+                    <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">B</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="n">L</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">bool</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">qkv</span><span class="o">.</span><span class="n">device</span><span class="p">),</span>
+                    <span class="n">diagonal</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward_without_cache</span><span class="p">(</span><span class="n">qkv</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mask</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inference_with_cache</span><span class="p">(</span><span class="n">qkv</span><span class="p">,</span> <span class="n">key_cache</span><span class="p">,</span> <span class="n">val_cache</span><span class="p">,</span> <span class="n">cache_seqlens</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="FlashAttention">
+<a class="viewcode-back" href="../../../api/amago.nets.transformer.html#amago.nets.transformer.FlashAttention">[docs]</a>
+<span class="nd">@gin</span><span class="o">.</span><span class="n">configurable</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">FlashAttention</span><span class="p">(</span><span class="n">SelfAttention</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Optimized self-attention using flash_attn.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        causal: Whether to use a causal mask.</span>
+<span class="sd">        dropout: The dropout rate of the attention matrix.</span>
+<span class="sd">        window_size: flash_attn&#39;s window_size parameter, which enables sliding window</span>
+<span class="sd">            attention. Defaults to (-1, -1), which is standard full-length attention.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">causal</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+        <span class="n">dropout</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">window_size</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+    <span class="p">):</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="n">flash_attn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="p">),</span> <span class="s2">&quot;Missing flash attention 2 install (pip install amago[flash]).&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">causal</span><span class="o">=</span><span class="n">causal</span><span class="p">,</span> <span class="n">dropout</span><span class="o">=</span><span class="n">dropout</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">window_size</span> <span class="o">=</span> <span class="n">window_size</span>
+
+<div class="viewcode-block" id="FlashAttention.forward">
+<a class="viewcode-back" href="../../../api/amago.nets.transformer.html#amago.nets.transformer.FlashAttention.forward">[docs]</a>
+    <span class="nd">@torch</span><span class="o">.</span><span class="n">compiler</span><span class="o">.</span><span class="n">disable</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">qkv</span><span class="p">,</span> <span class="n">key_cache</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">val_cache</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cache_seqlens</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">qkv</span> <span class="o">=</span> <span class="n">qkv</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">bfloat16</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key_cache</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">val_cache</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">cache_seqlens</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">flash_attn_qkvpacked_func</span><span class="p">(</span>
+                <span class="n">qkv</span><span class="p">,</span>
+                <span class="n">dropout_p</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dropout</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span> <span class="k">else</span> <span class="mf">0.0</span><span class="p">,</span>
+                <span class="n">causal</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">causal</span><span class="p">,</span>
+                <span class="n">window_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">window_size</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span>
+            <span class="n">q</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">qkv</span><span class="o">.</span><span class="n">unbind</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">flash_attn_with_kvcache</span><span class="p">(</span>
+                <span class="n">q</span><span class="o">=</span><span class="n">q</span><span class="p">,</span>
+                <span class="n">k_cache</span><span class="o">=</span><span class="n">key_cache</span><span class="p">,</span>
+                <span class="n">v_cache</span><span class="o">=</span><span class="n">val_cache</span><span class="p">,</span>
+                <span class="n">cache_seqlens</span><span class="o">=</span><span class="n">cache_seqlens</span><span class="p">,</span>
+                <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">,</span>
+                <span class="n">v</span><span class="o">=</span><span class="n">v</span><span class="p">,</span>
+                <span class="n">causal</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">causal</span><span class="p">,</span>
+                <span class="n">window_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">window_size</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">out</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="FlexAttention">
+<a class="viewcode-back" href="../../../api/amago.nets.transformer.html#amago.nets.transformer.FlexAttention">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">FlexAttention</span><span class="p">(</span><span class="n">SelfAttention</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Experimental support for flex_attention (a recent pytorch feature).</span>
+
+<span class="sd">    Allows custom sparse attention patterns using score_mod and mask_mod function.</span>
+<span class="sd">    (https://pytorch.org/blog/flexattention/)</span>
+<span class="sd">    (https://github.com/pytorch-labs/attention-gym)</span>
+
+<span class="sd">    The main benefit of flex_attention for our purposes is a unified implementation</span>
+<span class="sd">    of key/value cache inference for more complex attention patterns.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        score_mod: A function that takes the batch_idx, head_idx, q_idx, kv_idx and</span>
+<span class="sd">            computes a scalar score for the attention matrix entry between these</span>
+<span class="sd">            locations.</span>
+<span class="sd">        mask_mod: A function that takes the batch_idx, head_idx, q_idx, kv_idx and</span>
+<span class="sd">            returns False if attention scores between these locations should be</span>
+<span class="sd">            masked.</span>
+<span class="sd">        causal: Whether to use a causal mask. If True, the causal mask is applied on</span>
+<span class="sd">            top of the custom mask_mod. Defaults to True.</span>
+<span class="sd">        dropout: The dropout rate of the attention matrix. Defaults to 0.0.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">score_mod</span><span class="p">:</span> <span class="nb">callable</span><span class="p">,</span>
+        <span class="n">mask_mod</span><span class="p">:</span> <span class="nb">callable</span><span class="p">,</span>
+        <span class="n">causal</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+        <span class="n">dropout</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">assert</span> <span class="n">flex_attention</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;FlexAttention requires pytorch &gt;= 2.5&quot;</span>
+        <span class="k">if</span> <span class="n">dropout</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">amago_warning</span><span class="p">(</span>
+                <span class="s2">&quot;FlexAttention does not support attention dropout. Setting to 0.&quot;</span>
+            <span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">causal</span><span class="o">=</span><span class="n">causal</span><span class="p">,</span> <span class="n">dropout</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">causal_mask</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">q_idx</span><span class="p">,</span> <span class="n">kv_idx</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">q_idx</span> <span class="o">&gt;=</span> <span class="n">kv_idx</span><span class="p">)</span> <span class="k">if</span> <span class="n">causal</span> <span class="k">else</span> <span class="kc">True</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">score_mod</span> <span class="o">=</span> <span class="n">score_mod</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask_mod</span> <span class="o">=</span> <span class="n">mask_mod</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">causal_mask</span> <span class="o">=</span> <span class="n">causal_mask</span>
+
+<div class="viewcode-block" id="FlexAttention.cached_training_mask">
+<a class="viewcode-back" href="../../../api/amago.nets.transformer.html#amago.nets.transformer.FlexAttention.cached_training_mask">[docs]</a>
+    <span class="nd">@lru_cache</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cached_training_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">q_len</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">kv_len</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">create_block_mask</span><span class="p">(</span>
+            <span class="n">and_masks</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mask_mod</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">causal_mask</span><span class="p">),</span>
+            <span class="n">B</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">H</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">Q_LEN</span><span class="o">=</span><span class="n">q_len</span><span class="p">,</span>
+            <span class="n">KV_LEN</span><span class="o">=</span><span class="n">kv_len</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FlexAttention.kv_cache_score_mod">
+<a class="viewcode-back" href="../../../api/amago.nets.transformer.html#amago.nets.transformer.FlexAttention.kv_cache_score_mod">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">kv_cache_score_mod</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cache_seqlens</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_kv_cache_score_mod</span><span class="p">(</span><span class="n">score</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">q_idx</span><span class="p">,</span> <span class="n">kv_idx</span><span class="p">):</span>
+            <span class="n">q_idx_rel</span> <span class="o">=</span> <span class="n">q_idx</span> <span class="o">+</span> <span class="n">cache_seqlens</span><span class="p">[</span><span class="n">b</span><span class="p">]</span>
+            <span class="n">base</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">score_mod</span><span class="p">(</span><span class="n">score</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">q_idx_rel</span><span class="p">,</span> <span class="n">kv_idx</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">base</span>
+
+        <span class="k">return</span> <span class="n">_kv_cache_score_mod</span></div>
+
+
+<div class="viewcode-block" id="FlexAttention.kv_cache_mask_mod">
+<a class="viewcode-back" href="../../../api/amago.nets.transformer.html#amago.nets.transformer.FlexAttention.kv_cache_mask_mod">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">kv_cache_mask_mod</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cache_seqlens</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">_kv_cache_mask_mod</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">q_idx</span><span class="p">,</span> <span class="n">kv_idx</span><span class="p">):</span>
+            <span class="n">q_idx_rel</span> <span class="o">=</span> <span class="n">q_idx</span> <span class="o">+</span> <span class="n">cache_seqlens</span><span class="p">[</span><span class="n">b</span><span class="p">]</span>
+            <span class="n">base</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask_mod</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">q_idx_rel</span><span class="p">,</span> <span class="n">kv_idx</span><span class="p">)</span>
+            <span class="n">base</span> <span class="o">=</span> <span class="n">base</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">kv_idx</span> <span class="o">&lt;=</span> <span class="n">cache_seqlens</span><span class="p">[</span><span class="n">b</span><span class="p">])</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">causal</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">base</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">q_idx_rel</span> <span class="o">&gt;=</span> <span class="n">kv_idx</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">base</span>
+
+        <span class="k">return</span> <span class="n">_kv_cache_mask_mod</span></div>
+
+
+<div class="viewcode-block" id="FlexAttention.flex_attention">
+<a class="viewcode-back" href="../../../api/amago.nets.transformer.html#amago.nets.transformer.FlexAttention.flex_attention">[docs]</a>
+    <span class="nd">@torch</span><span class="o">.</span><span class="n">compile</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">flex_attention</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">score_mod</span><span class="p">,</span> <span class="n">block_mask</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">flex_attention</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">score_mod</span><span class="p">,</span> <span class="n">block_mask</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FlexAttention.flex_attention_inf">
+<a class="viewcode-back" href="../../../api/amago.nets.transformer.html#amago.nets.transformer.FlexAttention.flex_attention_inf">[docs]</a>
+    <span class="nd">@torch</span><span class="o">.</span><span class="n">compile</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">flex_attention_inf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">q</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">score_mod</span><span class="p">,</span> <span class="n">block_mask</span><span class="p">):</span>
+        <span class="c1"># pretend this is a different function than training to keep</span>
+        <span class="c1"># torch&#39;s compilation separate.</span>
+        <span class="k">return</span> <span class="n">flex_attention</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">score_mod</span><span class="p">,</span> <span class="n">block_mask</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FlexAttention.forward">
+<a class="viewcode-back" href="../../../api/amago.nets.transformer.html#amago.nets.transformer.FlexAttention.forward">[docs]</a>
+    <span class="nd">@torch</span><span class="o">.</span><span class="n">compiler</span><span class="o">.</span><span class="n">disable</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">qkv</span><span class="p">,</span> <span class="n">key_cache</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">val_cache</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cache_seqlens</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">key_cache</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">val_cache</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">cache_seqlens</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span>
+            <span class="n">qkv</span> <span class="o">=</span> <span class="n">rearrange</span><span class="p">(</span><span class="n">qkv</span><span class="p">,</span> <span class="s2">&quot;b l three h e -&gt; b h three l e&quot;</span><span class="p">)</span>
+            <span class="o">*</span><span class="n">_</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">qkv</span><span class="o">.</span><span class="n">shape</span>
+            <span class="n">q</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">unbind</span><span class="p">(</span><span class="n">qkv</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cached_training_mask</span><span class="p">(</span><span class="n">L</span><span class="p">,</span> <span class="n">L</span><span class="p">)</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flex_attention</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">score_mod</span><span class="p">,</span> <span class="n">mask</span><span class="p">)</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">rearrange</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="s2">&quot;b h l e -&gt; b l h e&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span>
+            <span class="n">q</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">unbind</span><span class="p">(</span><span class="n">qkv</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">cache_idxs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">key_cache</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">device</span><span class="o">=</span><span class="n">k</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="n">key_cache</span><span class="p">[</span><span class="n">cache_idxs</span><span class="p">,</span> <span class="n">cache_seqlens</span><span class="p">]</span> <span class="o">=</span> <span class="n">k</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+            <span class="n">val_cache</span><span class="p">[</span><span class="n">cache_idxs</span><span class="p">,</span> <span class="n">cache_seqlens</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+            <span class="n">max_len</span> <span class="o">=</span> <span class="n">cache_seqlens</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="n">q</span> <span class="o">=</span> <span class="n">rearrange</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="s2">&quot;b l h e -&gt; b h l e&quot;</span><span class="p">)</span>
+            <span class="n">k_cache</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span>
+                <span class="n">rearrange</span><span class="p">(</span><span class="n">key_cache</span><span class="p">[:,</span> <span class="p">:</span><span class="n">max_len</span><span class="p">],</span> <span class="s2">&quot;b l h e -&gt; b h l e&quot;</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">v_cache</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nan_to_num</span><span class="p">(</span>
+                <span class="n">rearrange</span><span class="p">(</span><span class="n">val_cache</span><span class="p">[:,</span> <span class="p">:</span><span class="n">max_len</span><span class="p">],</span> <span class="s2">&quot;b l h e -&gt; b h l e&quot;</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="c1"># TODO: custom constructor as potential speedup?</span>
+            <span class="c1"># https://pytorch.org/blog/flexattention/#q-how-can-we-compute-blockmask-quicker</span>
+            <span class="n">inf_mask</span> <span class="o">=</span> <span class="n">create_block_mask</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">kv_cache_mask_mod</span><span class="p">(</span><span class="n">cache_seqlens</span><span class="p">),</span>
+                <span class="n">B</span><span class="o">=</span><span class="n">q</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">H</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">Q_LEN</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">KV_LEN</span><span class="o">=</span><span class="n">max_len</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flex_attention_inf</span><span class="p">(</span>
+                <span class="n">q</span><span class="p">,</span> <span class="n">k_cache</span><span class="p">,</span> <span class="n">v_cache</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kv_cache_score_mod</span><span class="p">(</span><span class="n">cache_seqlens</span><span class="p">),</span> <span class="n">inf_mask</span>
+            <span class="p">)</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">rearrange</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="s2">&quot;b h l e -&gt; b l h e&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">out</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="VanillaFlexAttention">
+<a class="viewcode-back" href="../../../api/amago.nets.transformer.html#amago.nets.transformer.VanillaFlexAttention">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">VanillaFlexAttention</span><span class="p">(</span><span class="n">FlexAttention</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A sanity-check test of FlexAttention that should be equivalent to VanillaAttention.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">causal</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">dropout</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">score_mod</span><span class="o">=</span><span class="k">lambda</span> <span class="n">score</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">q_idx</span><span class="p">,</span> <span class="n">kv_idx</span><span class="p">:</span> <span class="n">score</span><span class="p">,</span>
+            <span class="n">mask_mod</span><span class="o">=</span><span class="k">lambda</span> <span class="n">b</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">q_idx</span><span class="p">,</span> <span class="n">kv_idx</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+            <span class="n">causal</span><span class="o">=</span><span class="n">causal</span><span class="p">,</span>
+            <span class="n">dropout</span><span class="o">=</span><span class="n">dropout</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="SlidingWindowFlexAttention">
+<a class="viewcode-back" href="../../../tutorial/configuration.html#amago.nets.transformer.SlidingWindowFlexAttention">[docs]</a>
+<span class="nd">@gin</span><span class="o">.</span><span class="n">configurable</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SlidingWindowFlexAttention</span><span class="p">(</span><span class="n">FlexAttention</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A more useful test of FlexAttention that implements a sliding window pattern for long context lengths.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">causal</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+        <span class="n">dropout</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">window_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">gin</span><span class="o">.</span><span class="n">REQUIRED</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">sliding_window_mask_mod</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">q_idx</span><span class="p">,</span> <span class="n">kv_idx</span><span class="p">):</span>
+            <span class="n">window_mask</span> <span class="o">=</span> <span class="n">q_idx</span> <span class="o">-</span> <span class="n">kv_idx</span> <span class="o">&lt;=</span> <span class="n">window_size</span>
+            <span class="k">return</span> <span class="n">window_mask</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">score_mod</span><span class="o">=</span><span class="k">lambda</span> <span class="n">score</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">q_idx</span><span class="p">,</span> <span class="n">kv_idx</span><span class="p">:</span> <span class="n">score</span><span class="p">,</span>
+            <span class="n">mask_mod</span><span class="o">=</span><span class="n">sliding_window_mask_mod</span><span class="p">,</span>
+            <span class="n">causal</span><span class="o">=</span><span class="n">causal</span><span class="p">,</span>
+            <span class="n">dropout</span><span class="o">=</span><span class="n">dropout</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="SigmaReparam">
+<a class="viewcode-back" href="../../../api/amago.nets.transformer.html#amago.nets.transformer.SigmaReparam">[docs]</a>
+<span class="nd">@gin</span><span class="o">.</span><span class="n">configurable</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SigmaReparam</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;SigmaReparam nn.Linear alternative.</span>
+
+<span class="sd">    https://github.com/apple/ml-sigma-reparam/blob/fea4e359126f812bd3e0a12234c56330fe4b5fa2/vision/layers.py#L90</span>
+<span class="sd">    https://github.com/ywchan2005/sigma-reparam-pytorch/blob/2a5676ac71f75567a09db4ecafc1a4d7bc135b8e/sigma_reparam.py#L5</span>
+
+<span class="sd">    SigmaReparam is an alternative to nn.Linear that can be used in Transformer blocks</span>
+<span class="sd">    to stabilize attention scores. (https://arxiv.org/abs/2303.06296)</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        d_in: The input dimension of the layer.</span>
+<span class="sd">        d_out: The output dimension of the layer.</span>
+
+<span class="sd">    Keyword Args:</span>
+<span class="sd">        bias: Whether to use a bias in the layer. Defaults to True.</span>
+<span class="sd">        fast_init: Skip a SVD initialization step and use a simpler strategy. Mainly</span>
+<span class="sd">            used for backward compatability with old results and as a hacky way to</span>
+<span class="sd">            speed up init for large models when we&#39;ll be loading a pretrained</span>
+<span class="sd">            checkoint soon anyway. Defaults to False.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d_in</span><span class="p">,</span> <span class="n">d_out</span><span class="p">,</span> <span class="n">bias</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">fast_init</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">d_in</span><span class="p">,</span> <span class="n">d_out</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="n">bias</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">fast_init</span><span class="p">:</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">trunc_normal_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="mf">0.02</span><span class="p">)</span>
+            <span class="n">u</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">full_matrices</span><span class="o">=</span><span class="kc">False</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="n">full_matrices</span><span class="o">=</span><span class="kc">False</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># initialization from legacy version used in the original AMAGO paper.</span>
+            <span class="c1"># This was a guess based on the sigma reparam pseudocode before the code was released,</span>
+            <span class="c1"># and leads to large outputs early in training... though we never encountered any</span>
+            <span class="c1"># real problems with this.</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">kaiming_uniform_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">fan_in</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">_calculate_fan_in_and_fan_out</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">)</span>
+                <span class="n">bound</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">fan_in</span><span class="p">)</span> <span class="k">if</span> <span class="n">fan_in</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
+                <span class="n">nn</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">uniform_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">,</span> <span class="o">-</span><span class="n">bound</span><span class="p">,</span> <span class="n">bound</span><span class="p">)</span>
+            <span class="n">u</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">d_out</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">d_in</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+            <span class="n">u</span> <span class="o">=</span> <span class="n">u</span> <span class="o">/</span> <span class="n">u</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">v</span> <span class="o">/</span> <span class="n">v</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s2">&quot;u&quot;</span><span class="p">,</span> <span class="n">u</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s2">&quot;v&quot;</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">requires_grad</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SigmaReparam.forward">
+<a class="viewcode-back" href="../../../api/amago.nets.transformer.html#amago.nets.transformer.SigmaReparam.forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span><span class="p">:</span>
+            <span class="c1"># with torch.no_grad(): # does not compile w/ accelerate 1.0 DDP torch 2.5</span>
+            <span class="n">u</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weight</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">v</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">u</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">u</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">v</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="c1"># detach instead...</span>
+        <span class="n">sigma</span> <span class="o">=</span> <span class="n">einsum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">u</span><span class="o">.</span><span class="n">detach</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">v</span><span class="o">.</span><span class="n">detach</span><span class="p">(),</span> <span class="s2">&quot;d, d c , c-&gt;&quot;</span><span class="p">)</span>
+        <span class="n">W_hat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gamma</span> <span class="o">/</span> <span class="n">sigma</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">linear</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">W_hat</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">out</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="AttentionLayer">
+<a class="viewcode-back" href="../../../api/amago.nets.transformer.html#amago.nets.transformer.AttentionLayer">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">AttentionLayer</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Query, Key, Value --&gt; Self-Attention --&gt; Output Projection&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">self_attention</span><span class="p">:</span> <span class="n">SelfAttention</span><span class="p">,</span>
+        <span class="n">d_model</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">d_qkv</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">n_heads</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">dropout_qkv</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+        <span class="n">head_scaling</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">sigma_reparam</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">self_attention</span><span class="p">,</span> <span class="n">SelfAttention</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">self_attention</span> <span class="o">=</span> <span class="n">self_attention</span>
+        <span class="n">FF</span> <span class="o">=</span> <span class="n">SigmaReparam</span> <span class="k">if</span> <span class="n">sigma_reparam</span> <span class="k">else</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">qkv_projection</span> <span class="o">=</span> <span class="n">FF</span><span class="p">(</span><span class="n">d_model</span><span class="p">,</span> <span class="mi">3</span> <span class="o">*</span> <span class="n">d_qkv</span> <span class="o">*</span> <span class="n">n_heads</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dropout_qkv</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="n">dropout_qkv</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">out_projection</span> <span class="o">=</span> <span class="n">FF</span><span class="p">(</span><span class="n">d_qkv</span> <span class="o">*</span> <span class="n">n_heads</span><span class="p">,</span> <span class="n">d_model</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">head_scaler</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_heads</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">requires_grad</span><span class="o">=</span><span class="n">head_scaling</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_heads</span> <span class="o">=</span> <span class="n">n_heads</span>
+
+<div class="viewcode-block" id="AttentionLayer.forward">
+<a class="viewcode-back" href="../../../api/amago.nets.transformer.html#amago.nets.transformer.AttentionLayer.forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sequence</span><span class="p">,</span> <span class="n">key_cache</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">val_cache</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cache_seqlens</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">qkv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropout_qkv</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">qkv_projection</span><span class="p">(</span><span class="n">sequence</span><span class="p">))</span>
+        <span class="n">qkv</span> <span class="o">=</span> <span class="n">rearrange</span><span class="p">(</span>
+            <span class="n">qkv</span><span class="p">,</span>
+            <span class="s2">&quot;batch len (three d_qkv heads) -&gt; batch len three heads d_qkv&quot;</span><span class="p">,</span>
+            <span class="n">heads</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_heads</span><span class="p">,</span>
+            <span class="n">three</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">head_scaler</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">self_attention</span><span class="p">(</span>
+            <span class="n">qkv</span><span class="o">=</span><span class="n">qkv</span><span class="p">,</span>
+            <span class="n">key_cache</span><span class="o">=</span><span class="n">key_cache</span><span class="p">,</span>
+            <span class="n">val_cache</span><span class="o">=</span><span class="n">val_cache</span><span class="p">,</span>
+            <span class="n">cache_seqlens</span><span class="o">=</span><span class="n">cache_seqlens</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">rearrange</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="s2">&quot;batch len heads dim -&gt; batch len (heads dim)&quot;</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_projection</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">out</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="TransformerLayer">
+<a class="viewcode-back" href="../../../api/amago.nets.transformer.html#amago.nets.transformer.TransformerLayer">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TransformerLayer</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Pre-Norm Self-Attention Layer&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">attention_layer</span><span class="p">:</span> <span class="n">AttentionLayer</span><span class="p">,</span>
+        <span class="n">d_model</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">d_ff</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">dropout_ff</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span>
+        <span class="n">activation</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;leaky_relu&quot;</span><span class="p">,</span>
+        <span class="n">norm</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;layer&quot;</span><span class="p">,</span>
+        <span class="n">sigma_reparam</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">normformer_norms</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attention_layer</span><span class="p">,</span> <span class="n">AttentionLayer</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attention_layer</span> <span class="o">=</span> <span class="n">attention_layer</span>
+        <span class="n">FF</span> <span class="o">=</span> <span class="n">SigmaReparam</span> <span class="k">if</span> <span class="n">sigma_reparam</span> <span class="k">else</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ff1</span> <span class="o">=</span> <span class="n">FF</span><span class="p">(</span><span class="n">d_model</span><span class="p">,</span> <span class="n">d_ff</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ff2</span> <span class="o">=</span> <span class="n">FF</span><span class="p">(</span><span class="n">d_ff</span><span class="p">,</span> <span class="n">d_model</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">norm1</span> <span class="o">=</span> <span class="n">Normalization</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span> <span class="n">d_model</span><span class="o">=</span><span class="n">d_model</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">norm2</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">Normalization</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span> <span class="n">d_model</span><span class="o">=</span><span class="n">d_model</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">normformer_norms</span>
+            <span class="k">else</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">norm3</span> <span class="o">=</span> <span class="n">Normalization</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span> <span class="n">d_model</span><span class="o">=</span><span class="n">d_model</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">norm4</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">Normalization</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span> <span class="n">d_model</span><span class="o">=</span><span class="n">d_ff</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">normformer_norms</span>
+            <span class="k">else</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dropout_ff</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="n">dropout_ff</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">activation</span> <span class="o">=</span> <span class="n">activation_switch</span><span class="p">(</span><span class="n">activation</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">d_model</span> <span class="o">=</span> <span class="n">d_model</span>
+
+<div class="viewcode-block" id="TransformerLayer.forward">
+<a class="viewcode-back" href="../../../api/amago.nets.transformer.html#amago.nets.transformer.TransformerLayer.forward">[docs]</a>
+    <span class="nd">@torch</span><span class="o">.</span><span class="n">compile</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">self_seq</span><span class="p">,</span> <span class="n">key_cache</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">val_cache</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cache_seqlens</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">q1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm1</span><span class="p">(</span><span class="n">self_seq</span><span class="p">)</span>  <span class="c1"># pre-norm</span>
+        <span class="n">q1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attention_layer</span><span class="p">(</span>
+            <span class="n">q1</span><span class="p">,</span> <span class="n">key_cache</span><span class="o">=</span><span class="n">key_cache</span><span class="p">,</span> <span class="n">val_cache</span><span class="o">=</span><span class="n">val_cache</span><span class="p">,</span> <span class="n">cache_seqlens</span><span class="o">=</span><span class="n">cache_seqlens</span>
+        <span class="p">)</span>
+        <span class="n">q1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm2</span><span class="p">(</span><span class="n">q1</span><span class="p">)</span>  <span class="c1"># normformer extra norm 1</span>
+        <span class="n">self_seq</span> <span class="o">=</span> <span class="n">self_seq</span> <span class="o">+</span> <span class="n">q1</span>
+        <span class="n">q1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm3</span><span class="p">(</span><span class="n">self_seq</span><span class="p">)</span>  <span class="c1"># regular norm</span>
+        <span class="c1"># normformer extra norm 2</span>
+        <span class="n">q1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm4</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">activation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ff1</span><span class="p">(</span><span class="n">q1</span><span class="p">)))</span>
+        <span class="n">q1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropout_ff</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ff2</span><span class="p">(</span><span class="n">q1</span><span class="p">))</span>
+        <span class="n">self_seq</span> <span class="o">=</span> <span class="n">self_seq</span> <span class="o">+</span> <span class="n">q1</span>
+        <span class="k">return</span> <span class="n">self_seq</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Cache">
+<a class="viewcode-back" href="../../../api/amago.nets.transformer.html#amago.nets.transformer.Cache">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Cache</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A cache for key and value tensors.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+        <span class="n">layers</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">max_seq_len</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">n_heads</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">head_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">layers</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">max_seq_len</span><span class="p">,</span> <span class="n">n_heads</span><span class="p">,</span> <span class="n">head_dim</span><span class="p">),</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
+            <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_seq_len</span> <span class="o">=</span> <span class="n">max_seq_len</span>
+        <span class="c1"># make silent bugs in k/v cache... much louder</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nan</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">device</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+<div class="viewcode-block" id="Cache.roll_back">
+<a class="viewcode-back" href="../../../api/amago.nets.transformer.html#amago.nets.transformer.Cache.roll_back">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">roll_back</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seq_lens</span><span class="p">):</span>
+        <span class="n">idxs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">seq_lens</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_seq_len</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">roll</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span> <span class="n">idxs</span><span class="p">,</span> <span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span> <span class="n">idxs</span><span class="p">,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">roll</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span> <span class="n">idxs</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nan</span>  <span class="c1"># no silent bugs</span>
+        <span class="k">return</span> <span class="n">idxs</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="TformerHiddenState">
+<a class="viewcode-back" href="../../../api/amago.nets.transformer.html#amago.nets.transformer.TformerHiddenState">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TformerHiddenState</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Helps manage the Cache hidden state during rollouts.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key_cache</span><span class="p">:</span> <span class="n">Cache</span><span class="p">,</span> <span class="n">val_cache</span><span class="p">:</span> <span class="n">Cache</span><span class="p">,</span> <span class="n">seq_lens</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">seq_lens</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">torch</span><span class="o">.</span><span class="n">int32</span>
+        <span class="k">assert</span> <span class="n">key_cache</span><span class="o">.</span><span class="n">device</span> <span class="o">==</span> <span class="n">val_cache</span><span class="o">.</span><span class="n">device</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_layers</span> <span class="o">=</span> <span class="n">key_cache</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_layers</span> <span class="o">==</span> <span class="n">val_cache</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">key_cache</span> <span class="o">=</span> <span class="n">key_cache</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">val_cache</span> <span class="o">=</span> <span class="n">val_cache</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seq_lens</span> <span class="o">=</span> <span class="n">seq_lens</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">key_cache</span><span class="o">.</span><span class="n">device</span>
+
+<div class="viewcode-block" id="TformerHiddenState.reset">
+<a class="viewcode-back" href="../../../api/amago.nets.transformer.html#amago.nets.transformer.TformerHiddenState.reset">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idxs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seq_lens</span><span class="p">[</span><span class="n">idxs</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+
+<div class="viewcode-block" id="TformerHiddenState.update">
+<a class="viewcode-back" href="../../../api/amago.nets.transformer.html#amago.nets.transformer.TformerHiddenState.update">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seq_lens</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">key_cache</span><span class="o">.</span><span class="n">roll_back</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seq_lens</span><span class="p">)</span>
+        <span class="n">idxs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">val_cache</span><span class="o">.</span><span class="n">roll_back</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seq_lens</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seq_lens</span><span class="p">[</span><span class="n">idxs</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer_idx</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="n">layer_idx</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_layers</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">key_cache</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">layer_idx</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">val_cache</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">layer_idx</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">seq_lens</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="FixedPosEmb">
+<a class="viewcode-back" href="../../../api/amago.nets.transformer.html#amago.nets.transformer.FixedPosEmb">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">FixedPosEmb</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Classic sinusoidal positional encoding.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d_model</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">d_model</span> <span class="o">=</span> <span class="n">d_model</span>
+
+<div class="viewcode-block" id="FixedPosEmb.forward">
+<a class="viewcode-back" href="../../../api/amago.nets.transformer.html#amago.nets.transformer.FixedPosEmb.forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos_idxs</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">):</span>
+        <span class="n">B</span><span class="p">,</span> <span class="n">L</span> <span class="o">=</span> <span class="n">pos_idxs</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">emb</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">d_model</span><span class="p">),</span> <span class="n">device</span><span class="o">=</span><span class="n">pos_idxs</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span>
+        <span class="p">)</span>
+        <span class="n">coeff</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">d_model</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">emb</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+                <span class="o">*</span> <span class="o">-</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">10000.0</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">d_model</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">emb</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">pos_idxs</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">coeff</span><span class="p">)</span>
+        <span class="n">emb</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">pos_idxs</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">coeff</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">emb</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="LearnablePosEmb">
+<a class="viewcode-back" href="../../../api/amago.nets.transformer.html#amago.nets.transformer.LearnablePosEmb">[docs]</a>
+<span class="nd">@gin</span><span class="o">.</span><span class="n">configurable</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">LearnablePosEmb</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Learnable positional encoding.</span>
+
+<span class="sd">    Creates a lookup table of d_model size embeddings for every timestep of the</span>
+<span class="sd">    episode.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        d_model: The dimension of the embeddings.</span>
+
+<span class="sd">    Keyword Args:</span>
+<span class="sd">        max_time_idx: The maximum timestep we&#39;ll need to learn an embedding for. So</span>
+<span class="sd">            application-specific that it&#39;s gin.REQUIRED and therefore must be</span>
+<span class="sd">            configured manually in the training script or its .gin files.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d_model</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">max_time_idx</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">gin</span><span class="o">.</span><span class="n">REQUIRED</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">embeddings</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Embedding</span><span class="p">(</span>
+            <span class="n">num_embeddings</span><span class="o">=</span><span class="n">max_time_idx</span><span class="p">,</span> <span class="n">embedding_dim</span><span class="o">=</span><span class="n">d_model</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="LearnablePosEmb.forward">
+<a class="viewcode-back" href="../../../api/amago.nets.transformer.html#amago.nets.transformer.LearnablePosEmb.forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos_idxs</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">embeddings</span><span class="p">(</span><span class="n">pos_idxs</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="Transformer">
+<a class="viewcode-back" href="../../../api/amago.nets.transformer.html#amago.nets.transformer.Transformer">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Transformer</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build a full Transformer model from a list of layers.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inp_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">d_model</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">layers</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">],</span>
+        <span class="n">dropout_emb</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
+        <span class="n">norm</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;layer&quot;</span><span class="p">,</span>
+        <span class="n">pos_emb</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;fixed&quot;</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">pos_emb</span> <span class="o">==</span> <span class="s2">&quot;fixed&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">position_embedding</span> <span class="o">=</span> <span class="n">FixedPosEmb</span><span class="p">(</span><span class="n">d_model</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">pos_emb</span> <span class="o">==</span> <span class="s2">&quot;learnable&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">position_embedding</span> <span class="o">=</span> <span class="n">LearnablePosEmb</span><span class="p">(</span><span class="n">d_model</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Unrecognized pos_emb: </span><span class="si">{</span><span class="n">pos_emb</span><span class="si">}</span><span class="s2">. Options are &#39;fixed&#39; or &#39;learnable&#39;.&quot;</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inp</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">inp_dim</span><span class="p">,</span> <span class="n">d_model</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dropout</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="n">dropout_emb</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="n">l</span><span class="o">.</span><span class="n">d_model</span> <span class="o">==</span> <span class="n">d_model</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">layers</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_layers</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">layers</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layers</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">(</span><span class="n">layers</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">norm</span> <span class="o">=</span> <span class="n">Normalization</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="n">norm</span><span class="p">,</span> <span class="n">d_model</span><span class="o">=</span><span class="n">d_model</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">d_model</span> <span class="o">=</span> <span class="n">d_model</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">emb_dim</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">d_model</span>
+
+<div class="viewcode-block" id="Transformer.preprocess_seq">
+<a class="viewcode-back" href="../../../api/amago.nets.transformer.html#amago.nets.transformer.Transformer.preprocess_seq">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">preprocess_seq</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seq</span><span class="p">,</span> <span class="n">pos_idxs</span><span class="p">):</span>
+        <span class="n">pos_emb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">position_embedding</span><span class="p">(</span><span class="n">pos_idxs</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">traj_emb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inp</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span>
+        <span class="n">traj_emb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dropout</span><span class="p">(</span><span class="n">traj_emb</span> <span class="o">+</span> <span class="n">pos_emb</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">traj_emb</span></div>
+
+
+<div class="viewcode-block" id="Transformer.training_forward">
+<a class="viewcode-back" href="../../../api/amago.nets.transformer.html#amago.nets.transformer.Transformer.training_forward">[docs]</a>
+    <span class="nd">@torch</span><span class="o">.</span><span class="n">compile</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">training_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seq</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+            <span class="n">seq</span> <span class="o">=</span> <span class="n">layer</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Transformer.inference_forward">
+<a class="viewcode-back" href="../../../api/amago.nets.transformer.html#amago.nets.transformer.Transformer.inference_forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">inference_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seq</span><span class="p">,</span> <span class="n">hidden_state</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">layer</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">):</span>
+            <span class="n">seq</span> <span class="o">=</span> <span class="n">layer</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="o">*</span><span class="n">hidden_state</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Transformer.forward">
+<a class="viewcode-back" href="../../../api/amago.nets.transformer.html#amago.nets.transformer.Transformer.forward">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seq</span><span class="p">,</span> <span class="n">pos_idxs</span><span class="p">,</span> <span class="n">hidden_state</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TformerHiddenState</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Transformer seq2seq</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            seq: The input sequence of shape (batch_size, seq_len, inp_dim).</span>
+<span class="sd">            pos_idxs: The position indices of the input sequence of shape (batch_size, seq_len).</span>
+<span class="sd">            hidden_state: The hidden state of the transformer.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The output sequence of shape (batch_size, seq_len, d_model).</span>
+<span class="sd">            The new hidden state of the transformer.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">traj_emb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">preprocess_seq</span><span class="p">(</span><span class="n">seq</span><span class="p">,</span> <span class="n">pos_idxs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">hidden_state</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span>
+            <span class="n">traj_emb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inference_forward</span><span class="p">(</span><span class="n">traj_emb</span><span class="p">,</span> <span class="n">hidden_state</span><span class="p">)</span>
+            <span class="n">hidden_state</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span>
+            <span class="n">traj_emb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">training_forward</span><span class="p">(</span><span class="n">traj_emb</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">traj_emb</span><span class="p">,</span> <span class="n">hidden_state</span></div>
+</div>
+
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By UT Austin Robot Perception and Learning Lab
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

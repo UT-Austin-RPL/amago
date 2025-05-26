@@ -1,0 +1,925 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" data-theme="light">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>amago.cli_utils &#8212; AMAGO</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "light";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/amago/cli_utils';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="light">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+    
+    <img src="../../_static/amago_logo_3.png" class="logo__image only-light" alt="AMAGO - Home"/>
+    <script>document.write(`<img src="../../_static/amago_logo_3.png" class="logo__image only-dark" alt="AMAGO - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../tutorial/index.html">Tutorial</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorial/setup_env.html">Setup the Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorial/create_dataset.html">Create a Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorial/create_experiment.html">Create an Experiment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorial/track_results.html">Track the Results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorial/configuration.html">Configure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorial/customization.html">Customize</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorial/async.html">Multi-GPU and Asynchronous Training</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../examples/index.html">Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/00_meta_frozen_lake.html">Meta Frozen Lake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/01_basic_gym.html">Basic Gymnasium</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/02_gymnax.html">Gymnax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/03_popgym_suite.html">POPGym</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/04_tmaze.html">T-Maze</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/05_dark_key_door.html">Dark Room Key Door</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/06_alchemy.html">Symbolic DM Alchemy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/07_metaworld.html">Meta-World ML1/ML10/ML45</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/08_ale.html">Multi-Game Atari</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/09_multitask_procgen.html">Multi-Game ProcGen</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/10_babyai.html">Multi-Task BabyAI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/11_xland_minigrid.html">XLand Mini-Grid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/12_half_cheetah_vel.html">HalfCheetah(v4)-Velocity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/13_mazerunner_relabeling.html">MazeRunner HER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/14_d4rl.html">D4RL</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../api/amago.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api/amago.agent.html">amago.agent</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/amago.cli_utils.html">amago.cli_utils</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../api/amago.envs.html">amago.envs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.envs.amago_env.html">amago.envs.amago_env</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../api/amago.envs.builtin.html">amago.envs.builtin</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api/amago.envs.builtin.half_cheetah_v4_vel.html">amago.envs.builtin.half_cheetah_v4_vel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/amago.envs.builtin.metaworld_ml.html">amago.envs.builtin.metaworld_ml</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/amago.envs.builtin.popgym_envs.html">amago.envs.builtin.popgym_envs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/amago.envs.builtin.toy_gym.html">amago.envs.builtin.toy_gym</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/amago.envs.builtin.xland_minigrid.html">amago.envs.builtin.xland_minigrid</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.envs.env_utils.html">amago.envs.env_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.envs.exploration.html">amago.envs.exploration</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/amago.experiment.html">amago.experiment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/amago.hindsight.html">amago.hindsight</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/amago.loading.html">amago.loading</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../api/amago.nets.html">amago.nets</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.nets.actor_critic.html">amago.nets.actor_critic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.nets.cnn.html">amago.nets.cnn</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.nets.ff.html">amago.nets.ff</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.nets.goal_embedders.html">amago.nets.goal_embedders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.nets.policy_dists.html">amago.nets.policy_dists</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.nets.traj_encoders.html">amago.nets.traj_encoders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.nets.transformer.html">amago.nets.transformer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.nets.tstep_encoders.html">amago.nets.tstep_encoders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.nets.utils.html">amago.nets.utils</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/amago.utils.html">amago.utils</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citation.html">Citation</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for amago.cli_utils</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Convenience functions that create a generic CLI for :class:`Experiment` and handle common gin configurations</span>
+
+<span class="sd">These mostly exist to make the :file:`examples/` easier to maintain with less boilerplate,</span>
+<span class="sd">and to break up configuration into several smaller steps.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">argparse</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArgumentParser</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">gin</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">amago</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">amago</span><span class="w"> </span><span class="kn">import</span> <span class="n">TrajEncoder</span><span class="p">,</span> <span class="n">TstepEncoder</span><span class="p">,</span> <span class="n">Agent</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">amago.loading</span><span class="w"> </span><span class="kn">import</span> <span class="n">DiskTrajDataset</span><span class="p">,</span> <span class="n">RLDataset</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">amago.envs.exploration</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ExplorationWrapper</span><span class="p">,</span>
+    <span class="n">EpsilonGreedy</span><span class="p">,</span>
+    <span class="n">BilevelEpsilonGreedy</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="add_common_cli">
+<a class="viewcode-back" href="../../api/amago.cli_utils.html#amago.cli_utils.add_common_cli">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_common_cli</span><span class="p">(</span><span class="n">parser</span><span class="p">:</span> <span class="n">ArgumentParser</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ArgumentParser</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adds a common CLI for examples and basic training scripts.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        parser: The argument parser containing problem-specific application-specific</span>
+<span class="sd">            arguments.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The argument parser with common CLI arguments added.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># extra gin configs</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--configs&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">nargs</span><span class="o">=</span><span class="s2">&quot;*&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Extra `.gin` configuration files. These settings are usually added last in the examples and would overwrite the script&#39;s defaults.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="c1"># basics</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--trials&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--agent_type&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;agent&quot;</span><span class="p">,</span>
+        <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;agent&quot;</span><span class="p">,</span> <span class="s2">&quot;multitask&quot;</span><span class="p">],</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Quick switch between default `agent.Agent` and `agent.MultiTaskAgent`. MultiTaskAgent is useful when training on mixed environments with multiple rewards functions.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--env_mode&quot;</span><span class="p">,</span>
+        <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;async&quot;</span><span class="p">,</span> <span class="s2">&quot;sync&quot;</span><span class="p">,</span> <span class="s2">&quot;already_vectorized&quot;</span><span class="p">],</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;async&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;`async` runs single-threaded environments in parallel, `sync` imitates the same parallel API but runs each step sequentially to save overhead, `already_vectorized` should be used for environments that are already parallelized at the lowest wrapper level (e.g. they&#39;re jax accelerated and have a batch dimension).&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--no_log&quot;</span><span class="p">,</span>
+        <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Turn off wandb logging (usually for debugging).&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--ckpt&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Start training from an epoch checkpoint saved in a buffer with the same `--run_name`&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--run_name&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Give the run a name. Used for logging and the disk replay buffer. Experiments with the same run_name share the same replay buffer, but log separately.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--epochs&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--buffer_dir&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to disk location where checkpoints (and, in most cases, replay buffers) will be stored. Should probably be somewhere with lots of space...&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="c1"># trajectory encoder</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--traj_encoder&quot;</span><span class="p">,</span>
+        <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;ff&quot;</span><span class="p">,</span> <span class="s2">&quot;transformer&quot;</span><span class="p">,</span> <span class="s2">&quot;rnn&quot;</span><span class="p">,</span> <span class="s2">&quot;mamba&quot;</span><span class="p">],</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;transformer&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Quick switch between seq2seq models. (ff == feedforward (memory-free))&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--memory_size&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Model/token dimension for a Transformer; hidden state size for an RNN.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--memory_layers&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Number of layers in the sequence model.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="c1"># main learning schedule</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--batches_per_epoch&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Gradient updates per training epoch.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--timesteps_per_epoch&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Timesteps of environment interaction per epoch *per actor*. The update:data ratio is defined by `batches_per_epoch / (timesteps_per_epoch * parallel_actors)`.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--val_interval&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;How often (in epochs) to evaluate the agent on validation envs.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--ckpt_interval&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;How often (in epochs) to save an agent checkpoint.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--parallel_actors&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Number of parallel environments (applies to training, validation, and testing).&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--dset_max_size&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">20_000</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Maximum size of the replay buffer (measured in trajectories, not timesteps).&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--start_learning_at_epoch&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Skip learning updates for this many epochs at the beginning of training (if worried about overfitting to a small dataset)&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--mixed_precision&quot;</span><span class="p">,</span>
+        <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;no&quot;</span><span class="p">,</span> <span class="s2">&quot;bf16&quot;</span><span class="p">],</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;no&quot;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Train in bf16 mixed precision (requires a compatible GPU). Make sure to select this option during `accelerate config`.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--dloader_workers&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Pytorch dataloader workers for loading trajectories from disk.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--batch_size&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">24</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Training batch size (measured in trajectories, not timesteps).&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s2">&quot;--mode&quot;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">,</span>
+        <span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;learn&quot;</span><span class="p">,</span> <span class="s2">&quot;collect&quot;</span><span class="p">,</span> <span class="s2">&quot;both&quot;</span><span class="p">],</span>
+        <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Simple max-throughput async mode. Start the command with `--mode collect` 1+ times, and then start the same command with `--mode learner` in another terminal. Defaults to alternating collect/train steps.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">parser</span></div>
+
+
+
+<div class="viewcode-block" id="switch_tstep_encoder">
+<a class="viewcode-back" href="../../api/amago.cli_utils.html#amago.cli_utils.switch_tstep_encoder">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">switch_tstep_encoder</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">arch</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">type</span><span class="p">[</span><span class="n">TstepEncoder</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Set default kwargs for a TstepEncoder without gin syntax or config files.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        config: A dictionary of gin parameters yet to be assigned.</span>
+<span class="sd">        arch: A shortcut name for built-in TstepEncoders. Options are &quot;ff&quot;</span>
+<span class="sd">            (generic MLP) and &quot;cnn&quot; (generic CNN).</span>
+<span class="sd">        **kwargs: Assign any of the chosen TstepEncoder&#39;s default kwargs.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A reference to the TstepEncoder type that can be passed into the</span>
+<span class="sd">        Experiment.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        .. code-block:: python</span>
+
+<span class="sd">            config = {}</span>
+<span class="sd">            # Make the input MLP smaller</span>
+<span class="sd">            tstep_encoder_type = switch_tstep_encoder(</span>
+<span class="sd">                config, &quot;ff&quot;, n_layers=1, d_hidden=128, d_output=128</span>
+<span class="sd">            )</span>
+<span class="sd">            cli_utils.use_config(config) # set new default parameters</span>
+<span class="sd">            experiment = Experiment(</span>
+<span class="sd">                ...,  # rest of args</span>
+<span class="sd">                tstep_encoder_type=tstep_encoder_type,</span>
+<span class="sd">            )</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">arch</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;ff&quot;</span><span class="p">,</span> <span class="s2">&quot;cnn&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">arch</span> <span class="o">==</span> <span class="s2">&quot;ff&quot;</span><span class="p">:</span>
+        <span class="n">tstep_encoder_type</span> <span class="o">=</span> <span class="n">amago</span><span class="o">.</span><span class="n">nets</span><span class="o">.</span><span class="n">tstep_encoders</span><span class="o">.</span><span class="n">FFTstepEncoder</span>
+        <span class="n">ff_config</span> <span class="o">=</span> <span class="s2">&quot;amago.nets.tstep_encoders.FFTstepEncoder&quot;</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">ff_config</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">:</span> <span class="n">val</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()})</span>
+    <span class="k">elif</span> <span class="n">arch</span> <span class="o">==</span> <span class="s2">&quot;cnn&quot;</span><span class="p">:</span>
+        <span class="n">tstep_encoder_type</span> <span class="o">=</span> <span class="n">amago</span><span class="o">.</span><span class="n">nets</span><span class="o">.</span><span class="n">tstep_encoders</span><span class="o">.</span><span class="n">CNNTstepEncoder</span>
+        <span class="n">cnn_config</span> <span class="o">=</span> <span class="s2">&quot;amago.nets.tstep_encoders.CNNTstepEncoder&quot;</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">cnn_config</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">:</span> <span class="n">val</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()})</span>
+    <span class="k">return</span> <span class="n">tstep_encoder_type</span></div>
+
+
+
+<div class="viewcode-block" id="switch_agent">
+<a class="viewcode-back" href="../../api/amago.cli_utils.html#amago.cli_utils.switch_agent">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">switch_agent</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">agent</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">type</span><span class="p">[</span><span class="n">Agent</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Set default kwargs for a built-in Agent without gin syntax or config files.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        config: A dictionary of gin parameters yet to be assigned.</span>
+<span class="sd">        agent: A shortcut name for built-in Agents. Options are &quot;agent&quot;</span>
+<span class="sd">            (`Agent`) and &quot;multitask&quot; (`MultiTaskAgent`).</span>
+<span class="sd">        **kwargs: Assign any of the chosen Agent&#39;s default kwargs.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A reference to the Agent type that can be passed into the Experiment.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">agent</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;agent&quot;</span><span class="p">,</span> <span class="s2">&quot;multitask&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">agent</span> <span class="o">==</span> <span class="s2">&quot;agent&quot;</span><span class="p">:</span>
+        <span class="n">agent_type</span> <span class="o">=</span> <span class="n">amago</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">Agent</span>
+        <span class="n">agent_config</span> <span class="o">=</span> <span class="s2">&quot;amago.agent.Agent&quot;</span>
+    <span class="k">elif</span> <span class="n">agent</span> <span class="o">==</span> <span class="s2">&quot;multitask&quot;</span><span class="p">:</span>
+        <span class="n">agent_type</span> <span class="o">=</span> <span class="n">amago</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">MultiTaskAgent</span>
+        <span class="n">agent_config</span> <span class="o">=</span> <span class="s2">&quot;amago.agent.MultiTaskAgent&quot;</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">agent_config</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">:</span> <span class="n">val</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()})</span>
+    <span class="k">return</span> <span class="n">agent_type</span></div>
+
+
+
+<div class="viewcode-block" id="switch_exploration">
+<a class="viewcode-back" href="../../api/amago.cli_utils.html#amago.cli_utils.switch_exploration">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">switch_exploration</span><span class="p">(</span>
+    <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">strategy</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">type</span><span class="p">[</span><span class="n">ExplorationWrapper</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Set default kwargs for a built-in ExplorationWrapper without gin syntax or</span>
+<span class="sd">    config files.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        config: A dictionary of gin parameters yet to be assigned.</span>
+<span class="sd">        strategy: A shortcut name for built-in ExplorationWrappers. Options are</span>
+<span class="sd">            &quot;egreedy&quot; (EpsilonGreedy) and &quot;bilevel&quot; (BilevelEpsilonGreedy).</span>
+<span class="sd">        **kwargs: Assign any of the chosen ExplorationWrapper&#39;s default kwargs.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A reference to the ExplorationWrapper type that can be passed into the</span>
+<span class="sd">        Experiment.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">strategy</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;egreedy&quot;</span><span class="p">,</span> <span class="s2">&quot;bilevel&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">strategy</span> <span class="o">==</span> <span class="s2">&quot;egreedy&quot;</span><span class="p">:</span>
+        <span class="n">strategy_type</span> <span class="o">=</span> <span class="n">EpsilonGreedy</span>
+        <span class="n">strategy_config</span> <span class="o">=</span> <span class="s2">&quot;amago.envs.exploration.EpsilonGreedy&quot;</span>
+    <span class="k">elif</span> <span class="n">strategy</span> <span class="o">==</span> <span class="s2">&quot;bilevel&quot;</span><span class="p">:</span>
+        <span class="n">strategy_type</span> <span class="o">=</span> <span class="n">BilevelEpsilonGreedy</span>
+        <span class="n">strategy_config</span> <span class="o">=</span> <span class="s2">&quot;amago.envs.exploration.BilevelEpsilonGreedy&quot;</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">strategy_config</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">:</span> <span class="n">val</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()})</span>
+    <span class="k">return</span> <span class="n">strategy_type</span></div>
+
+
+
+<div class="viewcode-block" id="switch_traj_encoder">
+<a class="viewcode-back" href="../../api/amago.cli_utils.html#amago.cli_utils.switch_traj_encoder">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">switch_traj_encoder</span><span class="p">(</span>
+    <span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">arch</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">memory_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">layers</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">type</span><span class="p">[</span><span class="n">TrajEncoder</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Set default kwargs for a built-in TrajEncoder without gin syntax or config files.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        config: A dictionary of gin parameters yet to be assigned.</span>
+<span class="sd">        arch: A shortcut name for built-in TrajEncoders. Options are &quot;ff&quot;</span>
+<span class="sd">            (memory-free residual feed-forward blocks), &quot;rnn&quot; (RNN),</span>
+<span class="sd">            &quot;transformer&quot; (Transformer), and &quot;mamba&quot; (Mamba).</span>
+<span class="sd">        memory_size: Sets the same conceptual state space dimension across the</span>
+<span class="sd">            various architectures. For example, the size of the hidden state in an</span>
+<span class="sd">            RNN or d_model in a Transformer.</span>
+<span class="sd">        layers: Sets the number of layers in the TrajEncoder.</span>
+<span class="sd">        **kwargs: Assign any of the chosen TrajEncoder&#39;s default kwargs.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A reference to the TrajEncoder type that can be passed into the Experiment.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">arch</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;ff&quot;</span><span class="p">,</span> <span class="s2">&quot;rnn&quot;</span><span class="p">,</span> <span class="s2">&quot;transformer&quot;</span><span class="p">,</span> <span class="s2">&quot;mamba&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">arch</span> <span class="o">==</span> <span class="s2">&quot;transformer&quot;</span><span class="p">:</span>
+        <span class="n">traj_encoder_type</span> <span class="o">=</span> <span class="n">amago</span><span class="o">.</span><span class="n">nets</span><span class="o">.</span><span class="n">traj_encoders</span><span class="o">.</span><span class="n">TformerTrajEncoder</span>
+        <span class="n">model_config</span> <span class="o">=</span> <span class="s2">&quot;amago.nets.traj_encoders.TformerTrajEncoder&quot;</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">model_config</span><span class="si">}</span><span class="s2">.d_model&quot;</span><span class="p">:</span> <span class="n">memory_size</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">model_config</span><span class="si">}</span><span class="s2">.d_ff&quot;</span><span class="p">:</span> <span class="n">memory_size</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">model_config</span><span class="si">}</span><span class="s2">.n_layers&quot;</span><span class="p">:</span> <span class="n">layers</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">arch</span> <span class="o">==</span> <span class="s2">&quot;rnn&quot;</span><span class="p">:</span>
+        <span class="n">traj_encoder_type</span> <span class="o">=</span> <span class="n">amago</span><span class="o">.</span><span class="n">nets</span><span class="o">.</span><span class="n">traj_encoders</span><span class="o">.</span><span class="n">GRUTrajEncoder</span>
+        <span class="n">model_config</span> <span class="o">=</span> <span class="s2">&quot;amago.nets.traj_encoders.GRUTrajEncoder&quot;</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">model_config</span><span class="si">}</span><span class="s2">.n_layers&quot;</span><span class="p">:</span> <span class="n">layers</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">model_config</span><span class="si">}</span><span class="s2">.d_output&quot;</span><span class="p">:</span> <span class="n">memory_size</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">model_config</span><span class="si">}</span><span class="s2">.d_hidden&quot;</span><span class="p">:</span> <span class="n">memory_size</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">arch</span> <span class="o">==</span> <span class="s2">&quot;ff&quot;</span><span class="p">:</span>
+        <span class="n">traj_encoder_type</span> <span class="o">=</span> <span class="n">amago</span><span class="o">.</span><span class="n">nets</span><span class="o">.</span><span class="n">traj_encoders</span><span class="o">.</span><span class="n">FFTrajEncoder</span>
+        <span class="n">model_config</span> <span class="o">=</span> <span class="s2">&quot;amago.nets.traj_encoders.FFTrajEncoder&quot;</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">model_config</span><span class="si">}</span><span class="s2">.d_model&quot;</span><span class="p">:</span> <span class="n">memory_size</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">model_config</span><span class="si">}</span><span class="s2">.n_layers&quot;</span><span class="p">:</span> <span class="n">layers</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">arch</span> <span class="o">==</span> <span class="s2">&quot;mamba&quot;</span><span class="p">:</span>
+        <span class="n">traj_encoder_type</span> <span class="o">=</span> <span class="n">amago</span><span class="o">.</span><span class="n">nets</span><span class="o">.</span><span class="n">traj_encoders</span><span class="o">.</span><span class="n">MambaTrajEncoder</span>
+        <span class="n">model_config</span> <span class="o">=</span> <span class="s2">&quot;amago.nets.traj_encoders.MambaTrajEncoder&quot;</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+            <span class="p">{</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">model_config</span><span class="si">}</span><span class="s2">.d_model&quot;</span><span class="p">:</span> <span class="n">memory_size</span><span class="p">,</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">model_config</span><span class="si">}</span><span class="s2">.n_layers&quot;</span><span class="p">:</span> <span class="n">layers</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">model_config</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">:</span> <span class="n">val</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()})</span>
+    <span class="k">return</span> <span class="n">traj_encoder_type</span></div>
+
+
+
+<div class="viewcode-block" id="use_config">
+<a class="viewcode-back" href="../../api/amago.cli_utils.html#amago.cli_utils.use_config">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">use_config</span><span class="p">(</span>
+    <span class="n">custom_params</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">gin_configs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">finalize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Bind gin parameters to edit kwarg defaults across the codebase before training</span>
+<span class="sd">    begins.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        custom_params: A dictionary of gin parameters to bind ({param:</span>
+<span class="sd">            new_default_value}). This was probably created within the training script</span>
+<span class="sd">            or from a few command line args.</span>
+<span class="sd">        gin_configs: An optional list of .gin configuration files to use. Gin files</span>
+<span class="sd">            are the correct way to handle configs for real projects... unlike the</span>
+<span class="sd">            example scripts.</span>
+<span class="sd">        finalize: If True, finalize/freeze the gin config to prevent later changes.</span>
+<span class="sd">            Defaults to True.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">param</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">custom_params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">gin</span><span class="o">.</span><span class="n">bind_parameter</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+    <span class="c1"># override defaults with custom gin config files</span>
+    <span class="k">if</span> <span class="n">gin_configs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">config</span> <span class="ow">in</span> <span class="n">gin_configs</span><span class="p">:</span>
+            <span class="n">gin</span><span class="o">.</span><span class="n">parse_config_file</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">finalize</span><span class="p">:</span>
+        <span class="n">gin</span><span class="o">.</span><span class="n">finalize</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="create_experiment_from_cli">
+<a class="viewcode-back" href="../../api/amago.cli_utils.html#amago.cli_utils.create_experiment_from_cli">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_experiment_from_cli</span><span class="p">(</span>
+    <span class="n">command_line_args</span><span class="p">,</span>
+    <span class="n">make_train_env</span><span class="p">:</span> <span class="nb">callable</span><span class="p">,</span>
+    <span class="n">make_val_env</span><span class="p">:</span> <span class="nb">callable</span><span class="p">,</span>
+    <span class="n">max_seq_len</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">group_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">run_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">agent_type</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">Agent</span><span class="p">],</span>
+    <span class="n">tstep_encoder_type</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">TstepEncoder</span><span class="p">],</span>
+    <span class="n">traj_encoder_type</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">TrajEncoder</span><span class="p">],</span>
+    <span class="n">traj_save_len</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">exploration_wrapper_type</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">ExplorationWrapper</span><span class="p">]</span> <span class="o">=</span> <span class="n">EpsilonGreedy</span><span class="p">,</span>
+    <span class="n">experiment_type</span><span class="p">:</span> <span class="nb">type</span><span class="p">[</span><span class="n">amago</span><span class="o">.</span><span class="n">Experiment</span><span class="p">]</span> <span class="o">=</span> <span class="n">amago</span><span class="o">.</span><span class="n">Experiment</span><span class="p">,</span>
+    <span class="n">dataset</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">RLDataset</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">extra_experiment_kwargs</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">amago</span><span class="o">.</span><span class="n">Experiment</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A convenience function that assigns Experiment kwargs from</span>
+<span class="sd">    :py:func:`~amago.cli_utils.add_common_cli()` options.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        command_line_args: The parsed command line arguments created by</span>
+<span class="sd">            `cli_utils.add_common_cli()`.</span>
+<span class="sd">        make_train_env: A callable that makes the training environment.</span>
+<span class="sd">        make_val_env: A callable that makes the validation environment.</span>
+<span class="sd">        max_seq_len: The maximum sequence length of the policy during training.</span>
+<span class="sd">        group_name: The name of the wandb group to use for logging.</span>
+<span class="sd">        run_name: The name of the run for logging &amp; checkpoints.</span>
+<span class="sd">        agent_type: The type of agent to use. Can be the output of</span>
+<span class="sd">            `cli_utils.switch_agent()`.</span>
+<span class="sd">        tstep_encoder_type: The type of tstep encoder to use. Can be the output of</span>
+<span class="sd">            `cli_utils.switch_tstep_encoder()`.</span>
+<span class="sd">        traj_encoder_type: The type of traj encoder to use. Can be the output of</span>
+<span class="sd">            `cli_utils.switch_traj_encoder()`.</span>
+<span class="sd">        traj_save_len: The length of the trajectory to save. Defaults to a very large</span>
+<span class="sd">            number (which saves entire trajectories on terminated or truncated).</span>
+<span class="sd">        exploration_wrapper_type: The type of exploration wrapper to use. Can be the</span>
+<span class="sd">            output of `cli_utils.switch_exploration()`, but defaults to</span>
+<span class="sd">            `EpsilonGreedy`.</span>
+<span class="sd">        experiment_type: The type of experiment to use. Defaults to `amago.Experiment`.</span>
+<span class="sd">        dataset: An optional dataset to use. If not provided, we create a</span>
+<span class="sd">            `DiskTrajDataset` (an online RL replay buffer on disk) in the same</span>
+<span class="sd">            directory where the CLI tells us it will save checkpoints</span>
+<span class="sd">            ({args.buffer_dir}/{args.run_name}).</span>
+<span class="sd">        **extra_experiment_kwargs: Additional keyword arguments to pass to the</span>
+<span class="sd">            Experiment constructor.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        An Experiment instance.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">cli</span> <span class="o">=</span> <span class="n">command_line_args</span>
+
+    <span class="n">traj_save_len</span> <span class="o">=</span> <span class="n">traj_save_len</span> <span class="ow">or</span> <span class="mf">1e10</span>
+
+    <span class="k">if</span> <span class="n">dataset</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># create a new-style dataset in the place</span>
+        <span class="c1"># where all the existing examples assume the dataset will be</span>
+        <span class="n">dataset</span> <span class="o">=</span> <span class="n">DiskTrajDataset</span><span class="p">(</span>
+            <span class="n">dset_root</span><span class="o">=</span><span class="n">cli</span><span class="o">.</span><span class="n">buffer_dir</span><span class="p">,</span>
+            <span class="n">dset_name</span><span class="o">=</span><span class="n">run_name</span><span class="p">,</span>
+            <span class="n">dset_max_size</span><span class="o">=</span><span class="n">cli</span><span class="o">.</span><span class="n">dset_max_size</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">experiment</span> <span class="o">=</span> <span class="n">experiment_type</span><span class="p">(</span>
+        <span class="n">agent_type</span><span class="o">=</span><span class="n">agent_type</span><span class="p">,</span>
+        <span class="n">tstep_encoder_type</span><span class="o">=</span><span class="n">tstep_encoder_type</span><span class="p">,</span>
+        <span class="n">traj_encoder_type</span><span class="o">=</span><span class="n">traj_encoder_type</span><span class="p">,</span>
+        <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>
+        <span class="n">ckpt_base_dir</span><span class="o">=</span><span class="n">cli</span><span class="o">.</span><span class="n">buffer_dir</span><span class="p">,</span>
+        <span class="n">make_train_env</span><span class="o">=</span><span class="n">make_train_env</span><span class="p">,</span>
+        <span class="n">make_val_env</span><span class="o">=</span><span class="n">make_val_env</span><span class="p">,</span>
+        <span class="n">max_seq_len</span><span class="o">=</span><span class="n">max_seq_len</span><span class="p">,</span>
+        <span class="n">traj_save_len</span><span class="o">=</span><span class="n">traj_save_len</span><span class="p">,</span>
+        <span class="n">exploration_wrapper_type</span><span class="o">=</span><span class="n">exploration_wrapper_type</span><span class="p">,</span>
+        <span class="n">run_name</span><span class="o">=</span><span class="n">run_name</span><span class="p">,</span>
+        <span class="n">dloader_workers</span><span class="o">=</span><span class="n">cli</span><span class="o">.</span><span class="n">dloader_workers</span><span class="p">,</span>
+        <span class="n">log_to_wandb</span><span class="o">=</span><span class="ow">not</span> <span class="n">cli</span><span class="o">.</span><span class="n">no_log</span><span class="p">,</span>
+        <span class="n">wandb_group_name</span><span class="o">=</span><span class="n">group_name</span><span class="p">,</span>
+        <span class="n">batch_size</span><span class="o">=</span><span class="n">cli</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
+        <span class="n">epochs</span><span class="o">=</span><span class="n">cli</span><span class="o">.</span><span class="n">epochs</span><span class="p">,</span>
+        <span class="n">parallel_actors</span><span class="o">=</span><span class="n">cli</span><span class="o">.</span><span class="n">parallel_actors</span><span class="p">,</span>
+        <span class="n">train_timesteps_per_epoch</span><span class="o">=</span><span class="n">cli</span><span class="o">.</span><span class="n">timesteps_per_epoch</span><span class="p">,</span>
+        <span class="n">train_batches_per_epoch</span><span class="o">=</span><span class="n">cli</span><span class="o">.</span><span class="n">batches_per_epoch</span><span class="p">,</span>
+        <span class="n">start_learning_at_epoch</span><span class="o">=</span><span class="n">cli</span><span class="o">.</span><span class="n">start_learning_at_epoch</span><span class="p">,</span>
+        <span class="n">val_interval</span><span class="o">=</span><span class="n">cli</span><span class="o">.</span><span class="n">val_interval</span><span class="p">,</span>
+        <span class="n">ckpt_interval</span><span class="o">=</span><span class="n">cli</span><span class="o">.</span><span class="n">ckpt_interval</span><span class="p">,</span>
+        <span class="n">mixed_precision</span><span class="o">=</span><span class="n">cli</span><span class="o">.</span><span class="n">mixed_precision</span><span class="p">,</span>
+        <span class="n">env_mode</span><span class="o">=</span><span class="n">cli</span><span class="o">.</span><span class="n">env_mode</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">extra_experiment_kwargs</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">experiment</span></div>
+
+
+
+<div class="viewcode-block" id="make_experiment_learn_only">
+<a class="viewcode-back" href="../../api/amago.cli_utils.html#amago.cli_utils.make_experiment_learn_only">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">make_experiment_learn_only</span><span class="p">(</span><span class="n">experiment</span><span class="p">:</span> <span class="n">amago</span><span class="o">.</span><span class="n">Experiment</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">amago</span><span class="o">.</span><span class="n">Experiment</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Modify the experiment to run in learn-only mode.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        experiment: The experiment to modify.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The modified experiment.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">experiment</span><span class="o">.</span><span class="n">start_collecting_at_epoch</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span>
+    <span class="n">experiment</span><span class="o">.</span><span class="n">train_timesteps_per_epoch</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">experiment</span><span class="o">.</span><span class="n">val_interval</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="n">experiment</span><span class="o">.</span><span class="n">val_timesteps_per_epoch</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="c1"># might throw warnings but cuts overhead of building envs we&#39;ll never use</span>
+    <span class="n">experiment</span><span class="o">.</span><span class="n">parallel_actors</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">experiment</span><span class="o">.</span><span class="n">always_save_latest</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">experiment</span><span class="o">.</span><span class="n">always_load_latest</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">experiment</span><span class="o">.</span><span class="n">has_dset_edit_rights</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="n">experiment</span></div>
+
+
+
+<div class="viewcode-block" id="make_experiment_collect_only">
+<a class="viewcode-back" href="../../api/amago.cli_utils.html#amago.cli_utils.make_experiment_collect_only">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">make_experiment_collect_only</span><span class="p">(</span><span class="n">experiment</span><span class="p">:</span> <span class="n">amago</span><span class="o">.</span><span class="n">Experiment</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">amago</span><span class="o">.</span><span class="n">Experiment</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Modify the experiment to run in collect-only mode.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        experiment: The experiment to modify.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The modified experiment.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">experiment</span><span class="o">.</span><span class="n">start_collecting_at_epoch</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">experiment</span><span class="o">.</span><span class="n">start_learning_at_epoch</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">)</span>
+    <span class="n">experiment</span><span class="o">.</span><span class="n">train_batches_per_epoch</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">experiment</span><span class="o">.</span><span class="n">ckpt_interval</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">experiment</span><span class="o">.</span><span class="n">always_save_latest</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">experiment</span><span class="o">.</span><span class="n">always_load_latest</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="c1"># run &quot;forever&quot;; terminate manually (when learning process is done)</span>
+    <span class="n">experiment</span><span class="o">.</span><span class="n">epochs</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">experiment</span><span class="o">.</span><span class="n">epochs</span><span class="p">,</span> <span class="mi">1_000_000</span><span class="p">)</span>
+    <span class="c1"># do not delete anything from the collection process</span>
+    <span class="n">experiment</span><span class="o">.</span><span class="n">has_dset_edit_rights</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="n">experiment</span></div>
+
+
+
+<div class="viewcode-block" id="switch_async_mode">
+<a class="viewcode-back" href="../../api/amago.cli_utils.html#amago.cli_utils.switch_async_mode">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">switch_async_mode</span><span class="p">(</span><span class="n">experiment</span><span class="p">:</span> <span class="n">amago</span><span class="o">.</span><span class="n">Experiment</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">amago</span><span class="o">.</span><span class="n">Experiment</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Switch the experiment mode between collect, learn, or both.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        experiment: The experiment to modify.</span>
+<span class="sd">        mode: The mode to switch to. Options are &quot;collect&quot;, &quot;learn&quot;, or &quot;both&quot;.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The modified experiment.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">mode</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;collect&quot;</span><span class="p">,</span> <span class="s2">&quot;learn&quot;</span><span class="p">,</span> <span class="s2">&quot;both&quot;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;collect&quot;</span><span class="p">:</span>
+        <span class="n">experiment</span> <span class="o">=</span> <span class="n">make_experiment_collect_only</span><span class="p">(</span><span class="n">experiment</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;learn&quot;</span><span class="p">:</span>
+        <span class="n">experiment</span> <span class="o">=</span> <span class="n">make_experiment_learn_only</span><span class="p">(</span><span class="n">experiment</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">experiment</span></div>
+
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By UT Austin Robot Perception and Learning Lab
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

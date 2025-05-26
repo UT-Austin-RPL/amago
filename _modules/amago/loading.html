@@ -1,0 +1,1177 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" data-theme="light">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>amago.loading &#8212; AMAGO</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "light";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/custom.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/amago/loading';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="light">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+    
+    
+    
+    <img src="../../_static/amago_logo_3.png" class="logo__image only-light" alt="AMAGO - Home"/>
+    <script>document.write(`<img src="../../_static/amago_logo_3.png" class="logo__image only-dark" alt="AMAGO - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../tutorial/index.html">Tutorial</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorial/setup_env.html">Setup the Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorial/create_dataset.html">Create a Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorial/create_experiment.html">Create an Experiment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorial/track_results.html">Track the Results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorial/configuration.html">Configure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorial/customization.html">Customize</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../tutorial/async.html">Multi-GPU and Asynchronous Training</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../examples/index.html">Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/00_meta_frozen_lake.html">Meta Frozen Lake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/01_basic_gym.html">Basic Gymnasium</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/02_gymnax.html">Gymnax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/03_popgym_suite.html">POPGym</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/04_tmaze.html">T-Maze</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/05_dark_key_door.html">Dark Room Key Door</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/06_alchemy.html">Symbolic DM Alchemy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/07_metaworld.html">Meta-World ML1/ML10/ML45</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/08_ale.html">Multi-Game Atari</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/09_multitask_procgen.html">Multi-Game ProcGen</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/10_babyai.html">Multi-Task BabyAI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/11_xland_minigrid.html">XLand Mini-Grid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/12_half_cheetah_vel.html">HalfCheetah(v4)-Velocity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/13_mazerunner_relabeling.html">MazeRunner HER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../examples/14_d4rl.html">D4RL</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../api/amago.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api/amago.agent.html">amago.agent</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/amago.cli_utils.html">amago.cli_utils</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../api/amago.envs.html">amago.envs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.envs.amago_env.html">amago.envs.amago_env</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../api/amago.envs.builtin.html">amago.envs.builtin</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../api/amago.envs.builtin.half_cheetah_v4_vel.html">amago.envs.builtin.half_cheetah_v4_vel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/amago.envs.builtin.metaworld_ml.html">amago.envs.builtin.metaworld_ml</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/amago.envs.builtin.popgym_envs.html">amago.envs.builtin.popgym_envs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/amago.envs.builtin.toy_gym.html">amago.envs.builtin.toy_gym</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../api/amago.envs.builtin.xland_minigrid.html">amago.envs.builtin.xland_minigrid</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.envs.env_utils.html">amago.envs.env_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.envs.exploration.html">amago.envs.exploration</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/amago.experiment.html">amago.experiment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/amago.hindsight.html">amago.hindsight</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/amago.loading.html">amago.loading</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../api/amago.nets.html">amago.nets</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.nets.actor_critic.html">amago.nets.actor_critic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.nets.cnn.html">amago.nets.cnn</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.nets.ff.html">amago.nets.ff</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.nets.goal_embedders.html">amago.nets.goal_embedders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.nets.policy_dists.html">amago.nets.policy_dists</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.nets.traj_encoders.html">amago.nets.traj_encoders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.nets.transformer.html">amago.nets.transformer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.nets.tstep_encoders.html">amago.nets.tstep_encoders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/amago.nets.utils.html">amago.nets.utils</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/amago.utils.html">amago.utils</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../../citation.html">Citation</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1></h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <h1>Source code for amago.loading</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Load training data.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pickle</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">collections</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">operator</span><span class="w"> </span><span class="kn">import</span> <span class="n">itemgetter</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Any</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.nn.utils.rnn</span><span class="w"> </span><span class="kn">import</span> <span class="n">pad_sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dataset</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">gin</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">amago.hindsight</span><span class="w"> </span><span class="kn">import</span> <span class="n">Trajectory</span><span class="p">,</span> <span class="n">Relabeler</span><span class="p">,</span> <span class="n">FrozenTraj</span><span class="p">,</span> <span class="n">NoOpRelabeler</span>
+
+
+<div class="viewcode-block" id="RLData">
+<a class="viewcode-back" href="../../api/amago.loading.html#amago.loading.RLData">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">RLData</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Stores an individual training example (sequence).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        obs (dict[str, torch.Tensor]): A dictionary of observation tensors.</span>
+<span class="sd">            The shape of each value is (T, Any), where T is the length of the sequence in timesteps.</span>
+<span class="sd">        rews (torch.FloatTensor): A tensor of rewards. Shape: (T - 1, 1).</span>
+<span class="sd">            There is no reward before the first timestep.</span>
+<span class="sd">        dones (torch.BoolTensor): A tensor of done flags. Shape: (T - 1, 1).</span>
+<span class="sd">            There is no done flag before the first timestep.</span>
+<span class="sd">        actions (torch.FloatTensor): A tensor of actions. Shape: (T - 1, action dim).</span>
+<span class="sd">            There is no action on the last (terminal) timestep.</span>
+<span class="sd">        time_idxs (torch.LongTensor): A tensor of time indices. Shape: (T, 1).</span>
+<span class="sd">            The global timestep counter of each timestep in the episode.</span>
+<span class="sd">            If this is an entire episode, `time_idxs` is range(0, T).</span>
+<span class="sd">        rl2s (Optional[torch.FloatTensor]): A tensor of previous action/reward pairs.</span>
+<span class="sd">            Shape: (T, 1 + action dim). The previous reward concatenated with the previous action.</span>
+<span class="sd">            Used to make these values input to the policy.</span>
+<span class="sd">            If not provided, they will be generated by shifting the actions and rewards.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">obs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span>  <span class="c1"># (T, obs dim)</span>
+    <span class="n">rews</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span>  <span class="c1"># (T - 1, 1)</span>
+    <span class="n">dones</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">BoolTensor</span>  <span class="c1"># (T - 1, 1)</span>
+    <span class="n">actions</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span>  <span class="c1"># (T - 1, action dim)</span>
+    <span class="n">time_idxs</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span>  <span class="c1"># (T, 1)</span>
+    <span class="n">rl2s</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># (T, 1 + action dim)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">rl2s</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Makes the `rl2s` (previous action/reward) sequence optional, because</span>
+<span class="sd">            any dataset that isn&#39;t generated by our env wrappers wouldn&#39;t have it.</span>
+<span class="sd">            Must always mirror the format of `hindsight.Trajectory.as_input_sequence`.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">blank_action</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">actions</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+            <span class="n">blank_rew</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">rl2s</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span>
+                <span class="p">(</span>
+                    <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">blank_rew</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">rews</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+                    <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">blank_action</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">actions</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+                <span class="p">),</span>
+                <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">actions</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_safe_randrange</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">random</span><span class="o">.</span><span class="n">randrange</span><span class="p">(</span><span class="n">low</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="n">high</span><span class="p">,</span> <span class="n">low</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+
+<div class="viewcode-block" id="RLData.random_slice">
+<a class="viewcode-back" href="../../api/amago.loading.html#amago.loading.RLData.random_slice">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">random_slice</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">length</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">padded_sampling</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;none&quot;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Randomly slices the sequence to a given length.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            length: The length of the sequence to sample.</span>
+<span class="sd">            padded_sampling: The mode of padding to use.</span>
+<span class="sd">                &quot;none&quot; --&gt; sample a random start index and take the next `length` timesteps. Can</span>
+<span class="sd">                bias against the timesteps at the end of the trajectory.</span>
+<span class="sd">                &quot;both&quot; --&gt; sample without bias against the start and end of the trajectory, but can lead to</span>
+<span class="sd">                    much more of the batch being padded/masked.</span>
+<span class="sd">                &quot;left&quot; --&gt; sample while effectively padding the left side of the sequence for cases</span>
+<span class="sd">                where the start of the training sequence is not always the first timestep of the trajectory.</span>
+<span class="sd">                &quot;right&quot; --&gt; sample while effectively padding the right side of the sequence for cases</span>
+<span class="sd">                where the end of the trajectory may be undersampled.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">length</span><span class="p">:</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">elif</span> <span class="n">padded_sampling</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_randrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-</span> <span class="n">length</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">padded_sampling</span> <span class="o">==</span> <span class="s2">&quot;both&quot;</span><span class="p">:</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_randrange</span><span class="p">(</span><span class="o">-</span><span class="n">length</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">padded_sampling</span> <span class="o">==</span> <span class="s2">&quot;left&quot;</span><span class="p">:</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_randrange</span><span class="p">(</span><span class="o">-</span><span class="n">length</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-</span> <span class="n">length</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">padded_sampling</span> <span class="o">==</span> <span class="s2">&quot;right&quot;</span><span class="p">:</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_safe_randrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Unrecognized `padded_sampling` mode: `</span><span class="si">{</span><span class="n">padded_sampling</span><span class="si">}</span><span class="s2">`&quot;</span>
+            <span class="p">)</span>
+        <span class="n">stop</span> <span class="o">=</span> <span class="n">start</span> <span class="o">+</span> <span class="n">length</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="c1"># the causal RL loss requires these off-by-one lengths</span>
+        <span class="n">tcp</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">tc</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span><span class="p">[</span><span class="n">tcp</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rl2s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rl2s</span><span class="p">[</span><span class="n">tcp</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_idxs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_idxs</span><span class="p">[</span><span class="n">tcp</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dones</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dones</span><span class="p">[</span><span class="n">tc</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rews</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rews</span><span class="p">[</span><span class="n">tc</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">actions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">actions</span><span class="p">[</span><span class="n">tc</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+</div>
+
+
+
+<span class="n">MAGIC_PAD_VAL</span> <span class="o">=</span> <span class="mf">4.0</span>
+<span class="n">pad</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">pad_sequence</span><span class="p">,</span> <span class="n">batch_first</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">padding_value</span><span class="o">=</span><span class="n">MAGIC_PAD_VAL</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Batch">
+<a class="viewcode-back" href="../../api/amago.loading.html#amago.loading.Batch">[docs]</a>
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Batch</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Keeps data organized during training step</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">obs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span>
+    <span class="n">rl2s</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span>
+    <span class="n">rews</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span>
+    <span class="n">dones</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span>
+    <span class="n">actions</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span>
+    <span class="n">time_idxs</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span>
+
+<div class="viewcode-block" id="Batch.to">
+<a class="viewcode-back" href="../../api/amago.loading.html#amago.loading.Batch.to">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">device</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rl2s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rl2s</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">rews</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rews</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dones</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dones</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">actions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">actions</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_idxs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_idxs</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="RLData_pad_collate">
+<a class="viewcode-back" href="../../api/amago.loading.html#amago.loading.RLData_pad_collate">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">RLData_pad_collate</span><span class="p">(</span><span class="n">samples</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">RLData</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Batch</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Pads the sequence data of a list of `RLData` gathered by dataloaders.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        samples: A list of `RLData` objects.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A `Batch` object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">samples</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">==</span> <span class="n">samples</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+    <span class="n">obs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">pad</span><span class="p">([</span><span class="n">s</span><span class="o">.</span><span class="n">obs</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">])</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">keys</span><span class="p">()}</span>
+    <span class="n">rl2s</span> <span class="o">=</span> <span class="n">pad</span><span class="p">([</span><span class="n">s</span><span class="o">.</span><span class="n">rl2s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">])</span>
+    <span class="n">rews</span> <span class="o">=</span> <span class="n">pad</span><span class="p">([</span><span class="n">s</span><span class="o">.</span><span class="n">rews</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">])</span>
+    <span class="n">dones</span> <span class="o">=</span> <span class="n">pad</span><span class="p">([</span><span class="n">s</span><span class="o">.</span><span class="n">dones</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">])</span>
+    <span class="n">actions</span> <span class="o">=</span> <span class="n">pad</span><span class="p">([</span><span class="n">s</span><span class="o">.</span><span class="n">actions</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">])</span>
+    <span class="n">time_idxs</span> <span class="o">=</span> <span class="n">pad</span><span class="p">([</span><span class="n">s</span><span class="o">.</span><span class="n">time_idxs</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">samples</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">Batch</span><span class="p">(</span>
+        <span class="n">obs</span><span class="o">=</span><span class="n">obs</span><span class="p">,</span>
+        <span class="n">rl2s</span><span class="o">=</span><span class="n">rl2s</span><span class="p">,</span>
+        <span class="n">rews</span><span class="o">=</span><span class="n">rews</span><span class="p">,</span>
+        <span class="n">dones</span><span class="o">=</span><span class="n">dones</span><span class="p">,</span>
+        <span class="n">actions</span><span class="o">=</span><span class="n">actions</span><span class="p">,</span>
+        <span class="n">time_idxs</span><span class="o">=</span><span class="n">time_idxs</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="RLDataset">
+<a class="viewcode-back" href="../../api/amago.loading.html#amago.loading.RLDataset">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">RLDataset</span><span class="p">(</span><span class="n">ABC</span><span class="p">,</span> <span class="n">Dataset</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Abstract base class that defines what :py:class:`~amago.experiment.Experiment` expects from its pytorch Dataset.</span>
+
+<span class="sd">    Allows the main training loop to be used with existing data sources (offline RL)</span>
+<span class="sd">    that were not generated by our environment wrappers.</span>
+
+<span class="sd">    RLDatasets have no real length or fixed indices like typical pytorch Datasets.</span>
+<span class="sd">    The &quot;length&quot; is determined by the update : data ratio of the experiment.</span>
+
+<span class="sd">    Datasets have a reference to the `Experiment` that is training on them, which can be used</span>
+<span class="sd">    to access the `Accelerator` and other useful information.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        dset_name: The name of the dataset. Used to identify the dataset in logging metrics. Defaults to the class name.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dset_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">configured</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dset_name</span> <span class="o">=</span> <span class="n">dset_name</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
+
+<div class="viewcode-block" id="RLDataset.configure">
+<a class="viewcode-back" href="../../api/amago.loading.html#amago.loading.RLDataset.configure">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">configure</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">items_per_epoch</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">max_seq_len</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">padded_sampling</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">has_edit_rights</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Configure the dataset with additional hyperparameters.</span>
+
+<span class="sd">        We&#39;ve basically split the constructor in two parts, because in practice</span>
+<span class="sd">        we will be grabbing these settings from the main Experiment.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            items_per_epoch: The number of trajectoires to sample each epoch. Defines</span>
+<span class="sd">                the end of dataloader iteration.</span>
+<span class="sd">            max_seq_len: The maximum sequence length to sample.</span>
+<span class="sd">            padded_sampling. Strategy for sampling from trajectories longer than max_seq_len.</span>
+<span class="sd">                See :py:meth:`~amago.loading.RLData.random_slice` or :py:class:`~amago.experiment.Experiment`</span>
+<span class="sd">                docs for more details.</span>
+<span class="sd">            has_edit_rights: Whether the dataset has total authority to edit the underlying data</span>
+<span class="sd">                (e.g., to delete trajectory files from disk). Sometimes turned off for async</span>
+<span class="sd">                setups.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">items_per_epoch</span> <span class="o">=</span> <span class="n">items_per_epoch</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_seq_len</span> <span class="o">=</span> <span class="n">max_seq_len</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">padded_sampling</span> <span class="o">=</span> <span class="n">padded_sampling</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">has_edit_rights</span> <span class="o">=</span> <span class="n">has_edit_rights</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">configured</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="RLDataset.configure_from_experiment">
+<a class="viewcode-back" href="../../api/amago.loading.html#amago.loading.RLDataset.configure_from_experiment">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">configure_from_experiment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Call ``configure()`` with settings inferred from the main Experiment.&quot;&quot;&quot;</span>
+        <span class="c1"># convert from length of epoch in batches to length of epoch in items to load</span>
+        <span class="n">items_per_epoch</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">experiment</span><span class="o">.</span><span class="n">train_batches_per_epoch</span>
+            <span class="o">*</span> <span class="n">experiment</span><span class="o">.</span><span class="n">batch_size</span>
+            <span class="o">*</span> <span class="n">experiment</span><span class="o">.</span><span class="n">accelerator</span><span class="o">.</span><span class="n">num_processes</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span>
+            <span class="n">items_per_epoch</span><span class="o">=</span><span class="n">items_per_epoch</span><span class="p">,</span>
+            <span class="n">max_seq_len</span><span class="o">=</span><span class="n">experiment</span><span class="o">.</span><span class="n">max_seq_len</span><span class="p">,</span>
+            <span class="n">padded_sampling</span><span class="o">=</span><span class="n">experiment</span><span class="o">.</span><span class="n">padded_sampling</span><span class="p">,</span>
+            <span class="n">has_edit_rights</span><span class="o">=</span><span class="n">experiment</span><span class="o">.</span><span class="n">has_dset_edit_rights</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RLDataset.check_configured">
+<a class="viewcode-back" href="../../api/amago.loading.html#amago.loading.RLDataset.check_configured">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">check_configured</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">configured</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Dataset not configured. Call `configure_from_experiment()` first.&quot;</span>
+            <span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># the length is set by the number of items we want to sample between</span>
+        <span class="c1"># env interactions, not by the actual number of items in the dataset.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_configured</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">items_per_epoch</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">save_new_trajs_to</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Tells the parallel actors where to write new trajectories.</span>
+
+<span class="sd">        If `None`, the actors will not write new trajectories to disk.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ready_for_training</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Whether the dataset is ready to be used for training.</span>
+<span class="sd">        If `False`, :py:class:`~amago.experiment.Experiment`</span>
+<span class="sd">        will keep collecting data until learning updates can begin.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">configured</span>
+
+<div class="viewcode-block" id="RLDataset.on_end_of_collection">
+<a class="viewcode-back" href="../../api/amago.loading.html#amago.loading.RLDataset.on_end_of_collection">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">on_end_of_collection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Callback for :py:class:`~amago.experiment.Experiment` to call</span>
+<span class="sd">        *after* each round of environment interaction / data collection,</span>
+<span class="sd">        but *before* gradient updates resume.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            epoch: The current epoch (in case there is some kind of schedule)</span>
+
+<span class="sd">        Returns a dictionary of metrics to log.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{}</span></div>
+
+
+<div class="viewcode-block" id="RLDataset.delete">
+<a class="viewcode-back" href="../../api/amago.loading.html#amago.loading.RLDataset.delete">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Called when the user wants to delete the dataset (from disk?).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="RLDataset.get_description">
+<a class="viewcode-back" href="../../api/amago.loading.html#amago.loading.RLDataset.get_description">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_description</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a string describing the dataset. Printed as part of the hparam</span>
+<span class="sd">        summary when the experiment starts.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+
+<div class="viewcode-block" id="RLDataset.sample_random_trajectory">
+<a class="viewcode-back" href="../../api/amago.loading.html#amago.loading.RLDataset.sample_random_trajectory">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample_random_trajectory</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RLData</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Prepare a (random) *full trajectory* or at least the maximum sequence length</span>
+<span class="sd">        of the dataset. Sampling random subsets up to the policy&#39;s sequence length is</span>
+<span class="sd">        handled automatically.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_configured</span><span class="p">()</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_random_trajectory</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_seq_len</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">random_slice</span><span class="p">(</span>
+                <span class="n">length</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_seq_len</span><span class="p">,</span> <span class="n">padded_sampling</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">padded_sampling</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">data</span></div>
+
+
+
+<span class="nd">@dataclass</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">_DatasetStatus</span><span class="p">:</span>
+    <span class="n">dataset</span><span class="p">:</span> <span class="n">RLDataset</span>
+    <span class="n">initial_weight</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">final_weight</span><span class="p">:</span> <span class="nb">float</span>
+    <span class="n">epoch_ready</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="MixtureOfDatasets">
+<a class="viewcode-back" href="../../api/amago.loading.html#amago.loading.MixtureOfDatasets">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">MixtureOfDatasets</span><span class="p">(</span><span class="n">RLDataset</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Sample from a mixture of datasets.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        datasets: A list of :py:class:`~amago.loading.RLDataset` objects.</span>
+<span class="sd">        sampling_weights: Probability of sampling from each dataset. Must sum to 1.</span>
+<span class="sd">        smooth_sudden_starts: When a dataset becomes ready for training mid-way through training,</span>
+<span class="sd">            anneal its sampling_weight from 0 --&gt; assigned ``sampling_weights[i]`` over ``smooth_sudden_starts`` epochs.</span>
+<span class="sd">        dset_name: The name of the dataset. Used to identify the dataset in logging metrics. Defaults to the class name.</span>
+
+<span class="sd">    Note:</span>
+<span class="sd">        Only samples from datasets that are currently :py:meth:`~amago.loading.RLDataset.ready_for_training`. For example,</span>
+<span class="sd">        a mixture of some custom offline dataset and the :py:class:`~amago.loading.DiskTrajDataset` will only sample</span>
+<span class="sd">        from the offline dataset until the :py:class:`~amago.loading.DiskTrajDataset` has written trajectories to disk.</span>
+<span class="sd">        Sampling weights are renormalized amongst the datasets that are ready for training.</span>
+
+<span class="sd">        Only one dataset can direct the Experiment&#39;s parallel actors to save new trajectories to disk</span>
+<span class="sd">        (only one dataset&#39;s `dset.save_new_trajs_to` is not `None`).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">datasets</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">RLDataset</span><span class="p">],</span>
+        <span class="n">sampling_weights</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+        <span class="n">smooth_sudden_starts</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">dset_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dset_name</span><span class="o">=</span><span class="n">dset_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">datasets</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">sampling_weights</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> requires the same number of datasets (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">datasets</span><span class="p">)</span><span class="si">}</span><span class="s2">) as sampling weights (</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">sampling_weights</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">sampling_weights</span><span class="p">),</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> requires the sum of sampling weights to be 1.0&quot;</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">all_datasets</span> <span class="o">=</span> <span class="n">datasets</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sampling_weights</span> <span class="o">=</span> <span class="n">sampling_weights</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">smooth_sudden_starts</span> <span class="o">=</span> <span class="n">smooth_sudden_starts</span>
+
+        <span class="c1"># find up to 1 dataset that determines where Experiment will write new trajectories</span>
+        <span class="n">active_save_locs</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">d</span><span class="o">.</span><span class="n">save_new_trajs_to</span>
+            <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_datasets</span>
+            <span class="k">if</span> <span class="n">d</span><span class="o">.</span><span class="n">save_new_trajs_to</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">active_save_locs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Only one dataset can save new trajectories&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_save_new_trajs_to</span> <span class="o">=</span> <span class="n">active_save_locs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">active_save_locs</span> <span class="k">else</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="MixtureOfDatasets.configure_from_experiment">
+<a class="viewcode-back" href="../../api/amago.loading.html#amago.loading.MixtureOfDatasets.configure_from_experiment">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">configure_from_experiment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">configure_from_experiment</span><span class="p">(</span><span class="n">experiment</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_datasets</span><span class="p">:</span>
+            <span class="n">d</span><span class="o">.</span><span class="n">configure_from_experiment</span><span class="p">(</span><span class="n">experiment</span><span class="p">)</span>
+
+        <span class="c1"># with datasets configured, initialize our annealing schedule</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dsets_status</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">d</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_datasets</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampling_weights</span><span class="p">):</span>
+            <span class="c1"># if the dataset is available from the start of training, turn off its schedule</span>
+            <span class="c1"># setting initial_weight to the final weight.</span>
+            <span class="n">initial_weight</span> <span class="o">=</span> <span class="n">w</span> <span class="k">if</span> <span class="n">d</span><span class="o">.</span><span class="n">ready_for_training</span> <span class="k">else</span> <span class="mi">0</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_dsets_status</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">_DatasetStatus</span><span class="p">(</span>
+                    <span class="n">dataset</span><span class="o">=</span><span class="n">d</span><span class="p">,</span>
+                    <span class="n">initial_weight</span><span class="o">=</span><span class="n">initial_weight</span><span class="p">,</span>
+                    <span class="n">final_weight</span><span class="o">=</span><span class="n">w</span><span class="p">,</span>
+                    <span class="n">epoch_ready</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_dset_weights</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="c1"># will hold an empirical counter of sampler per dataset per epoch as a wandb sanity-check</span>
+        <span class="c1"># (only works when dataloader has 0 workers)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sampling_metrics</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">save_new_trajs_to</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_save_new_trajs_to</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ready_for_training</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">ready_for_training</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_datasets</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MixtureOfDatasets.update_dset_weights">
+<a class="viewcode-back" href="../../api/amago.loading.html#amago.loading.MixtureOfDatasets.update_dset_weights">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_dset_weights</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epoch</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_configured</span><span class="p">()</span>
+
+        <span class="c1"># look for newly ready datasets</span>
+        <span class="k">for</span> <span class="n">status</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dsets_status</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">status</span><span class="o">.</span><span class="n">epoch_ready</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">status</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">ready_for_training</span><span class="p">:</span>
+                <span class="n">status</span><span class="o">.</span><span class="n">epoch_ready</span> <span class="o">=</span> <span class="n">epoch</span>
+
+        <span class="c1"># set sampling weights</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_available_datasets</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">status</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dsets_status</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">status</span><span class="o">.</span><span class="n">epoch_ready</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">smooth_sudden_starts</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="c1"># active datasets jump right to their final weight</span>
+                    <span class="n">current_weight</span> <span class="o">=</span> <span class="n">status</span><span class="o">.</span><span class="n">final_weight</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># linear schedule for smooth_sudden_starts epochs</span>
+                    <span class="c1"># after the dataset is first discovered to be ready</span>
+                    <span class="n">m</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">status</span><span class="o">.</span><span class="n">final_weight</span> <span class="o">-</span> <span class="n">status</span><span class="o">.</span><span class="n">initial_weight</span>
+                    <span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">smooth_sudden_starts</span>
+                    <span class="n">x</span> <span class="o">=</span> <span class="n">epoch</span> <span class="o">-</span> <span class="n">status</span><span class="o">.</span><span class="n">epoch_ready</span> <span class="o">+</span> <span class="mi">1</span>
+                    <span class="n">current_weight</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
+                        <span class="n">m</span> <span class="o">*</span> <span class="n">x</span> <span class="o">+</span> <span class="n">status</span><span class="o">.</span><span class="n">initial_weight</span><span class="p">,</span>
+                        <span class="n">status</span><span class="o">.</span><span class="n">final_weight</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_available_datasets</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">status</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="n">current_weight</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># if dataset is not ready for training, set weight to 0</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_available_datasets</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">status</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="MixtureOfDatasets.on_end_of_collection">
+<a class="viewcode-back" href="../../api/amago.loading.html#amago.loading.MixtureOfDatasets.on_end_of_collection">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">on_end_of_collection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_configured</span><span class="p">()</span>
+
+        <span class="c1"># flatten the metrics from all datasets</span>
+        <span class="n">metrics</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_datasets</span><span class="p">:</span>
+            <span class="n">d_metrics</span> <span class="o">=</span> <span class="n">d</span><span class="o">.</span><span class="n">on_end_of_collection</span><span class="p">(</span><span class="n">experiment</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">d_metrics</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">metrics</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">d</span><span class="o">.</span><span class="n">dset_name</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+
+        <span class="c1"># log and then reset sampling counters</span>
+        <span class="n">total_samples</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sampling_metrics</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">total_samples</span><span class="p">:</span>
+            <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sampling_metrics</span><span class="p">:</span>
+                <span class="n">dset_name</span><span class="p">,</span> <span class="n">samples</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sampling_metrics</span><span class="o">.</span><span class="n">popitem</span><span class="p">()</span>
+                <span class="n">metrics</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">dset_name</span><span class="si">}</span><span class="s2"> Empirical Sample Weight (Previous Epoch)&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">samples</span> <span class="o">/</span> <span class="n">total_samples</span>
+                <span class="p">)</span>
+
+        <span class="c1"># find datasets that are now ready for training, and adjust their sampling weight</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_dset_weights</span><span class="p">(</span><span class="n">experiment</span><span class="o">.</span><span class="n">epoch</span><span class="p">)</span>
+        <span class="c1"># log sampling weight logic to wandb</span>
+        <span class="k">for</span> <span class="n">dset</span><span class="p">,</span> <span class="n">active_weight</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_available_datasets</span><span class="p">:</span>
+            <span class="n">metrics</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">dset</span><span class="o">.</span><span class="n">dset_name</span><span class="si">}</span><span class="s2"> Current Sample Weight&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">active_weight</span>
+        <span class="k">return</span> <span class="n">metrics</span></div>
+
+
+<div class="viewcode-block" id="MixtureOfDatasets.delete">
+<a class="viewcode-back" href="../../api/amago.loading.html#amago.loading.MixtureOfDatasets.delete">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_datasets</span><span class="p">:</span>
+            <span class="n">d</span><span class="o">.</span><span class="n">delete</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="MixtureOfDatasets.get_description">
+<a class="viewcode-back" href="../../api/amago.loading.html#amago.loading.MixtureOfDatasets.get_description">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_description</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;MixtureOfDatasets with </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_datasets</span><span class="p">)</span><span class="si">}</span><span class="s2"> datasets&quot;</span>
+            <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">get_description</span><span class="p">()</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_datasets</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MixtureOfDatasets.sample_random_trajectory">
+<a class="viewcode-back" href="../../api/amago.loading.html#amago.loading.MixtureOfDatasets.sample_random_trajectory">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample_random_trajectory</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RLData</span><span class="p">:</span>
+        <span class="n">active_dsets</span><span class="p">,</span> <span class="n">active_weights</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_available_datasets</span><span class="p">)</span>
+        <span class="c1"># renormalize the weights to sum to 1.0</span>
+        <span class="n">total_weight</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">active_weights</span><span class="p">)</span>
+        <span class="n">active_weights</span> <span class="o">=</span> <span class="p">[</span><span class="n">w</span> <span class="o">/</span> <span class="n">total_weight</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">active_weights</span><span class="p">]</span>
+        <span class="c1"># sample from the available datasets</span>
+        <span class="n">random_dset</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choices</span><span class="p">(</span><span class="n">active_dsets</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">active_weights</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sampling_metrics</span><span class="p">[</span><span class="n">random_dset</span><span class="o">.</span><span class="n">dset_name</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="c1"># sample a random trajectory from the chosen dataset</span>
+        <span class="n">rldata</span> <span class="o">=</span> <span class="n">random_dset</span><span class="o">.</span><span class="n">sample_random_trajectory</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">rldata</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="load_traj_from_disk">
+<a class="viewcode-back" href="../../api/amago.loading.html#amago.loading.load_traj_from_disk">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_traj_from_disk</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Trajectory</span> <span class="o">|</span> <span class="n">FrozenTraj</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Loads a trajectory from disk.</span>
+
+<span class="sd">    Switches between the available file formats of (&quot;.traj&quot; and &quot;.npz&quot;)</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        path: The path to the trajectory file saved by our environment wrappers as part of online data collection in `Experiment`.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A :py:class:`~amago.hindsight.Trajectory` or :py:class:`~amago.hindsight.FrozenTraj` object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">ext</span> <span class="o">==</span> <span class="s2">&quot;.traj&quot;</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">disk</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        <span class="n">traj</span> <span class="o">=</span> <span class="n">Trajectory</span><span class="p">(</span><span class="n">timesteps</span><span class="o">=</span><span class="n">disk</span><span class="o">.</span><span class="n">timesteps</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">traj</span>
+    <span class="k">elif</span> <span class="n">ext</span> <span class="o">==</span> <span class="s2">&quot;.npz&quot;</span><span class="p">:</span>
+        <span class="n">disk</span> <span class="o">=</span> <span class="n">FrozenTraj</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">disk</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Unrecognized trajectory file extension `</span><span class="si">{</span><span class="n">ext</span><span class="si">}</span><span class="s2">` for path `</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">`.&quot;</span>
+        <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_path_to_trajs">
+<a class="viewcode-back" href="../../api/amago.loading.html#amago.loading.get_path_to_trajs">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_path_to_trajs</span><span class="p">(</span><span class="n">dset_root</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">dset_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">fifo</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dset_root</span><span class="p">,</span> <span class="n">dset_name</span><span class="p">,</span> <span class="s2">&quot;buffer&quot;</span><span class="p">,</span> <span class="s2">&quot;fifo&quot;</span> <span class="k">if</span> <span class="n">fifo</span> <span class="k">else</span> <span class="s2">&quot;protected&quot;</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="DiskTrajDataset">
+<a class="viewcode-back" href="../../api/amago.loading.html#amago.loading.DiskTrajDataset">[docs]</a>
+<span class="nd">@gin</span><span class="o">.</span><span class="n">configurable</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DiskTrajDataset</span><span class="p">(</span><span class="n">RLDataset</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Imitates the typical FIFO replay buffer but stores sequence data on disk.</span>
+
+<span class="sd">    Tells the parallel actors to write finished trajectories to a buffer directory</span>
+<span class="sd">    and then deletes the oldest trajectories when the dataset exceeds a max size.</span>
+<span class="sd">    Also creates a &quot;protected&quot; directory where trajectory data from previous runs</span>
+<span class="sd">    or demonstrations can be stored and sampled from without being deleted</span>
+<span class="sd">    (in the style of DQfD and so on).</span>
+
+<span class="sd">    Creates a dataset in the structure:</span>
+
+<span class="sd">    .. code-block:: shell</span>
+
+<span class="sd">        dset_root/</span>
+<span class="sd">        └── dset_name/</span>
+<span class="sd">            └── buffer/</span>
+<span class="sd">                ├── fifo/</span>
+<span class="sd">                │   └── # .traj or .npz files here</span>
+<span class="sd">                └── protected/</span>
+<span class="sd">                    └── # .traj or .npz files here</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        dset_root: The root directory to store the dataset.</span>
+<span class="sd">        dset_name: The name of the dataset. Used to create a buffer subdirectory</span>
+<span class="sd">            and to identify the dataset in logging metrics.</span>
+<span class="sd">        dset_max_size: The maximum number of trajectories to keep in the FIFO buffer.</span>
+<span class="sd">        dset_min_size: The minimum number of trajectories that need to be present</span>
+<span class="sd">            before training updates on this dataset can begin.</span>
+<span class="sd">        relabeler: A function that edits/relabels trajectory data when loaded.</span>
+<span class="sd">            (`amago.hindsight.Relabeler`).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dset_root</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">dset_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">dset_max_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">dset_min_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">relabeler</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Relabeler</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dset_name</span><span class="o">=</span><span class="n">dset_name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">relabeler</span> <span class="o">=</span> <span class="n">NoOpRelabeler</span><span class="p">()</span> <span class="k">if</span> <span class="n">relabeler</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">relabeler</span>
+        <span class="c1"># create two directories for the FIFO and protected buffers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fifo_path</span> <span class="o">=</span> <span class="n">get_path_to_trajs</span><span class="p">(</span><span class="n">dset_root</span><span class="p">,</span> <span class="n">dset_name</span><span class="p">,</span> <span class="n">fifo</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">protected_path</span> <span class="o">=</span> <span class="n">get_path_to_trajs</span><span class="p">(</span><span class="n">dset_root</span><span class="p">,</span> <span class="n">dset_name</span><span class="p">,</span> <span class="n">fifo</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dset_min_size</span> <span class="o">=</span> <span class="n">dset_min_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dset_max_size</span> <span class="o">=</span> <span class="n">dset_max_size</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fifo_path</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">protected_path</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_files</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">save_new_trajs_to</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="c1"># tells the parallel actors where to write new trajectories</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fifo_path</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_disk_usage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">bytes</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_filenames</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">bytes</span> <span class="o">*</span> <span class="mf">1e-9</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ready_for_training</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">ready_for_training</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_filenames</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">dset_min_size</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="DiskTrajDataset.delete">
+<a class="viewcode-back" href="../../api/amago.loading.html#amago.loading.DiskTrajDataset.delete">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">delete_protected</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_configured</span><span class="p">()</span>
+        <span class="c1"># remove files on disk</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fifo_path</span><span class="p">):</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fifo_path</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fifo_filenames</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">protected_path</span><span class="p">)</span> <span class="ow">and</span> <span class="n">delete_protected</span><span class="p">:</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">protected_path</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">protected_filenames</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">all_filenames</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fifo_filenames</span> <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">protected_filenames</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_list_abs_path_to_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">ext</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;.traj&quot;</span><span class="p">,</span> <span class="s2">&quot;.npz&quot;</span><span class="p">]:</span>
+            <span class="n">names</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="nb">dir</span><span class="p">)</span> <span class="k">if</span> <span class="n">f</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">ext</span><span class="p">)]</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="nb">set</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_refresh_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># find the new .traj files from the previous rollout</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fifo_filenames</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_list_abs_path_to_files</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fifo_path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">protected_filenames</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_list_abs_path_to_files</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">protected_path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">all_filenames</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fifo_filenames</span> <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">protected_filenames</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_count_trajectories</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_filenames</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_count_deletable_trajectories</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fifo_filenames</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_count_protected_trajectories</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">protected_filenames</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_filter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Imitates fixed-size FIFO replay buffers by clearing .traj files on disk in time order.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fifo_filenames</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dset_max_size</span><span class="p">:</span>
+            <span class="c1"># skip the sort</span>
+            <span class="k">return</span>
+
+        <span class="n">path_to_name</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">path</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">path</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">traj_infos</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">traj_filename</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fifo_filenames</span><span class="p">:</span>
+            <span class="n">env_name</span><span class="p">,</span> <span class="n">rand_id</span><span class="p">,</span> <span class="n">unix_time</span> <span class="o">=</span> <span class="n">path_to_name</span><span class="p">(</span><span class="n">traj_filename</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)</span>
+            <span class="n">traj_infos</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;env&quot;</span><span class="p">:</span> <span class="n">env_name</span><span class="p">,</span>
+                    <span class="s2">&quot;rand&quot;</span><span class="p">:</span> <span class="n">rand_id</span><span class="p">,</span>
+                    <span class="s2">&quot;time&quot;</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">unix_time</span><span class="p">),</span>
+                    <span class="s2">&quot;filename&quot;</span><span class="p">:</span> <span class="n">traj_filename</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+        <span class="n">traj_infos</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">traj_infos</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">d</span><span class="p">:</span> <span class="n">d</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">])</span>
+        <span class="n">num_to_remove</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">traj_infos</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">dset_max_size</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">to_delete</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">itemgetter</span><span class="p">(</span><span class="s2">&quot;filename&quot;</span><span class="p">),</span> <span class="n">traj_infos</span><span class="p">[:</span><span class="n">num_to_remove</span><span class="p">]))</span>
+        <span class="k">for</span> <span class="n">file_to_delete</span> <span class="ow">in</span> <span class="n">to_delete</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">file_to_delete</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fifo_filenames</span><span class="o">.</span><span class="n">discard</span><span class="p">(</span><span class="n">file_to_delete</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">all_filenames</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fifo_filenames</span> <span class="o">|</span> <span class="bp">self</span><span class="o">.</span><span class="n">protected_filenames</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DiskTrajDataset.get_description">
+<a class="viewcode-back" href="../../api/amago.loading.html#amago.loading.DiskTrajDataset.get_description">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_description</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_configured</span><span class="p">()</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;DiskTrajDataset</span>
+<span class="s2">        FIFO Buffer Path: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">fifo_path</span><span class="si">}</span>
+<span class="s2">        Protected Buffer Path: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">protected_path</span><span class="si">}</span>
+<span class="s2">        FIFO Buffer Max Size: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dset_max_size</span><span class="si">}</span>
+<span class="s2">        FIFO Buffer Initial Size: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_count_deletable_trajectories</span><span class="p">()</span><span class="si">}</span>
+<span class="s2">        Protected Buffer Initial Size: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_count_protected_trajectories</span><span class="p">()</span><span class="si">}</span>
+<span class="s2">        Trajectory File Max Sequence Length: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_seq_len</span><span class="si">}</span>
+<span class="s2">        Trajectory Padded Sampling: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">padded_sampling</span><span class="si">}</span>
+<span class="s2">        &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="DiskTrajDataset.on_end_of_collection">
+<a class="viewcode-back" href="../../api/amago.loading.html#amago.loading.DiskTrajDataset.on_end_of_collection">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">on_end_of_collection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">experiment</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Implements the FIFO buffer behavior.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_files</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_edit_rights</span><span class="p">:</span>
+            <span class="c1"># this Experiment is not supposed to manage the dataset</span>
+            <span class="k">return</span>
+        <span class="c1"># old `accelerate` paranoia</span>
+        <span class="n">old_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_count_trajectories</span><span class="p">()</span>
+        <span class="n">experiment</span><span class="o">.</span><span class="n">accelerator</span><span class="o">.</span><span class="n">wait_for_everyone</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">experiment</span><span class="o">.</span><span class="n">accelerator</span><span class="o">.</span><span class="n">is_main_process</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_filter</span><span class="p">()</span>
+        <span class="n">experiment</span><span class="o">.</span><span class="n">accelerator</span><span class="o">.</span><span class="n">wait_for_everyone</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_refresh_files</span><span class="p">()</span>
+        <span class="n">dset_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_count_trajectories</span><span class="p">()</span>
+        <span class="n">fifo_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_count_deletable_trajectories</span><span class="p">()</span>
+        <span class="n">protected_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_count_protected_trajectories</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;Trajectory Files Saved in FIFO Replay Buffer&quot;</span><span class="p">:</span> <span class="n">fifo_size</span><span class="p">,</span>
+            <span class="s2">&quot;Trajectory Files Saved in Protected Replay Buffer&quot;</span><span class="p">:</span> <span class="n">protected_size</span><span class="p">,</span>
+            <span class="s2">&quot;Total Trajectory Files in Replay Buffer&quot;</span><span class="p">:</span> <span class="n">dset_size</span><span class="p">,</span>
+            <span class="s2">&quot;Trajectory Files Deleted&quot;</span><span class="p">:</span> <span class="n">old_size</span> <span class="o">-</span> <span class="n">dset_size</span><span class="p">,</span>
+            <span class="s2">&quot;Buffer Disk Space (GB)&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_disk_usage</span><span class="p">,</span>
+        <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="DiskTrajDataset.sample_random_trajectory">
+<a class="viewcode-back" href="../../api/amago.loading.html#amago.loading.DiskTrajDataset.sample_random_trajectory">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sample_random_trajectory</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RLData</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_configured</span><span class="p">()</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_filenames</span><span class="p">)</span>
+        <span class="n">traj</span> <span class="o">=</span> <span class="n">load_traj_from_disk</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="n">traj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">relabeler</span><span class="p">(</span><span class="n">traj</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_traj_to_rl_data</span><span class="p">(</span><span class="n">traj</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_traj_to_rl_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">traj</span><span class="p">:</span> <span class="n">Trajectory</span> <span class="o">|</span> <span class="n">FrozenTraj</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RLData</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">traj</span><span class="p">,</span> <span class="n">Trajectory</span><span class="p">):</span>
+            <span class="n">traj</span> <span class="o">=</span> <span class="n">traj</span><span class="o">.</span><span class="n">freeze</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">traj</span><span class="p">,</span> <span class="n">FrozenTraj</span><span class="p">)</span>
+        <span class="n">obs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">traj</span><span class="o">.</span><span class="n">obs</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="n">rl2s</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">traj</span><span class="o">.</span><span class="n">rl2s</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+        <span class="n">time_idxs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">traj</span><span class="o">.</span><span class="n">time_idxs</span><span class="p">)</span><span class="o">.</span><span class="n">long</span><span class="p">()</span>
+        <span class="n">rews</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">traj</span><span class="o">.</span><span class="n">rews</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+        <span class="n">dones</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">traj</span><span class="o">.</span><span class="n">dones</span><span class="p">)</span><span class="o">.</span><span class="n">bool</span><span class="p">()</span>
+        <span class="n">actions</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">traj</span><span class="o">.</span><span class="n">actions</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">RLData</span><span class="p">(</span>
+            <span class="n">obs</span><span class="o">=</span><span class="n">obs</span><span class="p">,</span>
+            <span class="n">rl2s</span><span class="o">=</span><span class="n">rl2s</span><span class="p">,</span>
+            <span class="n">time_idxs</span><span class="o">=</span><span class="n">time_idxs</span><span class="p">,</span>
+            <span class="n">rews</span><span class="o">=</span><span class="n">rews</span><span class="p">,</span>
+            <span class="n">dones</span><span class="o">=</span><span class="n">dones</span><span class="p">,</span>
+            <span class="n">actions</span><span class="o">=</span><span class="n">actions</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+</pre></div>
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By UT Austin Robot Perception and Learning Lab
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

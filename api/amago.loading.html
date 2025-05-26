@@ -1,0 +1,1108 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="light">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>amago.loading &#8212; AMAGO</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "light";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/amago.loading';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="amago.nets" href="amago.nets.html" />
+    <link rel="prev" title="amago.hindsight" href="amago.hindsight.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="light">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+    
+    <img src="../_static/amago_logo_3.png" class="logo__image only-light" alt="AMAGO - Home"/>
+    <script>document.write(`<img src="../_static/amago_logo_3.png" class="logo__image only-dark" alt="AMAGO - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../tutorial/index.html">Tutorial</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/setup_env.html">Setup the Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/create_dataset.html">Create a Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/create_experiment.html">Create an Experiment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/track_results.html">Track the Results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/configuration.html">Configure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/customization.html">Customize</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/async.html">Multi-GPU and Asynchronous Training</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../examples/index.html">Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../examples/00_meta_frozen_lake.html">Meta Frozen Lake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/01_basic_gym.html">Basic Gymnasium</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/02_gymnax.html">Gymnax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/03_popgym_suite.html">POPGym</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/04_tmaze.html">T-Maze</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/05_dark_key_door.html">Dark Room Key Door</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/06_alchemy.html">Symbolic DM Alchemy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/07_metaworld.html">Meta-World ML1/ML10/ML45</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/08_ale.html">Multi-Game Atari</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/09_multitask_procgen.html">Multi-Game ProcGen</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/10_babyai.html">Multi-Task BabyAI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/11_xland_minigrid.html">XLand Mini-Grid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/12_half_cheetah_vel.html">HalfCheetah(v4)-Velocity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/13_mazerunner_relabeling.html">MazeRunner HER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/14_d4rl.html">D4RL</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="amago.html">API Reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="amago.agent.html">amago.agent</a></li>
+<li class="toctree-l2"><a class="reference internal" href="amago.cli_utils.html">amago.cli_utils</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="amago.envs.html">amago.envs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="amago.envs.amago_env.html">amago.envs.amago_env</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="amago.envs.builtin.html">amago.envs.builtin</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="amago.envs.builtin.half_cheetah_v4_vel.html">amago.envs.builtin.half_cheetah_v4_vel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="amago.envs.builtin.metaworld_ml.html">amago.envs.builtin.metaworld_ml</a></li>
+<li class="toctree-l4"><a class="reference internal" href="amago.envs.builtin.popgym_envs.html">amago.envs.builtin.popgym_envs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="amago.envs.builtin.toy_gym.html">amago.envs.builtin.toy_gym</a></li>
+<li class="toctree-l4"><a class="reference internal" href="amago.envs.builtin.xland_minigrid.html">amago.envs.builtin.xland_minigrid</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.envs.env_utils.html">amago.envs.env_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.envs.exploration.html">amago.envs.exploration</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="amago.experiment.html">amago.experiment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="amago.hindsight.html">amago.hindsight</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">amago.loading</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="amago.nets.html">amago.nets</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.actor_critic.html">amago.nets.actor_critic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.cnn.html">amago.nets.cnn</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.ff.html">amago.nets.ff</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.goal_embedders.html">amago.nets.goal_embedders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.policy_dists.html">amago.nets.policy_dists</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.traj_encoders.html">amago.nets.traj_encoders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.transformer.html">amago.nets.transformer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.tstep_encoders.html">amago.nets.tstep_encoders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.utils.html">amago.nets.utils</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="amago.utils.html">amago.utils</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../citation.html">Citation</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/api/amago.loading.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>amago.loading</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.Batch"><code class="docutils literal notranslate"><span class="pre">Batch</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.Batch.actions"><code class="docutils literal notranslate"><span class="pre">Batch.actions</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.Batch.dones"><code class="docutils literal notranslate"><span class="pre">Batch.dones</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.Batch.obs"><code class="docutils literal notranslate"><span class="pre">Batch.obs</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.Batch.rews"><code class="docutils literal notranslate"><span class="pre">Batch.rews</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.Batch.rl2s"><code class="docutils literal notranslate"><span class="pre">Batch.rl2s</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.Batch.time_idxs"><code class="docutils literal notranslate"><span class="pre">Batch.time_idxs</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.Batch.to"><code class="docutils literal notranslate"><span class="pre">Batch.to()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.DiskTrajDataset"><code class="docutils literal notranslate"><span class="pre">DiskTrajDataset</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.DiskTrajDataset.delete"><code class="docutils literal notranslate"><span class="pre">DiskTrajDataset.delete()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.DiskTrajDataset.get_description"><code class="docutils literal notranslate"><span class="pre">DiskTrajDataset.get_description()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.DiskTrajDataset.on_end_of_collection"><code class="docutils literal notranslate"><span class="pre">DiskTrajDataset.on_end_of_collection()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.DiskTrajDataset.ready_for_training"><code class="docutils literal notranslate"><span class="pre">DiskTrajDataset.ready_for_training</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.DiskTrajDataset.sample_random_trajectory"><code class="docutils literal notranslate"><span class="pre">DiskTrajDataset.sample_random_trajectory()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.DiskTrajDataset.save_new_trajs_to"><code class="docutils literal notranslate"><span class="pre">DiskTrajDataset.save_new_trajs_to</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.MixtureOfDatasets"><code class="docutils literal notranslate"><span class="pre">MixtureOfDatasets</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.MixtureOfDatasets.configure_from_experiment"><code class="docutils literal notranslate"><span class="pre">MixtureOfDatasets.configure_from_experiment()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.MixtureOfDatasets.delete"><code class="docutils literal notranslate"><span class="pre">MixtureOfDatasets.delete()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.MixtureOfDatasets.get_description"><code class="docutils literal notranslate"><span class="pre">MixtureOfDatasets.get_description()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.MixtureOfDatasets.on_end_of_collection"><code class="docutils literal notranslate"><span class="pre">MixtureOfDatasets.on_end_of_collection()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.MixtureOfDatasets.ready_for_training"><code class="docutils literal notranslate"><span class="pre">MixtureOfDatasets.ready_for_training</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.MixtureOfDatasets.sample_random_trajectory"><code class="docutils literal notranslate"><span class="pre">MixtureOfDatasets.sample_random_trajectory()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.MixtureOfDatasets.save_new_trajs_to"><code class="docutils literal notranslate"><span class="pre">MixtureOfDatasets.save_new_trajs_to</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.MixtureOfDatasets.update_dset_weights"><code class="docutils literal notranslate"><span class="pre">MixtureOfDatasets.update_dset_weights()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.RLData"><code class="docutils literal notranslate"><span class="pre">RLData</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.RLData.actions"><code class="docutils literal notranslate"><span class="pre">RLData.actions</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.RLData.dones"><code class="docutils literal notranslate"><span class="pre">RLData.dones</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.RLData.obs"><code class="docutils literal notranslate"><span class="pre">RLData.obs</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.RLData.random_slice"><code class="docutils literal notranslate"><span class="pre">RLData.random_slice()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.RLData.rews"><code class="docutils literal notranslate"><span class="pre">RLData.rews</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.RLData.rl2s"><code class="docutils literal notranslate"><span class="pre">RLData.rl2s</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.RLData.time_idxs"><code class="docutils literal notranslate"><span class="pre">RLData.time_idxs</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.RLData_pad_collate"><code class="docutils literal notranslate"><span class="pre">RLData_pad_collate()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.RLDataset"><code class="docutils literal notranslate"><span class="pre">RLDataset</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.RLDataset.check_configured"><code class="docutils literal notranslate"><span class="pre">RLDataset.check_configured()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.RLDataset.configure"><code class="docutils literal notranslate"><span class="pre">RLDataset.configure()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.RLDataset.configure_from_experiment"><code class="docutils literal notranslate"><span class="pre">RLDataset.configure_from_experiment()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.RLDataset.delete"><code class="docutils literal notranslate"><span class="pre">RLDataset.delete()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.RLDataset.get_description"><code class="docutils literal notranslate"><span class="pre">RLDataset.get_description()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.RLDataset.on_end_of_collection"><code class="docutils literal notranslate"><span class="pre">RLDataset.on_end_of_collection()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.RLDataset.ready_for_training"><code class="docutils literal notranslate"><span class="pre">RLDataset.ready_for_training</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.RLDataset.sample_random_trajectory"><code class="docutils literal notranslate"><span class="pre">RLDataset.sample_random_trajectory()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.RLDataset.save_new_trajs_to"><code class="docutils literal notranslate"><span class="pre">RLDataset.save_new_trajs_to</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.get_path_to_trajs"><code class="docutils literal notranslate"><span class="pre">get_path_to_trajs()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.load_traj_from_disk"><code class="docutils literal notranslate"><span class="pre">load_traj_from_disk()</span></code></a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-amago.loading">
+<span id="amago-loading"></span><h1>amago.loading<a class="headerlink" href="#module-amago.loading" title="Link to this heading">#</a></h1>
+<p>Load training data.</p>
+<p class="rubric">Functions</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amago.loading.RLData_pad_collate" title="amago.loading.RLData_pad_collate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RLData_pad_collate</span></code></a>(samples)</p></td>
+<td><p>Pads the sequence data of a list of <a class="reference internal" href="#amago.loading.RLData" title="amago.loading.RLData"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RLData</span></code></a> gathered by dataloaders.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amago.loading.get_path_to_trajs" title="amago.loading.get_path_to_trajs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_path_to_trajs</span></code></a>(dset_root, dset_name, fifo)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amago.loading.load_traj_from_disk" title="amago.loading.load_traj_from_disk"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_traj_from_disk</span></code></a>(path)</p></td>
+<td><p>Loads a trajectory from disk.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Classes</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amago.loading.Batch" title="amago.loading.Batch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Batch</span></code></a>(obs, rl2s, rews, dones, actions, time_idxs)</p></td>
+<td><p>Keeps data organized during training step</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amago.loading.DiskTrajDataset" title="amago.loading.DiskTrajDataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DiskTrajDataset</span></code></a>(dset_root, dset_name, ...[, ...])</p></td>
+<td><p>Imitates the typical FIFO replay buffer but stores sequence data on disk.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amago.loading.MixtureOfDatasets" title="amago.loading.MixtureOfDatasets"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MixtureOfDatasets</span></code></a>(datasets, sampling_weights)</p></td>
+<td><p>Sample from a mixture of datasets.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amago.loading.RLData" title="amago.loading.RLData"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RLData</span></code></a>(obs, rews, dones, actions, time_idxs)</p></td>
+<td><p>Stores an individual training example (sequence).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amago.loading.RLDataset" title="amago.loading.RLDataset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RLDataset</span></code></a>([dset_name])</p></td>
+<td><p>Abstract base class that defines what <a class="reference internal" href="amago.experiment.html#amago.experiment.Experiment" title="amago.experiment.Experiment"><code class="xref py py-class docutils literal notranslate"><span class="pre">Experiment</span></code></a> expects from its pytorch Dataset.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="amago.loading.Batch">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rl2s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rews</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dones</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">actions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_idxs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/loading.html#Batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.loading.Batch" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Keeps data organized during training step</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.loading.Batch.actions">
+<span class="sig-name descname"><span class="pre">actions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></em><a class="headerlink" href="#amago.loading.Batch.actions" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.loading.Batch.dones">
+<span class="sig-name descname"><span class="pre">dones</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></em><a class="headerlink" href="#amago.loading.Batch.dones" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.loading.Batch.obs">
+<span class="sig-name descname"><span class="pre">obs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code><span class="pre">]</span></em><a class="headerlink" href="#amago.loading.Batch.obs" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.loading.Batch.rews">
+<span class="sig-name descname"><span class="pre">rews</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></em><a class="headerlink" href="#amago.loading.Batch.rews" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.loading.Batch.rl2s">
+<span class="sig-name descname"><span class="pre">rl2s</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></em><a class="headerlink" href="#amago.loading.Batch.rl2s" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.loading.Batch.time_idxs">
+<span class="sig-name descname"><span class="pre">time_idxs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></em><a class="headerlink" href="#amago.loading.Batch.time_idxs" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.loading.Batch.to">
+<span class="sig-name descname"><span class="pre">to</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/loading.html#Batch.to"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.loading.Batch.to" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="amago.loading.DiskTrajDataset">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DiskTrajDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dset_root</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dset_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dset_max_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dset_min_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relabeler</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/loading.html#DiskTrajDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.loading.DiskTrajDataset" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#amago.loading.RLDataset" title="amago.loading.RLDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">RLDataset</span></code></a></p>
+<p>Imitates the typical FIFO replay buffer but stores sequence data on disk.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>This class is <code class="docutils literal notranslate"><span class="pre">&#64;gin.configurable</span></code>. Default values of kwargs can be overridden using <a class="reference external" href="https://github.com/google/gin-config">gin</a>.</p>
+</div>
+<p>Tells the parallel actors to write finished trajectories to a buffer directory
+and then deletes the oldest trajectories when the dataset exceeds a max size.
+Also creates a “protected” directory where trajectory data from previous runs
+or demonstrations can be stored and sampled from without being deleted
+(in the style of DQfD and so on).</p>
+<p>Creates a dataset in the structure:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>dset_root/
+└──<span class="w"> </span>dset_name/
+<span class="w">    </span>└──<span class="w"> </span>buffer/
+<span class="w">        </span>├──<span class="w"> </span>fifo/
+<span class="w">        </span>│<span class="w">   </span>└──<span class="w"> </span><span class="c1"># .traj or .npz files here</span>
+<span class="w">        </span>└──<span class="w"> </span>protected/
+<span class="w">            </span>└──<span class="w"> </span><span class="c1"># .traj or .npz files here</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dset_root</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – The root directory to store the dataset.</p></li>
+<li><p><strong>dset_name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – The name of the dataset. Used to create a buffer subdirectory
+and to identify the dataset in logging metrics.</p></li>
+<li><p><strong>dset_max_size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – The maximum number of trajectories to keep in the FIFO buffer.</p></li>
+<li><p><strong>dset_min_size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – The minimum number of trajectories that need to be present
+before training updates on this dataset can begin.</p></li>
+<li><p><strong>relabeler</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="amago.hindsight.html#amago.hindsight.Relabeler" title="amago.hindsight.Relabeler"><code class="xref py py-class docutils literal notranslate"><span class="pre">Relabeler</span></code></a> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – A function that edits/relabels trajectory data when loaded.
+(<a class="reference internal" href="amago.hindsight.html#amago.hindsight.Relabeler" title="amago.hindsight.Relabeler"><code class="xref py py-obj docutils literal notranslate"><span class="pre">amago.hindsight.Relabeler</span></code></a>).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.loading.DiskTrajDataset.delete">
+<span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">delete_protected</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/loading.html#DiskTrajDataset.delete"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.loading.DiskTrajDataset.delete" title="Link to this definition">#</a></dt>
+<dd><p>Called when the user wants to delete the dataset (from disk?).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.loading.DiskTrajDataset.get_description">
+<span class="sig-name descname"><span class="pre">get_description</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/loading.html#DiskTrajDataset.get_description"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.loading.DiskTrajDataset.get_description" title="Link to this definition">#</a></dt>
+<dd><p>Returns a string describing the dataset. Printed as part of the hparam
+summary when the experiment starts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.loading.DiskTrajDataset.on_end_of_collection">
+<span class="sig-name descname"><span class="pre">on_end_of_collection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/loading.html#DiskTrajDataset.on_end_of_collection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.loading.DiskTrajDataset.on_end_of_collection" title="Link to this definition">#</a></dt>
+<dd><p>Implements the FIFO buffer behavior.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="amago.loading.DiskTrajDataset.ready_for_training">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ready_for_training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#amago.loading.DiskTrajDataset.ready_for_training" title="Link to this definition">#</a></dt>
+<dd><p>Whether the dataset is ready to be used for training.
+If <code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code>, <a class="reference internal" href="amago.experiment.html#amago.experiment.Experiment" title="amago.experiment.Experiment"><code class="xref py py-class docutils literal notranslate"><span class="pre">Experiment</span></code></a>
+will keep collecting data until learning updates can begin.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.loading.DiskTrajDataset.sample_random_trajectory">
+<span class="sig-name descname"><span class="pre">sample_random_trajectory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/loading.html#DiskTrajDataset.sample_random_trajectory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.loading.DiskTrajDataset.sample_random_trajectory" title="Link to this definition">#</a></dt>
+<dd><p>Prepare a (random) <em>full trajectory</em> or at least the maximum sequence length
+of the dataset. Sampling random subsets up to the policy’s sequence length is
+handled automatically.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#amago.loading.RLData" title="amago.loading.RLData"><code class="xref py py-class docutils literal notranslate"><span class="pre">RLData</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="amago.loading.DiskTrajDataset.save_new_trajs_to">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">save_new_trajs_to</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#amago.loading.DiskTrajDataset.save_new_trajs_to" title="Link to this definition">#</a></dt>
+<dd><p>Tells the parallel actors where to write new trajectories.</p>
+<p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>, the actors will not write new trajectories to disk.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="amago.loading.MixtureOfDatasets">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MixtureOfDatasets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datasets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling_weights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smooth_sudden_starts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dset_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/loading.html#MixtureOfDatasets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.loading.MixtureOfDatasets" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#amago.loading.RLDataset" title="amago.loading.RLDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">RLDataset</span></code></a></p>
+<p>Sample from a mixture of datasets.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>datasets</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="#amago.loading.RLDataset" title="amago.loading.RLDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">RLDataset</span></code></a>]</span>) – A list of <a class="reference internal" href="#amago.loading.RLDataset" title="amago.loading.RLDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">RLDataset</span></code></a> objects.</p></li>
+<li><p><strong>sampling_weights</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code>]</span>) – Probability of sampling from each dataset. Must sum to 1.</p></li>
+<li><p><strong>smooth_sudden_starts</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – When a dataset becomes ready for training mid-way through training,
+anneal its sampling_weight from 0 –&gt; assigned <code class="docutils literal notranslate"><span class="pre">sampling_weights[i]</span></code> over <code class="docutils literal notranslate"><span class="pre">smooth_sudden_starts</span></code> epochs.</p></li>
+<li><p><strong>dset_name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – The name of the dataset. Used to identify the dataset in logging metrics. Defaults to the class name.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Only samples from datasets that are currently <a class="reference internal" href="#amago.loading.RLDataset.ready_for_training" title="amago.loading.RLDataset.ready_for_training"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ready_for_training()</span></code></a>. For example,
+a mixture of some custom offline dataset and the <a class="reference internal" href="#amago.loading.DiskTrajDataset" title="amago.loading.DiskTrajDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">DiskTrajDataset</span></code></a> will only sample
+from the offline dataset until the <a class="reference internal" href="#amago.loading.DiskTrajDataset" title="amago.loading.DiskTrajDataset"><code class="xref py py-class docutils literal notranslate"><span class="pre">DiskTrajDataset</span></code></a> has written trajectories to disk.
+Sampling weights are renormalized amongst the datasets that are ready for training.</p>
+<p>Only one dataset can direct the Experiment’s parallel actors to save new trajectories to disk
+(only one dataset’s <code class="xref py py-obj docutils literal notranslate"><span class="pre">dset.save_new_trajs_to</span></code> is not <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>).</p>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.loading.MixtureOfDatasets.configure_from_experiment">
+<span class="sig-name descname"><span class="pre">configure_from_experiment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/loading.html#MixtureOfDatasets.configure_from_experiment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.loading.MixtureOfDatasets.configure_from_experiment" title="Link to this definition">#</a></dt>
+<dd><p>Call <code class="docutils literal notranslate"><span class="pre">configure()</span></code> with settings inferred from the main Experiment.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.loading.MixtureOfDatasets.delete">
+<span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/loading.html#MixtureOfDatasets.delete"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.loading.MixtureOfDatasets.delete" title="Link to this definition">#</a></dt>
+<dd><p>Called when the user wants to delete the dataset (from disk?).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.loading.MixtureOfDatasets.get_description">
+<span class="sig-name descname"><span class="pre">get_description</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/loading.html#MixtureOfDatasets.get_description"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.loading.MixtureOfDatasets.get_description" title="Link to this definition">#</a></dt>
+<dd><p>Returns a string describing the dataset. Printed as part of the hparam
+summary when the experiment starts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.loading.MixtureOfDatasets.on_end_of_collection">
+<span class="sig-name descname"><span class="pre">on_end_of_collection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/loading.html#MixtureOfDatasets.on_end_of_collection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.loading.MixtureOfDatasets.on_end_of_collection" title="Link to this definition">#</a></dt>
+<dd><p>Callback for <a class="reference internal" href="amago.experiment.html#amago.experiment.Experiment" title="amago.experiment.Experiment"><code class="xref py py-class docutils literal notranslate"><span class="pre">Experiment</span></code></a> to call
+<em>after</em> each round of environment interaction / data collection,
+but <em>before</em> gradient updates resume.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>epoch</strong> – The current epoch (in case there is some kind of schedule)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</span></p>
+</dd>
+</dl>
+<p>Returns a dictionary of metrics to log.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="amago.loading.MixtureOfDatasets.ready_for_training">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ready_for_training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#amago.loading.MixtureOfDatasets.ready_for_training" title="Link to this definition">#</a></dt>
+<dd><p>Whether the dataset is ready to be used for training.
+If <code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code>, <a class="reference internal" href="amago.experiment.html#amago.experiment.Experiment" title="amago.experiment.Experiment"><code class="xref py py-class docutils literal notranslate"><span class="pre">Experiment</span></code></a>
+will keep collecting data until learning updates can begin.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.loading.MixtureOfDatasets.sample_random_trajectory">
+<span class="sig-name descname"><span class="pre">sample_random_trajectory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/loading.html#MixtureOfDatasets.sample_random_trajectory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.loading.MixtureOfDatasets.sample_random_trajectory" title="Link to this definition">#</a></dt>
+<dd><p>Prepare a (random) <em>full trajectory</em> or at least the maximum sequence length
+of the dataset. Sampling random subsets up to the policy’s sequence length is
+handled automatically.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#amago.loading.RLData" title="amago.loading.RLData"><code class="xref py py-class docutils literal notranslate"><span class="pre">RLData</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="amago.loading.MixtureOfDatasets.save_new_trajs_to">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">save_new_trajs_to</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#amago.loading.MixtureOfDatasets.save_new_trajs_to" title="Link to this definition">#</a></dt>
+<dd><p>Tells the parallel actors where to write new trajectories.</p>
+<p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>, the actors will not write new trajectories to disk.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.loading.MixtureOfDatasets.update_dset_weights">
+<span class="sig-name descname"><span class="pre">update_dset_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/loading.html#MixtureOfDatasets.update_dset_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.loading.MixtureOfDatasets.update_dset_weights" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="amago.loading.RLData">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RLData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rews</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dones</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">actions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_idxs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rl2s</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/loading.html#RLData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.loading.RLData" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Stores an individual training example (sequence).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obs</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><em>torch.Tensor</em><em>]</em>) – A dictionary of observation tensors.
+The shape of each value is (T, Any), where T is the length of the sequence in timesteps.</p></li>
+<li><p><strong>rews</strong> (<em>torch.FloatTensor</em>) – A tensor of rewards. Shape: (T - 1, 1).
+There is no reward before the first timestep.</p></li>
+<li><p><strong>dones</strong> (<em>torch.BoolTensor</em>) – A tensor of done flags. Shape: (T - 1, 1).
+There is no done flag before the first timestep.</p></li>
+<li><p><strong>actions</strong> (<em>torch.FloatTensor</em>) – A tensor of actions. Shape: (T - 1, action dim).
+There is no action on the last (terminal) timestep.</p></li>
+<li><p><strong>time_idxs</strong> (<em>torch.LongTensor</em>) – A tensor of time indices. Shape: (T, 1).
+The global timestep counter of each timestep in the episode.
+If this is an entire episode, <a class="reference internal" href="#amago.loading.RLData.time_idxs" title="amago.loading.RLData.time_idxs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">time_idxs</span></code></a> is range(0, T).</p></li>
+<li><p><strong>rl2s</strong> (<em>Optional</em><em>[</em><em>torch.FloatTensor</em><em>]</em>) – A tensor of previous action/reward pairs.
+Shape: (T, 1 + action dim). The previous reward concatenated with the previous action.
+Used to make these values input to the policy.
+If not provided, they will be generated by shifting the actions and rewards.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.loading.RLData.actions">
+<span class="sig-name descname"><span class="pre">actions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">FloatTensor</span></code></em><a class="headerlink" href="#amago.loading.RLData.actions" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.loading.RLData.dones">
+<span class="sig-name descname"><span class="pre">dones</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">BoolTensor</span></code></em><a class="headerlink" href="#amago.loading.RLData.dones" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.loading.RLData.obs">
+<span class="sig-name descname"><span class="pre">obs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">,</span> <code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code><span class="pre">]</span></em><a class="headerlink" href="#amago.loading.RLData.obs" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.loading.RLData.random_slice">
+<span class="sig-name descname"><span class="pre">random_slice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padded_sampling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/loading.html#RLData.random_slice"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.loading.RLData.random_slice" title="Link to this definition">#</a></dt>
+<dd><p>Randomly slices the sequence to a given length.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>length</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – The length of the sequence to sample.</p></li>
+<li><p><strong>padded_sampling</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – <p>The mode of padding to use.
+“none” –&gt; sample a random start index and take the next <code class="xref py py-obj docutils literal notranslate"><span class="pre">length</span></code> timesteps. Can
+bias against the timesteps at the end of the trajectory.
+“both” –&gt; sample without bias against the start and end of the trajectory, but can lead to</p>
+<blockquote>
+<div><p>much more of the batch being padded/masked.</p>
+</div></blockquote>
+<p>”left” –&gt; sample while effectively padding the left side of the sequence for cases
+where the start of the training sequence is not always the first timestep of the trajectory.
+“right” –&gt; sample while effectively padding the right side of the sequence for cases
+where the end of the trajectory may be undersampled.</p>
+</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.loading.RLData.rews">
+<span class="sig-name descname"><span class="pre">rews</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">FloatTensor</span></code></em><a class="headerlink" href="#amago.loading.RLData.rews" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.loading.RLData.rl2s">
+<span class="sig-name descname"><span class="pre">rl2s</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">FloatTensor</span></code> <span class="pre">|</span> <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#amago.loading.RLData.rl2s" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="amago.loading.RLData.time_idxs">
+<span class="sig-name descname"><span class="pre">time_idxs</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">LongTensor</span></code></em><a class="headerlink" href="#amago.loading.RLData.time_idxs" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amago.loading.RLData_pad_collate">
+<span class="sig-name descname"><span class="pre">RLData_pad_collate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/loading.html#RLData_pad_collate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.loading.RLData_pad_collate" title="Link to this definition">#</a></dt>
+<dd><p>Pads the sequence data of a list of <a class="reference internal" href="#amago.loading.RLData" title="amago.loading.RLData"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RLData</span></code></a> gathered by dataloaders.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>samples</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code>[<a class="reference internal" href="#amago.loading.RLData" title="amago.loading.RLData"><code class="xref py py-class docutils literal notranslate"><span class="pre">RLData</span></code></a>]</span>) – A list of <a class="reference internal" href="#amago.loading.RLData" title="amago.loading.RLData"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RLData</span></code></a> objects.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#amago.loading.Batch" title="amago.loading.Batch"><code class="xref py py-class docutils literal notranslate"><span class="pre">Batch</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A <a class="reference internal" href="#amago.loading.Batch" title="amago.loading.Batch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Batch</span></code></a> object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="amago.loading.RLDataset">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RLDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dset_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/loading.html#RLDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.loading.RLDataset" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code></p>
+<p>Abstract base class that defines what <a class="reference internal" href="amago.experiment.html#amago.experiment.Experiment" title="amago.experiment.Experiment"><code class="xref py py-class docutils literal notranslate"><span class="pre">Experiment</span></code></a> expects from its pytorch Dataset.</p>
+<p>Allows the main training loop to be used with existing data sources (offline RL)
+that were not generated by our environment wrappers.</p>
+<p>RLDatasets have no real length or fixed indices like typical pytorch Datasets.
+The “length” is determined by the update : data ratio of the experiment.</p>
+<p>Datasets have a reference to the <code class="xref py py-obj docutils literal notranslate"><span class="pre">Experiment</span></code> that is training on them, which can be used
+to access the <code class="xref py py-obj docutils literal notranslate"><span class="pre">Accelerator</span></code> and other useful information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dset_name</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – The name of the dataset. Used to identify the dataset in logging metrics. Defaults to the class name.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.loading.RLDataset.check_configured">
+<span class="sig-name descname"><span class="pre">check_configured</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/loading.html#RLDataset.check_configured"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.loading.RLDataset.check_configured" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.loading.RLDataset.configure">
+<span class="sig-name descname"><span class="pre">configure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">items_per_epoch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_seq_len</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padded_sampling</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">has_edit_rights</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/loading.html#RLDataset.configure"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.loading.RLDataset.configure" title="Link to this definition">#</a></dt>
+<dd><p>Configure the dataset with additional hyperparameters.</p>
+<p>We’ve basically split the constructor in two parts, because in practice
+we will be grabbing these settings from the main Experiment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>items_per_epoch</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – The number of trajectoires to sample each epoch. Defines
+the end of dataloader iteration.</p></li>
+<li><p><strong>max_seq_len</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – The maximum sequence length to sample.</p></li>
+<li><p><strong>max_seq_len.</strong> (<em>padded_sampling. Strategy for sampling from trajectories longer than</em>) – See <a class="reference internal" href="#amago.loading.RLData.random_slice" title="amago.loading.RLData.random_slice"><code class="xref py py-meth docutils literal notranslate"><span class="pre">random_slice()</span></code></a> or <a class="reference internal" href="amago.experiment.html#amago.experiment.Experiment" title="amago.experiment.Experiment"><code class="xref py py-class docutils literal notranslate"><span class="pre">Experiment</span></code></a>
+docs for more details.</p></li>
+<li><p><strong>has_edit_rights</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Whether the dataset has total authority to edit the underlying data
+(e.g., to delete trajectory files from disk). Sometimes turned off for async
+setups.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.loading.RLDataset.configure_from_experiment">
+<span class="sig-name descname"><span class="pre">configure_from_experiment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/loading.html#RLDataset.configure_from_experiment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.loading.RLDataset.configure_from_experiment" title="Link to this definition">#</a></dt>
+<dd><p>Call <code class="docutils literal notranslate"><span class="pre">configure()</span></code> with settings inferred from the main Experiment.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.loading.RLDataset.delete">
+<span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/loading.html#RLDataset.delete"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.loading.RLDataset.delete" title="Link to this definition">#</a></dt>
+<dd><p>Called when the user wants to delete the dataset (from disk?).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.loading.RLDataset.get_description">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_description</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/loading.html#RLDataset.get_description"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.loading.RLDataset.get_description" title="Link to this definition">#</a></dt>
+<dd><p>Returns a string describing the dataset. Printed as part of the hparam
+summary when the experiment starts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.loading.RLDataset.on_end_of_collection">
+<span class="sig-name descname"><span class="pre">on_end_of_collection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">experiment</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/loading.html#RLDataset.on_end_of_collection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.loading.RLDataset.on_end_of_collection" title="Link to this definition">#</a></dt>
+<dd><p>Callback for <a class="reference internal" href="amago.experiment.html#amago.experiment.Experiment" title="amago.experiment.Experiment"><code class="xref py py-class docutils literal notranslate"><span class="pre">Experiment</span></code></a> to call
+<em>after</em> each round of environment interaction / data collection,
+but <em>before</em> gradient updates resume.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>epoch</strong> – The current epoch (in case there is some kind of schedule)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code>, <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</span></p>
+</dd>
+</dl>
+<p>Returns a dictionary of metrics to log.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="amago.loading.RLDataset.ready_for_training">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ready_for_training</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#amago.loading.RLDataset.ready_for_training" title="Link to this definition">#</a></dt>
+<dd><p>Whether the dataset is ready to be used for training.
+If <code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code>, <a class="reference internal" href="amago.experiment.html#amago.experiment.Experiment" title="amago.experiment.Experiment"><code class="xref py py-class docutils literal notranslate"><span class="pre">Experiment</span></code></a>
+will keep collecting data until learning updates can begin.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.loading.RLDataset.sample_random_trajectory">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sample_random_trajectory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/loading.html#RLDataset.sample_random_trajectory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.loading.RLDataset.sample_random_trajectory" title="Link to this definition">#</a></dt>
+<dd><p>Prepare a (random) <em>full trajectory</em> or at least the maximum sequence length
+of the dataset. Sampling random subsets up to the policy’s sequence length is
+handled automatically.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#amago.loading.RLData" title="amago.loading.RLData"><code class="xref py py-class docutils literal notranslate"><span class="pre">RLData</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="amago.loading.RLDataset.save_new_trajs_to">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">save_new_trajs_to</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#amago.loading.RLDataset.save_new_trajs_to" title="Link to this definition">#</a></dt>
+<dd><p>Tells the parallel actors where to write new trajectories.</p>
+<p>If <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>, the actors will not write new trajectories to disk.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amago.loading.get_path_to_trajs">
+<span class="sig-name descname"><span class="pre">get_path_to_trajs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dset_root</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dset_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fifo</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/loading.html#get_path_to_trajs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.loading.get_path_to_trajs" title="Link to this definition">#</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="amago.loading.load_traj_from_disk">
+<span class="sig-name descname"><span class="pre">load_traj_from_disk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/loading.html#load_traj_from_disk"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.loading.load_traj_from_disk" title="Link to this definition">#</a></dt>
+<dd><p>Loads a trajectory from disk.</p>
+<p>Switches between the available file formats of (“.traj” and “.npz”)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – The path to the trajectory file saved by our environment wrappers as part of online data collection in <code class="xref py py-obj docutils literal notranslate"><span class="pre">Experiment</span></code>.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="amago.hindsight.html#amago.hindsight.Trajectory" title="amago.hindsight.Trajectory"><code class="xref py py-class docutils literal notranslate"><span class="pre">Trajectory</span></code></a> | <a class="reference internal" href="amago.hindsight.html#amago.hindsight.FrozenTraj" title="amago.hindsight.FrozenTraj"><code class="xref py py-class docutils literal notranslate"><span class="pre">FrozenTraj</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A <a class="reference internal" href="amago.hindsight.html#amago.hindsight.Trajectory" title="amago.hindsight.Trajectory"><code class="xref py py-class docutils literal notranslate"><span class="pre">Trajectory</span></code></a> or <a class="reference internal" href="amago.hindsight.html#amago.hindsight.FrozenTraj" title="amago.hindsight.FrozenTraj"><code class="xref py py-class docutils literal notranslate"><span class="pre">FrozenTraj</span></code></a> object.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="amago.hindsight.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">amago.hindsight</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="amago.nets.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">amago.nets</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.Batch"><code class="docutils literal notranslate"><span class="pre">Batch</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.Batch.actions"><code class="docutils literal notranslate"><span class="pre">Batch.actions</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.Batch.dones"><code class="docutils literal notranslate"><span class="pre">Batch.dones</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.Batch.obs"><code class="docutils literal notranslate"><span class="pre">Batch.obs</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.Batch.rews"><code class="docutils literal notranslate"><span class="pre">Batch.rews</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.Batch.rl2s"><code class="docutils literal notranslate"><span class="pre">Batch.rl2s</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.Batch.time_idxs"><code class="docutils literal notranslate"><span class="pre">Batch.time_idxs</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.Batch.to"><code class="docutils literal notranslate"><span class="pre">Batch.to()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.DiskTrajDataset"><code class="docutils literal notranslate"><span class="pre">DiskTrajDataset</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.DiskTrajDataset.delete"><code class="docutils literal notranslate"><span class="pre">DiskTrajDataset.delete()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.DiskTrajDataset.get_description"><code class="docutils literal notranslate"><span class="pre">DiskTrajDataset.get_description()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.DiskTrajDataset.on_end_of_collection"><code class="docutils literal notranslate"><span class="pre">DiskTrajDataset.on_end_of_collection()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.DiskTrajDataset.ready_for_training"><code class="docutils literal notranslate"><span class="pre">DiskTrajDataset.ready_for_training</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.DiskTrajDataset.sample_random_trajectory"><code class="docutils literal notranslate"><span class="pre">DiskTrajDataset.sample_random_trajectory()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.DiskTrajDataset.save_new_trajs_to"><code class="docutils literal notranslate"><span class="pre">DiskTrajDataset.save_new_trajs_to</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.MixtureOfDatasets"><code class="docutils literal notranslate"><span class="pre">MixtureOfDatasets</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.MixtureOfDatasets.configure_from_experiment"><code class="docutils literal notranslate"><span class="pre">MixtureOfDatasets.configure_from_experiment()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.MixtureOfDatasets.delete"><code class="docutils literal notranslate"><span class="pre">MixtureOfDatasets.delete()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.MixtureOfDatasets.get_description"><code class="docutils literal notranslate"><span class="pre">MixtureOfDatasets.get_description()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.MixtureOfDatasets.on_end_of_collection"><code class="docutils literal notranslate"><span class="pre">MixtureOfDatasets.on_end_of_collection()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.MixtureOfDatasets.ready_for_training"><code class="docutils literal notranslate"><span class="pre">MixtureOfDatasets.ready_for_training</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.MixtureOfDatasets.sample_random_trajectory"><code class="docutils literal notranslate"><span class="pre">MixtureOfDatasets.sample_random_trajectory()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.MixtureOfDatasets.save_new_trajs_to"><code class="docutils literal notranslate"><span class="pre">MixtureOfDatasets.save_new_trajs_to</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.MixtureOfDatasets.update_dset_weights"><code class="docutils literal notranslate"><span class="pre">MixtureOfDatasets.update_dset_weights()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.RLData"><code class="docutils literal notranslate"><span class="pre">RLData</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.RLData.actions"><code class="docutils literal notranslate"><span class="pre">RLData.actions</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.RLData.dones"><code class="docutils literal notranslate"><span class="pre">RLData.dones</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.RLData.obs"><code class="docutils literal notranslate"><span class="pre">RLData.obs</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.RLData.random_slice"><code class="docutils literal notranslate"><span class="pre">RLData.random_slice()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.RLData.rews"><code class="docutils literal notranslate"><span class="pre">RLData.rews</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.RLData.rl2s"><code class="docutils literal notranslate"><span class="pre">RLData.rl2s</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.RLData.time_idxs"><code class="docutils literal notranslate"><span class="pre">RLData.time_idxs</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.RLData_pad_collate"><code class="docutils literal notranslate"><span class="pre">RLData_pad_collate()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.RLDataset"><code class="docutils literal notranslate"><span class="pre">RLDataset</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.RLDataset.check_configured"><code class="docutils literal notranslate"><span class="pre">RLDataset.check_configured()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.RLDataset.configure"><code class="docutils literal notranslate"><span class="pre">RLDataset.configure()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.RLDataset.configure_from_experiment"><code class="docutils literal notranslate"><span class="pre">RLDataset.configure_from_experiment()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.RLDataset.delete"><code class="docutils literal notranslate"><span class="pre">RLDataset.delete()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.RLDataset.get_description"><code class="docutils literal notranslate"><span class="pre">RLDataset.get_description()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.RLDataset.on_end_of_collection"><code class="docutils literal notranslate"><span class="pre">RLDataset.on_end_of_collection()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.RLDataset.ready_for_training"><code class="docutils literal notranslate"><span class="pre">RLDataset.ready_for_training</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.RLDataset.sample_random_trajectory"><code class="docutils literal notranslate"><span class="pre">RLDataset.sample_random_trajectory()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.RLDataset.save_new_trajs_to"><code class="docutils literal notranslate"><span class="pre">RLDataset.save_new_trajs_to</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.get_path_to_trajs"><code class="docutils literal notranslate"><span class="pre">get_path_to_trajs()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.loading.load_traj_from_disk"><code class="docutils literal notranslate"><span class="pre">load_traj_from_disk()</span></code></a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By UT Austin Robot Perception and Learning Lab
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

@@ -1,0 +1,589 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="light">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Create an Experiment &#8212; AMAGO</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "light";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tutorial/create_experiment';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Track the Results" href="track_results.html" />
+    <link rel="prev" title="Create a Dataset" href="create_dataset.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="light">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+    
+    <img src="../_static/amago_logo_3.png" class="logo__image only-light" alt="AMAGO - Home"/>
+    <script>document.write(`<img src="../_static/amago_logo_3.png" class="logo__image only-dark" alt="AMAGO - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">Tutorial</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="setup_env.html">Setup the Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="create_dataset.html">Create a Dataset</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Create an Experiment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="track_results.html">Track the Results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html">Configure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="customization.html">Customize</a></li>
+<li class="toctree-l2"><a class="reference internal" href="async.html">Multi-GPU and Asynchronous Training</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../examples/index.html">Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../examples/00_meta_frozen_lake.html">Meta Frozen Lake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/01_basic_gym.html">Basic Gymnasium</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/02_gymnax.html">Gymnax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/03_popgym_suite.html">POPGym</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/04_tmaze.html">T-Maze</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/05_dark_key_door.html">Dark Room Key Door</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/06_alchemy.html">Symbolic DM Alchemy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/07_metaworld.html">Meta-World ML1/ML10/ML45</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/08_ale.html">Multi-Game Atari</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/09_multitask_procgen.html">Multi-Game ProcGen</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/10_babyai.html">Multi-Task BabyAI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/11_xland_minigrid.html">XLand Mini-Grid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/12_half_cheetah_vel.html">HalfCheetah(v4)-Velocity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/13_mazerunner_relabeling.html">MazeRunner HER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/14_d4rl.html">D4RL</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/amago.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/amago.agent.html">amago.agent</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/amago.cli_utils.html">amago.cli_utils</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../api/amago.envs.html">amago.envs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.envs.amago_env.html">amago.envs.amago_env</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../api/amago.envs.builtin.html">amago.envs.builtin</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/amago.envs.builtin.half_cheetah_v4_vel.html">amago.envs.builtin.half_cheetah_v4_vel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/amago.envs.builtin.metaworld_ml.html">amago.envs.builtin.metaworld_ml</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/amago.envs.builtin.popgym_envs.html">amago.envs.builtin.popgym_envs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/amago.envs.builtin.toy_gym.html">amago.envs.builtin.toy_gym</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/amago.envs.builtin.xland_minigrid.html">amago.envs.builtin.xland_minigrid</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.envs.env_utils.html">amago.envs.env_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.envs.exploration.html">amago.envs.exploration</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/amago.experiment.html">amago.experiment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/amago.hindsight.html">amago.hindsight</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/amago.loading.html">amago.loading</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../api/amago.nets.html">amago.nets</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.nets.actor_critic.html">amago.nets.actor_critic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.nets.cnn.html">amago.nets.cnn</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.nets.ff.html">amago.nets.ff</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.nets.goal_embedders.html">amago.nets.goal_embedders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.nets.policy_dists.html">amago.nets.policy_dists</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.nets.traj_encoders.html">amago.nets.traj_encoders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.nets.transformer.html">amago.nets.transformer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.nets.tstep_encoders.html">amago.nets.tstep_encoders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.nets.utils.html">amago.nets.utils</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/amago.utils.html">amago.utils</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../citation.html">Citation</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/tutorial/create_experiment.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Create an Experiment</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pick-a-sequence-embedding-tstepencoder">1. Pick a Sequence Embedding (<code class="xref py py-class docutils literal notranslate"><span class="pre">TstepEncoder</span></code>)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pick-a-sequence-model-trajencoder">2. Pick a Sequence Model (<code class="xref py py-class docutils literal notranslate"><span class="pre">TrajEncoder</span></code>)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pick-an-agent">3. Pick an <code class="xref py py-class docutils literal notranslate"><span class="pre">Agent</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#start-the-experiment-and-start-training">4. Start the <code class="xref py py-class docutils literal notranslate"><span class="pre">Experiment</span></code> and Start Training</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="create-an-experiment">
+<h1>Create an Experiment<a class="headerlink" href="#create-an-experiment" title="Link to this heading">#</a></h1>
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+</div>
+<section id="pick-a-sequence-embedding-tstepencoder">
+<h2>1. Pick a Sequence Embedding (<a class="reference internal" href="../api/amago.nets.tstep_encoders.html#amago.nets.tstep_encoders.TstepEncoder" title="amago.nets.tstep_encoders.TstepEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">TstepEncoder</span></code></a>)<a class="headerlink" href="#pick-a-sequence-embedding-tstepencoder" title="Link to this heading">#</a></h2>
+<p>Each timestep provides a dict observation along with the previous action and reward.
+AMAGO standardizes its training process by creating a <a class="reference internal" href="../api/amago.nets.tstep_encoders.html#amago.nets.tstep_encoders.TstepEncoder" title="amago.nets.tstep_encoders.TstepEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">TstepEncoder</span></code></a> to map timesteps to a fixed size representation.
+After this, the rest of the network can be environment-agnostic.
+We include customizable defaults for the two most common cases of images (<a class="reference internal" href="../api/amago.nets.tstep_encoders.html#amago.nets.tstep_encoders.CNNTstepEncoder" title="amago.nets.tstep_encoders.CNNTstepEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">CNNTstepEncoder</span></code></a>)
+and state arrays (<a class="reference internal" href="../api/amago.nets.tstep_encoders.html#amago.nets.tstep_encoders.FFTstepEncoder" title="amago.nets.tstep_encoders.FFTstepEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">FFTstepEncoder</span></code></a>).
+All we need to do is tell the <a class="reference internal" href="../api/amago.experiment.html#amago.experiment.Experiment" title="amago.experiment.Experiment"><code class="xref py py-class docutils literal notranslate"><span class="pre">Experiment</span></code></a> which type to use:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">amago.nets.tstep_encoders</span><span class="w"> </span><span class="kn">import</span> <span class="n">CNNTstepEncoder</span>
+
+<span class="n">experiment</span> <span class="o">=</span> <span class="n">amago</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span>
+    <span class="n">make_train_env</span><span class="o">=</span><span class="n">make_env</span><span class="p">,</span>
+    <span class="o">...</span><span class="p">,</span>
+    <span class="n">tstep_encoder_type</span><span class="o">=</span><span class="n">CNNTstepEncoder</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+</section>
+<section id="pick-a-sequence-model-trajencoder">
+<h2>2. Pick a Sequence Model (<a class="reference internal" href="../api/amago.nets.traj_encoders.html#amago.nets.traj_encoders.TrajEncoder" title="amago.nets.traj_encoders.TrajEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrajEncoder</span></code></a>)<a class="headerlink" href="#pick-a-sequence-model-trajencoder" title="Link to this heading">#</a></h2>
+<p>The <a class="reference internal" href="../api/amago.nets.traj_encoders.html#amago.nets.traj_encoders.TrajEncoder" title="amago.nets.traj_encoders.TrajEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrajEncoder</span></code></a> is a seq2seq model that enables long-term memory and in-context learning by processing a sequence of <a class="reference internal" href="../api/amago.nets.tstep_encoders.html#amago.nets.tstep_encoders.TstepEncoder" title="amago.nets.tstep_encoders.TstepEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">TstepEncoder</span></code></a> outputs. <a class="reference internal" href="../api/amago.nets.traj_encoders.html#module-amago.nets.traj_encoders" title="amago.nets.traj_encoders"><code class="xref py py-mod docutils literal notranslate"><span class="pre">amago.nets.traj_encoders</span></code></a> includes four built-in options:
+<a class="reference internal" href="../api/amago.nets.traj_encoders.html#amago.nets.traj_encoders.FFTrajEncoder" title="amago.nets.traj_encoders.FFTrajEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">FFTrajEncoder</span></code></a>, <a class="reference internal" href="../api/amago.nets.traj_encoders.html#amago.nets.traj_encoders.GRUTrajEncoder" title="amago.nets.traj_encoders.GRUTrajEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">GRUTrajEncoder</span></code></a>, <a class="reference internal" href="../api/amago.nets.traj_encoders.html#amago.nets.traj_encoders.MambaTrajEncoder" title="amago.nets.traj_encoders.MambaTrajEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">MambaTrajEncoder</span></code></a>, and <a class="reference internal" href="../api/amago.nets.traj_encoders.html#amago.nets.traj_encoders.TformerTrajEncoder" title="amago.nets.traj_encoders.TformerTrajEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">TformerTrajEncoder</span></code></a>.</p>
+<p>We can select a <a class="reference internal" href="../api/amago.nets.traj_encoders.html#amago.nets.traj_encoders.TrajEncoder" title="amago.nets.traj_encoders.TrajEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrajEncoder</span></code></a> just like a <a class="reference internal" href="../api/amago.nets.tstep_encoders.html#amago.nets.tstep_encoders.TstepEncoder" title="amago.nets.tstep_encoders.TstepEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">TstepEncoder</span></code></a>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">amago.nets.traj_encoders</span><span class="w"> </span><span class="kn">import</span> <span class="n">MambaTrajEncoder</span>
+
+<span class="n">experiment</span> <span class="o">=</span> <span class="n">amago</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span>
+    <span class="o">...</span><span class="p">,</span>
+    <span class="n">traj_encoder_type</span><span class="o">=</span><span class="n">MambaTrajEncoder</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+</section>
+<section id="pick-an-agent">
+<h2>3. Pick an <a class="reference internal" href="../api/amago.agent.html#amago.agent.Agent" title="amago.agent.Agent"><code class="xref py py-class docutils literal notranslate"><span class="pre">Agent</span></code></a><a class="headerlink" href="#pick-an-agent" title="Link to this heading">#</a></h2>
+<p>The <a class="reference internal" href="../api/amago.agent.html#amago.agent.Agent" title="amago.agent.Agent"><code class="xref py py-class docutils literal notranslate"><span class="pre">Agent</span></code></a> puts everything together and handles actor-critic RL training ontop of the outputs of the <a class="reference internal" href="../api/amago.nets.traj_encoders.html#amago.nets.traj_encoders.TrajEncoder" title="amago.nets.traj_encoders.TrajEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrajEncoder</span></code></a>.
+There are two built-in (highly <a class="reference internal" href="configuration.html"><span class="doc">configurable</span></a>) options: <a class="reference internal" href="../api/amago.agent.html#amago.agent.Agent" title="amago.agent.Agent"><code class="xref py py-class docutils literal notranslate"><span class="pre">Agent</span></code></a> and <a class="reference internal" href="../api/amago.agent.html#amago.agent.MultiTaskAgent" title="amago.agent.MultiTaskAgent"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiTaskAgent</span></code></a>.</p>
+<p>We can switch between them with:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">amago.agent</span><span class="w"> </span><span class="kn">import</span> <span class="n">MultiTaskAgent</span>
+
+<span class="n">experiment</span> <span class="o">=</span> <span class="n">amago</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span>
+    <span class="o">...</span><span class="p">,</span>
+    <span class="n">agent_type</span><span class="o">=</span><span class="n">MultiTaskAgent</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+</section>
+<section id="start-the-experiment-and-start-training">
+<h2>4. Start the <a class="reference internal" href="../api/amago.experiment.html#amago.experiment.Experiment" title="amago.experiment.Experiment"><code class="xref py py-class docutils literal notranslate"><span class="pre">Experiment</span></code></a> and Start Training<a class="headerlink" href="#start-the-experiment-and-start-training" title="Link to this heading">#</a></h2>
+<p>Launch training with:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">experiment</span> <span class="o">=</span> <span class="n">amago</span><span class="o">.</span><span class="n">Experiment</span><span class="p">(</span>
+    <span class="c1"># final required args we haven&#39;t mentioned</span>
+    <span class="n">run_name</span><span class="o">=</span><span class="s2">&quot;some_name&quot;</span><span class="p">,</span> <span class="c1"># a name used for checkpoints and logging</span>
+    <span class="n">ckpt_base_dir</span><span class="o">=</span><span class="s2">&quot;some/place/&quot;</span><span class="p">,</span> <span class="c1"># path to checkpoint directory</span>
+    <span class="n">val_timesteps_per_epoch</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="c1"># give actors enough time to finish &gt;= 1 episode</span>
+    <span class="n">max_seq_len</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="c1"># maximum sequence length for the TrajEncoder</span>
+    <span class="o">...</span>
+<span class="p">)</span>
+<span class="n">experiment</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+<span class="n">experiment</span><span class="o">.</span><span class="n">learn</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Checkpoints and logs are saved in:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="o">{</span>Experiment.ckpt_base_dir<span class="o">}</span>
+<span class="w">    </span><span class="p">|</span>--<span class="w"> </span><span class="o">{</span>Experiment.run_name<span class="o">}</span>/
+<span class="w">        </span><span class="p">|</span>--<span class="w"> </span>config.txt<span class="w"> </span><span class="c1"># stores gin configuration details for reproducibility</span>
+<span class="w">        </span><span class="p">|</span>--<span class="w"> </span>wandb_logs/
+<span class="w">        </span><span class="p">|</span>--<span class="w"> </span>ckpts/
+<span class="w">                </span><span class="p">|</span>--<span class="w"> </span>training_states/
+<span class="w">                </span><span class="p">|</span><span class="w">    </span><span class="p">|</span><span class="w"> </span><span class="c1"># full checkpoint dirs used to restore `accelerate` training runs</span>
+<span class="w">                </span><span class="p">|</span><span class="w">    </span><span class="p">|</span>--<span class="w"> </span><span class="o">{</span>Experiment.run_name<span class="o">}</span>_epoch_0/
+<span class="w">                </span><span class="p">|</span><span class="w">    </span><span class="p">|</span>--<span class="w"> </span><span class="o">{</span>Experiment.run_name<span class="o">}</span>_epoch_<span class="o">{</span>Experiment.ckpt_interval<span class="o">}</span>/
+<span class="w">                </span><span class="p">|</span><span class="w">    </span><span class="p">|</span>--<span class="w"> </span>...
+<span class="w">                </span><span class="p">|</span>
+<span class="w">                </span><span class="p">|</span>--<span class="w"> </span>latest/
+<span class="w">                </span><span class="p">|</span><span class="w">    </span><span class="p">|</span>--policy.pt<span class="w"> </span><span class="c1"># the latest model weights</span>
+<span class="w">                </span><span class="p">|</span>--<span class="w"> </span>policy_weights/
+<span class="w">                    </span><span class="p">|</span><span class="w"> </span><span class="c1"># standard pytorch weight files</span>
+<span class="w">                    </span><span class="p">|</span>--<span class="w"> </span>policy_epoch_0.pt
+<span class="w">                    </span><span class="p">|</span>--<span class="w"> </span>policy_epoch_<span class="o">{</span>Experiment.ckpt_interval<span class="o">}</span>.pt
+<span class="w">                    </span><span class="p">|</span>--<span class="w"> </span>...
+</pre></div>
+</div>
+<p>Each <code class="docutils literal notranslate"><span class="pre">epoch</span></code>, we:</p>
+<ol class="arabic simple">
+<li><p>Interact with the training envs for <code class="docutils literal notranslate"><span class="pre">train_timesteps_per_epoch</span></code>, creating a total of <code class="docutils literal notranslate"><span class="pre">parallel_actors</span> <span class="pre">*</span> <span class="pre">train_timesteps_per_epoch</span></code> new timesteps.</p></li>
+<li><p>Save any training sequences that have finished, if applicable.</p></li>
+<li><p>Compute the RL training objectives on <code class="docutils literal notranslate"><span class="pre">train_batches_per_epoch</span></code> batches sampled from the dataset.  Gradient steps are taken every <code class="docutils literal notranslate"><span class="pre">batches_per_update</span></code> batches.</p></li>
+</ol>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="create_dataset.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Create a Dataset</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="track_results.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Track the Results</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pick-a-sequence-embedding-tstepencoder">1. Pick a Sequence Embedding (<code class="xref py py-class docutils literal notranslate"><span class="pre">TstepEncoder</span></code>)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pick-a-sequence-model-trajencoder">2. Pick a Sequence Model (<code class="xref py py-class docutils literal notranslate"><span class="pre">TrajEncoder</span></code>)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pick-an-agent">3. Pick an <code class="xref py py-class docutils literal notranslate"><span class="pre">Agent</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#start-the-experiment-and-start-training">4. Start the <code class="xref py py-class docutils literal notranslate"><span class="pre">Experiment</span></code> and Start Training</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By UT Austin Robot Perception and Learning Lab
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

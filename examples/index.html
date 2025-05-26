@@ -1,0 +1,686 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="light">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Examples &#8212; AMAGO</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "light";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'examples/index';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Meta Frozen Lake" href="00_meta_frozen_lake.html" />
+    <link rel="prev" title="Multi-GPU and Asynchronous Training" href="../tutorial/async.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="light">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+    
+    <img src="../_static/amago_logo_3.png" class="logo__image only-light" alt="AMAGO - Home"/>
+    <script>document.write(`<img src="../_static/amago_logo_3.png" class="logo__image only-dark" alt="AMAGO - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../tutorial/index.html">Tutorial</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/setup_env.html">Setup the Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/create_dataset.html">Create a Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/create_experiment.html">Create an Experiment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/track_results.html">Track the Results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/configuration.html">Configure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/customization.html">Customize</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/async.html">Multi-GPU and Asynchronous Training</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="current reference internal" href="#">Examples</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="00_meta_frozen_lake.html">Meta Frozen Lake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="01_basic_gym.html">Basic Gymnasium</a></li>
+<li class="toctree-l2"><a class="reference internal" href="02_gymnax.html">Gymnax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="03_popgym_suite.html">POPGym</a></li>
+<li class="toctree-l2"><a class="reference internal" href="04_tmaze.html">T-Maze</a></li>
+<li class="toctree-l2"><a class="reference internal" href="05_dark_key_door.html">Dark Room Key Door</a></li>
+<li class="toctree-l2"><a class="reference internal" href="06_alchemy.html">Symbolic DM Alchemy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="07_metaworld.html">Meta-World ML1/ML10/ML45</a></li>
+<li class="toctree-l2"><a class="reference internal" href="08_ale.html">Multi-Game Atari</a></li>
+<li class="toctree-l2"><a class="reference internal" href="09_multitask_procgen.html">Multi-Game ProcGen</a></li>
+<li class="toctree-l2"><a class="reference internal" href="10_babyai.html">Multi-Task BabyAI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="11_xland_minigrid.html">XLand Mini-Grid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="12_half_cheetah_vel.html">HalfCheetah(v4)-Velocity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="13_mazerunner_relabeling.html">MazeRunner HER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="14_d4rl.html">D4RL</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/amago.html">API Reference</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/amago.agent.html">amago.agent</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/amago.cli_utils.html">amago.cli_utils</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../api/amago.envs.html">amago.envs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.envs.amago_env.html">amago.envs.amago_env</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../api/amago.envs.builtin.html">amago.envs.builtin</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/amago.envs.builtin.half_cheetah_v4_vel.html">amago.envs.builtin.half_cheetah_v4_vel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/amago.envs.builtin.metaworld_ml.html">amago.envs.builtin.metaworld_ml</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/amago.envs.builtin.popgym_envs.html">amago.envs.builtin.popgym_envs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/amago.envs.builtin.toy_gym.html">amago.envs.builtin.toy_gym</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/amago.envs.builtin.xland_minigrid.html">amago.envs.builtin.xland_minigrid</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.envs.env_utils.html">amago.envs.env_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.envs.exploration.html">amago.envs.exploration</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/amago.experiment.html">amago.experiment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/amago.hindsight.html">amago.hindsight</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/amago.loading.html">amago.loading</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../api/amago.nets.html">amago.nets</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.nets.actor_critic.html">amago.nets.actor_critic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.nets.cnn.html">amago.nets.cnn</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.nets.ff.html">amago.nets.ff</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.nets.goal_embedders.html">amago.nets.goal_embedders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.nets.policy_dists.html">amago.nets.policy_dists</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.nets.traj_encoders.html">amago.nets.traj_encoders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.nets.transformer.html">amago.nets.transformer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.nets.tstep_encoders.html">amago.nets.tstep_encoders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/amago.nets.utils.html">amago.nets.utils</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/amago.utils.html">amago.utils</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../citation.html">Citation</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/examples/index.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Examples</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#intro-to-black-box-meta-rl-meta-frozen-lake"><span class="xref std std-doc">0. Intro to Black-Box Meta-RL: Meta-Frozen-Lake</span></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#basic-gymnasium"><span class="xref std std-doc">01. Basic Gymnasium</span></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gpu-accelerated-envs-gymnax"><span class="xref std std-doc">02. GPU-Accelerated Envs: Gymnax</span></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pomdps-popgym"><span class="xref std std-doc">03. POMDPs: POPGym</span></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#super-long-term-recall-t-maze"><span class="xref std std-doc">04. Super Long-Term Recall: T-Maze</span></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#finite-horizon-meta-rl-dark-key-to-door"><span class="xref std std-doc">05. Finite-Horizon Meta-RL: Dark Key-To-Door</span></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#meta-rl-symbolic-deepmind-alchemy"><span class="xref std std-doc">06. Meta-RL: Symbolic DeepMind Alchemy</span></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#meta-rl-meta-world"><span class="xref std std-doc">07. Meta-RL: Meta-World</span></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#multi-task-rl-atari"><span class="xref std std-doc">08. Multi-Task RL: Atari</span></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#multi-game-two-episode-procgen"><span class="xref std std-doc">09. Multi-Game Two-Episode Procgen</span></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#multi-task-babyai"><span class="xref std std-doc">10. Multi-Task BabyAI</span></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#xland-minigrid"><span class="xref std std-doc">11. XLand MiniGrid</span></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#toy-meta-rl-locomotion-halfcheetahvelocity-w-halfcheetahv4"><span class="xref std std-doc">12. Toy Meta-RL / Locomotion: HalfCheetahVelocity (w/ HalfCheetahV4)</span></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hindsight-relabeling-mazerunner"><span class="xref std std-doc">13. Hindsight Relabeling: MazeRunner</span></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#offline-rl-d4rl"><span class="xref std std-doc">14. Offline RL: D4RL</span></a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="examples">
+<h1>Examples<a class="headerlink" href="#examples" title="Link to this heading">#</a></h1>
+<div class="toctree-wrapper compound">
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Example Training Scripts Table of Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="00_meta_frozen_lake.html">Meta Frozen Lake</a></li>
+<li class="toctree-l1"><a class="reference internal" href="01_basic_gym.html">Basic Gymnasium</a></li>
+<li class="toctree-l1"><a class="reference internal" href="02_gymnax.html">Gymnax</a></li>
+<li class="toctree-l1"><a class="reference internal" href="03_popgym_suite.html">POPGym</a></li>
+<li class="toctree-l1"><a class="reference internal" href="04_tmaze.html">T-Maze</a></li>
+<li class="toctree-l1"><a class="reference internal" href="05_dark_key_door.html">Dark Room Key Door</a></li>
+<li class="toctree-l1"><a class="reference internal" href="06_alchemy.html">Symbolic DM Alchemy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="07_metaworld.html">Meta-World ML1/ML10/ML45</a></li>
+<li class="toctree-l1"><a class="reference internal" href="08_ale.html">Multi-Game Atari</a></li>
+<li class="toctree-l1"><a class="reference internal" href="09_multitask_procgen.html">Multi-Game ProcGen</a></li>
+<li class="toctree-l1"><a class="reference internal" href="10_babyai.html">Multi-Task BabyAI</a></li>
+<li class="toctree-l1"><a class="reference internal" href="11_xland_minigrid.html">XLand Mini-Grid</a></li>
+<li class="toctree-l1"><a class="reference internal" href="12_half_cheetah_vel.html">HalfCheetah(v4)-Velocity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="13_mazerunner_relabeling.html">MazeRunner HER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="14_d4rl.html">D4RL</a></li>
+</ul>
+</div>
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">examples/</span></code> folder includes helpful starting points for common cases.</p>
+<p>To follow most of the examples you’ll need to install the benchmark environments with <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">amago[envs]</span></code>. If you want to log to <code class="docutils literal notranslate"><span class="pre">wandb</span></code> or check out some of the example results, it’s worth reading <a class="reference external" href="../tutorial.html#track-the-results">this section of the tutorial</a>. The public <code class="docutils literal notranslate"><span class="pre">wandb</span></code> links include example commands (click the “Overview” tab). Building this set of public examples with the new version of AMAGO is an active work in progress.</p>
+<p>Use the <code class="docutils literal notranslate"><span class="pre">CUDA_VISIBLE_DEVICES</span></code> environment variable to assign basic single-GPU examples to a specific GPU index. Most of the examples share a command line interface. Use <code class="docutils literal notranslate"><span class="pre">--help</span></code> for more information.</p>
+<section id="intro-to-black-box-meta-rl-meta-frozen-lake">
+<h2><a class="reference internal" href="00_meta_frozen_lake.html"><span class="doc">0. Intro to Black-Box Meta-RL: Meta-Frozen-Lake</span></a><a class="headerlink" href="#intro-to-black-box-meta-rl-meta-frozen-lake" title="Link to this heading">#</a></h2>
+<a class="reference internal image-reference" href="../_images/in_context_rl.png"><img alt="frozen_lake_diagram" class="align-center" src="../_images/in_context_rl.png" style="width: 510px;" />
+</a>
+<p>Learn more about adaptive policies with help from an intuitive meta-RL problem. Train an agent to adapt over multiple episodes by learning to avoid its previous mistakes.</p>
+<p><a class="reference external" href="https://wandb.ai/jakegrigsby/amago-v3-reference/runs/a53gh0wy">Example wandb</a></p>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+</section>
+<section id="basic-gymnasium">
+<h2><a class="reference internal" href="01_basic_gym.html"><span class="doc">01. Basic Gymnasium</span></a><a class="headerlink" href="#basic-gymnasium" title="Link to this heading">#</a></h2>
+<p>Typical RL benchmarks are MDPs and can be treated as a simple special case of the full agent. Memory is often redundant but these tasks can be helpful for testing.</p>
+<p><a class="reference external" href="https://wandb.ai/jakegrigsby/amago-v3-reference/runs/30ndyo2l">Example wandb for LunarLander-v2 with a Transformer</a></p>
+<p><a class="reference external" href="https://wandb.ai/jakegrigsby/amago-v3-reference/runs/0znibfm2">Example wandb for DM Control Suite Cheetah Run</a></p>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+</section>
+<section id="gpu-accelerated-envs-gymnax">
+<h2><a class="reference internal" href="02_gymnax.html"><span class="doc">02. GPU-Accelerated Envs: Gymnax</span></a><a class="headerlink" href="#gpu-accelerated-envs-gymnax" title="Link to this heading">#</a></h2>
+<a class="reference internal image-reference" href="../_images/gymnax_logo.png"><img alt="gymnax_logo" class="align-left" src="../_images/gymnax_logo.png" style="width: 110px;" />
+</a>
+<p>Like <code class="docutils literal notranslate"><span class="pre">gymnasium</span></code>, but 1000x faster! Use <code class="docutils literal notranslate"><span class="pre">jax</span></code> to add more <code class="docutils literal notranslate"><span class="pre">--parallel_actors</span></code> and speedup experiments. <a class="reference external" href="https://github.com/RobertTLange/gymnax">gymnax</a> includes several interesting memory problems.</p>
+<p><a class="reference external" href="https://wandb.ai/jakegrigsby/amago-v3-reference/runs/7qe1pu41/">Example wandb for MemoryChain-bsuite</a></p>
+<p><strong>📊 Experimental 📊</strong>. Support for <code class="docutils literal notranslate"><span class="pre">gymnax</span></code> is a new feature.</p>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+</section>
+<section id="pomdps-popgym">
+<h2><a class="reference internal" href="03_popgym_suite.html"><span class="doc">03. POMDPs: POPGym</span></a><a class="headerlink" href="#pomdps-popgym" title="Link to this heading">#</a></h2>
+<a class="reference internal image-reference" href="../_images/popgym.png"><img alt="popgym_diagram" class="align-left" src="../_images/popgym.png" style="width: 180px;" />
+</a>
+<p><a class="reference external" href="https://arxiv.org/abs/2303.01859">POPGym</a> is a collection of memory unit-tests for RL agents. AMAGO is really good at POPGym and turns most of these tasks into quick experiments for fast prototyping. Our <code class="docutils literal notranslate"><span class="pre">MultiDomainPOPGym</span></code> env concatenates POPGym domains into a harder one-shot multi-task problem discussed in the followup paper.</p>
+<p><a class="reference external" href="https://wandb.ai/jakegrigsby/amago-v3-reference/runs/nhyxu2g1">Example wandb</a>. These settings can be copied across every task in the ICLR paper.</p>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+</section>
+<section id="super-long-term-recall-t-maze">
+<h2><a class="reference internal" href="04_tmaze.html"><span class="doc">04. Super Long-Term Recall: T-Maze</span></a><a class="headerlink" href="#super-long-term-recall-t-maze" title="Link to this heading">#</a></h2>
+<a class="reference internal image-reference" href="../_images/tmaze.png"><img alt="tmaze_diagram" class="align-left" src="../_images/tmaze.png" style="width: 160px;" />
+</a>
+<p>T-Maze is a modified version of the problem featured in <a class="reference external" href="https://arxiv.org/abs/2307.03864">Ni et al., 2023</a>. T-Maze answers the question: RL issues (mostly) aside, what is the most distant memory our sequence model can recall? When using Transformers, the answer is usually whatever we can fit on the GPU…</p>
+<p><a class="reference external" href="https://wandb.ai/jakegrigsby/amago-v3-reference/runs/8t5bdqmu">Example wandb</a></p>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+</section>
+<section id="finite-horizon-meta-rl-dark-key-to-door">
+<h2><a class="reference internal" href="05_dark_key_door.html"><span class="doc">05. Finite-Horizon Meta-RL: Dark Key-To-Door</span></a><a class="headerlink" href="#finite-horizon-meta-rl-dark-key-to-door" title="Link to this heading">#</a></h2>
+<p>A common meta-RL problem where the environment resets for a fixed number of timesteps (rather than attempts) so that the agent is rewarded for finding a solution quickly in order to finish the task as many times as possible. Loosely based on experiments in <a class="reference external" href="https://arxiv.org/abs/2210.14215">Algorithm Distillation</a>.</p>
+<p><a class="reference external" href="https://wandb.ai/jakegrigsby/amago-v3-reference/runs/a6adhfg3">Example wandb</a></p>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+</section>
+<section id="meta-rl-symbolic-deepmind-alchemy">
+<h2><a class="reference internal" href="06_alchemy.html"><span class="doc">06. Meta-RL: Symbolic DeepMind Alchemy</span></a><a class="headerlink" href="#meta-rl-symbolic-deepmind-alchemy" title="Link to this heading">#</a></h2>
+<a class="reference internal image-reference" href="../_images/alchemy.png"><img alt="icrl_diagram" class="align-left" src="../_images/alchemy.png" style="width: 110px;" />
+</a>
+<p>Symbolic version of the <a class="reference external" href="https://arxiv.org/abs/2102.02926">DeepMind Alchemy</a> meta-RL domain.</p>
+<p><strong>🔥 Challenging 🔥</strong>. Alchemy has a hard local max strategy that can take many samples to break. We’ve found this domain to be very expensive and hard to tune, though we can usually match the pure-RL (VMPO) baseline from the original paper. We’ve never used Alchemy in our published results but maintain this script as a starting point.</p>
+<p>Example wandb from a recent large-scale attempt with the Multi-Task agent: <a class="reference external" href="https://wandb.ai/jakegrigsby/amago-v3-reference/runs/s85fw2kn">Actor Process</a> or <a class="reference external" href="https://wandb.ai/jakegrigsby/amago-v3-reference/runs/1ic57f70">Learner Process</a>.</p>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+</section>
+<section id="meta-rl-meta-world">
+<h2><a class="reference internal" href="07_metaworld.html"><span class="doc">07. Meta-RL: Meta-World</span></a><a class="headerlink" href="#meta-rl-meta-world" title="Link to this heading">#</a></h2>
+<a class="reference internal image-reference" href="../_images/sawyer2.png"><img alt="icrl_diagram" class="align-left" src="../_images/sawyer2.png" style="width: 110px;" />
+</a>
+<p><a class="reference external" href="https://meta-world.github.io">Meta-World</a> creates a meta-RL benchmark out of robotic manipulation tasks. Meta-World ML45 is a great example of why we’d want to use the <code class="docutils literal notranslate"><span class="pre">MultiTaskAgent</span></code> learning update. For much more information please refer to our NeurIPS 2024 paper.</p>
+<p><a class="reference external" href="https://wandb.ai/jakegrigsby/amago-v3-reference/runs/gq9s8vxs">Example wandb (MultiTaskAgent on ML45!)</a></p>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+</section>
+<section id="multi-task-rl-atari">
+<h2><a class="reference internal" href="08_ale.html"><span class="doc">08. Multi-Task RL: Atari</span></a><a class="headerlink" href="#multi-task-rl-atari" title="Link to this heading">#</a></h2>
+<a class="reference internal image-reference" href="../_images/gopher.png"><img alt="icrl_diagram" class="align-left" src="../_images/gopher.png" style="width: 110px;" />
+</a>
+<p>Multi-Task RL is a special case of meta-RL where the identity of each task is directly provided or can be inferred without memory. We focus on the uncommon setting of learning from <em>unclipped</em> rewards because it isolates the challenge of optimizing distinct reward functions. See the NeurIPS 2024 paper for more.</p>
+<p><a class="reference external" href="https://wandb.ai/jakegrigsby/amago-v3-reference/runs/gzgdshjb">Example wandb for an easy 4-game variant</a></p>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+</section>
+<section id="multi-game-two-episode-procgen">
+<h2><a class="reference internal" href="09_multitask_procgen.html"><span class="doc">09. Multi-Game Two-Episode Procgen</span></a><a class="headerlink" href="#multi-game-two-episode-procgen" title="Link to this heading">#</a></h2>
+<a class="reference internal image-reference" href="../_images/coinrun2.png"><img alt="icrl_diagram" class="align-left" src="../_images/coinrun2.png" style="width: 110px;" />
+</a>
+<p>Multi-Game <a class="reference external" href="https://arxiv.org/abs/1912.01588">Procgen</a> has a similar feel to Atari. However, Procgen’s procedural generation and partial observability (especially in “memory” mode) is better suited to multi-episodic adaptation. This example highlights the <code class="docutils literal notranslate"><span class="pre">TwoAttemptMTProcgen</span></code> setup used by experiments in the second paper.</p>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+</section>
+<section id="multi-task-babyai">
+<h2><a class="reference internal" href="10_babyai.html"><span class="doc">10. Multi-Task BabyAI</span></a><a class="headerlink" href="#multi-task-babyai" title="Link to this heading">#</a></h2>
+<a class="reference internal image-reference" href="../_images/minigrid.png"><img alt="icrl_diagram" class="align-left" src="../_images/minigrid.png" style="width: 100px;" />
+</a>
+<p><a class="reference external" href="https://arxiv.org/abs/1810.08272">BabyAI</a> is a collection of procedurally generated gridworld tasks with simple language instructions. We create a fun multi-task variant for adaptive agents.</p>
+<p><a class="reference external" href="https://wandb.ai/jakegrigsby/amago-v3-reference/reports/Multi-Task-BabyAI-AMAGOv2--Vmlldzo5ODAxNjc1">Example multi-seed report</a> (which uses an outdated version of AMAGO).</p>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+</section>
+<section id="xland-minigrid">
+<h2><a class="reference internal" href="11_xland_minigrid.html"><span class="doc">11. XLand MiniGrid</span></a><a class="headerlink" href="#xland-minigrid" title="Link to this heading">#</a></h2>
+<a class="reference internal image-reference" href="../_images/xland_rules.png"><img alt="icrl_diagram" class="align-left" src="../_images/xland_rules.png" style="width: 150px;" />
+</a>
+<p><a class="reference external" href="https://arxiv.org/abs/2312.12044">XLand-MiniGrid</a> is a <code class="docutils literal notranslate"><span class="pre">jax</span></code>-accelerated environment that brings the task diversity of <a class="reference external" href="https://arxiv.org/abs/2301.07608">AdA</a> to <a class="reference external" href="https://arxiv.org/abs/2306.13831">Minigrid</a>/BabyAI-style gridworlds.</p>
+<p><strong>📊 Experimental 📊</strong>. Support for XLand MiniGrid is a new feature.</p>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+</section>
+<section id="toy-meta-rl-locomotion-halfcheetahvelocity-w-halfcheetahv4">
+<h2><a class="reference internal" href="12_half_cheetah_vel.html"><span class="doc">12. Toy Meta-RL / Locomotion: HalfCheetahVelocity (w/ HalfCheetahV4)</span></a><a class="headerlink" href="#toy-meta-rl-locomotion-halfcheetahvelocity-w-halfcheetahv4" title="Link to this heading">#</a></h2>
+<a class="reference internal image-reference" href="../_images/half_cheetah.png"><img alt="half_cheetah_diagram" class="align-left" src="../_images/half_cheetah.png" style="width: 100px;" />
+</a>
+<p>A more modern remaster of the famous <a class="reference external" href="https://arxiv.org/pdf/1703.03400">HalfCheetahVel mujoco meta-RL benchmark</a>, where the cheetah from the <a class="reference external" href="https://gymnasium.farama.org/environments/mujoco/half_cheetah/">HalfCheetah-v4 gymnasium task</a> needs to run at a randomly sampled (hidden) target velocity based on reward signals.</p>
+<p><a class="reference external" href="https://wandb.ai/jakegrigsby/amago-v3-reference/runs/jveklygo">Example wandb</a></p>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+</section>
+<section id="hindsight-relabeling-mazerunner">
+<h2><a class="reference internal" href="13_mazerunner_relabeling.html"><span class="doc">13. Hindsight Relabeling: MazeRunner</span></a><a class="headerlink" href="#hindsight-relabeling-mazerunner" title="Link to this heading">#</a></h2>
+<a class="reference internal image-reference" href="../_images/mazerunner.png"><img alt="mazerunner_diagram" class="align-left" src="../_images/mazerunner.png" style="width: 100px;" />
+</a>
+<p>Off-policy learning makes it easy to relabel old sequence data with new rewards. MazeRunner is a goal-conditioned POMDP navigation problem used to discuss &amp; test the hindsight instruction relabeling technique in our paper. This example includes a template for using hindsight relabeling in the new version of AMAGO.</p>
+<p><a class="reference external" href="https://wandb.ai/jakegrigsby/amago-v3-reference/runs/a728v6k0">Example wandb</a></p>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+</section>
+<section id="offline-rl-d4rl">
+<h2><a class="reference internal" href="14_d4rl.html"><span class="doc">14. Offline RL: D4RL</span></a><a class="headerlink" href="#offline-rl-d4rl" title="Link to this heading">#</a></h2>
+<a class="reference internal image-reference" href="../_images/d4rl.png"><img alt="d4rl_diagram" class="align-left" src="../_images/d4rl.png" style="width: 100px;" />
+</a>
+<p>Offline RL on the (original) <a class="reference external" href="https://arxiv.org/pdf/2004.07219">D4RL</a> datasets.</p>
+<p><a class="reference external" href="https://wandb.ai/jakegrigsby/amago-v3-reference/runs/9ab15rr8">Example wandb</a></p>
+<div class="line-block">
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+<div class="line"><br /></div>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../tutorial/async.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Multi-GPU and Asynchronous Training</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="00_meta_frozen_lake.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Meta Frozen Lake</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#intro-to-black-box-meta-rl-meta-frozen-lake"><span class="xref std std-doc">0. Intro to Black-Box Meta-RL: Meta-Frozen-Lake</span></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#basic-gymnasium"><span class="xref std std-doc">01. Basic Gymnasium</span></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#gpu-accelerated-envs-gymnax"><span class="xref std std-doc">02. GPU-Accelerated Envs: Gymnax</span></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pomdps-popgym"><span class="xref std std-doc">03. POMDPs: POPGym</span></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#super-long-term-recall-t-maze"><span class="xref std std-doc">04. Super Long-Term Recall: T-Maze</span></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#finite-horizon-meta-rl-dark-key-to-door"><span class="xref std std-doc">05. Finite-Horizon Meta-RL: Dark Key-To-Door</span></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#meta-rl-symbolic-deepmind-alchemy"><span class="xref std std-doc">06. Meta-RL: Symbolic DeepMind Alchemy</span></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#meta-rl-meta-world"><span class="xref std std-doc">07. Meta-RL: Meta-World</span></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#multi-task-rl-atari"><span class="xref std std-doc">08. Multi-Task RL: Atari</span></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#multi-game-two-episode-procgen"><span class="xref std std-doc">09. Multi-Game Two-Episode Procgen</span></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#multi-task-babyai"><span class="xref std std-doc">10. Multi-Task BabyAI</span></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#xland-minigrid"><span class="xref std std-doc">11. XLand MiniGrid</span></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#toy-meta-rl-locomotion-halfcheetahvelocity-w-halfcheetahv4"><span class="xref std std-doc">12. Toy Meta-RL / Locomotion: HalfCheetahVelocity (w/ HalfCheetahV4)</span></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#hindsight-relabeling-mazerunner"><span class="xref std std-doc">13. Hindsight Relabeling: MazeRunner</span></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#offline-rl-d4rl"><span class="xref std std-doc">14. Offline RL: D4RL</span></a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By UT Austin Robot Perception and Learning Lab
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

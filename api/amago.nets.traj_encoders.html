@@ -1,0 +1,1222 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" data-theme="light">
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>amago.nets.traj_encoders &#8212; AMAGO</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "light";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/amago.nets.traj_encoders';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="amago.nets.transformer" href="amago.nets.transformer.html" />
+    <link rel="prev" title="amago.nets.policy_dists" href="amago.nets.policy_dists.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="light">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+    
+    <img src="../_static/amago_logo_3.png" class="logo__image only-light" alt="AMAGO - Home"/>
+    <script>document.write(`<img src="../_static/amago_logo_3.png" class="logo__image only-dark" alt="AMAGO - Home"/>`);</script>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../tutorial/index.html">Tutorial</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/setup_env.html">Setup the Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/create_dataset.html">Create a Dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/create_experiment.html">Create an Experiment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/track_results.html">Track the Results</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/configuration.html">Configure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/customization.html">Customize</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/async.html">Multi-GPU and Asynchronous Training</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../examples/index.html">Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../examples/00_meta_frozen_lake.html">Meta Frozen Lake</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/01_basic_gym.html">Basic Gymnasium</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/02_gymnax.html">Gymnax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/03_popgym_suite.html">POPGym</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/04_tmaze.html">T-Maze</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/05_dark_key_door.html">Dark Room Key Door</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/06_alchemy.html">Symbolic DM Alchemy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/07_metaworld.html">Meta-World ML1/ML10/ML45</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/08_ale.html">Multi-Game Atari</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/09_multitask_procgen.html">Multi-Game ProcGen</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/10_babyai.html">Multi-Task BabyAI</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/11_xland_minigrid.html">XLand Mini-Grid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/12_half_cheetah_vel.html">HalfCheetah(v4)-Velocity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/13_mazerunner_relabeling.html">MazeRunner HER</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/14_d4rl.html">D4RL</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="amago.html">API Reference</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="amago.agent.html">amago.agent</a></li>
+<li class="toctree-l2"><a class="reference internal" href="amago.cli_utils.html">amago.cli_utils</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="amago.envs.html">amago.envs</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="amago.envs.amago_env.html">amago.envs.amago_env</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="amago.envs.builtin.html">amago.envs.builtin</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l4"><a class="reference internal" href="amago.envs.builtin.half_cheetah_v4_vel.html">amago.envs.builtin.half_cheetah_v4_vel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="amago.envs.builtin.metaworld_ml.html">amago.envs.builtin.metaworld_ml</a></li>
+<li class="toctree-l4"><a class="reference internal" href="amago.envs.builtin.popgym_envs.html">amago.envs.builtin.popgym_envs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="amago.envs.builtin.toy_gym.html">amago.envs.builtin.toy_gym</a></li>
+<li class="toctree-l4"><a class="reference internal" href="amago.envs.builtin.xland_minigrid.html">amago.envs.builtin.xland_minigrid</a></li>
+</ul>
+</details></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.envs.env_utils.html">amago.envs.env_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.envs.exploration.html">amago.envs.exploration</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="amago.experiment.html">amago.experiment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="amago.hindsight.html">amago.hindsight</a></li>
+<li class="toctree-l2"><a class="reference internal" href="amago.loading.html">amago.loading</a></li>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="amago.nets.html">amago.nets</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.actor_critic.html">amago.nets.actor_critic</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.cnn.html">amago.nets.cnn</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.ff.html">amago.nets.ff</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.goal_embedders.html">amago.nets.goal_embedders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.policy_dists.html">amago.nets.policy_dists</a></li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">amago.nets.traj_encoders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.transformer.html">amago.nets.transformer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.tstep_encoders.html">amago.nets.tstep_encoders</a></li>
+<li class="toctree-l3"><a class="reference internal" href="amago.nets.utils.html">amago.nets.utils</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="amago.utils.html">amago.utils</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../citation.html">Citation</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/api/amago.nets.traj_encoders.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>amago.nets.traj_encoders</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.FFTrajEncoder"><code class="docutils literal notranslate"><span class="pre">FFTrajEncoder</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.FFTrajEncoder.emb_dim"><code class="docutils literal notranslate"><span class="pre">FFTrajEncoder.emb_dim</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.FFTrajEncoder.forward"><code class="docutils literal notranslate"><span class="pre">FFTrajEncoder.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.GRUTrajEncoder"><code class="docutils literal notranslate"><span class="pre">GRUTrajEncoder</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.GRUTrajEncoder.emb_dim"><code class="docutils literal notranslate"><span class="pre">GRUTrajEncoder.emb_dim</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.GRUTrajEncoder.forward"><code class="docutils literal notranslate"><span class="pre">GRUTrajEncoder.forward()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.GRUTrajEncoder.reset_hidden_state"><code class="docutils literal notranslate"><span class="pre">GRUTrajEncoder.reset_hidden_state()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.MambaTrajEncoder"><code class="docutils literal notranslate"><span class="pre">MambaTrajEncoder</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.MambaTrajEncoder.emb_dim"><code class="docutils literal notranslate"><span class="pre">MambaTrajEncoder.emb_dim</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.MambaTrajEncoder.forward"><code class="docutils literal notranslate"><span class="pre">MambaTrajEncoder.forward()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.MambaTrajEncoder.init_hidden_state"><code class="docutils literal notranslate"><span class="pre">MambaTrajEncoder.init_hidden_state()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.MambaTrajEncoder.reset_hidden_state"><code class="docutils literal notranslate"><span class="pre">MambaTrajEncoder.reset_hidden_state()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.TformerTrajEncoder"><code class="docutils literal notranslate"><span class="pre">TformerTrajEncoder</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.TformerTrajEncoder.emb_dim"><code class="docutils literal notranslate"><span class="pre">TformerTrajEncoder.emb_dim</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.TformerTrajEncoder.forward"><code class="docutils literal notranslate"><span class="pre">TformerTrajEncoder.forward()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.TformerTrajEncoder.init_hidden_state"><code class="docutils literal notranslate"><span class="pre">TformerTrajEncoder.init_hidden_state()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.TformerTrajEncoder.reset_hidden_state"><code class="docutils literal notranslate"><span class="pre">TformerTrajEncoder.reset_hidden_state()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.TrajEncoder"><code class="docutils literal notranslate"><span class="pre">TrajEncoder</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.TrajEncoder.emb_dim"><code class="docutils literal notranslate"><span class="pre">TrajEncoder.emb_dim</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.TrajEncoder.forward"><code class="docutils literal notranslate"><span class="pre">TrajEncoder.forward()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.TrajEncoder.init_hidden_state"><code class="docutils literal notranslate"><span class="pre">TrajEncoder.init_hidden_state()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.TrajEncoder.reset_hidden_state"><code class="docutils literal notranslate"><span class="pre">TrajEncoder.reset_hidden_state()</span></code></a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-amago.nets.traj_encoders">
+<span id="amago-nets-traj-encoders"></span><h1>amago.nets.traj_encoders<a class="headerlink" href="#module-amago.nets.traj_encoders" title="Link to this heading">#</a></h1>
+<p>Seq2Seq models for long-term memory.</p>
+<p class="rubric">Classes</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amago.nets.traj_encoders.FFTrajEncoder" title="amago.nets.traj_encoders.FFTrajEncoder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FFTrajEncoder</span></code></a>(tstep_dim, max_seq_len[, ...])</p></td>
+<td><p>Feed-forward (memory-free) trajectory encoder.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amago.nets.traj_encoders.GRUTrajEncoder" title="amago.nets.traj_encoders.GRUTrajEncoder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GRUTrajEncoder</span></code></a>(tstep_dim, max_seq_len[, ...])</p></td>
+<td><p>RNN (GRU) Trajectory Encoder.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amago.nets.traj_encoders.MambaTrajEncoder" title="amago.nets.traj_encoders.MambaTrajEncoder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MambaTrajEncoder</span></code></a>(tstep_dim, max_seq_len[, ...])</p></td>
+<td><p>Mamba Trajectory Encoder.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#amago.nets.traj_encoders.TformerTrajEncoder" title="amago.nets.traj_encoders.TformerTrajEncoder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TformerTrajEncoder</span></code></a>(tstep_dim, max_seq_len[, ...])</p></td>
+<td><p>Transformer Trajectory Encoder.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#amago.nets.traj_encoders.TrajEncoder" title="amago.nets.traj_encoders.TrajEncoder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TrajEncoder</span></code></a>(tstep_dim, max_seq_len)</p></td>
+<td><p>Abstract base class for trajectory encoders.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="amago.nets.traj_encoders.FFTrajEncoder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">FFTrajEncoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tstep_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_seq_len</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d_ff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'leaky_relu'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'layer'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/nets/traj_encoders.html#FFTrajEncoder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.nets.traj_encoders.FFTrajEncoder" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#amago.nets.traj_encoders.TrajEncoder" title="amago.nets.traj_encoders.TrajEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrajEncoder</span></code></a></p>
+<p>Feed-forward (memory-free) trajectory encoder.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>This class is <code class="docutils literal notranslate"><span class="pre">&#64;gin.configurable</span></code>. Default values of kwargs can be overridden using <a class="reference external" href="https://github.com/google/gin-config">gin</a>.</p>
+</div>
+<p>A useful tool for applying AMAGO to standard MDPs and benchmarking general
+RL details/hyperparamters on common benchmarks. The feed-forward architecture
+is designed to be close to an attention-less Transformer (residual blocks,
+norm, dropout, etc.). This makes it easy to create perfect 1:1 ablations of
+“memory vs. no memory” by only changing the TrajEncoder and without touching
+the <code class="xref py py-obj docutils literal notranslate"><span class="pre">max_seq_len</span></code>, which would have the side-effect of changing the effective
+batch size of actor-critic learning.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tstep_dim</strong> – Dimension of the input timestep representation (last dim of
+the input sequence). Defined by the output of the TstepEncoder.</p></li>
+<li><p><strong>max_seq_len</strong> – Maximum sequence length of the model. Any inputs will have
+been trimmed to this length before reaching the TrajEncoder.</p></li>
+<li><p><strong>d_model</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Dimension of the main residual stream and output. 1:1 with how
+this would be defined in a Transformer. Defaults to 256.</p></li>
+<li><p><strong>d_ff</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Hidden dim of the feed-forward network along each residual block.
+1:1 with how this would be defined in a Transformer. Defaults to
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">4</span> <span class="pre">*</span> <span class="pre">d_model</span></code>.</p></li>
+<li><p><strong>n_layers</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Number of residual feed-forward blocks. 1:1 with how this would
+be defined in a Transformer. Defaults to 1.</p></li>
+<li><p><strong>dropout</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Dropout rate. Equivalent to the dropout paramter of feed-forward
+blocks in a Transformer, but is also applied to the first and last
+linear layers (inp –&gt; d_model and d_model –&gt; out). Defaults to 0.0.</p></li>
+<li><p><strong>activation</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Activation function. Defaults to “leaky_relu”.</p></li>
+<li><p><strong>norm</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Normalization function. Defaults to “layer” (LayerNorm).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="amago.nets.traj_encoders.FFTrajEncoder.emb_dim">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">emb_dim</span></span><a class="headerlink" href="#amago.nets.traj_encoders.FFTrajEncoder.emb_dim" title="Link to this definition">#</a></dt>
+<dd><p>Defines the expected output dim of this model.</p>
+<p>Used to infer the input dim of actor/critics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The embedding dimension.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.nets.traj_encoders.FFTrajEncoder.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_idxs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/nets/traj_encoders.html#FFTrajEncoder.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.nets.traj_encoders.FFTrajEncoder.forward" title="Link to this definition">#</a></dt>
+<dd><p>Sequence model forward pass.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>seq</strong> – [Batch, Num Timesteps, TstepDim]. TstepDim is defined by the
+output of the TstepEncoder.</p></li>
+<li><p><strong>time_idxs</strong> – [Batch, Num Timesteps, 1]. A sequence of ints tying the
+input seq to the number of steps that have passed since the start
+of the episode. Can be used to compute position embeddings or
+other temporal features.</p></li>
+<li><p><strong>hidden_state</strong> – Architecture-specific hidden state. Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A tuple containing:</dt><dd><ul class="simple">
+<li><dl class="simple">
+<dt>output_seq: [Batch, Timestep, self.emb_dim]. Output of our</dt><dd><p>seq2seq model.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>new_hidden_state: Architecture-specific hidden state. Expected to</dt><dd><p>be <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code> if input <code class="xref py py-obj docutils literal notranslate"><span class="pre">hidden_state</span></code> is <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>. Otherwise, we
+assume we are at inference time and that this <a class="reference internal" href="#amago.nets.traj_encoders.FFTrajEncoder.forward" title="amago.nets.traj_encoders.FFTrajEncoder.forward"><code class="xref py py-obj docutils literal notranslate"><span class="pre">forward</span></code></a>
+method has handled any updates to the hidden state that were
+needed.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[torch.Tensor, Optional[Any]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="amago.nets.traj_encoders.GRUTrajEncoder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">GRUTrajEncoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tstep_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_seq_len</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d_hidden</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d_output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'layer'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/nets/traj_encoders.html#GRUTrajEncoder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.nets.traj_encoders.GRUTrajEncoder" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#amago.nets.traj_encoders.TrajEncoder" title="amago.nets.traj_encoders.TrajEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrajEncoder</span></code></a></p>
+<p>RNN (GRU) Trajectory Encoder.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>This class is <code class="docutils literal notranslate"><span class="pre">&#64;gin.configurable</span></code>. Default values of kwargs can be overridden using <a class="reference external" href="https://github.com/google/gin-config">gin</a>.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tstep_dim</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Dimension of the input timestep representation (last dim of
+the input sequence). Defined by the output of the TstepEncoder.</p></li>
+<li><p><strong>max_seq_len</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Maximum sequence length of the model. Any inputs will have
+been trimmed to this length before reaching the TrajEncoder.</p></li>
+<li><p><strong>d_hidden</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Dimension of the hidden state of the GRU. Defaults to 256.</p></li>
+<li><p><strong>n_layers</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Number of layers in the GRU. Defaults to 2.</p></li>
+<li><p><strong>d_output</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Dimension of the output linear layer after the GRU. Defaults to
+256.</p></li>
+<li><p><strong>norm</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Normalization applied after the final linear layer. Defaults to
+“layer” (LayerNorm).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="amago.nets.traj_encoders.GRUTrajEncoder.emb_dim">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">emb_dim</span></span><a class="headerlink" href="#amago.nets.traj_encoders.GRUTrajEncoder.emb_dim" title="Link to this definition">#</a></dt>
+<dd><p>Defines the expected output dim of this model.</p>
+<p>Used to infer the input dim of actor/critics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The embedding dimension.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.nets.traj_encoders.GRUTrajEncoder.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_idxs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/nets/traj_encoders.html#GRUTrajEncoder.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.nets.traj_encoders.GRUTrajEncoder.forward" title="Link to this definition">#</a></dt>
+<dd><p>Sequence model forward pass.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>seq</strong> – [Batch, Num Timesteps, TstepDim]. TstepDim is defined by the
+output of the TstepEncoder.</p></li>
+<li><p><strong>time_idxs</strong> – [Batch, Num Timesteps, 1]. A sequence of ints tying the
+input seq to the number of steps that have passed since the start
+of the episode. Can be used to compute position embeddings or
+other temporal features.</p></li>
+<li><p><strong>hidden_state</strong> – Architecture-specific hidden state. Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A tuple containing:</dt><dd><ul class="simple">
+<li><dl class="simple">
+<dt>output_seq: [Batch, Timestep, self.emb_dim]. Output of our</dt><dd><p>seq2seq model.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>new_hidden_state: Architecture-specific hidden state. Expected to</dt><dd><p>be <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code> if input <code class="xref py py-obj docutils literal notranslate"><span class="pre">hidden_state</span></code> is <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>. Otherwise, we
+assume we are at inference time and that this <a class="reference internal" href="#amago.nets.traj_encoders.GRUTrajEncoder.forward" title="amago.nets.traj_encoders.GRUTrajEncoder.forward"><code class="xref py py-obj docutils literal notranslate"><span class="pre">forward</span></code></a>
+method has handled any updates to the hidden state that were
+needed.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[torch.Tensor, Optional[Any]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.nets.traj_encoders.GRUTrajEncoder.reset_hidden_state">
+<span class="sig-name descname"><span class="pre">reset_hidden_state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hidden_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dones</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/nets/traj_encoders.html#GRUTrajEncoder.reset_hidden_state"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.nets.traj_encoders.GRUTrajEncoder.reset_hidden_state" title="Link to this definition">#</a></dt>
+<dd><p>Hook to implement architecture-specific hidden state reset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hidden_state</strong> – We only expect to see hidden states that were created
+by <code class="xref py py-obj docutils literal notranslate"><span class="pre">self.init_hidden_state()</span></code>.</p></li>
+<li><p><strong>dones</strong> – A bool array of shape (num_parallel_envs,) where True
+indicates the agent loop has finished this episode and expects
+the hidden state for this batch index to be reset.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Architecture-specific hidden state. Defaults to a</dt><dd><p>no-op: <code class="xref py py-obj docutils literal notranslate"><span class="pre">new_hidden_state</span> <span class="pre">=</span> <span class="pre">hidden_state</span></code>.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="amago.nets.traj_encoders.MambaTrajEncoder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">MambaTrajEncoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tstep_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_seq_len</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d_conv</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">expand</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'layer'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/nets/traj_encoders.html#MambaTrajEncoder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.nets.traj_encoders.MambaTrajEncoder" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#amago.nets.traj_encoders.TrajEncoder" title="amago.nets.traj_encoders.TrajEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrajEncoder</span></code></a></p>
+<p>Mamba Trajectory Encoder.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>This class is <code class="docutils literal notranslate"><span class="pre">&#64;gin.configurable</span></code>. Default values of kwargs can be overridden using <a class="reference external" href="https://github.com/google/gin-config">gin</a>.</p>
+</div>
+<p>Implementation of the Mamba architecture from “Mamba: Linear-Time Sequence
+Modeling with Selective State Spaces” (<a class="reference external" href="https://arxiv.org/abs/2312.00752">https://arxiv.org/abs/2312.00752</a>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tstep_dim</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Dimension of the input timestep representation (last dim of
+the input sequence). Defined by the output of the TstepEncoder.</p></li>
+<li><p><strong>max_seq_len</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Maximum sequence length of the model. The max context length
+of the model during training.</p></li>
+<li><p><strong>d_model</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Dimension of the main residual stream and output, analogous to
+the d_model in a Transformer. Defaults to 256.</p></li>
+<li><p><strong>d_state</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Dimension of the SSM in Mamba blocks. Defaults to 16.</p></li>
+<li><p><strong>d_conv</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Dimension of the convolution layer in Mamba blocks. Defaults to 4.</p></li>
+<li><p><strong>expand</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Expansion factor of the SSM. Defaults to 2.</p></li>
+<li><p><strong>n_layers</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Number of Mamba blocks. Defaults to 3.</p></li>
+<li><p><strong>norm</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Normalization function. Defaults to “layer” (LayerNorm).</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">References</p>
+<ul class="simple">
+<li><p><a class="github reference external" href="https://github.com/state-spaces/mamba/blob/main/mamba_ssm/modules/mamba_simple.py">state-spaces/mamba</a></p></li>
+<li><p><a class="github reference external" href="https://github.com/johnma2006/mamba-minimal/tree/master">johnma2006/mamba-minimal</a></p></li>
+</ul>
+<dl class="py property">
+<dt class="sig sig-object py" id="amago.nets.traj_encoders.MambaTrajEncoder.emb_dim">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">emb_dim</span></span><a class="headerlink" href="#amago.nets.traj_encoders.MambaTrajEncoder.emb_dim" title="Link to this definition">#</a></dt>
+<dd><p>Defines the expected output dim of this model.</p>
+<p>Used to infer the input dim of actor/critics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The embedding dimension.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.nets.traj_encoders.MambaTrajEncoder.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_idxs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/nets/traj_encoders.html#MambaTrajEncoder.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.nets.traj_encoders.MambaTrajEncoder.forward" title="Link to this definition">#</a></dt>
+<dd><p>Sequence model forward pass.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>seq</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span>) – [Batch, Num Timesteps, TstepDim]. TstepDim is defined by the
+output of the TstepEncoder.</p></li>
+<li><p><strong>time_idxs</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – [Batch, Num Timesteps, 1]. A sequence of ints tying the
+input seq to the number of steps that have passed since the start
+of the episode. Can be used to compute position embeddings or
+other temporal features.</p></li>
+<li><p><strong>hidden_state</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">_MambaHiddenState</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Architecture-specific hidden state. Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A tuple containing:</dt><dd><ul class="simple">
+<li><dl class="simple">
+<dt>output_seq: [Batch, Timestep, self.emb_dim]. Output of our</dt><dd><p>seq2seq model.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>new_hidden_state: Architecture-specific hidden state. Expected to</dt><dd><p>be <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code> if input <code class="xref py py-obj docutils literal notranslate"><span class="pre">hidden_state</span></code> is <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>. Otherwise, we
+assume we are at inference time and that this <a class="reference internal" href="#amago.nets.traj_encoders.MambaTrajEncoder.forward" title="amago.nets.traj_encoders.MambaTrajEncoder.forward"><code class="xref py py-obj docutils literal notranslate"><span class="pre">forward</span></code></a>
+method has handled any updates to the hidden state that were
+needed.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[torch.Tensor, Optional[Any]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.nets.traj_encoders.MambaTrajEncoder.init_hidden_state">
+<span class="sig-name descname"><span class="pre">init_hidden_state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/nets/traj_encoders.html#MambaTrajEncoder.init_hidden_state"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.nets.traj_encoders.MambaTrajEncoder.init_hidden_state" title="Link to this definition">#</a></dt>
+<dd><p>Hook to create an architecture-specific hidden state.</p>
+<p>Return value is passed as <code class="xref py py-obj docutils literal notranslate"><span class="pre">TrajEncoder.forward(...,</span> <span class="pre">hidden_state=self.init_hidden_state(...))</span></code>
+when the agent begins to interact with the environment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch_size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Number of parallel environments.</p></li>
+<li><p><strong>device</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">device</span></code></span>) – Device to store hidden state tensors (if applicable).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Some hidden state object, or None if not applicable.</dt><dd><p>Defaults to None.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.nets.traj_encoders.MambaTrajEncoder.reset_hidden_state">
+<span class="sig-name descname"><span class="pre">reset_hidden_state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hidden_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dones</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/nets/traj_encoders.html#MambaTrajEncoder.reset_hidden_state"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.nets.traj_encoders.MambaTrajEncoder.reset_hidden_state" title="Link to this definition">#</a></dt>
+<dd><p>Hook to implement architecture-specific hidden state reset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hidden_state</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">_MambaHiddenState</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – We only expect to see hidden states that were created
+by <code class="xref py py-obj docutils literal notranslate"><span class="pre">self.init_hidden_state()</span></code>.</p></li>
+<li><p><strong>dones</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></span>) – A bool array of shape (num_parallel_envs,) where True
+indicates the agent loop has finished this episode and expects
+the hidden state for this batch index to be reset.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Architecture-specific hidden state. Defaults to a</dt><dd><p>no-op: <code class="xref py py-obj docutils literal notranslate"><span class="pre">new_hidden_state</span> <span class="pre">=</span> <span class="pre">hidden_state</span></code>.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="amago.nets.traj_encoders.TformerTrajEncoder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">TformerTrajEncoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tstep_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_seq_len</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d_model=256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_heads=8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d_ff=1024</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_layers=3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout_ff=0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout_emb=0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout_attn=0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout_qkv=0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation='leaky_relu'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm='layer'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos_emb='fixed'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_reparam=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normformer_norms=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">head_scaling=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attention_type=&lt;class</span> <span class="pre">'amago.nets.transformer.FlashAttention'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/nets/traj_encoders.html#TformerTrajEncoder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.nets.traj_encoders.TformerTrajEncoder" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#amago.nets.traj_encoders.TrajEncoder" title="amago.nets.traj_encoders.TrajEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrajEncoder</span></code></a></p>
+<p>Transformer Trajectory Encoder.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>This class is <code class="docutils literal notranslate"><span class="pre">&#64;gin.configurable</span></code>. Default values of kwargs can be overridden using <a class="reference external" href="https://github.com/google/gin-config">gin</a>.</p>
+</div>
+<p>A pre-norm Transformer decoder-only model that processes sequences of timestep
+embeddings.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tstep_dim</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Dimension of the input timestep representation (last dim of
+the input sequence). Defined by the output of the TstepEncoder.</p></li>
+<li><p><strong>max_seq_len</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Maximum sequence length of the model. The max context length
+of the model during training.</p></li>
+<li><p><strong>d_model</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Dimension of the main residual stream and output. Defaults to
+256.</p></li>
+<li><p><strong>n_heads</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Number of self-attention heads. Each head has dimension
+d_model/n_heads. Defaults to 8.</p></li>
+<li><p><strong>d_ff</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Dimension of feed-forward network in residual blocks. Defaults to
+4*d_model.</p></li>
+<li><p><strong>n_layers</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Number of Transformer layers. Defaults to 3.</p></li>
+<li><p><strong>dropout_ff</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Dropout rate for linear layers within Transformer. Defaults to
+0.05.</p></li>
+<li><p><strong>dropout_emb</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Dropout rate for input embedding (combined input sequence and
+position embeddings passed to Transformer). Defaults to 0.05.</p></li>
+<li><p><strong>dropout_attn</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Dropout rate for attention matrix. Defaults to 0.00.</p></li>
+<li><p><strong>dropout_qkv</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></span>) – Dropout rate for query/key/value projections. Defaults to
+0.00.</p></li>
+<li><p><strong>activation</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Activation function. Defaults to “leaky_relu”.</p></li>
+<li><p><strong>norm</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Normalization function. Defaults to “layer” (LayerNorm).</p></li>
+<li><p><strong>pos_emb</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></span>) – Position embedding type. “fixed” (default) uses sinusoidal
+embeddings, “learned” uses trainable embeddings per timestep.</p></li>
+<li><p><strong>causal</strong> – Whether to use causal attention mask. Defaults to True.</p></li>
+<li><p><strong>sigma_reparam</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Whether to use <span class="math notranslate nohighlight">\(\sigma\)</span>-reparam feed-forward layers
+from <a class="reference external" href="https://arxiv.org/abs/2303.06296">https://arxiv.org/abs/2303.06296</a>. Defaults to True.</p></li>
+<li><p><strong>normformer_norms</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Whether to use extra norm layers from NormFormer
+(<a class="reference external" href="https://arxiv.org/abs/2110.09456">https://arxiv.org/abs/2110.09456</a>). Always uses pre-norm Transformer.</p></li>
+<li><p><strong>head_scaling</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></span>) – Whether to use head scaling from NormFormer. Defaults to
+True.</p></li>
+<li><p><strong>attention_type</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">type</span></code>[<a class="reference internal" href="amago.nets.transformer.html#amago.nets.transformer.SelfAttention" title="amago.nets.transformer.SelfAttention"><code class="xref py py-class docutils literal notranslate"><span class="pre">SelfAttention</span></code></a>]</span>) – Attention layer type. Defaults to
+transformer.FlashAttention. transformer.VanillaAttention provided as
+backup. New types can inherit from transformer.SelfAttention.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="amago.nets.traj_encoders.TformerTrajEncoder.emb_dim">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">emb_dim</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#amago.nets.traj_encoders.TformerTrajEncoder.emb_dim" title="Link to this definition">#</a></dt>
+<dd><p>Defines the expected output dim of this model.</p>
+<p>Used to infer the input dim of actor/critics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The embedding dimension.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.nets.traj_encoders.TformerTrajEncoder.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_idxs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/nets/traj_encoders.html#TformerTrajEncoder.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.nets.traj_encoders.TformerTrajEncoder.forward" title="Link to this definition">#</a></dt>
+<dd><p>Sequence model forward pass.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>seq</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span>) – [Batch, Num Timesteps, TstepDim]. TstepDim is defined by the
+output of the TstepEncoder.</p></li>
+<li><p><strong>time_idxs</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span>) – [Batch, Num Timesteps, 1]. A sequence of ints tying the
+input seq to the number of steps that have passed since the start
+of the episode. Can be used to compute position embeddings or
+other temporal features.</p></li>
+<li><p><strong>hidden_state</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="amago.nets.transformer.html#amago.nets.transformer.TformerHiddenState" title="amago.nets.transformer.TformerHiddenState"><code class="xref py py-class docutils literal notranslate"><span class="pre">TformerHiddenState</span></code></a> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Architecture-specific hidden state. Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A tuple containing:</dt><dd><ul class="simple">
+<li><dl class="simple">
+<dt>output_seq: [Batch, Timestep, self.emb_dim]. Output of our</dt><dd><p>seq2seq model.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>new_hidden_state: Architecture-specific hidden state. Expected to</dt><dd><p>be <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code> if input <code class="xref py py-obj docutils literal notranslate"><span class="pre">hidden_state</span></code> is <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>. Otherwise, we
+assume we are at inference time and that this <a class="reference internal" href="#amago.nets.traj_encoders.TformerTrajEncoder.forward" title="amago.nets.traj_encoders.TformerTrajEncoder.forward"><code class="xref py py-obj docutils literal notranslate"><span class="pre">forward</span></code></a>
+method has handled any updates to the hidden state that were
+needed.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[torch.Tensor, Optional[Any]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.nets.traj_encoders.TformerTrajEncoder.init_hidden_state">
+<span class="sig-name descname"><span class="pre">init_hidden_state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/nets/traj_encoders.html#TformerTrajEncoder.init_hidden_state"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.nets.traj_encoders.TformerTrajEncoder.init_hidden_state" title="Link to this definition">#</a></dt>
+<dd><p>Hook to create an architecture-specific hidden state.</p>
+<p>Return value is passed as <code class="xref py py-obj docutils literal notranslate"><span class="pre">TrajEncoder.forward(...,</span> <span class="pre">hidden_state=self.init_hidden_state(...))</span></code>
+when the agent begins to interact with the environment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch_size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Number of parallel environments.</p></li>
+<li><p><strong>device</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">device</span></code></span>) – Device to store hidden state tensors (if applicable).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Some hidden state object, or None if not applicable.</dt><dd><p>Defaults to None.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.nets.traj_encoders.TformerTrajEncoder.reset_hidden_state">
+<span class="sig-name descname"><span class="pre">reset_hidden_state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hidden_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dones</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/nets/traj_encoders.html#TformerTrajEncoder.reset_hidden_state"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.nets.traj_encoders.TformerTrajEncoder.reset_hidden_state" title="Link to this definition">#</a></dt>
+<dd><p>Hook to implement architecture-specific hidden state reset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hidden_state</strong> (<span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="amago.nets.transformer.html#amago.nets.transformer.TformerHiddenState" title="amago.nets.transformer.TformerHiddenState"><code class="xref py py-class docutils literal notranslate"><span class="pre">TformerHiddenState</span></code></a> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – We only expect to see hidden states that were created
+by <code class="xref py py-obj docutils literal notranslate"><span class="pre">self.init_hidden_state()</span></code>.</p></li>
+<li><p><strong>dones</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></span>) – A bool array of shape (num_parallel_envs,) where True
+indicates the agent loop has finished this episode and expects
+the hidden state for this batch index to be reset.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Architecture-specific hidden state. Defaults to a</dt><dd><p>no-op: <code class="xref py py-obj docutils literal notranslate"><span class="pre">new_hidden_state</span> <span class="pre">=</span> <span class="pre">hidden_state</span></code>.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="amago.nets.traj_encoders.TrajEncoder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">TrajEncoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tstep_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_seq_len</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/nets/traj_encoders.html#TrajEncoder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.nets.traj_encoders.TrajEncoder" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Abstract base class for trajectory encoders.</p>
+<p>An agent’s “TrajEncoder” is the sequence model in charge of mapping the output
+of the “TstepEncoder” for each timestep of the trajectory to the latent
+dimension where actor-critic learning takes place. Because the actor and
+critic are feed-forward networks, this is the place to add long-term memory
+over previous timesteps.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>It would <em>not</em> make sense for the sequence model defined here to be
+bi-directional or non-causal.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tstep_dim</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Dimension of the input timestep representation (last dim of
+the input sequence). Defined by the output of the TstepEncoder.</p></li>
+<li><p><strong>max_seq_len</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Maximum sequence length of the model. Any inputs will have
+been trimmed to this length before reaching the TrajEncoder.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="amago.nets.traj_encoders.TrajEncoder.emb_dim">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">emb_dim</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#amago.nets.traj_encoders.TrajEncoder.emb_dim" title="Link to this definition">#</a></dt>
+<dd><p>Defines the expected output dim of this model.</p>
+<p>Used to infer the input dim of actor/critics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The embedding dimension.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.nets.traj_encoders.TrajEncoder.forward">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_idxs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_state</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/nets/traj_encoders.html#TrajEncoder.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.nets.traj_encoders.TrajEncoder.forward" title="Link to this definition">#</a></dt>
+<dd><p>Sequence model forward pass.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>seq</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span>) – [Batch, Num Timesteps, TstepDim]. TstepDim is defined by the
+output of the TstepEncoder.</p></li>
+<li><p><strong>time_idxs</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tensor</span></code></span>) – [Batch, Num Timesteps, 1]. A sequence of ints tying the
+input seq to the number of steps that have passed since the start
+of the episode. Can be used to compute position embeddings or
+other temporal features.</p></li>
+<li><p><strong>hidden_state</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – Architecture-specific hidden state. Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A tuple containing:</dt><dd><ul class="simple">
+<li><dl class="simple">
+<dt>output_seq: [Batch, Timestep, self.emb_dim]. Output of our</dt><dd><p>seq2seq model.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>new_hidden_state: Architecture-specific hidden state. Expected to</dt><dd><p>be <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code> if input <code class="xref py py-obj docutils literal notranslate"><span class="pre">hidden_state</span></code> is <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>. Otherwise, we
+assume we are at inference time and that this <a class="reference internal" href="#amago.nets.traj_encoders.TrajEncoder.forward" title="amago.nets.traj_encoders.TrajEncoder.forward"><code class="xref py py-obj docutils literal notranslate"><span class="pre">forward</span></code></a>
+method has handled any updates to the hidden state that were
+needed.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple[torch.Tensor, Optional[Any]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.nets.traj_encoders.TrajEncoder.init_hidden_state">
+<span class="sig-name descname"><span class="pre">init_hidden_state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/nets/traj_encoders.html#TrajEncoder.init_hidden_state"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.nets.traj_encoders.TrajEncoder.init_hidden_state" title="Link to this definition">#</a></dt>
+<dd><p>Hook to create an architecture-specific hidden state.</p>
+<p>Return value is passed as <code class="xref py py-obj docutils literal notranslate"><span class="pre">TrajEncoder.forward(...,</span> <span class="pre">hidden_state=self.init_hidden_state(...))</span></code>
+when the agent begins to interact with the environment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch_size</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></span>) – Number of parallel environments.</p></li>
+<li><p><strong>device</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">device</span></code></span>) – Device to store hidden state tensors (if applicable).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Some hidden state object, or None if not applicable.</dt><dd><p>Defaults to None.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="amago.nets.traj_encoders.TrajEncoder.reset_hidden_state">
+<span class="sig-name descname"><span class="pre">reset_hidden_state</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hidden_state</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dones</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/amago/nets/traj_encoders.html#TrajEncoder.reset_hidden_state"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#amago.nets.traj_encoders.TrajEncoder.reset_hidden_state" title="Link to this definition">#</a></dt>
+<dd><p>Hook to implement architecture-specific hidden state reset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hidden_state</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code> | <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></span>) – We only expect to see hidden states that were created
+by <code class="xref py py-obj docutils literal notranslate"><span class="pre">self.init_hidden_state()</span></code>.</p></li>
+<li><p><strong>dones</strong> (<span class="sphinx_autodoc_typehints-type"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></span>) – A bool array of shape (num_parallel_envs,) where True
+indicates the agent loop has finished this episode and expects
+the hidden state for this batch index to be reset.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>Architecture-specific hidden state. Defaults to a</dt><dd><p>no-op: <code class="xref py py-obj docutils literal notranslate"><span class="pre">new_hidden_state</span> <span class="pre">=</span> <span class="pre">hidden_state</span></code>.</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[Any]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="amago.nets.policy_dists.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">amago.nets.policy_dists</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="amago.nets.transformer.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">amago.nets.transformer</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.FFTrajEncoder"><code class="docutils literal notranslate"><span class="pre">FFTrajEncoder</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.FFTrajEncoder.emb_dim"><code class="docutils literal notranslate"><span class="pre">FFTrajEncoder.emb_dim</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.FFTrajEncoder.forward"><code class="docutils literal notranslate"><span class="pre">FFTrajEncoder.forward()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.GRUTrajEncoder"><code class="docutils literal notranslate"><span class="pre">GRUTrajEncoder</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.GRUTrajEncoder.emb_dim"><code class="docutils literal notranslate"><span class="pre">GRUTrajEncoder.emb_dim</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.GRUTrajEncoder.forward"><code class="docutils literal notranslate"><span class="pre">GRUTrajEncoder.forward()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.GRUTrajEncoder.reset_hidden_state"><code class="docutils literal notranslate"><span class="pre">GRUTrajEncoder.reset_hidden_state()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.MambaTrajEncoder"><code class="docutils literal notranslate"><span class="pre">MambaTrajEncoder</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.MambaTrajEncoder.emb_dim"><code class="docutils literal notranslate"><span class="pre">MambaTrajEncoder.emb_dim</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.MambaTrajEncoder.forward"><code class="docutils literal notranslate"><span class="pre">MambaTrajEncoder.forward()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.MambaTrajEncoder.init_hidden_state"><code class="docutils literal notranslate"><span class="pre">MambaTrajEncoder.init_hidden_state()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.MambaTrajEncoder.reset_hidden_state"><code class="docutils literal notranslate"><span class="pre">MambaTrajEncoder.reset_hidden_state()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.TformerTrajEncoder"><code class="docutils literal notranslate"><span class="pre">TformerTrajEncoder</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.TformerTrajEncoder.emb_dim"><code class="docutils literal notranslate"><span class="pre">TformerTrajEncoder.emb_dim</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.TformerTrajEncoder.forward"><code class="docutils literal notranslate"><span class="pre">TformerTrajEncoder.forward()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.TformerTrajEncoder.init_hidden_state"><code class="docutils literal notranslate"><span class="pre">TformerTrajEncoder.init_hidden_state()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.TformerTrajEncoder.reset_hidden_state"><code class="docutils literal notranslate"><span class="pre">TformerTrajEncoder.reset_hidden_state()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.TrajEncoder"><code class="docutils literal notranslate"><span class="pre">TrajEncoder</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.TrajEncoder.emb_dim"><code class="docutils literal notranslate"><span class="pre">TrajEncoder.emb_dim</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.TrajEncoder.forward"><code class="docutils literal notranslate"><span class="pre">TrajEncoder.forward()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.TrajEncoder.init_hidden_state"><code class="docutils literal notranslate"><span class="pre">TrajEncoder.init_hidden_state()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#amago.nets.traj_encoders.TrajEncoder.reset_hidden_state"><code class="docutils literal notranslate"><span class="pre">TrajEncoder.reset_hidden_state()</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By UT Austin Robot Perception and Learning Lab
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
