@@ -3,6 +3,12 @@ name: Build and Publish Docs
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
 jobs:
   deploy:
@@ -34,9 +40,17 @@ jobs:
           cd docs
           make clean html
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v3
+
+      - name: Upload Pages Artifact  
+        uses: actions/upload-pages-artifact@v1
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: docs/build/html
+          path: docs/build/html
+          name: doc-artifact
+
+      - name: Deploy to GitHub Pages  
+        uses: actions/deploy-pages@v1
+        with:
+          artifact_name: doc-artifact
