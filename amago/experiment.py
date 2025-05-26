@@ -67,6 +67,8 @@ class Experiment:
     :param exploration_wrapper_type: Exploration wrapper for training envs. **Default:** ``EpsilonGreedy``.
     :param sample_actions: Whether to sample from stochastic actor during eval, or take argmax/mean. **Default:** True.
     :param force_reset_train_envs_every: If set, forces call to ``reset`` every N epochs for already_vectorized envs. **Default:** None.
+    :param async_env_mp_context: Multiprocessing spawn method for ``AsyncVectorEnv`` (e.g., ``"forkserver"``). Only relevant for ``env_mode="async"``. Set to None for default method. **Default:** None.
+
 
     .. rubric:: Logging
 
