@@ -27,6 +27,7 @@ jobs:
           pip install --upgrade pip
           pip install -e .
           pip install -e .[envs]
+          pip install gymnasium[mujoco]
 
       - name: Install docs dependencies
         run: |
