@@ -43,7 +43,7 @@ For additional control over the training process, use ``gin``. First, note that 
 
 
 We choose the :py:class:`~amago.envs.amago_env.AMAGOEnv`, :py:class:`~amago.loading.RLDataset`, and :py:class:`~amago.nets.tstep_encoders.TstepEncoder` 
-because they are problem-specific. We also pick the the :py:class:`~amago.nets.traj_encoders.TrajEncoder` because it is the key feature of a sequence model agent.
+because they are problem-specific. We also pick the :py:class:`~amago.nets.traj_encoders.TrajEncoder` because it is the key feature of a sequence model agent.
 :py:meth:`~amago.experiment.Experiment.start` is going to create an :py:class:`~amago.agent.Agent` based on the environment and our other choices. This follows a strict rule:
 
 .. important::

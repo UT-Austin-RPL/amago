@@ -38,6 +38,8 @@ setup(
             "opencv-python",
             "procgen",
             "minigrid",
+            "xminigrid",
+            "ale_py>=0.10",
         ],
         "flash": ["ninja", "packaging", "flash-attn"],
         "mamba": ["causal-conv1d>=1.1.0", "mamba-ssm"],

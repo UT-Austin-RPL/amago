@@ -63,7 +63,7 @@ We can switch between them with:
 
 |
 
-4. Start the :py:class:`~amago.experiment.Experiment` and Start Training
+4. Create the :py:class:`~amago.experiment.Experiment` and Start Training
 --------------------------------------------------------------------------
 
 Launch training with:
