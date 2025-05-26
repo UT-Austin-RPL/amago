@@ -278,7 +278,7 @@ class NCriticsTwoHot(nn.Module):
         output_bins: Number of bins in the categorical distribution. Defaults to 128.
         use_symlog: Whether to use a symlog transformation on the value estimates. Defaults to True.
 
-    Notes:
+    Note:
         The default bin settings (wide range, lots of bins, symlog transformation) follow
         Dreamer-V3 in picking a range that does not demand domain-specific tuning. It may be
         more sample efficient to use tighter bounds, in which case the unintuitive spacing
@@ -463,16 +463,18 @@ class PopArtLayer(nn.Module):
         self.enabled = enabled
 
     @property
-    def sigma(self):
+    def sigma(self) -> torch.Tensor:
         inner = (self.nu - self.mu**2).clamp(1e-4, 1e8)
         return torch.sqrt(inner).clamp(1e-4, 1e6)
 
-    def normalize_values(self, val):
+    def normalize_values(self, val: torch.Tensor) -> torch.Tensor:
+        """Get normalized (Q) values"""
         if not self.enabled:
             return val
         return ((val - self.mu) / self.sigma).to(val.dtype)
 
     def to(self, device):
+        """Move to another torch device."""
         self.w = self.w.to(device)
         self.b = self.b.to(device)
         self.mu = self.mu.to(device)

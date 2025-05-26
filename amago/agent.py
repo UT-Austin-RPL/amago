@@ -124,17 +124,16 @@ class Agent(nn.Module):
 
     .. code-block:: python
 
-        if discrete:
-            def Q(state, critic, action) -> float:
+        def Q(state, critic, action) -> float:
+            if discrete:
                 return critic(state)[action]
-
-            def V(state, critic, action_dist, k) -> float:
-                return (critic(state) * action_dist.probs).sum()
-        else:
-            def Q(state, critic, action) -> float:
+            else:
                 return critic(state, action)
 
-            def V(state, critic, action_dist, k) -> float:
+        def V(state, critic, action_dist, k) -> float:
+            if discrete:
+                return (critic(state) * action_dist.probs).sum()
+            else:
                 return 1 / k * sum(Q(state, critic, action_dist.sample()) for _ in range(k))
 
         k_c = num_actions_for_value_in_critic_loss

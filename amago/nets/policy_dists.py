@@ -330,6 +330,10 @@ class DiscreteLikeContinuous:
 
 
 def tanh_bounded_positive(x: torch.Tensor, low: float, high: float) -> torch.Tensor:
+    """Map network output activations to a positive value (to parameterize a distribution).
+
+    Uses tanh to scale values between ``low`` and ``high``.
+    """
     tanh_scale = torch.tanh(x)
     log_low = math.log(low)
     log_high = math.log(high)
@@ -340,6 +344,10 @@ def tanh_bounded_positive(x: torch.Tensor, low: float, high: float) -> torch.Ten
 def softplus_bounded_positive(
     x: torch.Tensor, low: float, high: Optional[float] = None
 ) -> torch.Tensor:
+    """Map network output activations to a positive value (to parameterize a distribution).
+
+    Uses softplus to output positive values ``> low`` (required) and ``< high`` (if provided).
+    """
     return (F.softplus(x) + low).clamp(max=high or float("inf"))
 
 

@@ -23,7 +23,7 @@ class TstepEncoder(nn.Module, ABC):
     creating a sequence of [Batch, Length, TstepEncoder.emb_dim] embeddings
     that becomes the input for the main sequence model (TrajEncoder).
 
-    Notes:
+    Note:
         Should operate on each timestep of the input sequences independently.
         Sequence modeling should be left to the TrajEncoder. This is not enforced
         during training but would break at inference, as the TstepEncoder currently
