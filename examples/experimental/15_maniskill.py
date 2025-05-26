@@ -87,9 +87,9 @@ class VectorizedNumpyWrapper(gym.Env):
                 else:
                     success_i = info["episode"]["success_once"][i]
                 out_info[f"{AMAGO_ENV_LOG_PREFIX} Success [0, 1]"].append(success_i.cpu().numpy().item())
-
         # fmt: on
-        return obs, reward, terminated, truncated, dict(out_info)
+        # done = terminal = truncated
+        return obs, reward, truncated, truncated, dict(out_info)
 
 
 class ManiSkillCPUSuccessLogger(gym.Wrapper):
@@ -101,7 +101,9 @@ class ManiSkillCPUSuccessLogger(gym.Wrapper):
         if terminated or truncated:
             success = info["episode"]["success_once"]
             info[f"{AMAGO_ENV_LOG_PREFIX} Success [0, 1]"] = success
-        return obs, reward, terminated, truncated, info
+
+        # done = terminal = truncated
+        return obs, reward, truncated, truncated, info
 
 
 def make_env(
@@ -368,7 +370,7 @@ if __name__ == "__main__":
         override_max_ep_len=horizon,
     )
 
-    args.env_mode = "already_vectorized" if backend == "physx_cuda" else "async"
+    args.env_mode = "already_vectorized" if backend == "physx_cuda" else args.env_mode
 
     # setup our agent
     from amago.nets import actor_critic, policy_dists, transformer
@@ -419,14 +421,16 @@ if __name__ == "__main__":
         # slightly faster target updates (default is super conservative)
         tau=0.005,
     )
-    exploration_type = switch_exploration(
-        config,
-        "egreedy",
-        # short/low-noise schedule given highly parallel actor setup & pre-training on demos
-        eps_start=0.1,
-        eps_end=0.05,
-        steps_anneal=5_000,
-    )
+    # exploration_type = switch_exploration(
+    #     config,
+    #     "egreedy",
+    #     # short/low-noise schedule given highly parallel actor setup & pre-training on demos
+    #     eps_start=0.1,
+    #     eps_end=0.05,
+    #     steps_anneal=5_000,
+    # )
+    # exploration disabled for now
+    exploration_type = None
     use_config(config, args.configs)
 
     # run training
@@ -437,7 +441,7 @@ if __name__ == "__main__":
         online_dset = DiskTrajDataset(
             dset_root=args.buffer_dir,
             dset_name=run_name,
-            dset_min_size=500,
+            dset_min_size=250,
             dset_max_size=args.dset_max_size,
         )
 
@@ -447,22 +451,23 @@ if __name__ == "__main__":
             sampling_weights=[0.6, 0.4],
             # gradually increase the weight of the online dset
             # over the first 100 epochs *after online collection starts*
-            smooth_sudden_starts=100,
+            smooth_sudden_starts=25,
         )
 
         experiment = create_experiment_from_cli(
             args,
+            run_name=run_name,
+            group_name=group_name,
             dataset=combined_dset,
             make_train_env=make_train_env,
             make_val_env=make_train_env,
-            # training and inference on entire episodes
-            max_seq_len=horizon,
-            traj_save_len=horizon + 1,
-            run_name=run_name,
             tstep_encoder_type=tstep_encoder_type,
             traj_encoder_type=traj_encoder_type,
+            exploration_wrapper_type=exploration_type,
             agent_type=agent_type,
-            group_name=group_name,
+            # training and inference on entire episodes
+            max_seq_len=horizon + 2,
+            stagger_traj_file_lengths=False,
             val_timesteps_per_epoch=horizon + 1,
             start_collecting_at_epoch=(args.online_after_epoch or float("inf")) + 1,
             learning_rate=1.25e-4,
