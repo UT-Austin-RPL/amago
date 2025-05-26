@@ -4,7 +4,7 @@ Tutorial
 |
 
 Applying AMAGO to any new problem involves wrapping the environment, defining the network architecture, creating a dataset, 
-and configuring the experiment. The :doc:` examples </examples/index>` include helpful starting points for common cases.
+and configuring the experiment. The :doc:`examples </examples/index>` include helpful starting points for common cases.
 
 .. image:: ../media/amago_overview.png
    :alt: amagoarch
