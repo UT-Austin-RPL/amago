@@ -45,7 +45,7 @@ We can select a :py:class:`~amago.nets.traj_encoders.TrajEncoder` just like a :p
 |
 
 3. Pick an :py:class:`~amago.agent.Agent`
---------------------
+------------------------------------------
 
 The :py:class:`~amago.agent.Agent` puts everything together and handles actor-critic RL training ontop of the outputs of the :py:class:`~amago.nets.traj_encoders.TrajEncoder`. 
 There are two built-in (highly :doc:`configurable </tutorial/configuration>`) options: :py:class:`~amago.agent.Agent` and :py:class:`~amago.agent.MultiTaskAgent`.
@@ -64,7 +64,7 @@ We can switch between them with:
 |
 
 4. Start the :py:class:`~amago.experiment.Experiment` and Start Training
-----------------------------------------------
+--------------------------------------------------------------------------
 
 Launch training with:
 

@@ -45,20 +45,20 @@ from .nets import TstepEncoder, TrajEncoder
 @dataclass
 class Experiment:
     """
-    Build, train, and evaluate an :class:`Agent`.
+    Build, train, and evaluate an :py:class:`~amago.agent.Agent`.
 
     .. rubric:: Required
 
     :param run_name: Name of the experiment. Used to create checkpoint and log directories.
     :param ckpt_base_dir: Base directory to store checkpoints and logs. Checkpoints are saved to ``ckpt_base_dir/run_name``.
     :param max_seq_len: Maximum sequence length for training. Determines effective batch size (Batch Size × Sequence Length).
-    :param dataset: :class:`RLDataset` for loading training sequences.
-    :param tstep_encoder_type: :class:`TstepEncoder` constructor (will be created with default kwargs --- edit via gin).
-    :param traj_encoder_type: :class:`TrajEncoder` constructor (will be created with default kwargs --- edit via gin).
-    :param agent_type: Agent constructor (will be created with default kwargs --- edit via gin).
-    :param make_train_env: Callable returning an :class:`AMAGOEnv`. If not a list, repeated ``parallel_actors`` times. List gives manual assignment across actors.
+    :param dataset: :py:class:`~amago.loading.RLDataset` for loading training sequences.
+    :param tstep_encoder_type: a type of :py:class:`~amago.nets.tstep_encoders.TstepEncoder` (will be created with default kwargs --- edit via gin).
+    :param traj_encoder_type: a type of :py:class:`~amago.nets.traj_encoders.TrajEncoder` (will be created with default kwargs --- edit via gin).
+    :param agent_type: a type of :py:class:`~amago.agent.Agent` (will be created with default kwargs --- edit via gin).
+    :param make_train_env: Callable returning an :py:class:`~amago.envs.amago_env.AMAGOEnv`. If not a list, repeated ``parallel_actors`` times. List gives manual assignment across actors.
     :param make_val_env: Like ``make_train_env``, but only used for evaluation (trajectories never saved).
-    :param val_timesteps_per_epoch: Number of steps per parallel environment for evaluation. Determines metric sample size.
+    :param val_timesteps_per_epoch: Number of steps per parallel environment for evaluation. Determines metric sample size. Should be enough time for at least one episode to finish per actor.
 
     .. rubric:: Environment
 

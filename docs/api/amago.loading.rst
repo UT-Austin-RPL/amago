@@ -1,4 +1,4 @@
-amago.loading
+﻿amago.loading
 =============
 
 .. automodule:: amago.loading
@@ -18,6 +18,7 @@ amago.loading
    
       Batch
       DiskTrajDataset
+      MixtureOfDatasets
       RLData
       RLDataset
    

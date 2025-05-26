@@ -190,7 +190,6 @@ def replay_maniskill_trajs_for_learning(
         os.system(command)
     else:
         warnings.warn(f"Trajectory file already exists at {expected_outcome}")
-
     # fmt: on
     return expected_outcome
 
@@ -218,9 +217,7 @@ class ManiSkillTrajectoryDataset(RLDataset):
         super().__init__()
 
         # Load the h5 trajectories and metadata based on starter code from the ManiSkill repo.
-        # TODO: changes needed for mp spawn
         self.dataset_file = dataset_file
-        self.data = h5py.File(dataset_file, "r")
         json_path = dataset_file.replace(".h5", ".json")
         self.json_data = load_json(json_path)
         self.episodes = self.json_data["episodes"]
@@ -232,65 +229,66 @@ class ManiSkillTrajectoryDataset(RLDataset):
         self.max_ep_len = -float("inf")
 
         self.rl_datas = []
-        for eps_id in tqdm(
-            range(load_count), desc="Loading ManiSkillTrajectoryDataset"
-        ):
-            eps = self.episodes[eps_id]
-            if success_only:
-                assert (
-                    "success" in eps
-                ), "episodes in this dataset do not have the success attribute, cannot load dataset with success_only=True"
-                if not eps["success"]:
-                    continue
-            trajectory = self.data[f"traj_{eps['episode_id']}"]
-            trajectory = load_h5_data(trajectory)
-            """
-            On Truncation and Termination:
+        with h5py.File(dataset_file, "r") as data:
+            for eps_id in tqdm(
+                range(load_count), desc="Loading ManiSkillTrajectoryDataset"
+            ):
+                eps = self.episodes[eps_id]
+                if success_only:
+                    assert (
+                        "success" in eps
+                    ), "episodes in this dataset do not have the success attribute, cannot load dataset with success_only=True"
+                    if not eps["success"]:
+                        continue
+                trajectory = data[f"traj_{eps['episode_id']}"]
+                trajectory = load_h5_data(trajectory)
+                """
+                On Truncation and Termination:
 
-            - ManiSkill reccomends treating done = truncated (not terminated) and measuring "success_once"
-                (did we ever succeed?). Keeps resets consistent across actors at the cost of letting the robot
-                keep going after it's already done.
-            - The env's all have established truncated = True time limits (standard TimeLimit wrapper)
-            - But the demos go well beyond the time limit. The first truncated seems to match up with 
-                the expected time limit, but that's not the end of the sequence for some reason. 
-                Truncated signals stay true until the end.
-            - So I'd think the correct approach is to cut the episode off after the first truncated.
-                But the rewards don't hit their peak value of 1.0 until well after the first truncated.
-            - I tried it this way and IL on successes only completely fails, even on tasks so easy you can't blame
-                a lack of diffusion policy or whatever.
-            - I tried completely ignoring the dataset's terminated/truncated flags. The policy trains on longer
-                sequences than it will see at test-time, but if we're supposed to be cutting these demo seqs short
-                it will follow the demo policy until eval terminates without issue. This fails too.
-            - Overriding the max episode length of the environment to the length of the longest demo trajectory
-                and then imitating the demos without any truncation hits 100% SR.
-            - In conclusion, by pure trial and error I think the demos do not match up with the env's time limit
-                and overriding both the demo truncation and the env episode length is the way to make training 1:1 with eval.
-            """
-            # make obs a dict that matches the AMAGOEnv default
-            ep_len = len(trajectory["actions"])
-            self.max_ep_len = max(self.max_ep_len, ep_len)
-            obs = {"observation": to_torch(trajectory["obs"]).float()}
-            actions = to_torch(trajectory["actions"]).float()
-            # NOTE: this seems to happen when i go off the beaten path of the official IL reference datasets.
-            # Maybe there is a controller conversion / action space normalization issue that the reference dataset
-            # skips over (?). The env will always list the action space as [-1, 1], so standard rescaling doesn't
-            # seem like the right solution.
-            assert (
-                abs(actions).max() <= 1.0
-            ), "Trajectory replay has generated actions outside of [-1, 1] range."
-            rewards = to_torch(trajectory["rewards"]).unsqueeze(-1).float()
-            # completely ignore the dataset's terminated/truncated flags.
-            dones = torch.zeros_like(rewards, dtype=torch.bool)
-            dones[-1] = True
-            time_idxs = torch.arange(ep_len + 1).long().unsqueeze(-1)
-            rl_data = RLData(
-                obs=obs,
-                actions=actions,
-                rews=rewards,
-                dones=dones,
-                time_idxs=time_idxs,
-            )
-            self.rl_datas.append(rl_data)
+                - ManiSkill reccomends treating done = truncated (not terminated) and measuring "success_once"
+                    (did we ever succeed?). Resets stay synced across actors at the cost of letting the robot
+                    keep going after it's already done.
+                - The envs all have established truncated = True time limits (standard TimeLimit wrapper)
+                - But the demos go well beyond the time limit. The first truncated seems to match up with 
+                    the expected time limit, but that's not the end of the sequence for some reason. 
+                    Truncated signals stay true until the end.
+                - So I'd think the correct approach is to cut the episode off after the first truncated.
+                    But the rewards don't hit their peak value of 1.0 until well after the first truncated.
+                - I tried it this way and IL on successes only completely fails, even on tasks so easy you can't blame
+                    a lack of diffusion policy or whatever.
+                - I tried completely ignoring the dataset's terminated/truncated flags. The policy trains on longer
+                    sequences than it will see at test-time, but if we're supposed to be cutting these demo seqs short
+                    it will follow the demo policy until eval terminates without issue. This fails too.
+                - Overriding the max episode length of the environment to the length of the longest demo trajectory
+                    and then imitating the demos without any truncation hits 100% SR.
+                - In conclusion, by pure trial and error I think the demos do not match up with the env's time limit
+                    and overriding both the demo truncation and the env episode length is the way to make training 1:1 with eval.
+                """
+                # make obs a dict that matches the AMAGOEnv default
+                ep_len = len(trajectory["actions"])
+                self.max_ep_len = max(self.max_ep_len, ep_len)
+                obs = {"observation": to_torch(trajectory["obs"]).float()}
+                actions = to_torch(trajectory["actions"]).float()
+                # NOTE: this seems to happen when i go off the beaten path of the official IL reference datasets.
+                # Maybe there is a controller conversion / action space normalization issue that the reference dataset
+                # skips over (?). The env will always list the action space as [-1, 1], so standard rescaling doesn't
+                # seem like the right solution.
+                assert (
+                    abs(actions).max() <= 1.0
+                ), "Trajectory replay has generated actions outside of [-1, 1] range."
+                rewards = to_torch(trajectory["rewards"]).unsqueeze(-1).float()
+                # completely ignore the dataset's terminated/truncated flags.
+                dones = torch.zeros_like(rewards, dtype=torch.bool)
+                dones[-1] = True
+                time_idxs = torch.arange(ep_len + 1).long().unsqueeze(-1)
+                rl_data = RLData(
+                    obs=obs,
+                    actions=actions,
+                    rews=rewards,
+                    dones=dones,
+                    time_idxs=time_idxs,
+                )
+                self.rl_datas.append(copy.deepcopy(rl_data))
 
     def get_description(self):
         # prints some basic info to the console on startup
@@ -370,8 +368,7 @@ if __name__ == "__main__":
         override_max_ep_len=horizon,
     )
 
-    # TODO: dset changes needed to get async to work after starting in spawn mp
-    args.env_mode = "already_vectorized" if backend == "physx_cuda" else "sync"
+    args.env_mode = "already_vectorized" if backend == "physx_cuda" else "async"
 
     # setup our agent
     from amago.nets import actor_critic, policy_dists, transformer
@@ -446,7 +443,10 @@ if __name__ == "__main__":
 
         combined_dset = MixtureOfDatasets(
             datasets=[maniskill_dset, online_dset],
+            # skew sampling towards the demos 60/40
             sampling_weights=[0.6, 0.4],
+            # gradually increase the weight of the online dset
+            # over the first 100 epochs *after online collection starts*
             smooth_sudden_starts=100,
         )
 
@@ -468,6 +468,7 @@ if __name__ == "__main__":
             learning_rate=1.25e-4,
             grad_clip=2.0,
             force_reset_train_envs_every=1,
+            async_env_mp_context="forkserver" if backend == "physx_cpu" else None,
         )
 
         experiment = switch_async_mode(experiment, args.mode)

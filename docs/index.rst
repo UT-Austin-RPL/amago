@@ -3,7 +3,7 @@ Home
 
 .. image:: media/amago_logo_3.png
    :alt: amago logo
-   :width: 310
+   :width: 275
    :align: center
 
 .. centered:: **Adaptive RL with Long-Term Memory**
@@ -25,16 +25,13 @@ Home
 |
 |
 
-AMAGO follows a simple and scalable recipe for building RL agents that can generalize:
+AMAGO is a high-powered off-policy version of `RL^2 <https://arxiv.org/abs/1611.02779>`_ for training large policies on long sequences. 
+It follows a simple and scalable perspective on RL generalization:
 
 1. Turn meta-learning into a *memory* problem ("black-box meta-RL").
 2. Put all of our effort into learning effective memory with end-to-end RL.
-3. Treat other RL problems as special cases of meta-learning.
-4. Use one method to solve a wide range of problems!
-
-|
-
-AMAGO is a high-powered off-policy version of `RL^2 <https://arxiv.org/abs/1611.02779>`_ for training large policies on long sequences. Its goal is to do this one thing very well, and make it applicable to just about any RL problem, while remaining customizable for research.
+3. View other RL settings as special cases of meta-RL.
+4. Use the same method for every problem while staying customizable for research.
 
 Some highlights:
 
