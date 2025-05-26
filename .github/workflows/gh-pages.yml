@@ -48,9 +48,6 @@ jobs:
         uses: actions/upload-pages-artifact@v1
         with:
           path: docs/build/html
-          name: doc-artifact
 
       - name: Deploy to GitHub Pages  
         uses: actions/deploy-pages@v1
-        with:
-          artifact_name: doc-artifact
