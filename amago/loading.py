@@ -19,7 +19,7 @@ from torch.utils.data import Dataset
 import numpy as np
 import gin
 
-from .hindsight import Trajectory, Relabeler, FrozenTraj, NoOpRelabeler
+from amago.hindsight import Trajectory, Relabeler, FrozenTraj, NoOpRelabeler
 
 
 @dataclass
@@ -72,6 +72,9 @@ class RLData:
     def __len__(self):
         return len(self.actions)
 
+    def _safe_randrange(self, low, high):
+        return random.randrange(low, max(high, low + 1))
+
     def random_slice(self, length: int, padded_sampling: str = "none"):
         """
         Randomly slices the sequence to a given length.
@@ -88,17 +91,16 @@ class RLData:
                 "right" --> sample while effectively padding the right side of the sequence for cases
                 where the end of the trajectory may be undersampled.
         """
-        _safe_randrange = lambda l, h: random.randrange(l, max(h, l + 1))
         if len(self) <= length:
             start = 0
         elif padded_sampling == "none":
-            start = _safe_randrange(0, len(self) - length + 1)
+            start = self._safe_randrange(0, len(self) - length + 1)
         elif padded_sampling == "both":
-            start = _safe_randrange(-length + 1, len(self) - 1)
+            start = self._safe_randrange(-length + 1, len(self) - 1)
         elif padded_sampling == "left":
-            start = _safe_randrange(-length + 1, len(self) - length + 1)
+            start = self._safe_randrange(-length + 1, len(self) - length + 1)
         elif padded_sampling == "right":
-            start = _safe_randrange(0, len(self) - 1)
+            start = self._safe_randrange(0, len(self) - 1)
         else:
             raise ValueError(
                 f"Unrecognized `padded_sampling` mode: `{padded_sampling}`"
@@ -187,26 +189,55 @@ class RLDataset(ABC, Dataset):
     """
 
     def __init__(self, dset_name: Optional[str] = None):
-        self.experiment = None
+        self.configured = False
         self.dset_name = dset_name or self.__class__.__name__
 
+    def configure(
+        self,
+        items_per_epoch: int,
+        max_seq_len: int,
+        padded_sampling: str,
+        has_edit_rights: bool,
+    ):
+        """Configure the dataset with additional hyperparameters.
+
+        We've basically split the constructor in two parts, because in practice
+        we will be grabbing these settings from the main Experiment.
+
+        Args:
+            items_per_epoch: The number of trajectoires to sample each epoch. Defines
+                the end of dataloader iteration.
+            max_seq_len: The maximum sequence length to sample.
+            padded_sampling. Strategy for sampling from trajectories longer than max_seq_len.
+                See :py:meth:`~amago.loading.RLData.random_slice` or :py:class:`~amago.experiment.Experiment`
+                docs for more details.
+            has_edit_rights: Whether the dataset has total authority to edit the underlying data
+                (e.g., to delete trajectory files from disk). Sometimes turned off for async
+                setups.
+        """
+        self.items_per_epoch = items_per_epoch
+        self.max_seq_len = max_seq_len
+        self.padded_sampling = padded_sampling
+        self.has_edit_rights = has_edit_rights
+        self.configured = True
+
     def configure_from_experiment(self, experiment):
-        """
-        Grabs universal hyperparameters from the experiment that would be confusing
-        to have to define twice.
-        """
-        self.experiment = experiment
-        self.items_per_epoch = (
+        """Call ``configure()`` with settings inferred from the main Experiment."""
+        # convert from length of epoch in batches to length of epoch in items to load
+        items_per_epoch = (
             experiment.train_batches_per_epoch
             * experiment.batch_size
             * experiment.accelerator.num_processes
         )
-        self.max_seq_len = experiment.max_seq_len
-        self.padded_sampling = experiment.padded_sampling
-        self.has_edit_rights = experiment.has_dset_edit_rights
+        self.configure(
+            items_per_epoch=items_per_epoch,
+            max_seq_len=experiment.max_seq_len,
+            padded_sampling=experiment.padded_sampling,
+            has_edit_rights=experiment.has_dset_edit_rights,
+        )
 
     def check_configured(self):
-        if self.experiment is None:
+        if not self.configured:
             raise ValueError(
                 "Dataset not configured. Call `configure_from_experiment()` first."
             )
@@ -234,9 +265,9 @@ class RLDataset(ABC, Dataset):
         If `False`, :py:class:`~amago.experiment.Experiment`
         will keep collecting data until learning updates can begin.
         """
-        return self.experiment is not None
+        return self.configured
 
-    def on_end_of_collection(self, epoch: int) -> dict[str, Any]:
+    def on_end_of_collection(self, experiment) -> dict[str, Any]:
         """
         Callback for :py:class:`~amago.experiment.Experiment` to call
         *after* each round of environment interaction / data collection,
@@ -403,13 +434,13 @@ class MixtureOfDatasets(RLDataset):
                 # if dataset is not ready for training, set weight to 0
                 self._available_datasets.append((status.dataset, 0.0))
 
-    def on_end_of_collection(self, epoch: int) -> dict[str, Any]:
+    def on_end_of_collection(self, experiment) -> dict[str, Any]:
         self.check_configured()
 
         # flatten the metrics from all datasets
         metrics = {}
         for d in self.all_datasets:
-            d_metrics = d.on_end_of_collection(epoch)
+            d_metrics = d.on_end_of_collection(experiment)
             for k, v in d_metrics.items():
                 metrics[f"{d.dset_name} {k}"] = v
 
@@ -423,7 +454,7 @@ class MixtureOfDatasets(RLDataset):
                 )
 
         # find datasets that are now ready for training, and adjust their sampling weight
-        self.update_dset_weights(epoch)
+        self.update_dset_weights(experiment.epoch)
         # log sampling weight logic to wandb
         for dset, active_weight in self._available_datasets:
             metrics[f"{dset.dset_name} Current Sample Weight"] = active_weight
@@ -624,7 +655,7 @@ class DiskTrajDataset(RLDataset):
         Trajectory Padded Sampling: {self.padded_sampling}
         """
 
-    def on_end_of_collection(self, epoch: int) -> dict[str, Any]:
+    def on_end_of_collection(self, experiment) -> dict[str, Any]:
         """
         Implements the FIFO buffer behavior.
         """
@@ -634,10 +665,10 @@ class DiskTrajDataset(RLDataset):
             return
         # old `accelerate` paranoia
         old_size = self._count_trajectories()
-        self.experiment.accelerator.wait_for_everyone()
-        if self.experiment.accelerator.is_main_process:
+        experiment.accelerator.wait_for_everyone()
+        if experiment.accelerator.is_main_process:
             self._filter()
-        self.experiment.accelerator.wait_for_everyone()
+        experiment.accelerator.wait_for_everyone()
         self._refresh_files()
         dset_size = self._count_trajectories()
         fifo_size = self._count_deletable_trajectories()

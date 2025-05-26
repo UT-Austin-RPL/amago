@@ -228,7 +228,7 @@ class Experiment:
             if self.exploration_wrapper_type is not None
             else "None"
         )
-        dset_str = "\n\t\t\t".join(self.dataset.get_description().split('\n'))
+        dset_str = "\n\t\t\t".join(self.dataset.get_description().split("\n"))
         self.accelerator.print(
             f"""\n\n \t\t {colored('AMAGO v3.1', 'green')}
             \t -------------------------
@@ -1009,7 +1009,7 @@ class Experiment:
                 self.collect_new_training_data()
             self.accelerator.wait_for_everyone()
 
-            dset_log = self.dataset.on_end_of_collection(epoch)
+            dset_log = self.dataset.on_end_of_collection(experiment=self)
             self.log(dset_log, key="dataset")
             self.init_dloaders()
             if not self.dataset.ready_for_training:
