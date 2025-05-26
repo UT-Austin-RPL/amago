@@ -65,7 +65,7 @@ There are some optional installs for additional features:
 - `pip install -e amago[envs]`: AMAGO comes with built-in support for a wide range of existing and custom meta-RL/generalization/memory domains (`amago/envs/builtin`) used in our experiments. This command installs (most of) the dependencies you'd need to run the [`examples/`](examples/).
 
 > [!TIP]
-> *NOTE*: AMAGO requires `gymnasium` <= 0.29. It is not compatible with the recent `gymnasium` 1.0 release. Please check your `gymnasium` version if you see environment-related error messages on startup.
+> AMAGO requires `gymnasium` <= 0.29. It is not compatible with the recent `gymnasium` 1.0 release. Please check your `gymnasium` version if you see environment-related error messages on startup.
 
 <br>
 
