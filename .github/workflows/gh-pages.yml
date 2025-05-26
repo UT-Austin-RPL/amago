@@ -21,7 +21,8 @@ jobs:
             sphinx \
             sphinx-rtd-theme \
             gin-config \
-            sphinx-autodoc-typehints
+            sphinx-autodoc-typehints \
+            sphinx-book-theme
 
       - name: Build Sphinx HTML
         run: |
