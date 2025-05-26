@@ -14,7 +14,7 @@ AMAGO can replicate the same (rollout --> learn) loop on multiple GPUs in ``Dist
 
 To use accelerate, run ``accelerate config`` and answer the questions. ``accelerate`` is mainly used for distributed LLM training and many of its features don't apply here. For our purposes, the answer to most questions is "NO", unless we're being asked about the GPU count, IDs, or float precision.
 
-Then, to use the GPUs you requested during ``accelerate config``, we'd replace a command that noramlly looks like this:
+Then, to use the GPUs we requested during ``accelerate config``, we'd replace a command that noramlly looks like this:
 
 .. code-block:: shell
 
