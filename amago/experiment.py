@@ -133,6 +133,7 @@ class Experiment:
     make_val_env: callable | Iterable[callable]
     parallel_actors: int = 12
     env_mode: str = "async"
+    async_env_mp_context: Optional[str] = None
     exploration_wrapper_type: Optional[type[ExplorationWrapper]] = EpsilonGreedy
     sample_actions: bool = True
     force_reset_train_envs_every: Optional[int] = None
@@ -273,11 +274,12 @@ class Experiment:
                 utils.amago_warning(
                     f"`Experiment.parallel_actors` is {self.parallel_actors} but `make_val_env` is a list of length {len(make_val_envs)}"
                 )
-            Par = (
-                gym.vector.AsyncVectorEnv
-                if self.env_mode == "async"
-                else DummyAsyncVectorEnv
-            )
+            if self.env_mode == "async":
+                Par = gym.vector.AsyncVectorEnv
+                par_kwargs = dict(context=self.async_env_mp_context)
+            else:
+                Par = DummyAsyncVectorEnv
+                par_kwargs = dict()
         elif self.env_mode == "already_vectorized":
             # alternate environment mode designed for jax / gpu-accelerated envs that handle parallelization
             # with a batch dimension on the lowest wrapper level. These envs must auto-reset and treat the last
@@ -285,6 +287,7 @@ class Experiment:
             make_train_envs = [self.make_train_env]
             make_val_envs = [self.make_val_env]
             Par = AlreadyVectorizedEnv
+            par_kwargs = dict()
         else:
             raise ValueError(f"Invalid `env_mode` {self.env_mode}")
 
@@ -339,8 +342,8 @@ class Experiment:
         ]
 
         # make parallel envs
-        self.train_envs = Par(make_train)
-        self.val_envs = Par(make_val)
+        self.train_envs = Par(make_train, **par_kwargs)
+        self.val_envs = Par(make_val, **par_kwargs)
         self.train_envs.reset()
         self.rl2_space = make_train[0].rl2_space
         self.hidden_state = None  # holds train_env hidden state between epochs
