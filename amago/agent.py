@@ -218,6 +218,8 @@ class Agent(nn.Module):
         popart: bool = True,
         use_target_actor: bool = True,
         use_multigamma: bool = True,
+        actor_type: Type[actor_critic.BaseActorHead] = actor_critic.Actor,
+        critic_type: Type[actor_critic.BaseCriticHead] = actor_critic.NCritics,
     ):
         super().__init__()
         self.obs_space = obs_space
@@ -280,17 +282,13 @@ class Agent(nn.Module):
             "discrete": self.discrete,
             "gammas": self.gammas,
         }
-        self.critics = actor_critic.NCritics(**ac_kwargs, num_critics=num_critics)
-        self.target_critics = actor_critic.NCritics(
-            **ac_kwargs, num_critics=num_critics
-        )
-        self.maximized_critics = actor_critic.NCritics(
-            **ac_kwargs, num_critics=num_critics
-        )
+        self.critics = critic_type(**ac_kwargs, num_critics=num_critics)
+        self.target_critics = critic_type(**ac_kwargs, num_critics=num_critics)
+        self.maximized_critics = critic_type(**ac_kwargs, num_critics=num_critics)
         if self.multibinary:
             ac_kwargs["cont_dist_kind"] = "multibinary"
-        self.actor = actor_critic.Actor(**ac_kwargs)
-        self.target_actor = actor_critic.Actor(**ac_kwargs)
+        self.actor = actor_type(**ac_kwargs)
+        self.target_actor = actor_type(**ac_kwargs)
         # full weight copy to targets
         self.hard_sync_targets()
 
@@ -733,6 +731,8 @@ class MultiTaskAgent(Agent):
         popart: bool = True,
         use_target_actor: bool = True,
         use_multigamma: bool = True,
+        actor_type: Type[actor_critic.BaseActorHead] = actor_critic.Actor,
+        critic_type: Type[actor_critic.BaseCriticHead] = actor_critic.NCriticsTwoHot,
     ):
         super().__init__(
             obs_space=obs_space,
@@ -755,17 +755,9 @@ class MultiTaskAgent(Agent):
             use_multigamma=use_multigamma,
             fbc_filter_func=fbc_filter_func,
             popart=popart,
+            actor_type=actor_type,
+            critic_type=critic_type,
         )
-        critic_kwargs = {
-            "state_dim": self.traj_encoder.emb_dim,
-            "action_dim": self.action_dim,
-            "gammas": self.gammas,
-            "num_critics": self.num_critics,
-        }
-        self.critics = actor_critic.NCriticsTwoHot(**critic_kwargs)
-        self.target_critics = actor_critic.NCriticsTwoHot(**critic_kwargs)
-        self.maximized_critics = actor_critic.NCriticsTwoHot(**critic_kwargs)
-        self.hard_sync_targets()
 
     def _sample_k_actions(self, dist, k: int):
         raise NotImplementedError

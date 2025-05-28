@@ -4,6 +4,7 @@ Actor and critic output modules.
 
 from typing import Optional, Type
 from functools import lru_cache
+from abc import ABC, abstractmethod
 
 import torch
 from torch import nn
@@ -23,8 +24,58 @@ from amago.nets.policy_dists import (
 from amago.utils import amago_warning
 
 
+class BaseActorHead(nn.Module, ABC):
+    def __init__(
+        self,
+        state_dim: int,
+        action_dim: int,
+        discrete: bool,
+        gammas: torch.Tensor,
+        continuous_dist_type: Type[PolicyOutput],
+    ):
+        super().__init__()
+        self.state_dim = state_dim
+        self.action_dim = action_dim
+        self.discrete = discrete
+        self.gammas = gammas
+        self.num_gammas = len(self.gammas)
+        # determine policy output
+        dist_type = Discrete if self.discrete else continuous_dist_type
+        self.policy_dist = dist_type(d_action=self.action_dim)
+        assert isinstance(self.policy_dist, PolicyOutput)
+        assert self.policy_dist.is_discrete == self.discrete
+        self.actions_differentiable = self.policy_dist.actions_differentiable
+
+    def forward(
+        self, state: torch.Tensor, log_dict: Optional[dict] = None
+    ) -> pyd.Distribution:
+        """Compute an action distribution from a state representation.
+
+        Args:
+            state: The "state" sequence (the output of the TrajEncoder) (Batch, Length, state_dim)
+
+        Returns:
+            The action distribution. Type varies according to the output of `PolicyOutput`
+            (e.g. `Discrete` or `TanhGaussian`). Always a pytorch distribution (e.g., `Categorical`)
+            where sampled actions would have shape (Batch, Length, Gammas, action_dim).
+        """
+        dist_params = self.actor_network_forward(state=state, log_dict=log_dict)
+        assert dist_params.ndim == 4
+        assert dist_params.shape[-2:] == (
+            self.num_gammas,
+            self.policy_dist.input_dimension,
+        )
+        return self.policy_dist(dist_params, log_dict=log_dict)
+
+    @abstractmethod
+    def actor_network_forward(
+        self, state: torch.Tensor, log_dict: Optional[dict] = None
+    ) -> torch.Tensor:
+        raise NotImplementedError
+
+
 @gin.configurable
-class Actor(nn.Module):
+class Actor(BaseActorHead):
     """Actor output head architecture.
 
     A (small) MLP that maps the output of the TrajEncoder to a distribution over actions.
@@ -56,46 +107,31 @@ class Actor(nn.Module):
         dropout_p: float = 0.0,
         continuous_dist_type: Type[PolicyOutput] = TanhGaussian,
     ):
-        super().__init__()
-        # determine policy output
-        self.num_gammas = len(gammas)
-        dist_type = Discrete if discrete else continuous_dist_type
-        self.policy_dist = dist_type(d_action=action_dim)
-        assert isinstance(self.policy_dist, PolicyOutput)
-        assert self.policy_dist.is_discrete == discrete
-        self.actions_differentiable = self.policy_dist.actions_differentiable
-        d_output = self.policy_dist.input_dimension * self.num_gammas
-
+        super().__init__(
+            state_dim=state_dim,
+            action_dim=action_dim,
+            discrete=discrete,
+            gammas=gammas,
+            continuous_dist_type=continuous_dist_type,
+        )
         # build base network
         self.base = MLP(
             d_inp=state_dim,
             d_hidden=d_hidden,
             n_layers=n_layers,
-            d_output=d_output,
+            d_output=self.policy_dist.input_dimension * self.num_gammas,
             dropout_p=dropout_p,
             activation=activation,
         )
-        self.discrete = discrete
-        self.action_dim = action_dim
 
-    def forward(
+    def actor_network_forward(
         self, state: torch.Tensor, log_dict: Optional[dict] = None
-    ) -> pyd.Distribution:
-        """Compute an action distribution from a state representation.
-
-        Args:
-            state: The "state" sequence (the output of the TrajEncoder) (Batch, Length, state_dim)
-
-        Returns:
-            The action distribution. Type varies according to the output of `PolicyOutput`
-            (e.g. `Discrete` or `TanhGaussian`). Always a pytorch distribution (e.g., `Categorical`)
-            where sampled actions would have shape (Batch, Length, Gammas, action_dim).
-        """
+    ) -> torch.Tensor:
         dist_params = self.base(state)
         dist_params = rearrange(
             dist_params, "b ... (g f) -> b ... g f", g=self.num_gammas
         )
-        return self.policy_dist(dist_params, log_dict=log_dict)
+        return dist_params
 
 
 class _EinMixEnsemble(nn.Module):
@@ -159,8 +195,42 @@ def gammas_as_input_seq(
     return gammas_rep
 
 
+class BaseCriticHead(nn.Module, ABC):
+    def __init__(
+        self,
+        state_dim: int,
+        action_dim: int,
+        discrete: bool,
+        gammas: torch.Tensor,
+        num_critics: int,
+    ):
+        super().__init__()
+        self.state_dim = state_dim
+        self.action_dim = action_dim
+        self.discrete = discrete
+        self.gammas = gammas
+        self.num_gammas = len(self.gammas)
+        self.num_critics = num_critics
+
+    def forward(
+        self, state: torch.Tensor, action: torch.Tensor, log_dict: Optional[dict] = None
+    ) -> torch.Tensor:
+        assert state.ndim == 3
+        B, L, _ = state.shape
+        assert action.ndim == 5
+        K = action.shape[0]
+        out = self.critic_network_forward(state=state, action=action, log_dict=log_dict)
+        return out
+
+    @abstractmethod
+    def critic_network_forward(
+        self, state: torch.Tensor, action: torch.Tensor, log_dict: Optional[dict] = None
+    ) -> torch.Tensor:
+        raise NotImplementedError
+
+
 @gin.configurable
-class NCritics(nn.Module):
+class NCritics(BaseCriticHead):
     """Critic output head architecture.
 
     A (small) ensemble of MLPs that maps the state and action to a value estimate.
@@ -185,25 +255,27 @@ class NCritics(nn.Module):
         action_dim: int,
         discrete: bool,
         gammas: torch.Tensor,
-        num_critics: int = 4,
+        num_critics: int,
         d_hidden: int = 256,
         n_layers: int = 2,
         dropout_p: float = 0.0,
         activation: str = "leaky_relu",
     ):
-        super().__init__()
-        self.discrete = discrete
-        self.num_critics = num_critics
-        inp_dim = state_dim
-        self.num_gammas = len(gammas)
-        self.gammas = gammas
-        if not discrete:
-            inp_dim += action_dim + 1
+        super().__init__(
+            state_dim=state_dim,
+            action_dim=action_dim,
+            discrete=discrete,
+            gammas=gammas,
+            num_critics=num_critics,
+        )
+        inp_dim = self.state_dim
+        if not self.discrete:
+            inp_dim += self.action_dim + 1
             out_dim = 1
         else:
-            out_dim = self.num_gammas * action_dim
+            out_dim = self.num_gammas * self.action_dim
         self.net = _EinMixEnsemble(
-            ensemble_size=num_critics,
+            ensemble_size=self.num_critics,
             inp_dim=inp_dim,
             d_hidden=d_hidden,
             n_layers=n_layers,
@@ -216,7 +288,7 @@ class NCritics(nn.Module):
         return self.num_critics
 
     @torch.compile
-    def forward(
+    def critic_network_forward(
         self, state: torch.Tensor, action: torch.Tensor, log_dict: Optional[dict] = None
     ) -> torch.Tensor:
         """Compute a value estimate from a state and action.
@@ -231,7 +303,6 @@ class NCritics(nn.Module):
         Returns:
             The value estimate with shape (K, Batch, Length, num_critics, Gammas, 1).
         """
-        assert action.dim() == 5
         K, B, L, G, D = action.shape
         if self.discrete:
             assert K == 1
@@ -256,7 +327,7 @@ class NCritics(nn.Module):
 
 
 @gin.configurable
-class NCriticsTwoHot(nn.Module):
+class NCriticsTwoHot(BaseCriticHead):
     """Critic output head architecture.
 
     A (small) ensemble of MLPs that maps the state and action to a value estimate in the form
@@ -293,7 +364,8 @@ class NCriticsTwoHot(nn.Module):
         state_dim: int,
         action_dim: int,
         gammas: torch.Tensor,
-        num_critics: int = 4,
+        discrete: bool,
+        num_critics: int,
         d_hidden: int = 256,
         n_layers: int = 2,
         dropout_p: float = 0.0,
@@ -304,12 +376,14 @@ class NCriticsTwoHot(nn.Module):
         output_bins: int = 128,
         use_symlog: bool = True,
     ):
-        super().__init__()
-        self.num_critics = num_critics
-        self.num_gammas = len(gammas)
-        self.action_dim = action_dim
-        self.gammas = gammas
-        inp_dim = state_dim + action_dim + 1
+        super().__init__(
+            state_dim=state_dim,
+            action_dim=action_dim,
+            discrete=discrete,
+            gammas=gammas,
+            num_critics=num_critics,
+        )
+        inp_dim = self.state_dim + self.action_dim + 1
         out_dim = output_bins
         self.num_bins = output_bins
         if min_return is None or max_return is None:
@@ -327,7 +401,7 @@ class NCriticsTwoHot(nn.Module):
             output_bins,
         )
         self.net = _EinMixEnsemble(
-            ensemble_size=num_critics,
+            ensemble_size=self.num_critics,
             inp_dim=inp_dim,
             d_hidden=d_hidden,
             n_layers=n_layers,
@@ -340,7 +414,7 @@ class NCriticsTwoHot(nn.Module):
         return self.num_critics
 
     @torch.compile
-    def forward(
+    def critic_network_forward(
         self, state: torch.Tensor, action: torch.Tensor, log_dict: Optional[dict] = None
     ) -> pyd.Categorical:
         """Compute a categorical distribution over bins from a state and action.
@@ -355,7 +429,6 @@ class NCriticsTwoHot(nn.Module):
         Returns:
             The categorical distribution over bins with shape (K, Batch, Length, num_critics, output_bins).
         """
-        assert action.dim() == 5
         K, B, L, G, D = action.shape
         assert G == self.num_gammas
         state = repeat(state, "b l d -> (k b g) l d", k=K, g=self.num_gammas)
