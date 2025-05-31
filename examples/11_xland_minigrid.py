@@ -15,7 +15,7 @@ import amago
 from amago.envs import AMAGOEnv
 from amago.envs.builtin.xland_minigrid import XLandMinigridVectorizedGym
 from amago.nets.utils import add_activation_log, symlog
-from amago.cli_utils import *
+from amago import cli_utils
 
 
 def add_cli(parser):
@@ -118,7 +118,7 @@ class XLandMGTstepEncoder(amago.TstepEncoder):
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    add_common_cli(parser)
+    cli_utils.add_common_cli(parser)
     add_cli(parser)
     args = parser.parse_args()
 
@@ -129,14 +129,14 @@ if __name__ == "__main__":
         "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 32,
     }
 
-    traj_encoder_type = switch_traj_encoder(
+    traj_encoder_type = cli_utils.switch_traj_encoder(
         config,
         arch=args.traj_encoder,
         memory_size=args.memory_size,
         layers=args.memory_layers,
     )
-    agent_type = switch_agent(config, args.agent_type, reward_multiplier=10.0)
-    use_config(config, args.configs)
+    agent_type = cli_utils.switch_agent(config, args.agent_type, reward_multiplier=10.0)
+    cli_utils.use_config(config, args.configs)
 
     xland_kwargs = {
         "parallel_envs": args.parallel_actors,
@@ -162,7 +162,7 @@ if __name__ == "__main__":
 
     for trial in range(args.trials):
         run_name = group_name + f"_trial_{trial}"
-        experiment = create_experiment_from_cli(
+        experiment = cli_utils.create_experiment_from_cli(
             args,
             make_train_env=make_train_env,
             make_val_env=make_val_env,
@@ -178,7 +178,7 @@ if __name__ == "__main__":
             save_trajs_as="npz-compressed",
             grad_clip=2.0,
         )
-        switch_async_mode(experiment, args.mode)
+        experiment = cli_utils.switch_async_mode(experiment, args.mode)
         amago_device = experiment.DEVICE.index or torch.cuda.current_device()
         env_device = jax.devices("gpu")[amago_device]
         with jax.default_device(env_device):

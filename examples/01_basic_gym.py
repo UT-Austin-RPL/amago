@@ -5,7 +5,7 @@ import wandb
 
 import amago
 from amago.envs import AMAGOEnv
-from amago.cli_utils import *
+from amago import cli_utils
 
 
 def add_cli(parser):
@@ -26,7 +26,7 @@ def add_cli(parser):
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    add_common_cli(parser)
+    cli_utils.add_common_cli(parser)
     add_cli(parser)
     args = parser.parse_args()
 
@@ -43,24 +43,24 @@ if __name__ == "__main__":
         "amago.nets.policy_dists.Discrete.clip_prob_low": 1e-6,
     }
     # switch sequence model
-    traj_encoder_type = switch_traj_encoder(
+    traj_encoder_type = cli_utils.switch_traj_encoder(
         config,
         arch=args.traj_encoder,
         memory_size=args.memory_size,
         layers=args.memory_layers,
     )
     # switch agent
-    agent_type = switch_agent(
+    agent_type = cli_utils.switch_agent(
         config,
         args.agent_type,
         reward_multiplier=1.0,
     )
-    use_config(config, args.configs)
+    cli_utils.use_config(config, args.configs)
 
     group_name = f"{args.run_name}_{env_name}"
     for trial in range(args.trials):
         run_name = group_name + f"_trial_{trial}"
-        experiment = create_experiment_from_cli(
+        experiment = cli_utils.create_experiment_from_cli(
             args,
             make_train_env=make_train_env,
             make_val_env=make_train_env,
@@ -73,7 +73,7 @@ if __name__ == "__main__":
             group_name=group_name,
             val_timesteps_per_epoch=args.eval_timesteps,
         )
-        experiment = switch_async_mode(experiment, args.mode)
+        experiment = cli_utils.switch_async_mode(experiment, args.mode)
         experiment.start()
         if args.ckpt is not None:
             experiment.load_checkpoint(args.ckpt)

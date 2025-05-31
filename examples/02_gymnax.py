@@ -1,6 +1,6 @@
 """
-Support for gymnax is experimental and mainly meant to test the already_vectorized 
-env API used by XLand MiniGrid (an unsolved environment) with classic gym envs. 
+Support for gymnax is experimental and mainly meant to test the already_vectorized
+env API used by XLand MiniGrid (an unsolved environment) with classic gym envs.
 Many of the gymnax envs appear to be broken by recent versions of jax.
 There are a couple memory/meta-RL bsuite envs where AMAGO+Transformer
 is significantly better than the gymnax reference scores though.
@@ -24,7 +24,7 @@ import numpy as np
 from amago.envs import AMAGOEnv
 from amago.envs.builtin.gymnax_envs import GymnaxCompatibility
 from amago.nets.cnn import GridworldCNN
-from amago.cli_utils import *
+from amago import cli_utils
 
 
 def add_cli(parser):
@@ -52,7 +52,7 @@ def guess_tstep_encoder(config, obs_shape):
     if len(obs_shape) == 3:
         print(f"Guessing CNN for observation of shape {obs_shape}")
         channels_first = np.argmin(obs_shape).item() == 0
-        return switch_tstep_encoder(
+        return cli_utils.switch_tstep_encoder(
             config,
             "cnn",
             cnn_type=GridworldCNN,
@@ -61,7 +61,7 @@ def guess_tstep_encoder(config, obs_shape):
     else:
         print(f"Guessing MLP for observation of shape {obs_shape}")
         dim = math.prod(obs_shape)  # FFTstepEncoder will flatten the obs on input
-        return switch_tstep_encoder(
+        return cli_utils.switch_tstep_encoder(
             config,
             "ff",
             d_hidden=max(dim // 3, 128),
@@ -72,7 +72,7 @@ def guess_tstep_encoder(config, obs_shape):
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    add_common_cli(parser)
+    cli_utils.add_common_cli(parser)
     add_cli(parser)
     args = parser.parse_args()
 
@@ -81,7 +81,7 @@ if __name__ == "__main__":
 
     # config
     config = {}
-    traj_encoder_type = switch_traj_encoder(
+    traj_encoder_type = cli_utils.switch_traj_encoder(
         config,
         arch=args.traj_encoder,
         memory_size=args.memory_size,
@@ -91,16 +91,16 @@ if __name__ == "__main__":
         test_env, env_params = gymnax.make(args.env)
         test_obs_shape = test_env.observation_space(env_params).shape
     tstep_encoder_type = guess_tstep_encoder(config, test_obs_shape)
-    agent_type = switch_agent(config, args.agent_type)
+    agent_type = cli_utils.switch_agent(config, args.agent_type)
 
-    use_config(config, args.configs)
+    cli_utils.use_config(config, args.configs)
     make_env = partial(
         make_gymnax_amago, env_name=args.env, parallel_envs=args.parallel_actors
     )
     group_name = f"{args.run_name}_{args.env}"
     for trial in range(args.trials):
         run_name = group_name + f"_trial_{trial}"
-        experiment = create_experiment_from_cli(
+        experiment = cli_utils.create_experiment_from_cli(
             args,
             make_train_env=make_env,
             make_val_env=make_env,
@@ -116,7 +116,7 @@ if __name__ == "__main__":
             l2_coeff=1e-4,
             save_trajs_as="npz-compressed",
         )
-        experiment = switch_async_mode(experiment, args.mode)
+        experiment = cli_utils.switch_async_mode(experiment, args.mode)
         amago_device = experiment.DEVICE.index or torch.cuda.current_device()
         env_device = jax.devices("gpu")[amago_device]
         with jax.default_device(env_device):

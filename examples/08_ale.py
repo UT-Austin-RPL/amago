@@ -5,7 +5,7 @@ import wandb
 
 from amago.envs.builtin.ale_retro import AtariAMAGOWrapper, AtariGame
 from amago.nets.cnn import NatureishCNN, IMPALAishCNN
-from amago.cli_utils import *
+from amago import cli_utils
 
 
 def add_cli(parser):
@@ -50,8 +50,8 @@ def make_atari_game(game_name):
 
 if __name__ == "__main__":
     parser = ArgumentParser()
+    cli_utils.add_common_cli(parser)
     add_cli(parser)
-    add_common_cli(parser)
     args = parser.parse_args()
 
     config = {
@@ -60,7 +60,7 @@ if __name__ == "__main__":
             1.0 if args.agent_type == "multitask" else 0.0
         ),
     }
-    traj_encoder_type = switch_traj_encoder(
+    traj_encoder_type = cli_utils.switch_traj_encoder(
         config,
         arch=args.traj_encoder,
         memory_size=args.memory_size,
@@ -71,7 +71,7 @@ if __name__ == "__main__":
         cnn_type = NatureishCNN
     elif args.cnn == "impala":
         cnn_type = IMPALAishCNN
-    tstep_encoder_type = switch_tstep_encoder(
+    tstep_encoder_type = cli_utils.switch_tstep_encoder(
         config,
         arch="cnn",
         cnn_type=cnn_type,
@@ -79,8 +79,8 @@ if __name__ == "__main__":
         drqv2_aug=True,
     )
 
-    agent_type = switch_agent(config, args.agent_type)
-    use_config(config, args.configs)
+    agent_type = cli_utils.switch_agent(config, args.agent_type)
+    cli_utils.use_config(config, args.configs)
 
     # Episode lengths in Atari vary widely across games, so we manually set actors
     # to a specific game so that all games are always played in parallel.
@@ -96,7 +96,7 @@ if __name__ == "__main__":
     group_name = f"{args.run_name}_atari_l_{args.max_seq_len}_cnn_{args.cnn}"
     for trial in range(args.trials):
         run_name = group_name + f"_trial_{trial}"
-        experiment = create_experiment_from_cli(
+        experiment = cli_utils.create_experiment_from_cli(
             args,
             make_train_env=env_funcs,
             make_val_env=env_funcs,
@@ -110,7 +110,7 @@ if __name__ == "__main__":
             val_timesteps_per_epoch=ATARI_TIME_LIMIT,
             save_trajs_as="npz-compressed",
         )
-        switch_async_mode(experiment, args.mode)
+        experiment = cli_utils.switch_async_mode(experiment, args.mode)
         experiment.start()
         if args.ckpt is not None:
             experiment.load_checkpoint(args.ckpt)

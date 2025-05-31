@@ -3,7 +3,7 @@ A demonstration of the hindsight instruction relabeling techinque discussed in t
 a generalization of Hindsight Experience Replay (HER) to sequences of multiple goals.
 The ability to relabel data is another good reason to prefer off-policy RL^2 to on-policy.
 
-This example uses the "MazeRunner" environment. MazeRunner is an adapted version of Memory Maze 
+This example uses the "MazeRunner" environment. MazeRunner is an adapted version of Memory Maze
 (https://arxiv.org/abs/2210.13383) that does not require the DM Lab simulator or learning from pixels.
 For more information please refer to the AMAGO Appendix C.4.
 
@@ -11,7 +11,7 @@ There are three steps to using hindsight relabeling:
 
 1. Make the env's observations a dict with keys for the intended goal and alternative goals achieved
    at that timestep. Goals are often subsets of the state space. In this example, observations consist of:
-   
+
    `obs` : the regular observation from the maze environment (LIDAR-ish depth sensors to the walls, timer, etc.)
    `goals` : a sequence of k goal positions to navigate to.
    `achieved`: the agent's current position.
@@ -33,7 +33,7 @@ import amago
 from amago.envs.builtin.mazerunner import MazeRunnerAMAGOEnv
 from amago.hindsight import Relabeler, FrozenTraj
 from amago.loading import DiskTrajDataset
-from amago.cli_utils import *
+from amago import cli_utils
 
 
 def add_cli(parser):
@@ -175,7 +175,7 @@ class HindsightInstructionReplay(Relabeler):
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    add_common_cli(parser)
+    cli_utils.add_common_cli(parser)
     add_cli(parser)
     args = parser.parse_args()
 
@@ -189,19 +189,19 @@ if __name__ == "__main__":
     )
     config = {}
     # switch sequence model
-    traj_encoder_type = switch_traj_encoder(
+    traj_encoder_type = cli_utils.switch_traj_encoder(
         config,
         arch=args.traj_encoder,
         memory_size=args.memory_size,
         layers=args.memory_layers,
     )
     # switch agent
-    agent_type = switch_agent(
+    agent_type = cli_utils.switch_agent(
         config,
         args.agent_type,
         # reward_multiplier=100.,
     )
-    tstep_encoder_type = switch_tstep_encoder(
+    tstep_encoder_type = cli_utils.switch_tstep_encoder(
         config,
         arch="ff",
         n_layers=2,
@@ -209,12 +209,12 @@ if __name__ == "__main__":
         # ignore "achieved" obs dict in the policy net.
         specify_obs_keys=["obs", "goals"],
     )
-    exploration_type = switch_exploration(
+    exploration_type = cli_utils.switch_exploration(
         config,
         strategy="egreedy",
         steps_anneal=500_000,  # needs re-tuning; paper used an older version
     )
-    use_config(config, args.configs)
+    cli_utils.use_config(config, args.configs)
 
     group_name = args.run_name
     for trial in range(args.trials):
@@ -230,7 +230,7 @@ if __name__ == "__main__":
             ),
         )
 
-        experiment = create_experiment_from_cli(
+        experiment = cli_utils.create_experiment_from_cli(
             args,
             make_train_env=make_train_env,
             make_val_env=make_train_env,
@@ -250,7 +250,7 @@ if __name__ == "__main__":
             group_name=group_name,
             val_timesteps_per_epoch=args.time_limit * 5,
         )
-        experiment = switch_async_mode(experiment, args.mode)
+        experiment = cli_utils.switch_async_mode(experiment, args.mode)
         experiment.start()
         if args.ckpt is not None:
             experiment.load_checkpoint(args.ckpt)

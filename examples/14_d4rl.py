@@ -10,7 +10,7 @@ import numpy as np
 
 import amago
 from amago.envs import AMAGOEnv
-from amago.cli_utils import *
+from amago import cli_utils
 from amago.loading import RLData, RLDataset
 from amago.nets.policy_dists import TanhGaussian, GMM, Beta
 from amago.nets.actor_critic import ResidualActor, Actor
@@ -138,7 +138,7 @@ class D4RLGymEnv(gym.Env):
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    add_common_cli(parser)
+    cli_utils.add_common_cli(parser)
     add_cli(parser)
     args = parser.parse_args()
 
@@ -173,22 +173,24 @@ if __name__ == "__main__":
         "amago.nets.actor_critic.ResidualActor.feature_dim": 128,
         "amago.nets.actor_critic.ResidualActor.residual_ff_dim": 256,
         "amago.nets.actor_critic.ResidualActor.residual_blocks": 2,
-        "amago.nets.actor_critic.ResidualActor.continuous_dist_type": eval(args.policy_dist),
+        "amago.nets.actor_critic.ResidualActor.continuous_dist_type": eval(
+            args.policy_dist
+        ),
     }
-    tstep_encoder_type = switch_tstep_encoder(
+    tstep_encoder_type = cli_utils.switch_tstep_encoder(
         config,
         arch="ff",
         d_hidden=128,
         d_output=128,
         n_layers=1,
     )
-    traj_encoder_type = switch_traj_encoder(
+    traj_encoder_type = cli_utils.switch_traj_encoder(
         config,
         arch=args.traj_encoder,
         memory_size=args.memory_size,
         layers=args.memory_layers,
     )
-    agent_type = switch_agent(
+    agent_type = cli_utils.switch_agent(
         config,
         args.agent_type,
         online_coeff=0.0,
@@ -200,12 +202,12 @@ if __name__ == "__main__":
         num_critics=4,
         actor_type=eval(args.actor_type),
     )
-    use_config(config, args.configs)
+    cli_utils.use_config(config, args.configs)
 
     group_name = f"{args.run_name}_{env_name}"
     for trial in range(args.trials):
         run_name = group_name + f"_trial_{trial}"
-        experiment = create_experiment_from_cli(
+        experiment = cli_utils.create_experiment_from_cli(
             args,
             make_train_env=make_train_env,
             make_val_env=make_train_env,
@@ -221,7 +223,7 @@ if __name__ == "__main__":
             padded_sampling="right",
             sample_actions=False,
         )
-        experiment = switch_async_mode(experiment, args.mode)
+        experiment = cli_utils.switch_async_mode(experiment, args.mode)
         experiment.start()
         if args.ckpt is not None:
             experiment.load_checkpoint(args.ckpt)

@@ -1,11 +1,12 @@
 from argparse import ArgumentParser
 
 import wandb
+import gin
 
 from amago.envs import AMAGOEnv
 from amago.envs.builtin.tmaze import TMazeAltPassive, TMazeAltActive
 from amago.envs.exploration import EpsilonGreedy
-from amago.cli_utils import *
+from amago import cli_utils
 
 
 def add_cli(parser):
@@ -60,20 +61,20 @@ class TMazeExploration(EpsilonGreedy):
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    add_common_cli(parser)
+    cli_utils.add_common_cli(parser)
     add_cli(parser)
     args = parser.parse_args()
 
     config = {
         "TMazeExploration.horizon": args.horizon,
     }
-    traj_encoder_type = switch_traj_encoder(
+    traj_encoder_type = cli_utils.switch_traj_encoder(
         config,
         arch=args.traj_encoder,
         memory_size=args.memory_size,
         layers=args.memory_layers,
     )
-    tstep_encoder_type = switch_tstep_encoder(
+    tstep_encoder_type = cli_utils.switch_tstep_encoder(
         config,
         arch="ff",
         n_layers=2,
@@ -81,10 +82,10 @@ if __name__ == "__main__":
         d_output=128,
         normalize_inputs=False,
     )
-    agent_type = switch_agent(
+    agent_type = cli_utils.switch_agent(
         config, args.agent_type, reward_multiplier=100.0, gamma=0.9999
     )
-    use_config(config, args.configs)
+    cli_utils.use_config(config, args.configs)
 
     group_name = f"{args.run_name}_TMazePassive_H{args.horizon}"
     for trial in range(args.trials):
@@ -95,7 +96,7 @@ if __name__ == "__main__":
             ),
             env_name=f"TMazePassive-H{args.horizon}",
         )
-        experiment = create_experiment_from_cli(
+        experiment = cli_utils.create_experiment_from_cli(
             args,
             make_train_env=make_env,
             make_val_env=make_env,
@@ -110,7 +111,7 @@ if __name__ == "__main__":
             sample_actions=False,  # even softmax prob .999 isn't good enough for this env...
             exploration_wrapper_type=TMazeExploration,
         )
-        switch_async_mode(experiment, args.mode)
+        experiment = cli_utils.switch_async_mode(experiment, args.mode)
         experiment.start()
         if args.ckpt is not None:
             experiment.load_checkpoint(args.ckpt)

@@ -5,7 +5,7 @@ import wandb
 from amago.envs.builtin.metaworld_ml import Metaworld
 from amago.nets.tstep_encoders import FFTstepEncoder
 from amago.envs.exploration import BilevelEpsilonGreedy
-from amago.cli_utils import *
+from amago import cli_utils
 
 
 def add_cli(parser):
@@ -27,7 +27,7 @@ def add_cli(parser):
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    add_common_cli(parser)
+    cli_utils.add_common_cli(parser)
     add_cli(parser)
     args = parser.parse_args()
 
@@ -39,19 +39,19 @@ if __name__ == "__main__":
         "amago.nets.actor_critic.NCriticsTwoHot.max_return": 5000 * args.k,
         "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 96,
     }
-    traj_encoder_type = switch_traj_encoder(
+    traj_encoder_type = cli_utils.switch_traj_encoder(
         config,
         arch=args.traj_encoder,
         memory_size=args.memory_size,
         layers=args.memory_layers,
     )
-    agent_type = switch_agent(
+    agent_type = cli_utils.switch_agent(
         config, args.agent_type, reward_multiplier=1.0, num_critics=4
     )
-    exploration_type = switch_exploration(
+    exploration_type = cli_utils.switch_exploration(
         config, "bilevel", steps_anneal=2_000_000, rollout_horizon=args.k * 500
     )
-    use_config(config, args.configs)
+    cli_utils.use_config(config, args.configs)
 
     make_train_env = lambda: Metaworld(args.benchmark, "train", k_episodes=args.k)
     make_test_env = lambda: Metaworld(args.benchmark, "test", k_episodes=args.k)
@@ -61,7 +61,7 @@ if __name__ == "__main__":
     )
     for trial in range(args.trials):
         run_name = group_name + f"_trial_{trial}"
-        experiment = create_experiment_from_cli(
+        experiment = cli_utils.create_experiment_from_cli(
             args,
             make_train_env=make_train_env,
             make_val_env=make_train_env,
@@ -78,7 +78,7 @@ if __name__ == "__main__":
             exploration_wrapper_type=exploration_type,
         )
 
-        experiment = switch_async_mode(experiment, args.mode)
+        experiment = cli_utils.switch_async_mode(experiment, args.mode)
         experiment.start()
         if args.ckpt is not None:
             experiment.load_checkpoint(args.ckpt)
