@@ -649,12 +649,14 @@ class Agent(nn.Module):
             ].sum()
 
         binary_filter = filter_ > 0
+        masked_logp_a = logp_a[mask.bool()]
         stats = {
-            "Minimum Action Logprob": logp_a.min(),
-            "Maximum Action Logprob": logp_a.max(),
+            "Minimum Action Logprob": masked_logp_a.min(),
+            "Maximum Action Logprob": masked_logp_a.max(),
+            "Mean Action Logprob": masked_logp_a.mean(),
             "Filter Max": filter_.max(),
             "Filter Min": filter_.min(),
-            "Filter Mean": filter_.mean(),
+            "Filter Mean": (mask * filter_).sum() / mask.sum(),
             "Pct. of Actions Approved by Binary FBC Filter (All Gammas)": utils.masked_avg(
                 binary_filter, mask
             )
