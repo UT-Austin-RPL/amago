@@ -4,7 +4,7 @@ import wandb
 
 from amago.envs.builtin.toy_gym import RoomKeyDoor
 from amago.envs import AMAGOEnv
-from amago.cli_utils import *
+from amago import cli_utils
 
 
 def add_cli(parser):
@@ -41,28 +41,30 @@ def add_cli(parser):
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    add_common_cli(parser)
+    cli_utils.add_common_cli(parser)
     add_cli(parser)
     args = parser.parse_args()
 
     config = {}
-    tstep_encoder_type = switch_tstep_encoder(
+    tstep_encoder_type = cli_utils.switch_tstep_encoder(
         config, arch="ff", n_layers=2, d_hidden=128, d_output=64
     )
-    traj_encoder_type = switch_traj_encoder(
+    traj_encoder_type = cli_utils.switch_traj_encoder(
         config,
         arch=args.traj_encoder,
         memory_size=args.memory_size,
         layers=args.memory_layers,
     )
-    agent_type = switch_agent(config, args.agent_type, reward_multiplier=100.0)
+    agent_type = cli_utils.switch_agent(
+        config, args.agent_type, reward_multiplier=100.0
+    )
     # the fancier exploration schedule mentioned in the appendix can help
     # when the domain is a true meta-RL problem and the "horizon" time limit
     # (above) is actually relevant for resetting the task.
-    exploration_type = switch_exploration(
+    exploration_type = cli_utils.switch_exploration(
         config, "bilevel", steps_anneal=500_000, rollout_horizon=args.meta_horizon
     )
-    use_config(config, args.configs)
+    cli_utils.use_config(config, args.configs)
 
     group_name = f"{args.run_name}_dark_key_door"
     for trial in range(args.trials):
@@ -77,7 +79,7 @@ if __name__ == "__main__":
             ),
             env_name=f"Dark-Key-To-Door-{args.room_size}x{args.room_size}",
         )
-        experiment = create_experiment_from_cli(
+        experiment = cli_utils.create_experiment_from_cli(
             args,
             agent_type=agent_type,
             tstep_encoder_type=tstep_encoder_type,
@@ -91,7 +93,7 @@ if __name__ == "__main__":
             val_timesteps_per_epoch=args.meta_horizon * 4,
             exploration_wrapper_type=exploration_type,
         )
-        switch_async_mode(experiment, args.mode)
+        experiment = cli_utils.switch_async_mode(experiment, args.mode)
         experiment.start()
         if args.ckpt is not None:
             experiment.load_checkpoint(args.ckpt)

@@ -2,8 +2,9 @@ from argparse import ArgumentParser
 
 import wandb
 
+import amago
 from amago.envs.builtin.popgym_envs import POPGymAMAGO, MultiDomainPOPGymAMAGO
-from amago.cli_utils import *
+from amago import cli_utils
 
 
 def add_cli(parser):
@@ -19,7 +20,7 @@ def add_cli(parser):
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    add_common_cli(parser)
+    cli_utils.add_common_cli(parser)
     add_cli(parser)
     args = parser.parse_args()
 
@@ -43,32 +44,32 @@ if __name__ == "__main__":
     }
     # fmt: on
 
-    traj_encoder_type = switch_traj_encoder(
+    traj_encoder_type = cli_utils.switch_traj_encoder(
         config,
         arch=args.traj_encoder,
         memory_size=args.memory_size,  # paper: 256
         layers=args.memory_layers,  # paper: 3
     )
-    tstep_encoder_type = switch_tstep_encoder(
+    tstep_encoder_type = cli_utils.switch_tstep_encoder(
         config,
         arch="ff",
         n_layers=2,
         d_hidden=512,
         d_output=200,
     )
-    agent_type = switch_agent(
+    agent_type = cli_utils.switch_agent(
         config,
         args.agent_type,
         reward_multiplier=200.0 if args.multidomain else 100.0,
         tau=0.0025,
     )
     # steps_anneal can safely be set much lower (<500k) in most tasks. More sweeps needed.
-    exploration_type = switch_exploration(
+    exploration_type = cli_utils.switch_exploration(
         config,
         "egreedy",
         steps_anneal=1_000_000,
     )
-    use_config(config, args.configs)
+    cli_utils.use_config(config, args.configs)
 
     group_name = f"{args.run_name}_{args.env}"
     for trial in range(args.trials):
@@ -81,7 +82,7 @@ if __name__ == "__main__":
             make_train_env = lambda: POPGymAMAGO(
                 f"popgym-{args.env}-v0", truncated_is_done=True
             )
-        experiment = create_experiment_from_cli(
+        experiment = cli_utils.create_experiment_from_cli(
             args,
             make_train_env=make_train_env,
             make_val_env=make_train_env,
@@ -98,7 +99,7 @@ if __name__ == "__main__":
             grad_clip=1.0,
             lr_warmup_steps=2000,
         )
-        experiment = switch_async_mode(experiment, args.mode)
+        experiment = cli_utils.switch_async_mode(experiment, args.mode)
         experiment.start()
         if args.ckpt is not None:
             experiment.load_checkpoint(args.ckpt)

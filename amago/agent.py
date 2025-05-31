@@ -194,6 +194,8 @@ class Agent(nn.Module):
         use_target_actor: If True, use a target actor to sample actions used in TD targets.
             Defaults to True.
         use_multigamma: If True, train on multiple discount horizons (:py:class:`~amago.agent.Multigammas`) in parallel. Defaults to True.
+        actor_type: Actor MLP head for producing action distributions. Defaults to :py:class:`~amago.nets.actor_critic.Actor`.
+        critic_type: Critic MLP head for producing Q-values. Defaults to :py:class:`~amago.nets.actor_critic.NCritics`.
     """
 
     def __init__(
@@ -218,6 +220,8 @@ class Agent(nn.Module):
         popart: bool = True,
         use_target_actor: bool = True,
         use_multigamma: bool = True,
+        actor_type: Type[actor_critic.BaseActorHead] = actor_critic.Actor,
+        critic_type: Type[actor_critic.BaseCriticHead] = actor_critic.NCritics,
     ):
         super().__init__()
         self.obs_space = obs_space
@@ -280,17 +284,13 @@ class Agent(nn.Module):
             "discrete": self.discrete,
             "gammas": self.gammas,
         }
-        self.critics = actor_critic.NCritics(**ac_kwargs, num_critics=num_critics)
-        self.target_critics = actor_critic.NCritics(
-            **ac_kwargs, num_critics=num_critics
-        )
-        self.maximized_critics = actor_critic.NCritics(
-            **ac_kwargs, num_critics=num_critics
-        )
+        self.critics = critic_type(**ac_kwargs, num_critics=num_critics)
+        self.target_critics = critic_type(**ac_kwargs, num_critics=num_critics)
+        self.maximized_critics = critic_type(**ac_kwargs, num_critics=num_critics)
         if self.multibinary:
             ac_kwargs["cont_dist_kind"] = "multibinary"
-        self.actor = actor_critic.Actor(**ac_kwargs)
-        self.target_actor = actor_critic.Actor(**ac_kwargs)
+        self.actor = actor_type(**ac_kwargs)
+        self.target_actor = actor_type(**ac_kwargs)
         # full weight copy to targets
         self.hard_sync_targets()
 
@@ -651,12 +651,14 @@ class Agent(nn.Module):
             ].sum()
 
         binary_filter = filter_ > 0
+        masked_logp_a = logp_a[mask.bool()]
         stats = {
-            "Minimum Action Logprob": logp_a.min(),
-            "Maximum Action Logprob": logp_a.max(),
+            "Minimum Action Logprob": masked_logp_a.min(),
+            "Maximum Action Logprob": masked_logp_a.max(),
+            "Mean Action Logprob": masked_logp_a.mean(),
             "Filter Max": filter_.max(),
             "Filter Min": filter_.min(),
-            "Filter Mean": filter_.mean(),
+            "Filter Mean": (mask * filter_).sum() / mask.sum(),
             "Pct. of Actions Approved by Binary FBC Filter (All Gammas)": utils.masked_avg(
                 binary_filter, mask
             )
@@ -708,7 +710,7 @@ class MultiTaskAgent(Agent):
 
     The combination of points 2 and 3 stresses accurate advantage estimates and motivates a change
     in the default value of num_actions_for_value_in_critic_loss from 1 --> 3. Arguments otherwise
-    follow the information listed in amago.agent.Agent.
+    follow the information listed in :py:class:`~amago.agent.Agent`.
     """
 
     def __init__(
@@ -733,6 +735,8 @@ class MultiTaskAgent(Agent):
         popart: bool = True,
         use_target_actor: bool = True,
         use_multigamma: bool = True,
+        actor_type: Type[actor_critic.BaseActorHead] = actor_critic.Actor,
+        critic_type: Type[actor_critic.BaseCriticHead] = actor_critic.NCriticsTwoHot,
     ):
         super().__init__(
             obs_space=obs_space,
@@ -755,17 +759,9 @@ class MultiTaskAgent(Agent):
             use_multigamma=use_multigamma,
             fbc_filter_func=fbc_filter_func,
             popart=popart,
+            actor_type=actor_type,
+            critic_type=critic_type,
         )
-        critic_kwargs = {
-            "state_dim": self.traj_encoder.emb_dim,
-            "action_dim": self.action_dim,
-            "gammas": self.gammas,
-            "num_critics": self.num_critics,
-        }
-        self.critics = actor_critic.NCriticsTwoHot(**critic_kwargs)
-        self.target_critics = actor_critic.NCriticsTwoHot(**critic_kwargs)
-        self.maximized_critics = actor_critic.NCriticsTwoHot(**critic_kwargs)
-        self.hard_sync_targets()
 
     def _sample_k_actions(self, dist, k: int):
         raise NotImplementedError

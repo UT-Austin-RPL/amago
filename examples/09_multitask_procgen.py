@@ -8,7 +8,7 @@ from amago.envs.builtin.procgen_envs import (
     ALL_PROCGEN_GAMES,
 )
 from amago.nets.cnn import IMPALAishCNN
-from amago.cli_utils import *
+from amago import cli_utils
 
 
 def add_cli(parser):
@@ -43,26 +43,26 @@ PROCGEN_SETTINGS = {
 
 if __name__ == "__main__":
     parser = ArgumentParser()
+    cli_utils.add_common_cli(parser)
     add_cli(parser)
-    add_common_cli(parser)
     args = parser.parse_args()
 
     config = {}
-    traj_encoder_type = switch_traj_encoder(
+    traj_encoder_type = cli_utils.switch_traj_encoder(
         config,
         arch=args.traj_encoder,
         memory_size=args.memory_size,
         layers=args.memory_layers,
     )
-    tstep_encoder_type = switch_tstep_encoder(
+    tstep_encoder_type = cli_utils.switch_tstep_encoder(
         config,
         arch="cnn",
         cnn_type=IMPALAishCNN,
         channels_first=False,
         drqv2_aug=True,
     )
-    agent_type = switch_agent(config, args.agent_type)
-    use_config(config, args.configs)
+    agent_type = cli_utils.switch_agent(config, args.agent_type)
+    cli_utils.use_config(config, args.configs)
 
     procgen_kwargs = PROCGEN_SETTINGS[args.distribution]
     horizon = 2000 if "easy" in args.distribution else 5000
@@ -78,7 +78,7 @@ if __name__ == "__main__":
     group_name = f"{args.run_name}_{args.distribution}_procgen_l_{args.max_seq_len}"
     for trial in range(args.trials):
         run_name = group_name + f"_trial_{trial}"
-        experiment = create_experiment_from_cli(
+        experiment = cli_utils.create_experiment_from_cli(
             args,
             make_train_env=make_train_env,
             make_val_env=make_test_env,
@@ -91,7 +91,7 @@ if __name__ == "__main__":
             group_name=group_name,
             val_timesteps_per_epoch=5 * horizon + 1,
         )
-        switch_async_mode(experiment, args.mode)
+        experiment = cli_utils.switch_async_mode(experiment, args.mode)
         experiment.start()
         if args.ckpt is not None:
             experiment.load_checkpoint(args.ckpt)

@@ -1,8 +1,10 @@
+from argparse import ArgumentParser
+
 import amago
 from amago.envs.builtin.toy_gym import MetaFrozenLake
 from amago.envs import AMAGOEnv
 from amago.loading import DiskTrajDataset
-from amago.cli_utils import *
+from amago import cli_utils
 
 
 def add_cli(parser):
@@ -35,19 +37,19 @@ if __name__ == "__main__":
 
     config = {}
     # configure trajectory encoder (seq2seq memory model)
-    traj_encoder_type = switch_traj_encoder(
+    traj_encoder_type = cli_utils.switch_traj_encoder(
         config,
         arch=args.seq_model,
         memory_size=128,
         layers=3,
     )
     # configure timestep encoder
-    tstep_encoder_type = switch_tstep_encoder(
+    tstep_encoder_type = cli_utils.switch_tstep_encoder(
         config, arch="ff", n_layers=1, d_hidden=128, d_output=64, normalize_inputs=False
     )
 
     # we're using the default exploration strategy but being overly verbose about it for the example
-    exploration_wrapper_type = switch_exploration(
+    exploration_wrapper_type = cli_utils.switch_exploration(
         config,
         strategy="egreedy",
         eps_start=1.0,
@@ -55,7 +57,7 @@ if __name__ == "__main__":
         steps_anneal=1_000_000,
         randomize_eps=True,
     )
-    use_config(config)
+    cli_utils.use_config(config)
 
     group_name = f"{args.run_name}_{args.seq_model}"
     for trial in range(args.trials):

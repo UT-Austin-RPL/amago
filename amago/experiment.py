@@ -916,7 +916,7 @@ class Experiment:
             "Unmasked Batch Size (in Timesteps)": unmasked_batch_size,
         } | update_info
 
-    def _get_grad_norms(self):
+    def get_grad_norms(self):
         """Get gradient norms for logging."""
         ggn = utils.get_grad_norm
         pi = self.policy
@@ -952,7 +952,7 @@ class Experiment:
                 if log_step:
                     l.update(
                         {"Learning Rate": self.lr_schedule.get_last_lr()[0]}
-                        | self._get_grad_norms()
+                        | self.get_grad_norms()
                     )
             self.optimizer.step()
             self.lr_schedule.step()
