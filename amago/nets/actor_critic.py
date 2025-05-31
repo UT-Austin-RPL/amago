@@ -2,7 +2,9 @@
 Actor and critic output modules.
 """
 
+import contextlib
 from typing import Optional, Type
+import random
 from functools import lru_cache
 from abc import ABC, abstractmethod
 
@@ -14,7 +16,7 @@ from einops import repeat, rearrange
 from einops.layers.torch import EinMix as Mix
 import gin
 
-from amago.nets.ff import MLP
+from amago.nets.ff import MLP, Normalization
 from amago.nets.utils import activation_switch, symlog, symexp
 from amago.nets.policy_dists import (
     Discrete,
@@ -92,7 +94,7 @@ class Actor(BaseActorHead):
         activation: Activation function to use in the MLP. Defaults to "leaky_relu".
         dropout_p: Dropout rate to use in the MLP. Defaults to 0.0.
         continuous_dist_type: Type of continuous distribution to use if applicable. Must be a
-            `amago.nets.policy_dists.PolicyOutput`. Defaults to TanhGaussian.
+            :py:class:`~amago.nets.policy_dists.PolicyOutput`. Defaults to :py:class:`~amago.nets.policy_dists.TanhGaussian`.
     """
 
     def __init__(
@@ -132,6 +134,97 @@ class Actor(BaseActorHead):
             dist_params, "b ... (g f) -> b ... g f", g=self.num_gammas
         )
         return dist_params
+
+
+@gin.configurable
+class ResidualActor(BaseActorHead):
+    """Actor output head with residual blocks.
+
+    Based on BRO https://arxiv.org/pdf/2405.16158v1,
+    which recommends similar hparams to our exsiting defaults.
+
+    Args:
+        state_dim: Dimension of the "state" space (which is the output of the TrajEncoder)
+        action_dim: Dimension of the action space
+        discrete: Whether the action space is discrete
+        gammas: List of gamma values to use for the multi-gamma actor
+
+    Keyword Args:
+        feature_dim: Dimension of the embedding between residual blocks (analogous to d_model in a Transformer). Defaults to 256.
+        residual_ff_dim: Hidden dimension of residual blocks (analogous to d_ff in a Transformer). Defaults to 512.
+        residual_blocks: Number of residual blocks. Defaults to 2.
+        activation: Activation function to use in the MLPs. Defaults to "leaky_relu".
+        normalization: Normalization to use in the residual blocks. Defaults to "layer" (LayerNorm).
+        dropout_p: Dropout rate to use in the initial linear layers. Defaults to 0.0.
+        continuous_dist_type: Type of continuous distribution to use if applicable. Must be a
+            :py:class:`~amago.nets.policy_dists.PolicyOutput`. Defaults to :py:class:`~amago.nets.policy_dists.TanhGaussian`.
+    """
+
+    def __init__(
+        self,
+        state_dim: int,
+        action_dim: int,
+        discrete: bool,
+        gammas: torch.Tensor,
+        feature_dim: int = 256,
+        residual_ff_dim: int = 512,
+        residual_blocks: int = 2,
+        activation: str = "leaky_relu",
+        normalization: str = "layer",
+        dropout_p: float = 0.0,
+        continuous_dist_type: Type[PolicyOutput] = TanhGaussian,
+    ):
+        super().__init__(
+            state_dim=state_dim,
+            action_dim=action_dim,
+            discrete=discrete,
+            gammas=gammas,
+            continuous_dist_type=continuous_dist_type,
+        )
+        self.inp = MLP(
+            d_inp=state_dim,
+            d_hidden=feature_dim,
+            n_layers=1,
+            d_output=feature_dim,
+            dropout_p=dropout_p,
+            activation=activation,
+        )
+
+        class _Lambda(nn.Module):
+            def __init__(self, func):
+                super().__init__()
+                self.func = func
+
+            def forward(self, x):
+                return self.func(x)
+
+        residual_block = lambda: nn.Sequential(
+            nn.Linear(feature_dim, residual_ff_dim),
+            Normalization(normalization, residual_ff_dim),
+            _Lambda(activation_switch(activation)),
+            nn.Linear(residual_ff_dim, feature_dim),
+            Normalization(normalization, feature_dim),
+        )
+
+        self.residual_blocks = nn.ModuleList(
+            [residual_block() for _ in range(residual_blocks)]
+        )
+
+        self.out = nn.Linear(
+            feature_dim, self.policy_dist.input_dimension * self.num_gammas
+        )
+
+    @torch.compile
+    def actor_network_forward(
+        self, state: torch.Tensor, log_dict: Optional[dict] = None
+    ) -> torch.Tensor:
+        B, L, D = state.shape
+        x = self.inp(state)
+        for block in self.residual_blocks:
+            x = x + block(x)
+        out = self.out(x)
+        params = rearrange(out, "b l (g f) -> b l g f", g=self.num_gammas)
+        return params
 
 
 class _EinMixEnsemble(nn.Module):

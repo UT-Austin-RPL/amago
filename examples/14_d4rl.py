@@ -13,6 +13,7 @@ from amago.envs import AMAGOEnv
 from amago.cli_utils import *
 from amago.loading import RLData, RLDataset
 from amago.nets.policy_dists import TanhGaussian, GMM, Beta
+from amago.nets.actor_critic import ResidualActor, Actor
 
 
 def add_cli(parser):
@@ -28,6 +29,13 @@ def add_cli(parser):
         default="TanhGaussian",
         help="Policy distribution type",
         choices=["TanhGaussian", "GMM", "Beta"],
+    )
+    parser.add_argument(
+        "--actor_type",
+        type=str,
+        default="Actor",
+        help="Actor head type",
+        choices=["ResidualActor", "Actor"],
     )
     parser.add_argument(
         "--eval_timesteps",
@@ -162,6 +170,10 @@ if __name__ == "__main__":
         "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 128,
         "amago.nets.actor_critic.Actor.d_hidden": 128,
         "amago.nets.actor_critic.Actor.continuous_dist_type": eval(args.policy_dist),
+        "amago.nets.actor_critic.ResidualActor.feature_dim": 128,
+        "amago.nets.actor_critic.ResidualActor.residual_ff_dim": 256,
+        "amago.nets.actor_critic.ResidualActor.residual_blocks": 2,
+        "amago.nets.actor_critic.ResidualActor.continuous_dist_type": eval(args.policy_dist),
     }
     tstep_encoder_type = switch_tstep_encoder(
         config,
@@ -186,6 +198,7 @@ if __name__ == "__main__":
         num_actions_for_value_in_critic_loss=2,
         num_actions_for_value_in_actor_loss=4,
         num_critics=4,
+        actor_type=eval(args.actor_type),
     )
     use_config(config, args.configs)
 
