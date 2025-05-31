@@ -194,6 +194,8 @@ class Agent(nn.Module):
         use_target_actor: If True, use a target actor to sample actions used in TD targets.
             Defaults to True.
         use_multigamma: If True, train on multiple discount horizons (:py:class:`~amago.agent.Multigammas`) in parallel. Defaults to True.
+        actor_type: Actor MLP head for producing action distributions. Defaults to :py:class:`~amago.nets.actor_critic.Actor`.
+        critic_type: Critic MLP head for producing Q-values. Defaults to :py:class:`~amago.nets.actor_critic.NCritics`.
     """
 
     def __init__(
@@ -708,7 +710,7 @@ class MultiTaskAgent(Agent):
 
     The combination of points 2 and 3 stresses accurate advantage estimates and motivates a change
     in the default value of num_actions_for_value_in_critic_loss from 1 --> 3. Arguments otherwise
-    follow the information listed in amago.agent.Agent.
+    follow the information listed in :py:class:`~amago.agent.Agent`.
     """
 
     def __init__(

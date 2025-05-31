@@ -309,9 +309,7 @@ class BaseCriticHead(nn.Module, ABC):
         self, state: torch.Tensor, action: torch.Tensor, log_dict: Optional[dict] = None
     ) -> torch.Tensor:
         assert state.ndim == 3
-        B, L, _ = state.shape
         assert action.ndim == 5
-        K = action.shape[0]
         out = self.critic_network_forward(state=state, action=action, log_dict=log_dict)
         return out
 

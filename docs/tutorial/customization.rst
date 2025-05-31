@@ -107,6 +107,20 @@ RLDataset
 
 **Implement**: :py:class:`~amago.nets.policy_dists.PolicyOutput`
 
-**Substitute**: ``config = {"amago.nets.actor_critic.Actor.continuous_dist_type" : MyPolicyOutput, ...}; use_config(config); experiment = Experiment(...)``
+**Configure**: ``config = {"amago.nets.actor_critic.Actor.continuous_dist_type" : MyPolicyOutput, ...}; use_config(config); experiment = Experiment(...)``
 
 |
+
+Actor Output Head
+~~~~~~~~~~~~~~~~~~~
+**Implement** :py:class:`~amago.nets.actor_critic.BaseActorHead`
+
+**Configure**: ``Agent.actor_type : MyActor``
+
+|
+
+Critic Output Head
+~~~~~~~~~~~~~~~~~~~
+**Implement** : :py:class:`~amago.nets.actor_critic.BaseCriticHead`
+
+**Configure**: ``Agent.critic_type : MyCritic``
