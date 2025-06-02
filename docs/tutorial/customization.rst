@@ -113,7 +113,7 @@ RLDataset
 
 Actor Output Head
 ~~~~~~~~~~~~~~~~~~~
-**Implement** :py:class:`~amago.nets.actor_critic.BaseActorHead`
+**Implement**: :py:class:`~amago.nets.actor_critic.BaseActorHead`
 
 **Configure**: ``Agent.actor_type : MyActor``
 
@@ -121,6 +121,6 @@ Actor Output Head
 
 Critic Output Head
 ~~~~~~~~~~~~~~~~~~~
-**Implement** : :py:class:`~amago.nets.actor_critic.BaseCriticHead`
+**Implement**: :py:class:`~amago.nets.actor_critic.BaseCriticHead`
 
 **Configure**: ``Agent.critic_type : MyCritic``

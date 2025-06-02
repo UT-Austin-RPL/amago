@@ -446,7 +446,7 @@ class Agent(nn.Module):
         K_a = self.num_actions_for_value_in_actor_loss if not self.discrete else 1
         # note that the last timestep does not have an action.
         # we give it a fake one to make shape math work.
-        a_buffer = torch.cat((a, a[:, -1, ...].clone().unsqueeze(1)), axis=1)
+        a_buffer = F.pad(a, (0, 0, 0, 1), "replicate")
         a_buffer = repeat(a_buffer, f"b l a -> b l {G} a")
         C = len(self.critics)
         # arrays used by critic update end up in a (B, L, C, G, dim) format
@@ -456,9 +456,11 @@ class Agent(nn.Module):
         gamma = self.gammas.to(r.device).unsqueeze(-1)
         d = repeat(batch.dones.float(), f"b l d -> b l 1 {G} d")
         D_emb = self.traj_encoder.emb_dim
-        state_mask = (~((batch.rl2s == self.pad_val).all(-1, keepdim=True))).float()
-        actor_mask = repeat(state_mask, f"b l 1 -> b l {G} 1")
-        critic_mask = repeat(state_mask[:, 1:, ...], f"b l 1 -> b l {C} {G} 1")
+        # 1.0 where loss at this index should count, 0.0 where is should be ignored
+        state_mask = (~((batch.rl2s == self.pad_val).all(-1, keepdim=True))).float()[:, 1:, ...]
+        actor_mask = F.pad(state_mask, (0, 0, 0, 1), "constant", 0.0)
+        actor_mask = repeat(actor_mask, f"b l 1 -> b l {G} 1")
+        critic_mask = repeat(state_mask, f"b l 1 -> b l {C} {G} 1")
 
         ########################
         ## Sequence Embedding ##
@@ -606,7 +608,9 @@ class Agent(nn.Module):
                 "Max TD Target": td_target[where_mask].max(),
                 "TD Target (test-time gamma)": masked_avg(td_target, -1),
                 "Mean Reward (in training sequences)": masked_avg(r),
-                "Sequences Containing Done": d[:, :, 0, 0, 0].any(1).sum(),
+                "Sequences Containing Done": (d * mask.all(2, keepdim=True))
+                .any((1, 2, 3))
+                .sum(),
                 "Min Reward (in training sequences)": r[where_mask].min(),
                 "Max Reward (in training sequences)": r[where_mask].max(),
             }
@@ -620,7 +624,6 @@ class Agent(nn.Module):
         masked_avg = (
             lambda x_, dim: (mask[..., dim, :] * x_[..., dim, :]).sum().detach() / sum_
         )
-
         if self.discrete:
             entropy = a_dist.entropy().unsqueeze(-1)
             low_prob = torch.min(a_dist.probs, dim=-1, keepdims=True).values
@@ -786,7 +789,7 @@ class MultiTaskAgent(Agent):
         assert _L == L - 1
         G = len(self.gammas)
         K_c = self.num_actions_for_value_in_critic_loss
-        a_buffer = torch.cat((a, a[:, -1, ...].clone().unsqueeze(1)), axis=1)
+        a_buffer = F.pad(a, (0, 0, 0, 1), "replicate")
         a_buffer = repeat(a_buffer, f"b l a -> b l {G} a")
         C = len(self.critics)
         assert batch.rews.shape == (B, L - 1, 1)
@@ -796,9 +799,10 @@ class MultiTaskAgent(Agent):
         gamma = self.gammas.to(r.device).unsqueeze(-1)
         D_emb = self.traj_encoder.emb_dim
         Bins = self.critics.num_bins
-        state_mask = (~((batch.rl2s == self.pad_val).all(-1, keepdim=True))).float()
-        actor_mask = repeat(state_mask, f"b l 1 -> b l {G} 1")
-        critic_mask = repeat(state_mask[:, 1:, ...], f"b l 1 -> b l {C} {G} 1")
+        state_mask = (~((batch.rl2s == self.pad_val).all(-1, keepdim=True))).float()[:, 1:, ...]
+        actor_mask = F.pad(state_mask, (0, 0, 0, 1), "constant", 0.0)
+        actor_mask = repeat(actor_mask, f"b l 1 -> b l {G} 1")
+        critic_mask = repeat(state_mask, f"b l 1 -> b l {C} {G} 1")
 
         ########################
         ## Sequence Embedding ##
