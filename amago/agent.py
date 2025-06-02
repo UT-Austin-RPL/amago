@@ -446,7 +446,7 @@ class Agent(nn.Module):
         K_a = self.num_actions_for_value_in_actor_loss if not self.discrete else 1
         # note that the last timestep does not have an action.
         # we give it a fake one to make shape math work.
-        a_buffer = torch.cat((a, a[:, -1, ...].clone().unsqueeze(1)), axis=1)
+        a_buffer = F.pad(a, (0, 0, 0, 1), "replicate")
         a_buffer = repeat(a_buffer, f"b l a -> b l {G} a")
         C = len(self.critics)
         # arrays used by critic update end up in a (B, L, C, G, dim) format
@@ -458,7 +458,7 @@ class Agent(nn.Module):
         D_emb = self.traj_encoder.emb_dim
         # 1.0 where loss at this index should count, 0.0 where is should be ignored
         state_mask = (~((batch.rl2s == self.pad_val).all(-1, keepdim=True))).float()[:, 1:, ...]
-        actor_mask = torch.cat((state_mask, torch.zeros(B, 1, 1, device=d.device)), dim=1)
+        actor_mask = F.pad(state_mask, (0, 0, 0, 1), "constant", 0.0)
         actor_mask = repeat(actor_mask, f"b l 1 -> b l {G} 1")
         critic_mask = repeat(state_mask, f"b l 1 -> b l {C} {G} 1")
 
@@ -787,7 +787,7 @@ class MultiTaskAgent(Agent):
         assert _L == L - 1
         G = len(self.gammas)
         K_c = self.num_actions_for_value_in_critic_loss
-        a_buffer = torch.cat((a, a[:, -1, ...].clone().unsqueeze(1)), axis=1)
+        a_buffer = F.pad(a, (0, 0, 0, 1), "replicate")
         a_buffer = repeat(a_buffer, f"b l a -> b l {G} a")
         C = len(self.critics)
         assert batch.rews.shape == (B, L - 1, 1)
@@ -797,9 +797,10 @@ class MultiTaskAgent(Agent):
         gamma = self.gammas.to(r.device).unsqueeze(-1)
         D_emb = self.traj_encoder.emb_dim
         Bins = self.critics.num_bins
-        state_mask = (~((batch.rl2s == self.pad_val).all(-1, keepdim=True))).float()
-        actor_mask = repeat(state_mask, f"b l 1 -> b l {G} 1")
-        critic_mask = repeat(state_mask[:, 1:, ...], f"b l 1 -> b l {C} {G} 1")
+        state_mask = (~((batch.rl2s == self.pad_val).all(-1, keepdim=True))).float()[:, 1:, ...]
+        actor_mask = F.pad(state_mask, (0, 0, 0, 1), "constant", 0.0)
+        actor_mask = repeat(actor_mask, f"b l 1 -> b l {G} 1")
+        critic_mask = repeat(state_mask, f"b l 1 -> b l {C} {G} 1")
 
         ########################
         ## Sequence Embedding ##
