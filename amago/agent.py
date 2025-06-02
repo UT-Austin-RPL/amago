@@ -608,7 +608,9 @@ class Agent(nn.Module):
                 "Max TD Target": td_target[where_mask].max(),
                 "TD Target (test-time gamma)": masked_avg(td_target, -1),
                 "Mean Reward (in training sequences)": masked_avg(r),
-                "Sequences Containing Done": d[:, :, 0, 0, 0].any(1).sum(),
+                "Sequences Containing Done": (d * mask.all(2, keepdim=True))
+                .any((1, 2, 3))
+                .sum(),
                 "Min Reward (in training sequences)": r[where_mask].min(),
                 "Max Reward (in training sequences)": r[where_mask].max(),
             }
