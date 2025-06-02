@@ -663,7 +663,7 @@ class DiskTrajDataset(RLDataset):
         self._refresh_files()
         if not self.has_edit_rights:
             # this Experiment is not supposed to manage the dataset
-            return
+            return {}
         # old `accelerate` paranoia
         old_size = self._count_trajectories()
         experiment.accelerator.wait_for_everyone()
