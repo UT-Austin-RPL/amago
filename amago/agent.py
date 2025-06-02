@@ -456,9 +456,11 @@ class Agent(nn.Module):
         gamma = self.gammas.to(r.device).unsqueeze(-1)
         d = repeat(batch.dones.float(), f"b l d -> b l 1 {G} d")
         D_emb = self.traj_encoder.emb_dim
-        state_mask = (~((batch.rl2s == self.pad_val).all(-1, keepdim=True))).float()
-        actor_mask = repeat(state_mask, f"b l 1 -> b l {G} 1")
-        critic_mask = repeat(state_mask[:, 1:, ...], f"b l 1 -> b l {C} {G} 1")
+        # 1.0 where loss at this index should count, 0.0 where is should be ignored
+        state_mask = (~((batch.rl2s == self.pad_val).all(-1, keepdim=True))).float()[:, 1:, ...]
+        actor_mask = torch.cat((state_mask, torch.zeros(B, 1, 1, device=d.device)), dim=1)
+        actor_mask = repeat(actor_mask, f"b l 1 -> b l {G} 1")
+        critic_mask = repeat(state_mask, f"b l 1 -> b l {C} {G} 1")
 
         ########################
         ## Sequence Embedding ##
@@ -620,7 +622,6 @@ class Agent(nn.Module):
         masked_avg = (
             lambda x_, dim: (mask[..., dim, :] * x_[..., dim, :]).sum().detach() / sum_
         )
-
         if self.discrete:
             entropy = a_dist.entropy().unsqueeze(-1)
             low_prob = torch.min(a_dist.probs, dim=-1, keepdims=True).values
