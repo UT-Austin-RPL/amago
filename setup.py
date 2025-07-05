@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="amago",
-    version="3.1.0",
+    version="3.1.1",
     author="Jake Grigsby",
     author_email="grigsby@cs.utexas.edu",
     license="MIT",
