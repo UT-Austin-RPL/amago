@@ -36,9 +36,9 @@ And that's it! Let's say our ``Experiment.parallel_actors=32``, ``Experiment.tra
 Asynchronous Training/Rollouts
 --------------------------------
 
-Each ``epoch`` alternates between rollouts --> gradient updates. AMAGO saves environment data and checkpoints to disk, so changing some :py:class:`~amago.experiment.Experiment`` kwargs would let these two steps be completely separate.
+There is rough support for completely asynchronous training/collection with an arbitrary number of processes. Each ``epoch`` alternates between rollouts --> gradient updates. AMAGO saves environment data and checkpoints to disk, so changing some :py:class:`~amago.experiment.Experiment`` kwargs would let these two steps be completely separate.
 
-After we create an ``experiment = Experiment()``, but before ``experiment.start()``, :py:func:`~amago.cli_utils.switch_async_mode` can override settings to ``"learn"``, ``"collect"`` or do ``"both"`` (the default). This leads to a very hacky but fun way to add extra data collection or do training/learning asychronously. For example, we can ``accelerate launch`` a multi-gpu script that only does gradient updates, and collect data for that model to train on with as many collect-only processes as we want. All we need to do is make sure the ``dset_root``, ``dset_name``, ``run_name`` are the same (so that all the experiments are working from the same directory), and the network architecture settings are the same (so that checkpoints load correctly). For example:
+After we create an ``experiment = Experiment()``, but before ``experiment.start()``, :py:func:`~amago.cli_utils.switch_async_mode` can override settings to ``"learn"``, ``"collect"`` or do ``"both"`` (the default). We can ``accelerate launch`` a multi-gpu script that only does gradient updates, and collect data for that model to train on with as many collect-only processes as we want.
 
 .. code-block:: python
 
@@ -49,21 +49,11 @@ After we create an ``experiment = Experiment()``, but before ``experiment.start(
     parser = ArgumentParser()
     parser.add_argument("--mode", options=["learn", "collect", "both"])
     args = parser.parse_args()
-
     config = {
         ...
     }
     use_config(config)
-
-    experiment = Experiment(
-        dset_root="~/amago_dsets",
-        dset_name="agi_training_data",
-        run_name="v1",
-        tstep_encoder_type=FFTstepEncoder,
-        traj_encoder_type=TformerTrajEncoder,
-        agent_type=MultiTaskAgent,
-        ...
-    )
+    experiment = Experiment(...)
     switch_async_mode(experiment, args.mode)
     experiment.start()
     experiment.learn()

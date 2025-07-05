@@ -254,7 +254,16 @@ Offline RL on the (original) [D4RL](https://arxiv.org/pdf/2004.07219) datasets.
 
 [Example `wandb`](https://wandb.ai/jakegrigsby/amago-v3-reference/runs/9ab15rr8)
 
+<br>
 
+### **15. Human-Level Competitive Pokémon: Metamon**
+[`metamon`](https://github.com/UT-Austin-RPL/metamon) used `amago` to train top decile agents in Pokémon Showdown from human and self-collected battle data. 
+
+<img src="docs/media/metamon_icon.png" alt="metamon_diagram" width="100" align="left" />
+
+Check out our [project website](https://metamon.tech)!
+
+<br>
 
 <br>
 
