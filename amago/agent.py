@@ -662,6 +662,8 @@ class Agent(nn.Module):
             "Filter Max": filter_.max(),
             "Filter Min": filter_.min(),
             "Filter Mean": (mask * filter_).sum() / mask.sum(),
+            "Filter 95th Percentile": torch.quantile(filter_, 0.95),
+            "Filter 75th Percentile": torch.quantile(filter_, 0.75),
             "Pct. of Actions Approved by Binary FBC Filter (All Gammas)": utils.masked_avg(
                 binary_filter, mask
             )
@@ -920,7 +922,7 @@ class MultiTaskAgent(Agent):
             logp_a = logp_a[:, :-1, ...]
             actor_loss += self.offline_coeff * -(filter_.detach() * logp_a)
             if log_step:
-                filter_stats = self._filter_stats(actor_mask, logp_a, binary_filter_)
+                filter_stats = self._filter_stats(actor_mask, logp_a, filter_)
                 self.update_info.update(filter_stats)
 
         if self.online_coeff > 0:

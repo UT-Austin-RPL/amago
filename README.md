@@ -245,7 +245,7 @@ Off-policy learning makes it easy to relabel old sequence data with new rewards.
 <br>
 
 
-### **14. Offline RL: D4RL**
+### **14. Offline-to-Online RL: D4RL**
 **[`14_d4rl.py`](examples/14_d4rl.py)**
 
 <img src="docs/media/d4rl.png" alt="d4rl_diagram" width="100" align="left" />

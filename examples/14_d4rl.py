@@ -11,9 +11,10 @@ import numpy as np
 import amago
 from amago.envs import AMAGOEnv
 from amago import cli_utils
-from amago.loading import RLData, RLDataset
+from amago.loading import RLData, RLDataset, DiskTrajDataset, MixtureOfDatasets
 from amago.nets.policy_dists import TanhGaussian, GMM, Beta
 from amago.nets.actor_critic import ResidualActor, Actor
+from amago.agent import binary_filter, exp_filter
 
 
 def add_cli(parser):
@@ -26,7 +27,7 @@ def add_cli(parser):
     parser.add_argument(
         "--policy_dist",
         type=str,
-        default="TanhGaussian",
+        default="Beta",
         help="Policy distribution type",
         choices=["TanhGaussian", "GMM", "Beta"],
     )
@@ -36,6 +37,12 @@ def add_cli(parser):
         default="Actor",
         help="Actor head type",
         choices=["ResidualActor", "Actor"],
+    )
+    parser.add_argument(
+        "--online_after_epoch",
+        type=int,
+        default=float("inf"),
+        help="Number of epochs after which to start collecting online data",
     )
     parser.add_argument(
         "--eval_timesteps",
@@ -83,7 +90,6 @@ class D4RLDataset(RLDataset):
         rewards = torch.from_numpy(rewards_np).float().unsqueeze(-1)
         time_idxs = torch.arange(traj_len).unsqueeze(-1).long()
         dones = torch.from_numpy(terminals_np).bool().unsqueeze(-1)
-
         return RLData(
             obs=obs,
             actions=actions,
@@ -128,12 +134,14 @@ class D4RLGymEnv(gym.Env):
 
     def step(self, action):
         s, r, d, i = self.env.step(action)
+        truncated = i.get("TimeLimit.truncated", False)
+        terminated = d and not truncated
         self.episode_return += r
-        if d:
+        if terminated or truncated:
             i[f"{AMAGO_ENV_LOG_PREFIX} D4RL Normalized Return"] = (
                 d4rl.get_normalized_score(self.env_name, self.episode_return)
             )
-        return s, r, d, d, i
+        return s, r, terminated, truncated, i
 
 
 if __name__ == "__main__":
@@ -148,13 +156,9 @@ if __name__ == "__main__":
     assert isinstance(
         example_env.action_space, gym.spaces.Box
     ), "Only supports continuous action spaces"
-    if args.timesteps_per_epoch > 0:
-        print("WARNING: timesteps_per_epoch is not supported for D4RL, setting to 0")
-        args.timesteps_per_epoch = 0
 
-    # create dataset
-    dataset = D4RLDataset(d4rl_dset=example_env.dset)
     args.eval_timesteps = example_env.time_limit + 1
+    args.timesteps_per_epoch = example_env.time_limit
 
     # setup environment
     make_train_env = lambda: AMAGOEnv(
@@ -166,8 +170,8 @@ if __name__ == "__main__":
     # agent architecture: drop everything down to standard small sizes
     config = {
         "amago.nets.actor_critic.NCritics.d_hidden": 128,
-        "amago.nets.actor_critic.NCriticsTwoHot.d_hidden": 256,
-        "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 128,
+        "amago.nets.actor_critic.NCriticsTwoHot.d_hidden": 128,
+        "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 64,
         "amago.nets.actor_critic.Actor.d_hidden": 128,
         "amago.nets.actor_critic.Actor.continuous_dist_type": eval(args.policy_dist),
         "amago.nets.actor_critic.ResidualActor.feature_dim": 128,
@@ -184,6 +188,13 @@ if __name__ == "__main__":
         d_output=128,
         n_layers=1,
     )
+    exploration_wrapper_type = cli_utils.switch_exploration(
+        config,
+        strategy="egreedy",
+        eps_start=0.05,
+        eps_end=0.01,
+        steps_anneal=15_000,
+    )
     traj_encoder_type = cli_utils.switch_traj_encoder(
         config,
         arch=args.traj_encoder,
@@ -195,18 +206,37 @@ if __name__ == "__main__":
         args.agent_type,
         online_coeff=0.0,
         offline_coeff=1.0,
-        gamma=0.995,
+        gamma=0.997,
         reward_multiplier=100.0 if example_env.max_return <= 10.0 else 1,
-        num_actions_for_value_in_critic_loss=2,
-        num_actions_for_value_in_actor_loss=4,
-        num_critics=4,
+        num_actions_for_value_in_critic_loss=3,
+        num_actions_for_value_in_actor_loss=5,
+        num_critics=5,
         actor_type=eval(args.actor_type),
+        fbc_filter_func=exp_filter,
     )
     cli_utils.use_config(config, args.configs)
 
     group_name = f"{args.run_name}_{env_name}"
     for trial in range(args.trials):
         run_name = group_name + f"_trial_{trial}"
+
+        # create dataset
+        d4rl_dataset = D4RLDataset(d4rl_dset=example_env.dset)
+        online_dset = DiskTrajDataset(
+            dset_root=args.buffer_dir,
+            dset_name=run_name,
+            dset_min_size=250,
+            dset_max_size=args.dset_max_size,
+        )
+        combined_dset = MixtureOfDatasets(
+            datasets=[d4rl_dataset, online_dset],
+            # skew sampling towards the demos 80/20
+            sampling_weights=[0.8, 0.2],
+            # gradually increase the weight of the online dset
+            # over the first 100 epochs *after online collection starts*
+            smooth_sudden_starts=50,
+        )
+
         experiment = cli_utils.create_experiment_from_cli(
             args,
             make_train_env=make_train_env,
@@ -219,10 +249,15 @@ if __name__ == "__main__":
             group_name=group_name,
             val_timesteps_per_epoch=args.eval_timesteps,
             learning_rate=1e-4,
-            dataset=dataset,
+            dataset=combined_dset,
             padded_sampling="right",
+            start_collecting_at_epoch=args.online_after_epoch,
+            stagger_traj_file_lengths=False,
+            traj_save_len=args.eval_timesteps + 1,
             sample_actions=False,
+            exploration_wrapper_type=exploration_wrapper_type,
         )
+        # save a copy of this script at the time of the run
         experiment = cli_utils.switch_async_mode(experiment, args.mode)
         experiment.start()
         if args.ckpt is not None:

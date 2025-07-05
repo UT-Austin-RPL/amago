@@ -5,10 +5,12 @@ These mostly exist to make the :file:`examples/` easier to maintain with less bo
 and to break up configuration into several smaller steps.
 """
 
+import os
 from argparse import ArgumentParser
 from typing import Optional
 
 import gin
+import wandb
 
 import amago
 from amago import TrajEncoder, TstepEncoder, Agent
