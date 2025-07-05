@@ -233,12 +233,13 @@ Offline RL on the (original) `D4RL <https://arxiv.org/pdf/2004.07219>`_ datasets
 
 `Example wandb <https://wandb.ai/jakegrigsby/amago-v3-reference/runs/9ab15rr8>`_
 
+|
 
 15. Human-Level Competitive Pokémon: Metamon
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. image:: ../media/metamon_icon.png``
-   :alt: metamon_diagram
+   :alt: metamon_icon
    :width: 100
    :align: left
 
