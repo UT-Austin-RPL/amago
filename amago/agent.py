@@ -3,7 +3,7 @@ Actor-Critic agents and RL objectives.
 """
 
 import itertools
-from typing import Type, Optional, Tuple, Any, List
+from typing import Type, Optional, Tuple, Any, List, Iterable
 
 import torch
 from torch import nn
@@ -222,6 +222,7 @@ class Agent(nn.Module):
         use_multigamma: bool = True,
         actor_type: Type[actor_critic.BaseActorHead] = actor_critic.Actor,
         critic_type: Type[actor_critic.BaseCriticHead] = actor_critic.NCritics,
+        pass_obs_keys_to_actor: Optional[Iterable[str]] = None,
     ):
         super().__init__()
         self.obs_space = obs_space
@@ -293,6 +294,7 @@ class Agent(nn.Module):
         self.target_actor = actor_type(**ac_kwargs)
         # full weight copy to targets
         self.hard_sync_targets()
+        self.pass_obs_keys_to_actor = pass_obs_keys_to_actor or []
 
     @property
     def trainable_params(self):
@@ -364,7 +366,10 @@ class Agent(nn.Module):
             tstep_emb, time_idxs=time_idxs, hidden_state=hidden_state
         )
         # generate action distribution [batch, length, len(self.gammas), d_action]
-        action_dists = self.actor(traj_emb_t)
+        action_dists = self.actor(
+            traj_emb_t,
+            straight_from_obs={k: obs[k] for k in self.pass_obs_keys_to_actor},
+        )
         if sample:
             actions = action_dists.sample()
         else:
@@ -473,7 +478,7 @@ class Agent(nn.Module):
         ## a ~ \pi(s) ##
         ################
         critic_loss = None
-        a_dist = self.actor(s_rep, log_dict=active_log_dict)
+        a_dist = self.actor(s_rep, log_dict=active_log_dict, straight_from_obs={k : batch.obs[k] for k in self.pass_obs_keys_to_actor})
         a_agent = self._sample_k_actions(a_dist, k=K_a)
         assert a_agent.shape == (K_a, B, L, G, D_action)
         if log_step:
@@ -742,6 +747,7 @@ class MultiTaskAgent(Agent):
         use_multigamma: bool = True,
         actor_type: Type[actor_critic.BaseActorHead] = actor_critic.Actor,
         critic_type: Type[actor_critic.BaseCriticHead] = actor_critic.NCriticsTwoHot,
+        pass_obs_keys_to_actor: Optional[Iterable[str]] = None,
     ):
         super().__init__(
             obs_space=obs_space,
@@ -766,6 +772,7 @@ class MultiTaskAgent(Agent):
             popart=popart,
             actor_type=actor_type,
             critic_type=critic_type,
+            pass_obs_keys_to_actor=pass_obs_keys_to_actor,
         )
 
     def _sample_k_actions(self, dist, k: int):
@@ -815,7 +822,7 @@ class MultiTaskAgent(Agent):
         ################
         ## a ~ \pi(s) ##
         ################
-        a_dist = self.actor(s_rep, log_dict=active_log_dict)
+        a_dist = self.actor(s_rep, log_dict=active_log_dict, straight_from_obs={k : batch.obs[k] for k in self.pass_obs_keys_to_actor})
         if self.discrete:
             a_dist = DiscreteLikeContinuous(a_dist)
         if log_step:

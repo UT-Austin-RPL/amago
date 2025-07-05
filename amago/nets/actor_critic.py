@@ -49,7 +49,10 @@ class BaseActorHead(nn.Module, ABC):
         self.actions_differentiable = self.policy_dist.actions_differentiable
 
     def forward(
-        self, state: torch.Tensor, log_dict: Optional[dict] = None
+        self,
+        state: torch.Tensor,
+        log_dict: Optional[dict] = None,
+        straight_from_obs: Optional[dict[str, torch.Tensor]] = None,
     ) -> pyd.Distribution:
         """Compute an action distribution from a state representation.
 
@@ -61,7 +64,9 @@ class BaseActorHead(nn.Module, ABC):
             (e.g. `Discrete` or `TanhGaussian`). Always a pytorch distribution (e.g., `Categorical`)
             where sampled actions would have shape (Batch, Length, Gammas, action_dim).
         """
-        dist_params = self.actor_network_forward(state=state, log_dict=log_dict)
+        dist_params = self.actor_network_forward(
+            state=state, log_dict=log_dict, straight_from_obs=straight_from_obs
+        )
         assert dist_params.ndim == 4
         assert dist_params.shape[-2:] == (
             self.num_gammas,
@@ -71,7 +76,10 @@ class BaseActorHead(nn.Module, ABC):
 
     @abstractmethod
     def actor_network_forward(
-        self, state: torch.Tensor, log_dict: Optional[dict] = None
+        self,
+        state: torch.Tensor,
+        log_dict: Optional[dict] = None,
+        straight_from_obs: Optional[dict[str, torch.Tensor]] = None,
     ) -> torch.Tensor:
         raise NotImplementedError
 
@@ -127,7 +135,10 @@ class Actor(BaseActorHead):
         )
 
     def actor_network_forward(
-        self, state: torch.Tensor, log_dict: Optional[dict] = None
+        self,
+        state: torch.Tensor,
+        log_dict: Optional[dict] = None,
+        straight_from_obs: Optional[dict[str, torch.Tensor]] = None,
     ) -> torch.Tensor:
         dist_params = self.base(state)
         dist_params = rearrange(
@@ -216,7 +227,10 @@ class ResidualActor(BaseActorHead):
 
     @torch.compile
     def actor_network_forward(
-        self, state: torch.Tensor, log_dict: Optional[dict] = None
+        self,
+        state: torch.Tensor,
+        log_dict: Optional[dict] = None,
+        straight_from_obs: Optional[dict[str, torch.Tensor]] = None,
     ) -> torch.Tensor:
         B, L, D = state.shape
         x = self.inp(state)
