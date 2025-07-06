@@ -436,6 +436,7 @@ class Agent(nn.Module):
         ##################
         active_log_dict = self.update_info if log_step else None
         o = self.tstep_encoder(obs=batch.obs, rl2s=batch.rl2s, log_dict=active_log_dict)
+        straight_from_obs = {k : batch.obs[k] for k in self.pass_obs_keys_to_actor}
 
         ###################
         ## Get Organized ##
@@ -479,7 +480,7 @@ class Agent(nn.Module):
         ## a ~ \pi(s) ##
         ################
         critic_loss = None
-        a_dist = self.actor(s_rep, log_dict=active_log_dict, straight_from_obs={k : batch.obs[k] for k in self.pass_obs_keys_to_actor})
+        a_dist = self.actor(s_rep, log_dict=active_log_dict, straight_from_obs=straight_from_obs)
         a_agent = self._sample_k_actions(a_dist, k=K_a)
         assert a_agent.shape == (K_a, B, L, G, D_action)
         if log_step:
@@ -501,7 +502,7 @@ class Agent(nn.Module):
             ################
             with torch.no_grad():
                 # (a ~ pi_target)
-                a_prime_dist = self.target_actor(s_rep) if self.use_target_actor else a_dist
+                a_prime_dist = self.target_actor(s_rep, straight_from_obs=straight_from_obs) if self.use_target_actor else a_dist
                 ap = self._sample_k_actions(a_prime_dist, k=K_c).detach() # a' 
                 assert ap.shape == (K_c, B, L, G, D_action)
                 sp_ap_gp = (s_rep[:, 1:, ...], ap[:, :, 1:, ...]) # (s', a')
@@ -788,6 +789,7 @@ class MultiTaskAgent(Agent):
         ##################
         active_log_dict = self.update_info if log_step else None
         o = self.tstep_encoder(obs=batch.obs, rl2s=batch.rl2s, log_dict=active_log_dict)
+        straight_from_obs = {k : batch.obs[k] for k in self.pass_obs_keys_to_actor}
 
         ###################
         ## Get Organized ##
@@ -823,7 +825,7 @@ class MultiTaskAgent(Agent):
         ################
         ## a ~ \pi(s) ##
         ################
-        a_dist = self.actor(s_rep, log_dict=active_log_dict, straight_from_obs={k : batch.obs[k] for k in self.pass_obs_keys_to_actor})
+        a_dist = self.actor(s_rep, log_dict=active_log_dict, straight_from_obs=straight_from_obs)
         if self.discrete:
             a_dist = DiscreteLikeContinuous(a_dist)
         if log_step:
@@ -837,7 +839,7 @@ class MultiTaskAgent(Agent):
             ################
             with torch.no_grad():
                 if self.use_target_actor:
-                    a_prime_dist = self.target_actor(s_rep)
+                    a_prime_dist = self.target_actor(s_rep, straight_from_obs=straight_from_obs)
                     if self.discrete:
                         a_prime_dist = DiscreteLikeContinuous(a_prime_dist)
                 else:
