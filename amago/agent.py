@@ -289,8 +289,6 @@ class Agent(nn.Module):
         self.critics = critic_type(**ac_kwargs, num_critics=num_critics)
         self.target_critics = critic_type(**ac_kwargs, num_critics=num_critics)
         self.maximized_critics = critic_type(**ac_kwargs, num_critics=num_critics)
-        if self.multibinary:
-            ac_kwargs["cont_dist_kind"] = "multibinary"
         self.actor = actor_type(**ac_kwargs)
         self.target_actor = actor_type(**ac_kwargs)
         # full weight copy to targets
