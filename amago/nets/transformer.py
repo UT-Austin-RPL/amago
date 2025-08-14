@@ -348,6 +348,56 @@ class SlidingWindowFlexAttention(FlexAttention):
 
 
 @gin.configurable
+class ClippedSlidingSinkAttention(FlexAttention):
+    """
+    Sliding-window attention with optional attention sink and logit clipping.
+    """
+
+    def __init__(
+        self,
+        causal: bool,
+        dropout: float,
+        window_size: int = gin.REQUIRED,
+        logit_clip: float = 0.0,
+        sink_size: int = 0,
+        sink_bias: float = 0.0,
+    ):
+        assert window_size > 0, "window_size must be > 0"
+        self.window_size = int(window_size)
+        self.logit_clip = float(logit_clip) if logit_clip is not None else 0.0
+        self.sink_size = int(sink_size)
+        self.sink_bias = float(sink_bias)
+
+        has_sink = self.sink_size > 0
+        has_sink_bias = has_sink and (self.sink_bias != 0.0)
+        clip_active = self.logit_clip > 0.0
+
+        def sliding_window_with_sink_mask_mod(
+            b: int, h: int, q_idx: int, kv_idx: int
+        ) -> bool:
+            dq = q_idx - kv_idx
+            in_window = (dq >= 0) & (dq <= self.window_size)
+            in_sink = (kv_idx < self.sink_size) if has_sink else False
+            return in_window | in_sink
+
+        def score_with_sink_and_clip(
+            score: torch.Tensor, b: int, h: int, q_idx: int, kv_idx: int
+        ) -> torch.Tensor:
+            if has_sink_bias and kv_idx < self.sink_size:
+                score = score + score.new_tensor(self.sink_bias)
+            if clip_active:
+                score = torch.clamp(score, -self.logit_clip, self.logit_clip)
+            return score
+
+        super().__init__(
+            score_mod=score_with_sink_and_clip,
+            mask_mod=sliding_window_with_sink_mask_mod,
+            causal=causal,
+            dropout=dropout,
+        )
+
+
+@gin.configurable
 class SigmaReparam(nn.Linear):
     """SigmaReparam nn.Linear alternative.
 
