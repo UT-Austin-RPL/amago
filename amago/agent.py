@@ -65,6 +65,37 @@ def binary_filter(adv: torch.Tensor, threshold: float = 0.0) -> torch.Tensor:
 
 
 @gin.configurable
+def leaky_relu_filter(
+    adv: torch.Tensor,
+    beta: float = 2.0,
+    tau: float = 1e-2,
+    neg_slope: float = 0.05,
+    target_f0: float = 1e-2,
+    clip_weights_low: Optional[float] = 1e-7,
+    clip_weights_high: Optional[float] = 10.0,
+) -> torch.Tensor:
+    """Weights policy regression data using a leaky relu ramp with f(0)=target_f0.
+
+    Args:
+        adv: Tensor of advantages (Batch, Length, Gammas, 1)
+
+    Keyword Args:
+        beta: Positive scale controlling slope.
+        tau: Advantage hinge location for switching from leak to main slope.
+        neg_slope: Slope for advantages below tau.
+        target_f0: Desired weight at adv=0 (before clipping).
+        clip_weights_low: If provided, clip output weights below this value. Defaults to None.
+        clip_weights_high: If provided, clip output weights above this value. Defaults to None.
+    """
+    bias = target_f0 + neg_slope * tau / beta
+    x = (adv - tau) / beta
+    weights = bias + F.leaky_relu(x, negative_slope=neg_slope)
+    if clip_weights_low is not None or clip_weights_high is not None:
+        weights = torch.clamp(weights, min=clip_weights_low, max=clip_weights_high)
+    return weights
+
+
+@gin.configurable
 def exp_filter(
     adv: torch.Tensor,
     beta: float = 1.0,
@@ -289,8 +320,6 @@ class Agent(nn.Module):
         self.critics = critic_type(**ac_kwargs, num_critics=num_critics)
         self.target_critics = critic_type(**ac_kwargs, num_critics=num_critics)
         self.maximized_critics = critic_type(**ac_kwargs, num_critics=num_critics)
-        if self.multibinary:
-            ac_kwargs["cont_dist_kind"] = "multibinary"
         self.actor = actor_type(**ac_kwargs)
         self.target_actor = actor_type(**ac_kwargs)
         # full weight copy to targets

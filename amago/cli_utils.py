@@ -464,7 +464,6 @@ def make_experiment_learn_only(experiment: amago.Experiment) -> amago.Experiment
     experiment.parallel_actors = 1
     experiment.always_save_latest = True
     experiment.always_load_latest = False
-    experiment.has_dset_edit_rights = True
     return experiment
 
 
@@ -488,6 +487,7 @@ def make_experiment_collect_only(experiment: amago.Experiment) -> amago.Experime
     experiment.epochs = max(experiment.epochs, 1_000_000)
     # do not delete anything from the collection process
     experiment.has_dset_edit_rights = False
+    experiment.init_dsets()
     return experiment
 
 

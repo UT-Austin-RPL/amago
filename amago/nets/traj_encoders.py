@@ -532,6 +532,7 @@ class MambaTrajEncoder(TrajEncoder):
         hidden_state.reset(idxs=dones)
         return hidden_state
 
+    @torch.compile
     def forward(
         self,
         seq: torch.Tensor,
