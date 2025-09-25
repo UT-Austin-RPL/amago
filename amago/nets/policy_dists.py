@@ -138,6 +138,32 @@ class _Categorical(pyd.Categorical):
     def sample(self, *args, **kwargs):
         return super().sample(*args, **kwargs).unsqueeze(-1)
 
+class _MultiDiscrete(pyd.Distribution):
+    """MultiDiscrete distribution that samples multiple independent discrete actions."""
+    
+    def __init__(self, logits_list):
+        super().__init__(validate_args=False)
+        self.categorical_dists = [pyd.Categorical(logits=logits) for logits in logits_list]
+        self.nvec = torch.tensor([len(logits) for logits in logits_list])
+    
+    def sample(self, *args, **kwargs):
+        samples = torch.stack([dist.sample(*args, **kwargs) for dist in self.categorical_dists], dim=-1)
+        return samples
+    
+    def log_prob(self, value):
+        log_probs = torch.stack([
+            dist.log_prob(value[..., i]) 
+            for i, dist in enumerate(self.categorical_dists)
+        ], dim=-1)
+        return log_probs.sum(-1)
+    
+    def entropy(self):
+        entropies = torch.stack([dist.entropy() for dist in self.categorical_dists], dim=-1)
+        return entropies.sum(-1)
+    
+    @property
+    def probs(self):
+        return torch.stack([dist.probs for dist in self.categorical_dists], dim=-2)
 
 class _ShiftedBeta(pyd.TransformedDistribution):
     """Create a Beta distribution on [0,1], then y=2*x - 1 to shift to [-1, 1]"""
@@ -281,6 +307,64 @@ class Discrete(PolicyOutput):
             add_activation_log("Discrete-probs", probs, log_dict)
         return safe_dist
 
+@gin.configurable
+class MultiDiscrete(PolicyOutput):
+    """Generates a multi-discrete distribution over actions.
+    
+    Args:
+        d_action: Total dimension of the flattened one-hot action representation.
+        nvec: List/array of integers specifying the number of choices for each sub-action.
+    
+    Keyword Args:
+        clip_prob_low: Clips action probabilities to this value before renormalizing. Default is 0.001.
+        clip_prob_high: Clips action probabilities to this value before renormalizing. Default is 0.99.
+    """
+    
+    def __init__(
+        self,
+        d_action: int,
+        nvec: list,
+        clip_prob_low: float = 0.001,
+        clip_prob_high: float = 0.99,
+    ):
+        super().__init__(d_action)
+        self.nvec = nvec
+        self.num_sub_actions = len(nvec)
+        self.clip_prob_low = clip_prob_low
+        self.clip_prob_high = clip_prob_high
+    
+    @property
+    def actions_differentiable(self) -> bool:
+        return True
+    
+    @property
+    def is_discrete(self) -> bool:
+        return True
+    
+    @property
+    def input_dimension(self) -> int:
+        return sum(self.nvec)
+    
+    def forward(
+        self, vec: torch.Tensor, log_dict: Optional[dict] = None
+    ) -> _MultiDiscrete:
+        logits_list = torch.split(vec, self.nvec, dim=-1)
+        
+        safe_dists = []
+        for i, logits in enumerate(logits_list):
+            dist = pyd.Categorical(logits=logits)
+            probs = dist.probs
+            clip_probs = probs.clamp(self.clip_prob_low, self.clip_prob_high)
+            safe_probs = clip_probs / clip_probs.sum(-1, keepdims=True).detach()
+            safe_dists.append(pyd.Categorical(probs=safe_probs))
+        
+        combined_dist = _MultiDiscrete([dist.logits for dist in safe_dists])
+        
+        if log_dict is not None:
+            for i, dist in enumerate(safe_dists):
+                add_activation_log(f"MultiDiscrete-probs-{i}", dist.probs, log_dict)
+        
+        return combined_dist
 
 @gin.configurable
 class DiscreteLikeContinuous:

@@ -61,13 +61,16 @@ class POPGym(gym.Wrapper):
     Args:
         env_name: The popgym environment name (e.g., "popgym-MineSweeperMedium-v0").
         truncated_is_done: Whether to consider truncated as a terminal signal (used in value backups). Defaults to True.
+        keep_multidiscrete: Whether to keep MultiDiscrete observation spaces as-is instead of converting to Box. Defaults to False.
     """
 
-    def __init__(self, env_name, truncated_is_done: bool = True):
+    def __init__(self, env_name, truncated_is_done: bool = True, keep_multidiscrete: bool = False):
         str_to_cls = {v["id"]: k for k, v in popgym.envs.ALL.items()}
         env = str_to_cls[env_name]()
         env = Flatten(env)
-        if isinstance(env.action_space, gym.spaces.Discrete | gym.spaces.MultiDiscrete):
+        if isinstance(env.action_space, gym.spaces.Discrete):
+            env = DiscreteAction(env)
+        elif isinstance(env.action_space, gym.spaces.MultiDiscrete) and not keep_multidiscrete:
             env = DiscreteAction(env)
         if isinstance(env.observation_space, gym.spaces.Discrete):
             env = _DiscreteToBox(env)
@@ -102,10 +105,11 @@ class POPGymAMAGO(AMAGOEnv):
     Args:
         env_name: The popgym environment name (e.g., "popgym-MineSweeperMedium-v0").
         truncated_is_done: Whether to consider truncated as a terminal signal (used in value backups). Defaults to True.
+        keep_multidiscrete: Whether to keep MultiDiscrete observation spaces as-is instead of converting to Box. Defaults to False.
     """
 
-    def __init__(self, env_name: str, truncated_is_done: bool = True):
-        env = POPGym(env_name, truncated_is_done=truncated_is_done)
+    def __init__(self, env_name: str, truncated_is_done: bool = True, keep_multidiscrete: bool = False):
+        env = POPGym(env_name, truncated_is_done=truncated_is_done, keep_multidiscrete=keep_multidiscrete)
         super().__init__(env, env_name=env_name)
 
 
@@ -121,6 +125,7 @@ class MultiDomainPOPGym(gym.Env):
 
     Args:
         warmup_episodes: The number of episodes to play before the attempt that "counts" towards the total return.
+        keep_multidiscrete: Whether to keep MultiDiscrete observation spaces as-is instead of converting to Box. Defaults to False.
     """
 
     mt_names = [
@@ -154,25 +159,45 @@ class MultiDomainPOPGym(gym.Env):
         "MineSweeperEasy",  # 16, 3
     ]
 
-    def __init__(self, warmup_episodes: int = 1):
+    def __init__(self, warmup_episodes: int = 1, keep_multidiscrete: bool = False):
         self.warmup_episodes = warmup_episodes
+        self.keep_multidiscrete = keep_multidiscrete
         self.name_to_env = {}
         for cls, id_dict in popgym.envs.ALL.items():
             raw_name = id_dict["id"].split("-")[1]
             if raw_name in self.mt_names:
                 env = cls()
                 env = Flatten(env)
-                if isinstance(
-                    env.action_space, gym.spaces.Discrete | gym.spaces.MultiDiscrete
-                ):
+                if isinstance(env.action_space, gym.spaces.Discrete):
+                    env = DiscreteAction(env)
+                elif isinstance(env.action_space, gym.spaces.MultiDiscrete) and not keep_multidiscrete:
                     env = DiscreteAction(env)
                 if isinstance(env.observation_space, gym.spaces.Discrete):
                     env = _DiscreteToBox(env)
                 elif isinstance(env.observation_space, gym.spaces.MultiDiscrete):
                     env = _MultiDiscreteToBox(env)
                 self.name_to_env[raw_name] = env
+        
+        if keep_multidiscrete:
+            max_nvec = []
+            for env in self.name_to_env.values():
+                if isinstance(env.action_space, gym.spaces.MultiDiscrete):
+                    if not max_nvec:
+                        max_nvec = list(env.action_space.nvec)
+                    else:
+                        for i in range(min(len(max_nvec), len(env.action_space.nvec))):
+                            max_nvec[i] = max(max_nvec[i], env.action_space.nvec[i])
+                        if len(env.action_space.nvec) > len(max_nvec):
+                            max_nvec.extend(env.action_space.nvec[len(max_nvec):])
+            
+            if max_nvec:
+                self.action_space = gym.spaces.MultiDiscrete(max_nvec)
+            else:
+                self.action_space = gym.spaces.Discrete(26)
+        else:
+            self.action_space = gym.spaces.Discrete(26)
+        
         self.observation_space = gym.spaces.Box(low=-5.0, high=5.0, shape=(26 + 4,))
-        self.action_space = gym.spaces.Discrete(26)
         self.reset()
 
     def reset(self, *args, **kwargs):
@@ -200,9 +225,25 @@ class MultiDomainPOPGym(gym.Env):
 
     def step(self, action):
         self.timer += 1
-        valid_action = action < self.current_action_size
-        if not valid_action:
-            action = random.randrange(0, self.current_action_size)
+        
+        if isinstance(self.current_env.action_space, gym.spaces.MultiDiscrete):
+            valid_action = True
+            if isinstance(action, np.ndarray) and len(action) >= len(self.current_env.action_space.nvec):
+                for i in range(len(self.current_env.action_space.nvec)):
+                    if action[i] >= self.current_env.action_space.nvec[i]:
+                        valid_action = False
+                        break
+                if valid_action:
+                    action = action[:len(self.current_env.action_space.nvec)]
+                else:
+                    action = np.array([random.randrange(0, n) for n in self.current_env.action_space.nvec])
+            else:
+                valid_action = False
+                action = np.array([random.randrange(0, n) for n in self.current_env.action_space.nvec])
+        else:
+            valid_action = action < self.current_action_size
+            if not valid_action:
+                action = random.randrange(0, self.current_action_size)
 
         if self.reset_next_step:
             next_raw_obs, info = self.current_env.reset()
@@ -230,10 +271,11 @@ class MultiDomainPOPGymAMAGO(AMAGOEnv):
 
     Args:
         warmup_episodes: The number of episodes to play before the attempt that "counts" towards the total return.
+        keep_multidiscrete: Whether to keep MultiDiscrete observation spaces as-is instead of converting to Box. Defaults to False.
     """
 
-    def __init__(self, warmup_episodes: int = 1):
-        env = MultiDomainPOPGym(warmup_episodes)
+    def __init__(self, warmup_episodes: int = 1, keep_multidiscrete: bool = False):
+        env = MultiDomainPOPGym(warmup_episodes, keep_multidiscrete=keep_multidiscrete)
         super().__init__(env, env_name="TODO")
 
     @property

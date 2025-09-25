@@ -263,12 +263,17 @@ class Agent(nn.Module):
         self.action_space = action_space
         self.multibinary = False
         self.discrete = False
+        self.multidiscrete = False
         if isinstance(self.action_space, gym.spaces.Discrete):
             self.action_dim = self.action_space.n
             self.discrete = True
         elif isinstance(self.action_space, gym.spaces.MultiBinary):
             self.action_dim = self.action_space.n
             self.multibinary = True
+        elif isinstance(self.action_space, gym.spaces.MultiDiscrete):
+            self.action_dim = self.action_space.nvec.sum()
+            self.multidiscrete = True
+            self.nvec = self.action_space.nvec
         elif isinstance(self.action_space, gym.spaces.Box):
             self.action_dim = self.action_space.shape[-1]
         else:
@@ -315,6 +320,7 @@ class Agent(nn.Module):
             "state_dim": self.traj_encoder.emb_dim,
             "action_dim": self.action_dim,
             "discrete": self.discrete,
+            "multidiscrete": self.multidiscrete,
             "gammas": self.gammas,
         }
         self.critics = critic_type(**ac_kwargs, num_critics=num_critics)
@@ -405,17 +411,31 @@ class Agent(nn.Module):
         else:
             if self.discrete:
                 actions = torch.argmax(action_dists.probs, dim=-1, keepdim=True)
+            elif self.multidiscrete:
+                actions = torch.stack([
+                    torch.argmax(action_dists.probs[..., i, :], dim=-1) 
+                    for i in range(len(self.nvec))
+                ], dim=-1)
             else:
                 actions = action_dists.mean
         # get intended gamma distribution (always in -1 idx)
         actions = actions[..., -1, :]
-        dtype = torch.uint8 if (self.discrete or self.multibinary) else torch.float32
+        dtype = torch.int32 if self.multidiscrete else (torch.uint8 if (self.discrete or self.multibinary) else torch.float32)
         return actions.to(dtype=dtype), hidden_state
 
     def _sample_k_actions(self, dist, k: int):
         if self.discrete:
             assert k == 1, "There is no need to sample multiple discrete actions"
             a = dist.probs.unsqueeze(0)
+        elif self.multidiscrete:
+            assert k == 1, "There is no need to sample multiple discrete actions"
+            samples = dist.sample().unsqueeze(0)
+            a = torch.zeros(1, *samples.shape[:-1], self.action_dim, device=samples.device)
+            offset = 0
+            for i, nvec in enumerate(self.nvec):
+                indices = samples[..., i] + offset
+                a.scatter_(-1, indices.unsqueeze(-1), 1.0)
+                offset += nvec
         elif self.actor.actions_differentiable:
             a = torch.stack([dist.rsample() for _ in range(k)], dim=0)
         else:
@@ -474,7 +494,15 @@ class Agent(nn.Module):
         # padded actions are `self.pad_val` which will be invalid;
         # clip to valid range now and mask the loss later
         a = batch.actions
-        a = a.clamp(0, 1.0) if self.discrete else a.clamp(-1., 1.)
+        if self.discrete:
+            a = a.clamp(0, 1.0)
+        elif self.multidiscrete:
+            clamped_actions = []
+            for i, nvec in enumerate(self.nvec):
+                clamped_actions.append(a[..., i:i+1].clamp(0, nvec-1))
+            a = torch.cat(clamped_actions, dim=-1)
+        else:
+            a = a.clamp(-1., 1.)
         _B, _L, D_action = a.shape
         assert _L == L - 1
         G = len(self.gammas)
@@ -604,6 +632,15 @@ class Agent(nn.Module):
                 logp_a = a_dist.log_prob(a_buffer.argmax(-1)).unsqueeze(-1)
             elif self.multibinary:
                 logp_a = a_dist.log_prob(a_buffer).mean(-1, keepdim=True)
+            elif self.multidiscrete:
+                indices = []
+                offset = 0
+                for nvec in self.nvec:
+                    sub_onehot = a_buffer[..., offset:offset+nvec]
+                    indices.append(sub_onehot.argmax(-1))
+                    offset += nvec
+                action_indices = torch.stack(indices, dim=-1)
+                logp_a = a_dist.log_prob(action_indices).unsqueeze(-1)
             else:
                 logp_a = a_dist.log_prob(a_buffer).sum(-1, keepdim=True)
             # throw away last action that was a duplicate

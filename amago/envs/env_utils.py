@@ -180,3 +180,9 @@ class ContinuousActionWrapper(gym.ActionWrapper):
 class MultiBinaryActionWrapper(gym.ActionWrapper):
     def action(self, action):
         return action.astype(np.int8)
+    
+class MultiDiscreteActionWrapper(gym.ActionWrapper):
+    def action(self, action):
+        if isinstance(action, np.ndarray) and action.ndim == 2:
+            return np.squeeze(action, axis=0) if action.shape[0] == 1 else action
+        return action.astype(np.int32)

@@ -20,6 +20,7 @@ from amago.nets.ff import MLP, Normalization
 from amago.nets.utils import activation_switch, symlog, symexp
 from amago.nets.policy_dists import (
     Discrete,
+    MultiDiscrete,
     PolicyOutput,
     TanhGaussian,
 )
@@ -32,6 +33,7 @@ class BaseActorHead(nn.Module, ABC):
         state_dim: int,
         action_dim: int,
         discrete: bool,
+        multidiscrete: bool,
         gammas: torch.Tensor,
         continuous_dist_type: Type[PolicyOutput],
     ):
@@ -39,10 +41,16 @@ class BaseActorHead(nn.Module, ABC):
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.discrete = discrete
+        self.multidiscrete = multidiscrete
         self.gammas = gammas
         self.num_gammas = len(self.gammas)
         # determine policy output
-        dist_type = Discrete if self.discrete else continuous_dist_type
+        if self.discrete:
+            dist_type = Discrete
+        elif self.multidiscrete:
+            dist_type = lambda d_action: MultiDiscrete(d_action=d_action, nvec=self.nvec)
+        else:
+            dist_type = continuous_dist_type
         self.policy_dist = dist_type(d_action=self.action_dim)
         assert isinstance(self.policy_dist, PolicyOutput)
         assert self.policy_dist.is_discrete == self.discrete
@@ -110,6 +118,7 @@ class Actor(BaseActorHead):
         state_dim: int,
         action_dim: int,
         discrete: bool,
+        multidiscrete: bool,
         gammas: torch.Tensor,
         n_layers: int = 2,
         d_hidden: int = 256,
@@ -121,6 +130,7 @@ class Actor(BaseActorHead):
             state_dim=state_dim,
             action_dim=action_dim,
             discrete=discrete,
+            multidiscrete=multidiscrete,
             gammas=gammas,
             continuous_dist_type=continuous_dist_type,
         )
@@ -176,6 +186,7 @@ class ResidualActor(BaseActorHead):
         state_dim: int,
         action_dim: int,
         discrete: bool,
+        multidiscrete: bool,
         gammas: torch.Tensor,
         feature_dim: int = 256,
         residual_ff_dim: int = 512,
@@ -189,6 +200,7 @@ class ResidualActor(BaseActorHead):
             state_dim=state_dim,
             action_dim=action_dim,
             discrete=discrete,
+            multidiscrete=multidiscrete,
             gammas=gammas,
             continuous_dist_type=continuous_dist_type,
         )
@@ -308,6 +320,7 @@ class BaseCriticHead(nn.Module, ABC):
         state_dim: int,
         action_dim: int,
         discrete: bool,
+        multidiscrete: bool,
         gammas: torch.Tensor,
         num_critics: int,
     ):
@@ -315,6 +328,7 @@ class BaseCriticHead(nn.Module, ABC):
         self.state_dim = state_dim
         self.action_dim = action_dim
         self.discrete = discrete
+        self.multidiscrete = multidiscrete
         self.gammas = gammas
         self.num_gammas = len(self.gammas)
         self.num_critics = num_critics
@@ -359,6 +373,7 @@ class NCritics(BaseCriticHead):
         state_dim: int,
         action_dim: int,
         discrete: bool,
+        multidiscrete: bool,
         gammas: torch.Tensor,
         num_critics: int,
         d_hidden: int = 256,
@@ -370,6 +385,7 @@ class NCritics(BaseCriticHead):
             state_dim=state_dim,
             action_dim=action_dim,
             discrete=discrete,
+            multidiscrete=multidiscrete,
             gammas=gammas,
             num_critics=num_critics,
         )
@@ -470,6 +486,7 @@ class NCriticsTwoHot(BaseCriticHead):
         action_dim: int,
         gammas: torch.Tensor,
         discrete: bool,
+        multidiscrete: bool,
         num_critics: int,
         d_hidden: int = 256,
         n_layers: int = 2,
@@ -485,6 +502,7 @@ class NCriticsTwoHot(BaseCriticHead):
             state_dim=state_dim,
             action_dim=action_dim,
             discrete=discrete,
+            multidiscrete=multidiscrete,
             gammas=gammas,
             num_critics=num_critics,
         )

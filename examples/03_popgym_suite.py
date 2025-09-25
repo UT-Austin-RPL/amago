@@ -15,6 +15,11 @@ def add_cli(parser):
         action="store_true",
         help="Activate 'MultiDomain' POPGym, where agents play 27 POPGym games at the same time in 1-shot format (2 episodes, second one counts).",
     )
+    parser.add_argument(
+        "--multidiscrete",
+        action="store_true",
+        help="Preserve MultiDiscrete action spaces instead of converting to Discrete.",
+    )
     return parser
 
 
@@ -75,12 +80,12 @@ if __name__ == "__main__":
     for trial in range(args.trials):
         run_name = group_name + f"_trial_{trial}"
         if args.multidomain:
-            make_train_env = lambda: MultiDomainPOPGymAMAGO()
+            make_train_env = lambda: MultiDomainPOPGymAMAGO(keep_multidiscrete=args.multidiscrete)
         else:
             # in order to match the pre-gymnasium version of popgym (done instead of terminated/truncated),
             # we need to set terminated = terminated or truncated
             make_train_env = lambda: POPGymAMAGO(
-                f"popgym-{args.env}-v0", truncated_is_done=True
+                f"popgym-{args.env}-v0", truncated_is_done=True, keep_multidiscrete=args.multidiscrete
             )
         experiment = cli_utils.create_experiment_from_cli(
             args,

@@ -20,6 +20,7 @@ from .env_utils import (
     ContinuousActionWrapper,
     DiscreteActionWrapper,
     MultiBinaryActionWrapper,
+    MultiDiscreteActionWrapper,
     space_convert,
 )
 from .exploration import ExplorationWrapper
@@ -57,6 +58,10 @@ class AMAGOEnv(gym.Wrapper):
             self.env = MultiBinaryActionWrapper(self.env)
             self.action_size = self.action_space.n
             self.action_dtype = np.uint8
+        elif self.multidiscrete:
+            self.env = MultiDiscreteActionWrapper(self.env)
+            self.action_size = self.action_space.nvec.sum()
+            self.action_dtype = np.int32
         else:
             self.env = ContinuousActionWrapper(self.env)
             self.action_size = self.action_space.shape[-1]
@@ -92,6 +97,13 @@ class AMAGOEnv(gym.Wrapper):
             # action as one-hot
             action_rep = np.zeros((self.batched_envs, self.action_size), dtype=np.uint8)
             action_rep[self._batch_idxs, action[..., 0]] = 1
+        elif self.multidiscrete:
+            # action as concatenated one-hots for each sub-action
+            action_rep = np.zeros((self.batched_envs, self.action_size), dtype=self.action_dtype)
+            offset = 0
+            for i, (sub_action, nvec) in enumerate(zip(action.T, self.action_space.nvec)):
+                action_rep[self._batch_idxs, offset + sub_action.flatten()] = 1
+                offset += nvec
         else:
             action_rep = action.copy()
             if self.batched_envs == 1 and action_rep.ndim == 1:

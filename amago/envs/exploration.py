@@ -106,6 +106,7 @@ class BilevelEpsilonGreedy(ExplorationWrapper):
         self.start_global_slope = (eps_start_start - eps_start_end) / steps_anneal
         self.end_global_slope = (eps_end_start - eps_end_end) / steps_anneal
         self.discrete = isinstance(self.env.action_space, gym.spaces.Discrete)
+        self.multidiscrete = isinstance(self.env.action_space, gym.spaces.MultiDiscrete)
         assert not isinstance(
             self.env.action_space, gym.spaces.MultiBinary
         ), "Use a custom wrapper for MultiBinary actions"
@@ -159,6 +160,16 @@ class BilevelEpsilonGreedy(ExplorationWrapper):
                 use_random * random_action + (1 - use_random) * action
             ).astype(np.uint8)
             assert expl_action.shape == (self.batched_envs, 1)
+        elif self.multidiscrete:
+            nvec = self.env.action_space.nvec
+            random_actions = []
+            for i, n in enumerate(nvec):
+                random_sub = self.rng.integers(0, n, size=(self.batched_envs,))
+                use_random = self.rng.random(self.batched_envs) <= noise.flatten()
+                sub_action = np.where(use_random, random_sub, action[:, i])
+                random_actions.append(sub_action)
+            expl_action = np.stack(random_actions, axis=1).astype(np.int32)
+            assert expl_action.shape == (self.batched_envs, len(nvec))
         else:
             # random noise (TD3-style)
             expl_action = action + noise[:, np.newaxis] * self.rng.standard_normal(
