@@ -34,6 +34,7 @@ class BaseActorHead(nn.Module, ABC):
         discrete: bool,
         gammas: torch.Tensor,
         continuous_dist_type: Type[PolicyOutput],
+        discrete_dist_type: Type[PolicyOutput] = Discrete,
     ):
         super().__init__()
         self.state_dim = state_dim
@@ -42,7 +43,7 @@ class BaseActorHead(nn.Module, ABC):
         self.gammas = gammas
         self.num_gammas = len(self.gammas)
         # determine policy output
-        dist_type = Discrete if self.discrete else continuous_dist_type
+        dist_type = discrete_dist_type if self.discrete else continuous_dist_type
         self.policy_dist = dist_type(d_action=self.action_dim)
         assert isinstance(self.policy_dist, PolicyOutput)
         assert self.policy_dist.is_discrete == self.discrete
@@ -116,6 +117,7 @@ class Actor(BaseActorHead):
         activation: str = "leaky_relu",
         dropout_p: float = 0.0,
         continuous_dist_type: Type[PolicyOutput] = TanhGaussian,
+        discrete_dist_type: Type[PolicyOutput] = Discrete,
     ):
         super().__init__(
             state_dim=state_dim,
@@ -123,6 +125,7 @@ class Actor(BaseActorHead):
             discrete=discrete,
             gammas=gammas,
             continuous_dist_type=continuous_dist_type,
+            discrete_dist_type=discrete_dist_type,
         )
         # build base network
         self.base = MLP(
@@ -184,6 +187,7 @@ class ResidualActor(BaseActorHead):
         normalization: str = "layer",
         dropout_p: float = 0.0,
         continuous_dist_type: Type[PolicyOutput] = TanhGaussian,
+        discrete_dist_type: Type[PolicyOutput] = Discrete,
     ):
         super().__init__(
             state_dim=state_dim,
@@ -191,6 +195,7 @@ class ResidualActor(BaseActorHead):
             discrete=discrete,
             gammas=gammas,
             continuous_dist_type=continuous_dist_type,
+            discrete_dist_type=discrete_dist_type,
         )
         self.inp = MLP(
             d_inp=state_dim,
