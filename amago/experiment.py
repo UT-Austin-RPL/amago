@@ -16,7 +16,6 @@ from termcolor import colored
 import torch
 from torch.utils.data import DataLoader
 import numpy as np
-from einops import repeat
 import gymnasium as gym
 from accelerate import Accelerator, DistributedDataParallelKwargs
 from accelerate.utils import tqdm
@@ -35,9 +34,8 @@ from .loading import (
     Batch,
     RLDataset,
     RLData_pad_collate,
-    MAGIC_PAD_VAL,
 )
-from .agent import Agent
+from .agent import BaseAgent
 from .nets import TstepEncoder, TrajEncoder
 
 
@@ -55,7 +53,7 @@ class Experiment:
     :param dataset: :py:class:`~amago.loading.RLDataset` for loading training sequences.
     :param tstep_encoder_type: a type of :py:class:`~amago.nets.tstep_encoders.TstepEncoder` (will be created with default kwargs --- edit via gin).
     :param traj_encoder_type: a type of :py:class:`~amago.nets.traj_encoders.TrajEncoder` (will be created with default kwargs --- edit via gin).
-    :param agent_type: a type of :py:class:`~amago.agent.Agent` (will be created with default kwargs --- edit via gin).
+    :param agent_type: a type of :py:class:`~amago.agent.BaseAgent` (will be created with default kwargs --- edit via gin).
     :param make_train_env: Callable returning an :py:class:`~amago.envs.amago_env.AMAGOEnv`. If not a list, repeated ``parallel_actors`` times. List gives manual assignment across actors.
     :param make_val_env: Like ``make_train_env``, but only used for evaluation (trajectories never saved).
     :param val_timesteps_per_epoch: Number of steps per parallel environment for evaluation. Determines metric sample size. Should be enough time for at least one episode to finish per actor.
@@ -109,7 +107,6 @@ class Experiment:
     :param batch_size: Batch size *per GPU* (in sequences). **Default:** 24.
     :param batches_per_update: Number of batches to accumulate gradients over before optimizer update. **Default:** 1.
     :param learning_rate: Optimizer learning rate. **Default:** 1e-4 (defaults to AdamW).
-    :param critic_loss_weight: Weight for critic loss vs actor loss in encoders. **Default:** 10.
     :param lr_warmup_steps: Number of warmup steps for learning rate scheduler. **Default:** 500.
     :param grad_clip: Gradient norm clipping value. **Default:** 1.0.
     :param l2_coeff: L2 regularization coefficient (AdamW). **Default:** 1e-3.
@@ -125,7 +122,7 @@ class Experiment:
     dataset: RLDataset
     tstep_encoder_type: type[TstepEncoder]
     traj_encoder_type: type[TrajEncoder]
-    agent_type: type[Agent]
+    agent_type: type[BaseAgent]
     val_timesteps_per_epoch: int
 
     #################
@@ -179,7 +176,6 @@ class Experiment:
     batch_size: int = 24
     batches_per_update: int = 1
     learning_rate: float = 1e-4
-    critic_loss_weight: float = 10.0
     lr_warmup_steps: int = 500
     grad_clip: float = 1.0
     l2_coeff: float = 1e-3
@@ -484,14 +480,14 @@ class Experiment:
                 },
             )
 
-    def init_optimizer(self, policy: Agent) -> torch.optim.Optimizer:
+    def init_optimizer(self, policy: BaseAgent) -> torch.optim.Optimizer:
         """Defines the optimizer.
 
         Override to switch from AdamW.
 
         Returns:
             torch.optim.Optimizer in charge of updating the Agent's parameters
-                (Agent.trainable_params)
+                (BaseAgent.trainable_params)
         """
         adamw_kwargs = dict(lr=self.learning_rate, weight_decay=self.l2_coeff)
         return torch.optim.AdamW(policy.trainable_params, **adamw_kwargs)
@@ -507,7 +503,7 @@ class Experiment:
             "max_seq_len": self.max_seq_len,
         }
         policy = self.agent_type(**policy_kwargs)
-        assert isinstance(policy, Agent)
+        assert isinstance(policy, BaseAgent)
         optimizer = self.init_optimizer(policy)
         lr_schedule = utils.get_constant_schedule_with_warmup(
             optimizer=optimizer, num_warmup_steps=self.lr_warmup_steps
@@ -519,7 +515,7 @@ class Experiment:
         self.grad_update_counter = 0
 
     @property
-    def policy(self) -> Agent:
+    def policy(self) -> BaseAgent:
         """Returns the current Agent policy free from the accelerator wrapper."""
         return self.accelerator.unwrap_model(self.policy_aclr)
 
@@ -839,83 +835,6 @@ class Experiment:
             | bottom_quintile_ret_per_env
         )
 
-    def edit_actor_mask(
-        self, batch: Batch, actor_loss: torch.FloatTensor, pad_mask: torch.BoolTensor
-    ) -> torch.BoolTensor:
-        """Customize the actor loss mask.
-
-        Args:
-            batch: The batch of data.
-            actor_loss: The unmasked actor loss. Shape: (Batch, Length, Num Gammas, 1)
-            pad_mask: The default mask. True where the sequence was not padded out of the
-                dataloader.
-
-        Returns:
-            The mask. True where the actor loss should count, False where it should be ignored.
-        """
-        return pad_mask
-
-    def edit_critic_mask(
-        self, batch: Batch, critic_loss: torch.FloatTensor, pad_mask: torch.BoolTensor
-    ) -> torch.BoolTensor:
-        """Customize the critic loss mask.
-
-        Args:
-            batch: The batch of data.
-            critic_loss: The unmasked critic loss. Shape: (Batch, Length, Num Critics, Num
-                Gammas, 1)
-            pad_mask: The default mask. True where the sequence was not padded out of the
-                dataloader.
-
-        Returns:
-            The mask. True where the critic loss should count, False where it should be ignored.
-        """
-        return pad_mask
-
-    def compute_loss(self, batch: Batch, log_step: bool) -> dict:
-        """Core computation of the actor and critic RL loss terms from a `Batch` of data.
-
-        Args:
-            batch: The batch of data.
-            log_step: Whether to compute extra metrics for wandb logging.
-
-        Returns:
-            dict: loss terms and any logging metrics. "Actor Loss", "Critic Loss", "Sequence
-                Length", "Batch Size (in Timesteps)", "Unmasked Batch Size (in Timesteps)" are
-                always provided. Additional keys are determined by what is logged in the
-                Agent.forward method.
-        """
-        # Agent.forward handles most of the work
-        critic_loss, actor_loss = self.policy_aclr(batch, log_step=log_step)
-        update_info = self.policy.update_info
-        B, L_1, G, _ = actor_loss.shape
-        C = len(self.policy.critics)
-
-        # mask sequence losses
-        state_mask = (~((batch.rl2s == MAGIC_PAD_VAL).all(-1, keepdim=True))).bool()
-        critic_state_mask = repeat(state_mask[:, 1:, ...], f"B L 1 -> B L {C} {G} 1")
-        actor_state_mask = repeat(state_mask[:, 1:, ...], f"B L 1 -> B L {G} 1")
-        # hook to allow custom masks
-        actor_state_mask = self.edit_actor_mask(batch, actor_loss, actor_state_mask)
-        critic_state_mask = self.edit_critic_mask(batch, critic_loss, critic_state_mask)
-        batch_size = B * L_1
-        unmasked_batch_size = actor_state_mask[..., 0, 0].sum()
-        masked_actor_loss = utils.masked_avg(actor_loss, actor_state_mask)
-        if isinstance(critic_loss, torch.Tensor):
-            masked_critic_loss = utils.masked_avg(critic_loss, critic_state_mask)
-        else:
-            assert critic_loss is None
-            masked_critic_loss = 0.0
-
-        # all of this is logged
-        return {
-            "Critic Loss": masked_critic_loss,
-            "Actor Loss": masked_actor_loss,
-            "Sequence Length": L_1 + 1,
-            "Batch Size (in Timesteps)": batch_size,
-            "Unmasked Batch Size (in Timesteps)": unmasked_batch_size,
-        } | update_info
-
     def get_grad_norms(self):
         """Get gradient norms for logging."""
         ggn = utils.get_grad_norm
@@ -936,12 +855,12 @@ class Experiment:
             log_step: Whether to compute extra metrics for wandb logging.
 
         Returns:
-            dict: metrics from the compute_loss method.
+            dict: loss terms and any logging metrics from Agent.forward.
         """
         with self.accelerator.accumulate(self.policy_aclr):
             self.optimizer.zero_grad()
-            l = self.compute_loss(batch, log_step=log_step)
-            loss = l["Actor Loss"] + self.critic_loss_weight * l["Critic Loss"]
+            loss = self.policy_aclr(batch, log_step=log_step)
+            l = {"Loss": loss} | self.policy.update_info
             self.accelerator.backward(loss)
             if self.accelerator.sync_gradients:
                 self.accelerator.clip_grad_norm_(
