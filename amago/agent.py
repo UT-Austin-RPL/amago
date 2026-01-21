@@ -73,6 +73,7 @@ def leaky_relu_filter(
     target_f0: float = 1e-2,
     clip_weights_low: Optional[float] = 1e-7,
     clip_weights_high: Optional[float] = 10.0,
+    add_binary: bool = True,
 ) -> torch.Tensor:
     """Weights policy regression data using a leaky relu ramp with f(0)=target_f0.
 
@@ -92,6 +93,8 @@ def leaky_relu_filter(
     weights = bias + F.leaky_relu(x, negative_slope=neg_slope)
     if clip_weights_low is not None or clip_weights_high is not None:
         weights = torch.clamp(weights, min=clip_weights_low, max=clip_weights_high)
+    if add_binary:
+        weights += binary_filter(adv)
     return weights
 
 
@@ -630,6 +633,8 @@ class Agent(nn.Module):
             stats[f"Q(s, a) (global mean, rescaled) gamma={gamma:.3f}"] = masked_avg(
                 q_s_a_g, i
             )
+            print("here")
+            stats["Q Sequence"] = q_s_a_g
             stats[f"Q(s,a) (global mean, raw scale) gamma={gamma:.3f}"] = masked_avg(
                 raw_q_s_a_g, i
             )
