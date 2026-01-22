@@ -155,6 +155,7 @@ class BaseAgent(nn.Module, abc.ABC):
         self.rl2_space = rl2_space
         self.action_space = action_space
         self.max_seq_len = max_seq_len
+        self.pad_val = MAGIC_PAD_VAL
 
         self.multibinary = False
         self.discrete = False
@@ -423,7 +424,6 @@ class Agent(BaseAgent):
         )
 
         self.reward_multiplier = reward_multiplier
-        self.pad_val = MAGIC_PAD_VAL
         self.fake_filter = fake_filter
         self.num_actions_for_value_in_critic_loss = num_actions_for_value_in_critic_loss
         self.num_actions_for_value_in_actor_loss = num_actions_for_value_in_actor_loss

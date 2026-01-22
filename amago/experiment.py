@@ -835,18 +835,6 @@ class Experiment:
             | bottom_quintile_ret_per_env
         )
 
-    def get_grad_norms(self):
-        """Get gradient norms for logging."""
-        ggn = utils.get_grad_norm
-        pi = self.policy
-        grads = {
-            "Actor Grad Norm": ggn(pi.actor),
-            "Critic Grad Norm": ggn(pi.critics),
-            "TrajEncoder Grad Norm": ggn(pi.traj_encoder),
-            "TstepEncoder Grad Norm": ggn(pi.tstep_encoder),
-        }
-        return grads
-
     def train_step(self, batch: Batch, log_step: bool):
         """Take a single training step on a `batch` of data.
 
@@ -871,7 +859,7 @@ class Experiment:
                 if log_step:
                     l.update(
                         {"Learning Rate": self.lr_schedule.get_last_lr()[0]}
-                        | self.get_grad_norms()
+                        | self.policy.get_grad_norms()
                     )
             self.optimizer.step()
             self.lr_schedule.step()
