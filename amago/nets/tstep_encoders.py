@@ -160,8 +160,11 @@ class FFTstepEncoder(TstepEncoder):
         n_layers: Number of layers in the MLP. Defaults to 2.
         d_hidden: Dimension of the hidden layers. Defaults to 512.
         d_output: Dimension of the output. Defaults to 256.
-        norm: Normalization layer to use. See `nets.ff.Normalization` for options.
-            Defaults to "layer".
+        norm: Normalization layer to use within the MLP (after every layer
+            excluding the final output activation). See `nets.ff.Normalization`
+            for options. Defaults to None.
+        out_norm: Normalization layer to use on the final output. Defaults to
+            "layer" (LayerNorm).
         activation: Activation function to use. See `nets.utils.activation_switch`
             for options. Defaults to "leaky_relu".
         hide_rl2s: Whether to ignore the previous action and reward features (but
@@ -181,7 +184,8 @@ class FFTstepEncoder(TstepEncoder):
         n_layers: int = 2,
         d_hidden: int = 512,
         d_output: int = 256,
-        norm: str = "layer",
+        norm: Optional[str] = None,
+        out_norm: str = "layer",
         activation: str = "leaky_relu",
         hide_rl2s: bool = False,
         normalize_inputs: bool = True,
@@ -203,8 +207,9 @@ class FFTstepEncoder(TstepEncoder):
             n_layers=n_layers,
             d_output=d_output,
             activation=activation,
+            normalization=norm,
         )
-        self.out_norm = ff.Normalization(norm, d_output)
+        self.out_norm = ff.Normalization(out_norm, d_output)
         self._emb_dim = d_output
 
     def _cat_flattened_obs(self, obs):

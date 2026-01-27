@@ -211,6 +211,7 @@ def activation_switch(activation: str) -> callable:
             - "relu" (ReLU)
             - "gelu" (GeLU)
             - "adaptive" (SlowAdaptiveRational)
+            - "mish" (Mish)
 
     Returns:
         The activation function (callable).
@@ -226,5 +227,7 @@ def activation_switch(activation: str) -> callable:
         return F.gelu
     elif activation == "adaptive":
         return SlowAdaptiveRational()
+    elif activation == "mish":
+        return F.mish
     else:
         raise ValueError(f"Unrecognized `activation` func: {activation}")
