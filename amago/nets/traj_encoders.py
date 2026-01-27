@@ -14,6 +14,53 @@ from amago.nets import ff, transformer, utils
 from amago.utils import amago_warning
 
 
+##############################
+## TrajEncoder Registration ##
+##############################
+
+_TRAJ_ENCODER_REGISTRY: dict[str, type] = {}
+
+
+def register_traj_encoder(name: str):
+    """Decorator to register a TrajEncoder class under a shortcut name.
+
+    Args:
+        name: The shortcut name to register the encoder under (e.g., "transformer", "ff").
+
+    Example:
+        @gin.configurable
+        @register_traj_encoder("my_encoder")
+        class MyCustomTrajEncoder(TrajEncoder):
+            ...
+    """
+
+    def decorator(cls):
+        if name in _TRAJ_ENCODER_REGISTRY:
+            raise ValueError(
+                f"TrajEncoder '{name}' is already registered to {_TRAJ_ENCODER_REGISTRY[name]}. "
+                f"Cannot re-register to {cls}."
+            )
+        _TRAJ_ENCODER_REGISTRY[name] = cls
+        return cls
+
+    return decorator
+
+
+def get_traj_encoder_cls(name: str) -> type:
+    """Look up a registered TrajEncoder class by its shortcut name."""
+    if name not in _TRAJ_ENCODER_REGISTRY:
+        available = list(_TRAJ_ENCODER_REGISTRY.keys())
+        raise KeyError(
+            f"TrajEncoder '{name}' is not registered. Available: {available}"
+        )
+    return _TRAJ_ENCODER_REGISTRY[name]
+
+
+def list_registered_traj_encoders() -> list[str]:
+    """Return a list of all registered TrajEncoder shortcut names."""
+    return list(_TRAJ_ENCODER_REGISTRY.keys())
+
+
 class TrajEncoder(nn.Module, ABC):
     """Abstract base class for trajectory encoders.
 
@@ -118,6 +165,7 @@ class TrajEncoder(nn.Module, ABC):
 
 
 @gin.configurable
+@register_traj_encoder("ff")
 class FFTrajEncoder(TrajEncoder):
     """Feed-forward (memory-free) trajectory encoder.
 
@@ -196,6 +244,7 @@ class FFTrajEncoder(TrajEncoder):
 
 
 @gin.configurable
+@register_traj_encoder("rnn")
 class GRUTrajEncoder(TrajEncoder):
     """RNN (GRU) Trajectory Encoder.
 
@@ -254,6 +303,7 @@ class GRUTrajEncoder(TrajEncoder):
 
 
 @gin.configurable
+@register_traj_encoder("transformer")
 class TformerTrajEncoder(TrajEncoder):
     r"""Transformer Trajectory Encoder.
 
@@ -452,6 +502,7 @@ class _MambaHiddenState:
 
 
 @gin.configurable
+@register_traj_encoder("mamba")
 class MambaTrajEncoder(TrajEncoder):
     """Mamba Trajectory Encoder.
 

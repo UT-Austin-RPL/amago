@@ -14,12 +14,33 @@ import wandb
 
 import amago
 from amago import TrajEncoder, TstepEncoder, Agent
+from amago.agent import get_agent_cls, list_registered_agents
+from amago.nets.traj_encoders import get_traj_encoder_cls, list_registered_traj_encoders
+from amago.nets.tstep_encoders import (
+    get_tstep_encoder_cls,
+    list_registered_tstep_encoders,
+)
 from amago.loading import DiskTrajDataset, RLDataset
 from amago.envs.exploration import (
     ExplorationWrapper,
     EpsilonGreedy,
     BilevelEpsilonGreedy,
+    get_exploration_cls,
+    list_registered_explorations,
 )
+
+
+class _LazyChoices:
+    """A helper that defers evaluation of choices until argparse needs them."""
+
+    def __init__(self, list_fn: callable):
+        self._list_fn = list_fn
+
+    def __contains__(self, item):
+        return item in self._list_fn()
+
+    def __iter__(self):
+        return iter(self._list_fn())
 
 
 def add_common_cli(parser: ArgumentParser) -> ArgumentParser:
@@ -45,8 +66,8 @@ def add_common_cli(parser: ArgumentParser) -> ArgumentParser:
         "--agent_type",
         type=str,
         default="agent",
-        choices=["agent", "multitask"],
-        help="Quick switch between default `agent.Agent` and `agent.MultiTaskAgent`. MultiTaskAgent is useful when training on mixed environments with multiple rewards functions.",
+        choices=_LazyChoices(list_registered_agents),
+        help="Quick switch between registered Agent types. See `amago.agent.list_registered_agents()` for options. MultiTaskAgent is useful when training on mixed environments with multiple reward functions.",
     )
     parser.add_argument(
         "--env_mode",
@@ -81,9 +102,9 @@ def add_common_cli(parser: ArgumentParser) -> ArgumentParser:
     # trajectory encoder
     parser.add_argument(
         "--traj_encoder",
-        choices=["ff", "transformer", "rnn", "mamba"],
+        choices=_LazyChoices(list_registered_traj_encoders),
         default="transformer",
-        help="Quick switch between seq2seq models. (ff == feedforward (memory-free))",
+        help="Quick switch between registered TrajEncoders. See `amago.nets.traj_encoders.list_registered_traj_encoders()` for options. (ff == feedforward/memory-free)",
     )
     parser.add_argument(
         "--memory_size",
@@ -174,8 +195,8 @@ def switch_tstep_encoder(config: dict, arch: str, **kwargs) -> type[TstepEncoder
 
     Args:
         config: A dictionary of gin parameters yet to be assigned.
-        arch: A shortcut name for built-in TstepEncoders. Options are "ff"
-            (generic MLP) and "cnn" (generic CNN).
+        arch: A shortcut name for a registered TstepEncoder (e.g., "ff", "cnn").
+            See `amago.nets.tstep_encoders.list_registered_tstep_encoders()` for options.
         **kwargs: Assign any of the chosen TstepEncoder's default kwargs.
 
     Returns:
@@ -196,15 +217,9 @@ def switch_tstep_encoder(config: dict, arch: str, **kwargs) -> type[TstepEncoder
                 tstep_encoder_type=tstep_encoder_type,
             )
     """
-    assert arch in ["ff", "cnn"]
-    if arch == "ff":
-        tstep_encoder_type = amago.nets.tstep_encoders.FFTstepEncoder
-        ff_config = "amago.nets.tstep_encoders.FFTstepEncoder"
-        config.update({f"{ff_config}.{key}": val for key, val in kwargs.items()})
-    elif arch == "cnn":
-        tstep_encoder_type = amago.nets.tstep_encoders.CNNTstepEncoder
-        cnn_config = "amago.nets.tstep_encoders.CNNTstepEncoder"
-        config.update({f"{cnn_config}.{key}": val for key, val in kwargs.items()})
+    tstep_encoder_type = get_tstep_encoder_cls(arch)
+    encoder_config = f"{tstep_encoder_type.__module__}.{tstep_encoder_type.__name__}"
+    config.update({f"{encoder_config}.{key}": val for key, val in kwargs.items()})
     return tstep_encoder_type
 
 
@@ -214,20 +229,16 @@ def switch_agent(config: dict, agent: str, **kwargs) -> type[Agent]:
 
     Args:
         config: A dictionary of gin parameters yet to be assigned.
-        agent: A shortcut name for built-in Agents. Options are "agent"
-            (`Agent`) and "multitask" (`MultiTaskAgent`).
+        agent: A shortcut name for a registered Agent (e.g., "agent", "multitask").
+            See `amago.agent.list_registered_agents()` for available options.
         **kwargs: Assign any of the chosen Agent's default kwargs.
 
     Returns:
         A reference to the Agent type that can be passed into the Experiment.
     """
-    assert agent in ["agent", "multitask"]
-    if agent == "agent":
-        agent_type = amago.agent.Agent
-        agent_config = "amago.agent.Agent"
-    elif agent == "multitask":
-        agent_type = amago.agent.MultiTaskAgent
-        agent_config = "amago.agent.MultiTaskAgent"
+    agent_type = get_agent_cls(agent)
+    # Build the gin config path from the class's module and name
+    agent_config = f"{agent_type.__module__}.{agent_type.__name__}"
     config.update({f"{agent_config}.{key}": val for key, val in kwargs.items()})
     return agent_type
 
@@ -241,21 +252,16 @@ def switch_exploration(
 
     Args:
         config: A dictionary of gin parameters yet to be assigned.
-        strategy: A shortcut name for built-in ExplorationWrappers. Options are
-            "egreedy" (EpsilonGreedy) and "bilevel" (BilevelEpsilonGreedy).
+        strategy: A shortcut name for a registered ExplorationWrapper (e.g., "egreedy", "bilevel").
+            See `amago.envs.exploration.list_registered_explorations()` for options.
         **kwargs: Assign any of the chosen ExplorationWrapper's default kwargs.
 
     Returns:
         A reference to the ExplorationWrapper type that can be passed into the
         Experiment.
     """
-    assert strategy in ["egreedy", "bilevel"]
-    if strategy == "egreedy":
-        strategy_type = EpsilonGreedy
-        strategy_config = "amago.envs.exploration.EpsilonGreedy"
-    elif strategy == "bilevel":
-        strategy_type = BilevelEpsilonGreedy
-        strategy_config = "amago.envs.exploration.BilevelEpsilonGreedy"
+    strategy_type = get_exploration_cls(strategy)
+    strategy_config = f"{strategy_type.__module__}.{strategy_type.__name__}"
     config.update({f"{strategy_config}.{key}": val for key, val in kwargs.items()})
     return strategy_type
 
@@ -268,9 +274,8 @@ def switch_traj_encoder(
 
     Args:
         config: A dictionary of gin parameters yet to be assigned.
-        arch: A shortcut name for built-in TrajEncoders. Options are "ff"
-            (memory-free residual feed-forward blocks), "rnn" (RNN),
-            "transformer" (Transformer), and "mamba" (Mamba).
+        arch: A shortcut name for a registered TrajEncoder (e.g., "ff", "rnn", "transformer", "mamba").
+            See `amago.nets.traj_encoders.list_registered_traj_encoders()` for options.
         memory_size: Sets the same conceptual state space dimension across the
             various architectures. For example, the size of the hidden state in an
             RNN or d_model in a Transformer.
@@ -280,10 +285,12 @@ def switch_traj_encoder(
     Returns:
         A reference to the TrajEncoder type that can be passed into the Experiment.
     """
-    assert arch in ["ff", "rnn", "transformer", "mamba"]
+    traj_encoder_type = get_traj_encoder_cls(arch)
+    model_config = f"{traj_encoder_type.__module__}.{traj_encoder_type.__name__}"
+
+    # Map memory_size and layers to architecture-specific param names
+    # (Built-in encoders have different conventions for these params)
     if arch == "transformer":
-        traj_encoder_type = amago.nets.traj_encoders.TformerTrajEncoder
-        model_config = "amago.nets.traj_encoders.TformerTrajEncoder"
         config.update(
             {
                 f"{model_config}.d_model": memory_size,
@@ -292,8 +299,6 @@ def switch_traj_encoder(
             }
         )
     elif arch == "rnn":
-        traj_encoder_type = amago.nets.traj_encoders.GRUTrajEncoder
-        model_config = "amago.nets.traj_encoders.GRUTrajEncoder"
         config.update(
             {
                 f"{model_config}.n_layers": layers,
@@ -301,25 +306,23 @@ def switch_traj_encoder(
                 f"{model_config}.d_hidden": memory_size,
             }
         )
+    elif arch in ("ff", "mamba"):
+        config.update(
+            {
+                f"{model_config}.d_model": memory_size,
+                f"{model_config}.n_layers": layers,
+            }
+        )
+    # For custom registered encoders, pass memory_size and layers as-is
+    # (they can be overridden via **kwargs if needed)
+    else:
+        config.update(
+            {
+                f"{model_config}.memory_size": memory_size,
+                f"{model_config}.n_layers": layers,
+            }
+        )
 
-    elif arch == "ff":
-        traj_encoder_type = amago.nets.traj_encoders.FFTrajEncoder
-        model_config = "amago.nets.traj_encoders.FFTrajEncoder"
-        config.update(
-            {
-                f"{model_config}.d_model": memory_size,
-                f"{model_config}.n_layers": layers,
-            }
-        )
-    elif arch == "mamba":
-        traj_encoder_type = amago.nets.traj_encoders.MambaTrajEncoder
-        model_config = "amago.nets.traj_encoders.MambaTrajEncoder"
-        config.update(
-            {
-                f"{model_config}.d_model": memory_size,
-                f"{model_config}.n_layers": layers,
-            }
-        )
     config.update({f"{model_config}.{key}": val for key, val in kwargs.items()})
     return traj_encoder_type
 

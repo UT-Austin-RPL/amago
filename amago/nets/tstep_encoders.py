@@ -15,6 +15,53 @@ from amago.nets.utils import InputNorm, add_activation_log, symlog, activation_s
 from amago.nets import ff, cnn
 
 
+###############################
+## TstepEncoder Registration ##
+###############################
+
+_TSTEP_ENCODER_REGISTRY: dict[str, type] = {}
+
+
+def register_tstep_encoder(name: str):
+    """Decorator to register a TstepEncoder class under a shortcut name.
+
+    Args:
+        name: The shortcut name to register the encoder under (e.g., "ff", "cnn").
+
+    Example:
+        @gin.configurable
+        @register_tstep_encoder("my_encoder")
+        class MyCustomTstepEncoder(TstepEncoder):
+            ...
+    """
+
+    def decorator(cls):
+        if name in _TSTEP_ENCODER_REGISTRY:
+            raise ValueError(
+                f"TstepEncoder '{name}' is already registered to {_TSTEP_ENCODER_REGISTRY[name]}. "
+                f"Cannot re-register to {cls}."
+            )
+        _TSTEP_ENCODER_REGISTRY[name] = cls
+        return cls
+
+    return decorator
+
+
+def get_tstep_encoder_cls(name: str) -> type:
+    """Look up a registered TstepEncoder class by its shortcut name."""
+    if name not in _TSTEP_ENCODER_REGISTRY:
+        available = list(_TSTEP_ENCODER_REGISTRY.keys())
+        raise KeyError(
+            f"TstepEncoder '{name}' is not registered. Available: {available}"
+        )
+    return _TSTEP_ENCODER_REGISTRY[name]
+
+
+def list_registered_tstep_encoders() -> list[str]:
+    """Return a list of all registered TstepEncoder shortcut names."""
+    return list(_TSTEP_ENCODER_REGISTRY.keys())
+
+
 class TstepEncoder(nn.Module, ABC):
     """Abstract base class for Timestep Encoders.
 
@@ -98,6 +145,7 @@ class TstepEncoder(nn.Module, ABC):
 
 
 @gin.configurable
+@register_tstep_encoder("ff")
 class FFTstepEncoder(TstepEncoder):
     """A simple MLP-based TstepEncoder.
 
@@ -190,6 +238,7 @@ class FFTstepEncoder(TstepEncoder):
 
 
 @gin.configurable
+@register_tstep_encoder("cnn")
 class CNNTstepEncoder(TstepEncoder):
     """A simple CNN-based TstepEncoder.
 

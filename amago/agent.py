@@ -23,6 +23,63 @@ from amago.nets.policy_dists import DiscreteLikeContinuous
 from amago import utils
 
 
+########################
+## Agent Registration ##
+########################
+
+_AGENT_REGISTRY: dict[str, type] = {}
+
+
+def register_agent(name: str):
+    """Decorator to register an Agent class under a shortcut name.
+
+    Args:
+        name: The shortcut name to register the agent under (e.g., "agent", "multitask").
+
+    Example:
+        @gin.configurable
+        @register_agent("my_agent")
+        class MyCustomAgent(Agent):
+            ...
+    """
+
+    def decorator(cls):
+        if name in _AGENT_REGISTRY:
+            raise ValueError(
+                f"Agent '{name}' is already registered to {_AGENT_REGISTRY[name]}. "
+                f"Cannot re-register to {cls}."
+            )
+        _AGENT_REGISTRY[name] = cls
+        return cls
+
+    return decorator
+
+
+def get_agent_cls(name: str) -> type:
+    """Look up a registered Agent class by its shortcut name.
+
+    Args:
+        name: The shortcut name (e.g., "agent", "multitask").
+
+    Returns:
+        The registered Agent class.
+
+    Raises:
+        KeyError: If the name is not registered.
+    """
+    if name not in _AGENT_REGISTRY:
+        available = list(_AGENT_REGISTRY.keys())
+        raise KeyError(
+            f"Agent '{name}' is not registered. Available agents: {available}"
+        )
+    return _AGENT_REGISTRY[name]
+
+
+def list_registered_agents() -> list[str]:
+    """Return a list of all registered agent shortcut names."""
+    return list(_AGENT_REGISTRY.keys())
+
+
 @gin.configurable
 class Multigammas:
     """A hook for gin configuration of Multi-gamma values.
@@ -50,6 +107,22 @@ class Multigammas:
     ):
         self.discrete = discrete
         self.continuous = continuous
+
+
+def get_action_dim_and_type(action_space: gym.spaces.Space) -> Tuple[int, bool, bool]:
+    multibinary = False
+    discrete = False
+    if isinstance(action_space, gym.spaces.Discrete):
+        discrete = True
+        action_dim = action_space.n
+    elif isinstance(action_space, gym.spaces.MultiBinary):
+        multibinary = True
+        action_dim = action_space.n
+    elif isinstance(action_space, gym.spaces.Box):
+        action_dim = action_space.shape[-1]
+    else:
+        raise ValueError(f"Unsupported action space: {action_space}")
+    return action_dim, discrete, multibinary
 
 
 @gin.configurable
@@ -127,6 +200,11 @@ def exp_filter(
     return weights
 
 
+#####################
+## Built-in Agents ##
+#####################
+
+
 class BaseAgent(nn.Module, abc.ABC):
     """Abstract base class for AMAGO agents.
 
@@ -159,16 +237,9 @@ class BaseAgent(nn.Module, abc.ABC):
 
         self.multibinary = False
         self.discrete = False
-        if isinstance(self.action_space, gym.spaces.Discrete):
-            self.action_dim = self.action_space.n
-            self.discrete = True
-        elif isinstance(self.action_space, gym.spaces.MultiBinary):
-            self.action_dim = self.action_space.n
-            self.multibinary = True
-        elif isinstance(self.action_space, gym.spaces.Box):
-            self.action_dim = self.action_space.shape[-1]
-        else:
-            raise ValueError(f"Unsupported action space: `{type(self.action_space)}`")
+        self.action_dim, self.discrete, self.multibinary = get_action_dim_and_type(
+            action_space
+        )
         self.tstep_encoder = tstep_encoder_type(
             obs_space=obs_space,
             rl2_space=rl2_space,
@@ -205,11 +276,11 @@ class BaseAgent(nn.Module, abc.ABC):
         for target_param, param in zip(target.parameters(), online.parameters()):
             target_param.data.copy_(param.data)
 
-    def _ema_copy(self, target, online):
+    def _ema_copy(self, target, online, tau: Optional[float] = None):
+        if tau is None:
+            tau = self.tau
         for target_param, param in zip(target.parameters(), online.parameters()):
-            target_param.data.copy_(
-                target_param.data * (1.0 - self.tau) + param.data * self.tau
-            )
+            target_param.data.copy_(target_param.data * (1.0 - tau) + param.data * tau)
 
     @abc.abstractmethod
     def hard_sync_targets(self):
@@ -282,6 +353,7 @@ class BaseAgent(nn.Module, abc.ABC):
 
 
 @gin.configurable
+@register_agent("agent")
 class Agent(BaseAgent):
     """Actor-Critic with a shared sequence model backbone.
 
@@ -882,6 +954,7 @@ class Agent(BaseAgent):
 
 
 @gin.configurable
+@register_agent("multitask")
 class MultiTaskAgent(Agent):
     """A variant of Agent aimed at learning from distinct reward functions.
 
