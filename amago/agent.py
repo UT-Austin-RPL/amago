@@ -234,20 +234,61 @@ class BaseAgent(nn.Module, abc.ABC):
         self.action_space = action_space
         self.max_seq_len = max_seq_len
         self.pad_val = MAGIC_PAD_VAL
-
+        self.tstep_encoder_type = tstep_encoder_type
+        self.traj_encoder_type = traj_encoder_type
         self.multibinary = False
         self.discrete = False
         self.action_dim, self.discrete, self.multibinary = get_action_dim_and_type(
             action_space
         )
-        self.tstep_encoder = tstep_encoder_type(
-            obs_space=obs_space,
-            rl2_space=rl2_space,
+        self.init_encoders()
+
+    def init_encoders(self) -> None:
+        self.tstep_encoder = self.tstep_encoder_type(
+            obs_space=self.obs_space,
+            rl2_space=self.rl2_space,
         )
-        self.traj_encoder = traj_encoder_type(
+        self.traj_encoder = self.traj_encoder_type(
             tstep_dim=self.tstep_encoder.emb_dim,
-            max_seq_len=max_seq_len,
+            max_seq_len=self.max_seq_len,
         )
+
+    @property
+    def state_dim(self) -> int:
+        """Defines the effective "state" dimension for RL.
+
+        The dimension of the timestep representation at the point where RL
+        is assumed to be memory-free. Typically the dimension of the output
+        of the TrajEncoder.
+        """
+        return self.traj_encoder.emb_dim
+
+    def get_state_embedding(
+        self,
+        obs: dict[str, torch.Tensor],
+        rl2s: torch.Tensor,
+        time_idxs: torch.Tensor,
+        hidden_state: Optional[Any] = None,
+    ) -> Tuple[torch.Tensor, Any]:
+        """Get the state embedding from the current policy.
+
+        Args:
+            obs: Dictionary of (batched) observation tensors. AMAGOEnv makes all
+                observations into dicts.
+            rl2s: Batched Tensor of previous action and reward. AMAGOEnv makes these.
+            time_idxs: Batched Tensor indicating the global timestep of the episode.
+            hidden_state: Hidden state of the TrajEncoder. Defaults to None.
+
+        Returns:
+            Tuple[Tensor, Any]: A tuple containing:
+                - The state embedding.
+                - Updated hidden state of the TrajEncoder.
+        """
+        tstep_emb = self.tstep_encoder(obs=obs, rl2s=rl2s)
+        traj_emb_t, hidden_state = self.traj_encoder(
+            tstep_emb, time_idxs=time_idxs, hidden_state=hidden_state
+        )
+        return traj_emb_t, hidden_state
 
     @abc.abstractmethod
     def forward(self, batch: Batch, log_step: bool) -> torch.Tensor:
@@ -505,33 +546,48 @@ class Agent(BaseAgent):
         self.critic_loss_weight = critic_loss_weight
         self.tau = tau
         self.use_target_actor = use_target_actor
-        if self.discrete:
-            multigammas = Multigammas().discrete
-        else:
-            multigammas = Multigammas().continuous
+        multigammas = (
+            Multigammas().discrete if self.discrete else Multigammas().continuous
+        )
         gammas = (multigammas if use_multigamma else []) + [gamma]
         self.gammas = torch.Tensor(gammas).float()
-
         assert num_critics_td <= num_critics
         self.num_critics = num_critics
         self.num_critics_td = num_critics_td
-
         self.popart = actor_critic.PopArtLayer(gammas=len(gammas), enabled=popart)
+        self.pass_obs_keys_to_actor = pass_obs_keys_to_actor or []
+        self.actor_type = actor_type
+        self.critic_type = critic_type
+        self.init_actor_critic()
+        self.init_extra_networks()
+        # full weight copy to targets
+        self.hard_sync_targets()
 
+    def init_actor_critic(self) -> None:
+        """Initialize the actor and critic networks."""
         ac_kwargs = {
-            "state_dim": self.traj_encoder.emb_dim,
+            "state_dim": self.state_dim,
             "action_dim": self.action_dim,
             "discrete": self.discrete,
             "gammas": self.gammas,
         }
-        self.critics = critic_type(**ac_kwargs, num_critics=num_critics)
-        self.target_critics = critic_type(**ac_kwargs, num_critics=num_critics)
-        self.maximized_critics = critic_type(**ac_kwargs, num_critics=num_critics)
-        self.actor = actor_type(**ac_kwargs)
-        self.target_actor = actor_type(**ac_kwargs)
-        # full weight copy to targets
-        self.hard_sync_targets()
-        self.pass_obs_keys_to_actor = pass_obs_keys_to_actor or []
+        self.critics = self.critic_type(**ac_kwargs, num_critics=self.num_critics)
+        self.target_critics = self.critic_type(
+            **ac_kwargs, num_critics=self.num_critics
+        )
+        self.maximized_critics = self.critic_type(
+            **ac_kwargs, num_critics=self.num_critics
+        )
+        self.actor = self.actor_type(**ac_kwargs)
+        self.target_actor = self.actor_type(**ac_kwargs)
+
+    def init_extra_networks(self) -> None:
+        """Hook to initialize any additional networks
+
+        Called after the main tstep_encoder, traj_encoder, actor and critics
+        are initialized, but before hard_sync_targets().
+        """
+        pass
 
     @property
     def trainable_params(self):
@@ -561,7 +617,7 @@ class Agent(BaseAgent):
         obs: dict[str, torch.Tensor],
         rl2s: torch.Tensor,
         time_idxs: torch.Tensor,
-        hidden_state=None,
+        hidden_state: Optional[Any] = None,
         sample: bool = True,
     ) -> Tuple[torch.Tensor, Any]:
         """Get rollout actions from the current policy.
@@ -587,10 +643,8 @@ class Agent(BaseAgent):
                   ("test-time") discount factor* `Agent.gamma`.
                 - Updated hidden state of the TrajEncoder.
         """
-        tstep_emb = self.tstep_encoder(obs=obs, rl2s=rl2s)
-        # sequence model embedding [batch, length, d_emb]
-        traj_emb_t, hidden_state = self.traj_encoder(
-            tstep_emb, time_idxs=time_idxs, hidden_state=hidden_state
+        traj_emb_t, hidden_state = self.get_state_embedding(
+            obs=obs, rl2s=rl2s, time_idxs=time_idxs, hidden_state=hidden_state
         )
         # generate action distribution [batch, length, len(self.gammas), d_action]
         action_dists = self.actor(
