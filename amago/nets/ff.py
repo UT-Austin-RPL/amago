@@ -173,7 +173,7 @@ class MLP(nn.Module):
         self.norms = nn.ModuleList(
             [Normalization(normalization, d_hidden) for _ in range(n_layers - 1)]
         )
-        self.out_layer = nn.Linear(d_hidden, d_output)
+        self.out_layer = layer_type(d_hidden, d_output)
         self.activation = activation_switch(activation)
 
     def forward(self, x):

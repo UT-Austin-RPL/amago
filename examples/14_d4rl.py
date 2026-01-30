@@ -254,7 +254,8 @@ if __name__ == "__main__":
             start_collecting_at_epoch=args.online_after_epoch,
             stagger_traj_file_lengths=False,
             traj_save_len=args.eval_timesteps + 1,
-            sample_actions=False,
+            sample_actions_train=False,
+            sample_actions_val=False,
             exploration_wrapper_type=exploration_wrapper_type,
         )
         # save a copy of this script at the time of the run

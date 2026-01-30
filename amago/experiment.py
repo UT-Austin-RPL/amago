@@ -63,7 +63,8 @@ class Experiment:
     :param parallel_actors: Number of parallel envs for batched inference. **Default:** 12.
     :param env_mode: ``"async"`` (default), wraps envs in async pool. ``"already_vectorized"`` for jax/gpu batch envs. ``"sync"`` for debug. **Default:** "async".
     :param exploration_wrapper_type: Exploration wrapper for training envs. **Default:** ``EpsilonGreedy``.
-    :param sample_actions: Whether to sample from stochastic actor during eval, or take argmax/mean. **Default:** True.
+    :param sample_actions_train: Whether to sample from stochastic actor during training data collection, or take argmax/mean. **Default:** True.
+    :param sample_actions_val: Whether to sample from stochastic actor during eval (val/test), or take argmax/mean. **Default:** True.
     :param force_reset_train_envs_every: If set, forces call to ``reset`` every N epochs for already_vectorized envs. **Default:** None.
     :param async_env_mp_context: Multiprocessing spawn method for ``AsyncVectorEnv`` (e.g., ``"forkserver"``). Only relevant for ``env_mode="async"``. Set to None for default method. **Default:** None.
 
@@ -134,7 +135,8 @@ class Experiment:
     env_mode: str = "async"
     async_env_mp_context: Optional[str] = None
     exploration_wrapper_type: Optional[type[ExplorationWrapper]] = EpsilonGreedy
-    sample_actions: bool = True
+    sample_actions_train: bool = True
+    sample_actions_val: bool = True
     force_reset_train_envs_every: Optional[int] = None
 
     #############
@@ -527,6 +529,7 @@ class Experiment:
         render: bool = False,
         save_on_done: bool = False,
         episodes: Optional[int] = None,
+        sample: bool = True,
     ) -> tuple[ReturnHistory, SpecialMetricHistory]:
         """Main policy loop for interacting with the environment.
 
@@ -544,6 +547,7 @@ class Experiment:
             episodes: The number of episodes to interact with the environment. If provided, the
                 loop will terminate after this many episodes have been completed OR we hit the
                 `timesteps` limit, whichever comes first. Defaults to None.
+            sample: Whether to sample from stochastic actor, or take argmax/mean. Defaults to True.
 
         Returns:
             tuple[ReturnHistory, SpecialMetricHistory]: Objects that keep track of standard
@@ -604,7 +608,7 @@ class Experiment:
                         obs=obs,
                         rl2s=rl2s,
                         time_idxs=time_idxs,
-                        sample=self.sample_actions,
+                        sample=sample,
                         hidden_state=hidden_state,
                     )
             *_, terminated, truncated, _ = envs.step(actions.squeeze(1).cpu().numpy())
@@ -640,6 +644,7 @@ class Experiment:
             self.train_envs,
             self.train_timesteps_per_epoch,
             hidden_state=self.hidden_state,
+            sample=self.sample_actions_train,
         )
         utils.call_async_env(self.train_envs, "save_finished_trajs")
 
@@ -654,6 +659,7 @@ class Experiment:
             self.val_envs,
             self.val_timesteps_per_epoch,
             hidden_state=None,
+            sample=self.sample_actions_val,
         )
         end_time = time.time()
         fps = (
@@ -732,6 +738,7 @@ class Experiment:
             # saves trajectories as soon as they're finished instead of waiting until the end of eval
             save_on_done=is_saving,
             episodes=episodes,
+            sample=self.sample_actions_val,
         )
         logs = self.policy_metrics(returns, specials)
         logs_global = utils.avg_over_accelerate(logs)
