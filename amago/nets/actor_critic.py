@@ -500,8 +500,8 @@ class NCriticsTwoHot(BaseCriticHead):
             amago_warning(
                 "amago.nets.actor_critic.NCriticsTwoHot.min_return/max_return have not been set manually, and default to extreme values."
             )
-        min_return = min_return or -100_000
-        max_return = max_return or 100_000
+        min_return = min_return if min_return is not None else -100_000
+        max_return = max_return if max_return is not None else 100_000
         self.transform_values = symlog if use_symlog else lambda x: x
         self.invert_bins = symexp if use_symlog else lambda x: x
         assert min_return < max_return
