@@ -4,6 +4,7 @@ Actor and critic output modules.
 
 import contextlib
 from typing import Optional, Type
+import math
 import random
 from functools import lru_cache
 from abc import ABC, abstractmethod
@@ -458,6 +459,14 @@ class NCriticsTwoHot(BaseCriticHead):
         max_return: Maximum return value. If not set, defaults to a very positive value (100_000).
         output_bins: Number of bins in the categorical distribution. Defaults to 128.
         use_symlog: Whether to use a symlog transformation on the value estimates. Defaults to True.
+        label_type: How to construct target distributions from scalar values. Options:
+            - "twohot": Two-hot encoding (Dreamer-V3). Puts mass on the two bins flanking the
+              target value, weighted by proximity. (Default)
+            - "hlgauss": Histogram Loss with Gaussian targets (Imani & White, 2018;
+              Farebrother et al., 2024 "Stop Regressing"). Spreads mass across multiple bins
+              using a Gaussian kernel centered at the target.
+        sigma: Ratio of Gaussian standard deviation to bin width  for HL-Gauss targets.
+        init_value: If set, initializes the network to predict this value at the start of training.
 
     Note:
         The default bin settings (wide range, lots of bins, symlog transformation) follow
@@ -485,6 +494,9 @@ class NCriticsTwoHot(BaseCriticHead):
         max_return: Optional[float] = None,
         output_bins: int = 128,
         use_symlog: bool = True,
+        label_type: str = "twohot",
+        sigma: float = 0.75,
+        init_value: Optional[float] = None,
     ):
         super().__init__(
             state_dim=state_dim,
@@ -510,6 +522,9 @@ class NCriticsTwoHot(BaseCriticHead):
             self.transform_values(max_return),
             output_bins,
         )
+        assert label_type in ("twohot", "hlgauss"), f"Unknown label_type: {label_type}"
+        self.label_type = label_type
+        self.sigma = sigma
         self.net = _EinMixEnsemble(
             ensemble_size=self.num_critics,
             inp_dim=inp_dim,
@@ -520,8 +535,42 @@ class NCriticsTwoHot(BaseCriticHead):
             dropout_p=dropout_p,
         )
 
+        if init_value is not None:
+            if not (min_return <= init_value <= max_return):
+                raise ValueError(
+                    f"init_value={init_value} is outside the bin support "
+                    f"[{min_return}, {max_return}]"
+                )
+            init_bin_idx = (
+                (self.bin_vals - self.transform_values(init_value))
+                .abs()
+                .argmin()
+                .item()
+            )
+            edge_margin = min(init_bin_idx, output_bins - 1 - init_bin_idx)
+            if edge_margin < 12:
+                amago_warning(
+                    f"init_value={init_value} is only {edge_margin} bins from the edge "
+                    f"of the support. The initialization Gaussian may be truncated, "
+                    f"slightly biasing the initial prediction inward. Consider widening "
+                    f"[min_return, max_return] or adjusting init_value."
+                )
+            self._initialize_to_value(init_value)
+
     def __len__(self):
         return self.num_critics
+
+    def _initialize_to_value(self, init_value: float):
+        """Initialize the output layer bias so the network's initial prediction
+        is centered near init_value.
+        """
+        init_transformed = self.transform_values(init_value)
+        bin_width = self.bin_vals[1] - self.bin_vals[0]
+        sigma_init = 4.0 * bin_width
+        logits = -((self.bin_vals - init_transformed) ** 2) / (2.0 * sigma_init**2)
+        output_layer = self.net.output_layer
+        with torch.no_grad():
+            output_layer.bias.data[..., :] = logits
 
     @torch.compile
     def critic_network_forward(
@@ -549,40 +598,50 @@ class NCriticsTwoHot(BaseCriticHead):
         outputs = rearrange(
             outputs, "(k b g) l c o -> k b l c g o", k=K, g=self.num_gammas
         )
-        val_dist = pyd.Categorical(logits=outputs)
-        clip_probs = val_dist.probs.clamp(1e-6, 0.999)
-        safe_probs = clip_probs / clip_probs.sum(-1, keepdims=True).detach()
-        safe_dist = pyd.Categorical(probs=safe_probs)
-        return safe_dist
+        return pyd.Categorical(logits=outputs)
 
-    def bin_dist_to_raw_vals(self, bin_dist: pyd.Categorical) -> torch.Tensor:
+    def bin_dist_to_raw_vals(
+        self, bin_dist: pyd.Categorical, temperature: float = 1.0
+    ) -> torch.Tensor:
         """Convert a categorical distribution over bins to a scalar.
 
         Args:
             bin_dist: The categorical distribution over bins (output of `forward`).
+            temperature: Temperature for softening the distribution.
 
         Returns:
             The scalar value.
         """
         assert isinstance(bin_dist, pyd.Categorical)
-        probs = bin_dist.probs
+        if temperature == 1.0:
+            probs = bin_dist.probs
+        else:
+            probs = torch.softmax(bin_dist.logits / temperature, dim=-1)
         bin_vals = self.bin_vals.to(probs.device, dtype=probs.dtype)
         exp_val = (probs * bin_vals).sum(-1, keepdims=True)
         return self.invert_bins(exp_val)
 
     def raw_vals_to_labels(self, raw_td_target: torch.Tensor) -> torch.Tensor:
-        """Convert a scalar to a categorical distribution over bins.
+        """Convert a scalar to a categorical target distribution over bins.
 
-        Just a torch port of the `dreamerv3/jaxutils.py` implementation.
+        Dispatches to two-hot or HL-Gauss encoding based on ``self.label_type``.
 
         Args:
             raw_td_target: The scalar value.
 
         Returns:
-            A two-hot encoded categorical distribution over bins.
+            A categorical distribution over bins (sums to 1 along the last dim).
         """
-        # raw scalar --> symlog --> two hot encoding
-        # (github: danijar/dreamerv3/jaxutils.py)
+        if self.label_type == "hlgauss":
+            return self._hlgauss_labels(raw_td_target)
+        return self._twohot_labels(raw_td_target)
+
+    def _twohot_labels(self, raw_td_target: torch.Tensor) -> torch.Tensor:
+        """Two-hot encoding (Dreamer-V3).
+
+        Puts probability mass on exactly two bins flanking the target value,
+        weighted by proximity. Torch port of `dreamerv3/jaxutils.py`.
+        """
         symlog_td_target = self.transform_values(raw_td_target)
         bin_vals = self.bin_vals.to(symlog_td_target.device)
         # below and above are indices of the bins directly above and below the scaled value
@@ -608,6 +667,24 @@ class NCriticsTwoHot(BaseCriticHead):
             + F.one_hot(above, num_classes=self.num_bins) * weight_above
         )
         return target
+
+    def _hlgauss_labels(self, raw_td_target: torch.Tensor) -> torch.Tensor:
+        """HL-Gauss: Histogram Loss with Gaussian targets.
+
+        Reference: Imani & White (2018); Farebrother et al. (2024)
+        "Stop Regressing: Training Value Functions via Classification for Scalable Deep RL"
+        (https://arxiv.org/abs/2403.03950)
+        """
+        symlog_target = self.transform_values(raw_td_target)
+        bin_vals = self.bin_vals.to(symlog_target.device)
+        bin_width = bin_vals[1] - bin_vals[0]
+        sigma_abs = self.sigma * bin_width
+        edges = torch.cat([bin_vals[:1] - bin_width / 2, bin_vals + bin_width / 2])
+        z = (edges - symlog_target) / sigma_abs
+        cdf_vals = 0.5 * (1.0 + torch.erf(z * (1.0 / math.sqrt(2.0))))
+        bin_probs = cdf_vals[..., 1:] - cdf_vals[..., :-1]
+        bin_probs = bin_probs / bin_probs.sum(-1, keepdim=True).clamp(min=1e-8)
+        return bin_probs
 
 
 @gin.configurable(denylist=["enabled"])

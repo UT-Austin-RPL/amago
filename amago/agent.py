@@ -1064,7 +1064,9 @@ class MultiTaskAgent(Agent):
         actor_type: Type[actor_critic.BaseActorHead] = actor_critic.Actor,
         critic_type: Type[actor_critic.BaseCriticHead] = actor_critic.NCriticsTwoHot,
         pass_obs_keys_to_actor: Optional[Iterable[str]] = None,
+        dpg_temperature: float = 1.0,
     ):
+        self.dpg_temperature = dpg_temperature
         super().__init__(
             obs_space=obs_space,
             rl2_space=rl2_space,
@@ -1260,8 +1262,9 @@ class MultiTaskAgent(Agent):
             a_agent_dpg = torch.stack([a_dist.rsample() for _ in range(K_a)], dim=0)
             q_s_a_agent = self.maximized_critics(s_rep.detach(), a_agent_dpg)
             q_s_a_agent = self.popart.normalize_values(
-                # mean over K actions, min over critic ensemble
-                self.maximized_critics.bin_dist_to_raw_vals(q_s_a_agent).mean(0).min(2).values
+                self.maximized_critics.bin_dist_to_raw_vals(
+                    q_s_a_agent, temperature=self.dpg_temperature
+                ).mean(0).min(2).values
             )
             actor_loss += self.online_coeff * -(q_s_a_agent[:, :-1, ...])
         
