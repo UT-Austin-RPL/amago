@@ -751,23 +751,23 @@ class Agent(BaseAgent):
         dtype = torch.uint8 if (self.discrete or self.multibinary) else torch.float32
         return actions.to(dtype=dtype), hidden_state
 
-    def _critic_ensemble_to_td_target(self, ensemble_td_target: torch.Tensor):
-        B, L, C, G, _ = ensemble_td_target.shape
+    def _reduce_critic_ensemble(self, q_ensemble: torch.Tensor) -> torch.Tensor:
+        B, L, C, G, _ = q_ensemble.shape
         # random subset of critic ensemble
         random_subset = torch.randint(
             low=0,
             high=C,
             size=(B, L, self.num_critics_td, G, 1),
-            device=ensemble_td_target.device,
+            device=q_ensemble.device,
         )
-        td_target_rand = torch.take_along_dim(ensemble_td_target, random_subset, dim=2)
+        q_subset = torch.take_along_dim(q_ensemble, random_subset, dim=2)
         if self.online_coeff > 0:
             # clipped double q
-            td_target = td_target_rand.min(2, keepdims=True).values
+            q_reduced = q_subset.min(2, keepdims=True).values
         else:
             # without DPG updates the usual min creates strong underestimation. take mean instead
-            td_target = td_target_rand.mean(2, keepdims=True)
-        return td_target
+            q_reduced = q_subset.mean(2, keepdims=True)
+        return q_reduced
 
     def _compute_loss(
         self,
@@ -897,7 +897,7 @@ class Agent(BaseAgent):
                 # Q_target(s', a')
                 q_targ_sp_ap_gp = self.popart(self.target_critics(*sp_ap_gp).mean(0), normalized=False)
                 assert q_targ_sp_ap_gp.shape == (B, L - 1, C, G, 1)
-                q_reduced = self._critic_ensemble_to_td_target(q_targ_sp_ap_gp)
+                q_reduced = self._reduce_critic_ensemble(q_targ_sp_ap_gp)
                 assert q_reduced.shape == (B, L - 1, 1, G, 1)
                 nstep_mask = state_mask.float().unsqueeze(-1).unsqueeze(-1)  # (B, L-1, 1, 1, 1)
                 td_target = self._nstep_fn(r, d, q_reduced, gamma, mask=nstep_mask)
@@ -1258,7 +1258,7 @@ class MultiTaskAgent(Agent):
                 assert q_targ_sp_ap_gp.probs.shape == (K_c, B, L - 1, C, G, Bins)
                 q_targ_sp_ap_gp = self.target_critics.bin_dist_to_raw_vals(q_targ_sp_ap_gp).mean(0)
                 assert q_targ_sp_ap_gp.shape == (B, L - 1, C, G, 1)
-                q_reduced = self._critic_ensemble_to_td_target(q_targ_sp_ap_gp)
+                q_reduced = self._reduce_critic_ensemble(q_targ_sp_ap_gp)
                 assert q_reduced.shape == (B, L - 1, 1, G, 1)
                 nstep_mask = state_mask.float().unsqueeze(-1).unsqueeze(-1)  # (B, L-1, 1, 1, 1)
                 td_target = self._nstep_fn(r, d, q_reduced, gamma, mask=nstep_mask)
