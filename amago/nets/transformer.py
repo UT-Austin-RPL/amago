@@ -736,6 +736,5 @@ class Transformer(nn.Module):
             traj_emb = self.inference_forward(traj_emb, hidden_state)
             hidden_state.update()
         else:
-            assert self.training
             traj_emb = self.training_forward(traj_emb)
         return traj_emb, hidden_state

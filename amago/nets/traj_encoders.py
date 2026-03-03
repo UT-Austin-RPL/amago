@@ -14,6 +14,53 @@ from amago.nets import ff, transformer, utils
 from amago.utils import amago_warning
 
 
+##############################
+## TrajEncoder Registration ##
+##############################
+
+_TRAJ_ENCODER_REGISTRY: dict[str, type] = {}
+
+
+def register_traj_encoder(name: str):
+    """Decorator to register a TrajEncoder class under a shortcut name.
+
+    Args:
+        name: The shortcut name to register the encoder under (e.g., "transformer", "ff").
+
+    Example:
+        @gin.configurable
+        @register_traj_encoder("my_encoder")
+        class MyCustomTrajEncoder(TrajEncoder):
+            ...
+    """
+
+    def decorator(cls):
+        if name in _TRAJ_ENCODER_REGISTRY:
+            raise ValueError(
+                f"TrajEncoder '{name}' is already registered to {_TRAJ_ENCODER_REGISTRY[name]}. "
+                f"Cannot re-register to {cls}."
+            )
+        _TRAJ_ENCODER_REGISTRY[name] = cls
+        return cls
+
+    return decorator
+
+
+def get_traj_encoder_cls(name: str) -> type:
+    """Look up a registered TrajEncoder class by its shortcut name."""
+    if name not in _TRAJ_ENCODER_REGISTRY:
+        available = list(_TRAJ_ENCODER_REGISTRY.keys())
+        raise KeyError(
+            f"TrajEncoder '{name}' is not registered. Available: {available}"
+        )
+    return _TRAJ_ENCODER_REGISTRY[name]
+
+
+def list_registered_traj_encoders() -> list[str]:
+    """Return a list of all registered TrajEncoder shortcut names."""
+    return list(_TRAJ_ENCODER_REGISTRY.keys())
+
+
 class TrajEncoder(nn.Module, ABC):
     """Abstract base class for trajectory encoders.
 
@@ -118,6 +165,7 @@ class TrajEncoder(nn.Module, ABC):
 
 
 @gin.configurable
+@register_traj_encoder("ff")
 class FFTrajEncoder(TrajEncoder):
     """Feed-forward (memory-free) trajectory encoder.
 
@@ -147,7 +195,9 @@ class FFTrajEncoder(TrajEncoder):
             blocks in a Transformer, but is also applied to the first and last
             linear layers (inp --> d_model and d_model --> out). Defaults to 0.0.
         activation: Activation function. Defaults to "leaky_relu".
-        norm: Normalization function. Defaults to "layer" (LayerNorm).
+        norm: Normalization for hidden layers within FFBlocks. Defaults to None.
+        out_norm: Normalization for the final output. Defaults to "layer".
+        layer_type: Type of linear layer to use. Defaults to nn.Linear.
     """
 
     def __init__(
@@ -159,19 +209,28 @@ class FFTrajEncoder(TrajEncoder):
         n_layers: int = 1,
         dropout: float = 0.0,
         activation: str = "leaky_relu",
-        norm: str = "layer",
+        norm: Optional[str] = None,
+        out_norm: str = "layer",
+        layer_type: type[nn.Module] = nn.Linear,
     ):
         super().__init__(tstep_dim, max_seq_len)
         d_ff = d_ff or d_model * 4
-        self.traj_emb = nn.Linear(tstep_dim, d_model)
+        self.traj_emb = layer_type(tstep_dim, d_model)
         self.traj_blocks = nn.ModuleList(
             [
-                ff.FFBlock(d_model, d_ff, dropout=dropout, activation=activation)
+                ff.FFBlock(
+                    d_model,
+                    d_ff,
+                    dropout=dropout,
+                    activation=activation,
+                    norm=norm,
+                    layer_type=layer_type,
+                )
                 for _ in range(n_layers)
             ]
         )
-        self.traj_last = nn.Linear(d_model, d_model)
-        self.norm = ff.Normalization(norm, d_model)
+        self.traj_last = layer_type(d_model, d_model)
+        self.out_norm = ff.Normalization(out_norm, d_model)
         self.activation = utils.activation_switch(activation)
         self.dropout = nn.Dropout(dropout)
         self._emb_dim = d_model
@@ -182,7 +241,7 @@ class FFTrajEncoder(TrajEncoder):
         for traj_block in self.traj_blocks:
             traj_emb = traj_block(traj_emb)
         traj_emb = self.traj_last(traj_emb)
-        traj_emb = self.dropout(self.norm(traj_emb))
+        traj_emb = self.dropout(self.out_norm(traj_emb))
         return traj_emb
 
     def forward(
@@ -196,6 +255,7 @@ class FFTrajEncoder(TrajEncoder):
 
 
 @gin.configurable
+@register_traj_encoder("rnn")
 class GRUTrajEncoder(TrajEncoder):
     """RNN (GRU) Trajectory Encoder.
 
@@ -254,6 +314,7 @@ class GRUTrajEncoder(TrajEncoder):
 
 
 @gin.configurable
+@register_traj_encoder("transformer")
 class TformerTrajEncoder(TrajEncoder):
     r"""Transformer Trajectory Encoder.
 
@@ -452,6 +513,7 @@ class _MambaHiddenState:
 
 
 @gin.configurable
+@register_traj_encoder("mamba")
 class MambaTrajEncoder(TrajEncoder):
     """Mamba Trajectory Encoder.
 

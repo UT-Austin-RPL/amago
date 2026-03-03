@@ -9,6 +9,53 @@ import numpy as np
 import gin
 
 
+#####################################
+## ExplorationWrapper Registration ##
+#####################################
+
+_EXPLORATION_REGISTRY: dict[str, type] = {}
+
+
+def register_exploration(name: str):
+    """Decorator to register an ExplorationWrapper class under a shortcut name.
+
+    Args:
+        name: The shortcut name to register the wrapper under (e.g., "egreedy", "bilevel").
+
+    Example:
+        @gin.configurable
+        @register_exploration("my_exploration")
+        class MyExplorationWrapper(ExplorationWrapper):
+            ...
+    """
+
+    def decorator(cls):
+        if name in _EXPLORATION_REGISTRY:
+            raise ValueError(
+                f"ExplorationWrapper '{name}' is already registered to {_EXPLORATION_REGISTRY[name]}. "
+                f"Cannot re-register to {cls}."
+            )
+        _EXPLORATION_REGISTRY[name] = cls
+        return cls
+
+    return decorator
+
+
+def get_exploration_cls(name: str) -> type:
+    """Look up a registered ExplorationWrapper class by its shortcut name."""
+    if name not in _EXPLORATION_REGISTRY:
+        available = list(_EXPLORATION_REGISTRY.keys())
+        raise KeyError(
+            f"ExplorationWrapper '{name}' is not registered. Available: {available}"
+        )
+    return _EXPLORATION_REGISTRY[name]
+
+
+def list_registered_explorations() -> list[str]:
+    """Return a list of all registered ExplorationWrapper shortcut names."""
+    return list(_EXPLORATION_REGISTRY.keys())
+
+
 class ExplorationWrapper(ABC, gym.ActionWrapper):
     """Abstract base class for exploration wrappers.
 
@@ -55,6 +102,7 @@ class ExplorationWrapper(ABC, gym.ActionWrapper):
 
 
 @gin.configurable
+@register_exploration("bilevel")
 class BilevelEpsilonGreedy(ExplorationWrapper):
     """Implements the bi-level epsilon greedy exploration strategy visualized in Figure 13 of
     the AMAGO paper.
@@ -172,6 +220,7 @@ class BilevelEpsilonGreedy(ExplorationWrapper):
 
 
 @gin.configurable
+@register_exploration("egreedy")
 class EpsilonGreedy(BilevelEpsilonGreedy):
     """Standard exploration noise schedule.
 

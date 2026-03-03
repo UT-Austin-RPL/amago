@@ -2,7 +2,9 @@
 Actor-Critic agents and RL objectives.
 """
 
+import abc
 import itertools
+from functools import partial
 from typing import Type, Optional, Tuple, Any, List, Iterable
 
 import torch
@@ -20,6 +22,63 @@ from amago.nets.traj_encoders import TrajEncoder
 from amago.nets import actor_critic
 from amago.nets.policy_dists import DiscreteLikeContinuous
 from amago import utils
+
+
+########################
+## Agent Registration ##
+########################
+
+_AGENT_REGISTRY: dict[str, type] = {}
+
+
+def register_agent(name: str):
+    """Decorator to register an Agent class under a shortcut name.
+
+    Args:
+        name: The shortcut name to register the agent under (e.g., "agent", "multitask").
+
+    Example:
+        @gin.configurable
+        @register_agent("my_agent")
+        class MyCustomAgent(Agent):
+            ...
+    """
+
+    def decorator(cls):
+        if name in _AGENT_REGISTRY:
+            raise ValueError(
+                f"Agent '{name}' is already registered to {_AGENT_REGISTRY[name]}. "
+                f"Cannot re-register to {cls}."
+            )
+        _AGENT_REGISTRY[name] = cls
+        return cls
+
+    return decorator
+
+
+def get_agent_cls(name: str) -> type:
+    """Look up a registered Agent class by its shortcut name.
+
+    Args:
+        name: The shortcut name (e.g., "agent", "multitask").
+
+    Returns:
+        The registered Agent class.
+
+    Raises:
+        KeyError: If the name is not registered.
+    """
+    if name not in _AGENT_REGISTRY:
+        available = list(_AGENT_REGISTRY.keys())
+        raise KeyError(
+            f"Agent '{name}' is not registered. Available agents: {available}"
+        )
+    return _AGENT_REGISTRY[name]
+
+
+def list_registered_agents() -> list[str]:
+    """Return a list of all registered agent shortcut names."""
+    return list(_AGENT_REGISTRY.keys())
 
 
 @gin.configurable
@@ -49,6 +108,22 @@ class Multigammas:
     ):
         self.discrete = discrete
         self.continuous = continuous
+
+
+def get_action_dim_and_type(action_space: gym.spaces.Space) -> Tuple[int, bool, bool]:
+    multibinary = False
+    discrete = False
+    if isinstance(action_space, gym.spaces.Discrete):
+        discrete = True
+        action_dim = action_space.n
+    elif isinstance(action_space, gym.spaces.MultiBinary):
+        multibinary = True
+        action_dim = action_space.n
+    elif isinstance(action_space, gym.spaces.Box):
+        action_dim = action_space.shape[-1]
+    else:
+        raise ValueError(f"Unsupported action space: {action_space}")
+    return action_dim, discrete, multibinary
 
 
 @gin.configurable
@@ -129,8 +204,279 @@ def exp_filter(
     return weights
 
 
+# compiled within the agent
+def nstep_return(
+    r: torch.Tensor,
+    d: torch.Tensor,
+    q: torch.Tensor,
+    gamma: torch.Tensor,
+    n: int,
+    mask: torch.Tensor,
+) -> torch.Tensor:
+    """Compute n-step TD targets
+
+    Args:
+        r: Rewards, shape ``(B, L, 1, G, 1)``. Already scaled by reward_multiplier.
+        d: Dones (float 0 or 1), shape ``(B, L, 1, G, 1)``.
+        q: Bootstrap Q-values (ensemble-reduced), shape ``(B, L, 1, G, 1)``.
+            ``q[b, t]`` = Q(s_{t+1}, a'_{t+1}) — already aligned as next-state values.
+        gamma: Discount factors, shape ``(G, 1)``.
+        n: N-step horizon. n=1 recovers the standard 1-step Bellman target.
+        mask: Valid timestep mask (1=valid, 0=padding), shape ``(B, L, 1, 1, 1)``.
+
+    Returns:
+        N-step TD targets, shape ``(B, L, 1, G, 1)``.
+    """
+    B, L, _one, G, _one2 = r.shape
+    device = r.device
+
+    gamma_pow = gamma.unsqueeze(0).unsqueeze(0).unsqueeze(0)  # (1, 1, 1, G, 1)
+
+    r_masked = r * mask
+    d_masked = d * mask
+
+    cumulative_reward = torch.zeros(B, L, 1, G, 1, device=device, dtype=r.dtype)
+    survival = torch.ones(B, L, 1, G, 1, device=device, dtype=r.dtype)
+
+    last_survival = torch.ones(B, L, 1, G, 1, device=device, dtype=r.dtype)
+    last_q_idx = torch.zeros(B, L, 1, G, 1, device=device, dtype=torch.long)
+    reached_n = torch.zeros(B, L, 1, G, 1, device=device, dtype=torch.bool)
+
+    for i in range(n):
+        if i == 0:
+            r_i = r_masked
+            d_i = d_masked
+            valid_i = mask
+        else:
+            r_i = F.pad(r_masked[:, i:, ...], (0, 0, 0, 0, 0, 0, 0, i), value=0.0)
+            d_i = F.pad(d_masked[:, i:, ...], (0, 0, 0, 0, 0, 0, 0, i), value=0.0)
+            valid_i = F.pad(mask[:, i:, ...], (0, 0, 0, 0, 0, 0, 0, i), value=0.0)
+
+        step_valid = valid_i * (~reached_n).float()
+        cumulative_reward += (gamma_pow**i) * survival * r_i * step_valid
+
+        new_survival = survival * (1.0 - d_i)
+
+        active = step_valid.bool()
+        last_survival = torch.where(active, new_survival, last_survival)
+        last_q_idx = torch.where(active, torch.tensor(i, device=device), last_q_idx)
+
+        done_here = (d_i > 0.5) & active
+        invalid_here = (valid_i < 0.5) & (~reached_n)
+        reached_n = reached_n | done_here | invalid_here
+
+        survival = new_survival
+
+    reached_n[:] = True
+
+    k = last_q_idx + 1
+    gamma_k = gamma_pow ** k.float()
+
+    t_indices = torch.arange(L, device=device).view(1, L, 1, 1, 1).expand(B, L, 1, G, 1)
+    boot_indices = (t_indices + last_q_idx).clamp(max=L - 1)
+
+    q_bootstrap = torch.gather(q, dim=1, index=boot_indices)
+    bootstrap = gamma_k * last_survival * q_bootstrap
+
+    return cumulative_reward + bootstrap
+
+
+#####################
+## Built-in Agents ##
+#####################
+
+
+class BaseAgent(nn.Module, abc.ABC):
+    """Abstract base class for AMAGO agents.
+
+    Args:
+        obs_space: Environment observation space (for creating input layers).
+        rl2_space: A gymnasium space that is automatically generated by
+            :py:class:`~amago.envs.amago_env.AMAGOEnv` to represent the shape of extra
+            input features for the previous action and reward.
+        action_space: Environment action space (for creating output layers).
+        max_seq_len: Maximum context length of the policy (in timesteps).
+        tstep_encoder_type: Type of :py:class:`~amago.nets.tstep_encoders.TstepEncoder` to use.
+        traj_encoder_type: Type of :py:class:`~amago.nets.traj_encoders.TrajEncoder` to use.
+    """
+
+    def __init__(
+        self,
+        obs_space: gym.spaces.Dict,
+        rl2_space: gym.spaces.Box,
+        action_space: gym.spaces.Space,
+        max_seq_len: int,
+        tstep_encoder_type: Type[TstepEncoder],
+        traj_encoder_type: Type[TrajEncoder],
+    ):
+        super().__init__()
+        self.obs_space = obs_space
+        self.rl2_space = rl2_space
+        self.action_space = action_space
+        self.max_seq_len = max_seq_len
+        self.pad_val = MAGIC_PAD_VAL
+        self.tstep_encoder_type = tstep_encoder_type
+        self.traj_encoder_type = traj_encoder_type
+        self.multibinary = False
+        self.discrete = False
+        self.action_dim, self.discrete, self.multibinary = get_action_dim_and_type(
+            action_space
+        )
+        self.init_encoders()
+
+    def init_encoders(self) -> None:
+        self.tstep_encoder = self.tstep_encoder_type(
+            obs_space=self.obs_space,
+            rl2_space=self.rl2_space,
+        )
+        self.traj_encoder = self.traj_encoder_type(
+            tstep_dim=self.tstep_encoder.emb_dim,
+            max_seq_len=self.max_seq_len,
+        )
+
+    @property
+    def state_dim(self) -> int:
+        """Defines the effective "state" dimension for RL.
+
+        The dimension of the timestep representation at the point where RL
+        is assumed to be memory-free. Typically the dimension of the output
+        of the TrajEncoder.
+        """
+        return self.traj_encoder.emb_dim
+
+    def get_state_embedding(
+        self,
+        obs: dict[str, torch.Tensor],
+        rl2s: torch.Tensor,
+        time_idxs: torch.Tensor,
+        hidden_state: Optional[Any] = None,
+    ) -> Tuple[torch.Tensor, Any]:
+        """Get the state embedding from the current policy.
+
+        Args:
+            obs: Dictionary of (batched) observation tensors. AMAGOEnv makes all
+                observations into dicts.
+            rl2s: Batched Tensor of previous action and reward. AMAGOEnv makes these.
+            time_idxs: Batched Tensor indicating the global timestep of the episode.
+            hidden_state: Hidden state of the TrajEncoder. Defaults to None.
+
+        Returns:
+            Tuple[Tensor, Any]: A tuple containing:
+                - The state embedding.
+                - Updated hidden state of the TrajEncoder.
+        """
+        tstep_emb = self.tstep_encoder(obs=obs, rl2s=rl2s)
+        traj_emb_t, hidden_state = self.traj_encoder(
+            tstep_emb, time_idxs=time_idxs, hidden_state=hidden_state
+        )
+        return traj_emb_t, hidden_state
+
+    @abc.abstractmethod
+    def forward(self, batch: Batch, log_step: bool) -> torch.Tensor:
+        """Training forward pass."""
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_actions(
+        self,
+        obs: dict[str, torch.Tensor],
+        rl2s: torch.Tensor,
+        time_idxs: torch.Tensor,
+        hidden_state=None,
+        sample: bool = True,
+    ) -> Tuple[torch.Tensor, Any]:
+        """Inference forward pass for getting actions during rollouts."""
+        raise NotImplementedError
+
+    @property
+    @abc.abstractmethod
+    def trainable_params(self):
+        """Iterable over all trainable parameters, which should be passed to the optimizer."""
+        raise NotImplementedError
+
+    def _full_copy(self, target, online):
+        for target_param, param in zip(target.parameters(), online.parameters()):
+            target_param.data.copy_(param.data)
+
+    def _ema_copy(self, target, online, tau: Optional[float] = None):
+        if tau is None:
+            tau = self.tau
+        for target_param, param in zip(target.parameters(), online.parameters()):
+            target_param.data.copy_(target_param.data * (1.0 - tau) + param.data * tau)
+
+    @abc.abstractmethod
+    def hard_sync_targets(self):
+        """Hard copy online networks to target networks."""
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def soft_sync_targets(self):
+        """Soft (EMA) copy online networks to target networks."""
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def get_grad_norms(self) -> dict[str, float]:
+        """Get gradient norms for logging to wandb."""
+        raise NotImplementedError
+
+    def init_hidden_state(self, batch_size: int, device: torch.device):
+        """Initialize hidden state for rollouts."""
+        return self.traj_encoder.init_hidden_state(batch_size, device)
+
+    def reset_hidden_state(self, hidden_state, dones: np.ndarray):
+        """Reset hidden state for environments that are done."""
+        return self.traj_encoder.reset_hidden_state(hidden_state, dones)
+
+    def _sample_k_actions(self, dist, k: int):
+        if self.discrete:
+            assert k == 1, "There is no need to sample multiple discrete actions"
+            a = dist.probs.unsqueeze(0)
+        elif self.actor.actions_differentiable:
+            a = torch.stack([dist.rsample() for _ in range(k)], dim=0)
+        else:
+            a = dist.sample((k,))
+        return a
+
+    def edit_actor_mask(
+        self, batch: Batch, actor_loss: torch.FloatTensor, pad_mask: torch.BoolTensor
+    ) -> torch.BoolTensor:
+        """Customize the actor loss mask.
+
+        Args:
+            batch: The batch of data.
+            actor_loss: The unmasked actor loss. Shape: (Batch, Length, Num Gammas, 1)
+            pad_mask: The default mask. True where the sequence was not padded out of the
+                dataloader.
+
+        Returns:
+            The mask. True where the actor loss should count, False where it should be ignored.
+        """
+        return pad_mask
+
+    def edit_critic_mask(
+        self,
+        batch: Batch,
+        critic_loss: Optional[torch.Tensor],
+        pad_mask: torch.BoolTensor,
+    ) -> torch.BoolTensor:
+        """Customize the critic loss mask.
+
+        Args:
+            batch: The batch of data.
+            critic_loss: The unmasked critic loss. Shape: (Batch, Length, Num Critics, Num
+                Gammas, 1)
+            pad_mask: The default mask. True where the sequence was not padded out of the
+                dataloader.
+
+        Returns:
+            The mask. True where the critic loss should count, False where it should be ignored.
+        """
+        return pad_mask
+
+
 @gin.configurable
-class Agent(nn.Module):
+@register_agent("agent")
+class Agent(BaseAgent):
     """Actor-Critic with a shared sequence model backbone.
 
     `Agent` manages the training and inference of a sequence model policy. The base learning
@@ -209,6 +555,8 @@ class Agent(nn.Module):
             -Q(s, a ~ pi(s)). Defaults to 1.0.
         offline_coeff: Weight of the "offline" aka advantage weighted/"filtered"
             regression term (CRR/AWAC). Defaults to 0.1.
+        critic_loss_weight: Weight for critic loss vs actor loss in the total scalar loss.
+            Defaults to 10.0.
         gamma: Discount factor *of the policy we sample during rollouts/evals*.
             Defaults to 0.999.
         reward_multiplier: Scale every reward by a constant (for loss function only).
@@ -228,6 +576,10 @@ class Agent(nn.Module):
         use_target_actor: If True, use a target actor to sample actions used in TD targets.
             Defaults to True.
         use_multigamma: If True, train on multiple discount horizons (:py:class:`~amago.agent.Multigammas`) in parallel. Defaults to True.
+        n_step: N-step horizon for TD targets. n=1 gives standard 1-step Bellman targets.
+            Higher values use :py:func:`~amago.agent.nstep_return` to sum discounted
+            rewards over ``n`` future steps before bootstrapping with Q(s_{t+n}).
+            Defaults to 1.
         actor_type: Actor MLP head for producing action distributions. Defaults to :py:class:`~amago.nets.actor_critic.Actor`.
         critic_type: Critic MLP head for producing Q-values. Defaults to :py:class:`~amago.nets.actor_critic.NCritics`.
         pass_obs_keys_to_actor: List of keys from the observation space to pass directly to the actor network's forward pass if needed for some reason (e.g., for masking actions). Defaults to None.
@@ -245,6 +597,7 @@ class Agent(nn.Module):
         num_critics_td: int = 2,
         online_coeff: float = 1.0,
         offline_coeff: float = 0.1,
+        critic_loss_weight: float = 10.0,
         gamma: float = 0.999,
         reward_multiplier: float = 10.0,
         tau: float = 0.003,
@@ -255,79 +608,77 @@ class Agent(nn.Module):
         popart: bool = True,
         use_target_actor: bool = True,
         use_multigamma: bool = True,
+        n_step: int = 1,
         actor_type: Type[actor_critic.BaseActorHead] = actor_critic.Actor,
         critic_type: Type[actor_critic.BaseCriticHead] = actor_critic.NCritics,
         pass_obs_keys_to_actor: Optional[Iterable[str]] = None,
     ):
-        super().__init__()
-        self.obs_space = obs_space
-        self.rl2_space = rl2_space
-
-        self.action_space = action_space
-        self.multibinary = False
-        self.discrete = False
-        if isinstance(self.action_space, gym.spaces.Discrete):
-            self.action_dim = self.action_space.n
-            self.discrete = True
-        elif isinstance(self.action_space, gym.spaces.MultiBinary):
-            self.action_dim = self.action_space.n
-            self.multibinary = True
-        elif isinstance(self.action_space, gym.spaces.Box):
-            self.action_dim = self.action_space.shape[-1]
-        else:
-            raise ValueError(f"Unsupported action space: `{type(self.action_space)}`")
+        super().__init__(
+            obs_space=obs_space,
+            rl2_space=rl2_space,
+            action_space=action_space,
+            max_seq_len=max_seq_len,
+            tstep_encoder_type=tstep_encoder_type,
+            traj_encoder_type=traj_encoder_type,
+        )
 
         self.reward_multiplier = reward_multiplier
-        self.pad_val = MAGIC_PAD_VAL
         self.fake_filter = fake_filter
         self.num_actions_for_value_in_critic_loss = num_actions_for_value_in_critic_loss
         self.num_actions_for_value_in_actor_loss = num_actions_for_value_in_actor_loss
         self.fbc_filter_func = fbc_filter_func
         self.offline_coeff = offline_coeff
         self.online_coeff = online_coeff
+        self.critic_loss_weight = critic_loss_weight
         self.tau = tau
         self.use_target_actor = use_target_actor
-        self.max_seq_len = max_seq_len
-
-        self.tstep_encoder = tstep_encoder_type(
-            obs_space=obs_space,
-            rl2_space=rl2_space,
+        assert n_step >= 1, f"n_step must be >= 1, got {n_step}"
+        self.n_step = n_step
+        self._nstep_fn = torch.compile(
+            partial(nstep_return, n=n_step), mode="reduce-overhead"
         )
-        self.traj_encoder = traj_encoder_type(
-            tstep_dim=self.tstep_encoder.emb_dim,
-            max_seq_len=max_seq_len,
+        multigammas = (
+            Multigammas().discrete if self.discrete else Multigammas().continuous
         )
-        self.emb_dim = self.traj_encoder.emb_dim
-
-        if self.discrete:
-            multigammas = Multigammas().discrete
-        else:
-            multigammas = Multigammas().continuous
-
-        # provided hparam `gamma` will stay in the -1 index
-        # of gammas, actor, and critic outputs.
         gammas = (multigammas if use_multigamma else []) + [gamma]
         self.gammas = torch.Tensor(gammas).float()
         assert num_critics_td <= num_critics
         self.num_critics = num_critics
         self.num_critics_td = num_critics_td
-
         self.popart = actor_critic.PopArtLayer(gammas=len(gammas), enabled=popart)
+        self.pass_obs_keys_to_actor = pass_obs_keys_to_actor or []
+        self.actor_type = actor_type
+        self.critic_type = critic_type
+        self.init_actor_critic()
+        self.init_extra_networks()
+        # full weight copy to targets
+        self.hard_sync_targets()
 
+    def init_actor_critic(self) -> None:
+        """Initialize the actor and critic networks."""
         ac_kwargs = {
-            "state_dim": self.traj_encoder.emb_dim,
+            "state_dim": self.state_dim,
             "action_dim": self.action_dim,
             "discrete": self.discrete,
             "gammas": self.gammas,
         }
-        self.critics = critic_type(**ac_kwargs, num_critics=num_critics)
-        self.target_critics = critic_type(**ac_kwargs, num_critics=num_critics)
-        self.maximized_critics = critic_type(**ac_kwargs, num_critics=num_critics)
-        self.actor = actor_type(**ac_kwargs)
-        self.target_actor = actor_type(**ac_kwargs)
-        # full weight copy to targets
-        self.hard_sync_targets()
-        self.pass_obs_keys_to_actor = pass_obs_keys_to_actor or []
+        self.critics = self.critic_type(**ac_kwargs, num_critics=self.num_critics)
+        self.target_critics = self.critic_type(
+            **ac_kwargs, num_critics=self.num_critics
+        )
+        self.maximized_critics = self.critic_type(
+            **ac_kwargs, num_critics=self.num_critics
+        )
+        self.actor = self.actor_type(**ac_kwargs)
+        self.target_actor = self.actor_type(**ac_kwargs)
+
+    def init_extra_networks(self) -> None:
+        """Hook to initialize any additional networks
+
+        Called after the main tstep_encoder, traj_encoder, actor and critics
+        are initialized, but before hard_sync_targets().
+        """
+        pass
 
     @property
     def trainable_params(self):
@@ -338,16 +689,6 @@ class Agent(nn.Module):
             self.critics.parameters(),
             self.actor.parameters(),
         )
-
-    def _full_copy(self, target, online):
-        for target_param, param in zip(target.parameters(), online.parameters()):
-            target_param.data.copy_(param.data)
-
-    def _ema_copy(self, target, online):
-        for target_param, param in zip(target.parameters(), online.parameters()):
-            target_param.data.copy_(
-                target_param.data * (1.0 - self.tau) + param.data * self.tau
-            )
 
     def hard_sync_targets(self):
         """Hard copy online actor/critics to target actor/critics"""
@@ -367,7 +708,7 @@ class Agent(nn.Module):
         obs: dict[str, torch.Tensor],
         rl2s: torch.Tensor,
         time_idxs: torch.Tensor,
-        hidden_state=None,
+        hidden_state: Optional[Any] = None,
         sample: bool = True,
     ) -> Tuple[torch.Tensor, Any]:
         """Get rollout actions from the current policy.
@@ -393,10 +734,8 @@ class Agent(nn.Module):
                   ("test-time") discount factor* `Agent.gamma`.
                 - Updated hidden state of the TrajEncoder.
         """
-        tstep_emb = self.tstep_encoder(obs=obs, rl2s=rl2s)
-        # sequence model embedding [batch, length, d_emb]
-        traj_emb_t, hidden_state = self.traj_encoder(
-            tstep_emb, time_idxs=time_idxs, hidden_state=hidden_state
+        traj_emb_t, hidden_state = self.get_state_embedding(
+            obs=obs, rl2s=rl2s, time_idxs=time_idxs, hidden_state=hidden_state
         )
         # generate action distribution [batch, length, len(self.gammas), d_action]
         action_dists = self.actor(
@@ -415,38 +754,61 @@ class Agent(nn.Module):
         dtype = torch.uint8 if (self.discrete or self.multibinary) else torch.float32
         return actions.to(dtype=dtype), hidden_state
 
-    def _sample_k_actions(self, dist, k: int):
-        if self.discrete:
-            assert k == 1, "There is no need to sample multiple discrete actions"
-            a = dist.probs.unsqueeze(0)
-        elif self.actor.actions_differentiable:
-            a = torch.stack([dist.rsample() for _ in range(k)], dim=0)
-        else:
-            a = dist.sample((k,))
-        return a
-
-    def _critic_ensemble_to_td_target(self, ensemble_td_target: torch.Tensor):
-        B, L, C, G, _ = ensemble_td_target.shape
+    def _reduce_critic_ensemble(self, q_ensemble: torch.Tensor) -> torch.Tensor:
+        B, L, C, G, _ = q_ensemble.shape
         # random subset of critic ensemble
         random_subset = torch.randint(
             low=0,
             high=C,
             size=(B, L, self.num_critics_td, G, 1),
-            device=ensemble_td_target.device,
+            device=q_ensemble.device,
         )
-        td_target_rand = torch.take_along_dim(ensemble_td_target, random_subset, dim=2)
+        q_subset = torch.take_along_dim(q_ensemble, random_subset, dim=2)
         if self.online_coeff > 0:
             # clipped double q
-            td_target = td_target_rand.min(2, keepdims=True).values
+            q_reduced = q_subset.min(2, keepdims=True).values
         else:
             # without DPG updates the usual min creates strong underestimation. take mean instead
-            td_target = td_target_rand.mean(2, keepdims=True)
-        return td_target
+            q_reduced = q_subset.mean(2, keepdims=True)
+        return q_reduced
 
-    def forward(
-        self, batch: Batch, log_step: bool
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
-        """Computes actor and critic losses from a Batch of trajectory data.
+    def _compute_loss(
+        self,
+        batch: Batch,
+        actor_loss: torch.Tensor,
+        critic_loss: Optional[torch.Tensor],
+        state_mask: torch.BoolTensor,
+    ) -> torch.Tensor:
+        B, L_1, _ = state_mask.shape
+        G = len(self.gammas)
+        C = len(self.critics)
+        if not isinstance(actor_loss, torch.Tensor):
+            actor_loss = torch.zeros((B, L_1, G, 1), device=state_mask.device)
+        actor_state_mask = repeat(state_mask, f"b l 1 -> b l {G} 1")
+        critic_state_mask = repeat(state_mask, f"b l 1 -> b l {C} {G} 1")
+        actor_state_mask = self.edit_actor_mask(batch, actor_loss, actor_state_mask)
+        critic_state_mask = self.edit_critic_mask(batch, critic_loss, critic_state_mask)
+        batch_size = B * L_1
+        unmasked_batch_size = actor_state_mask[..., 0, 0].sum()
+        masked_actor_loss = utils.masked_avg(actor_loss, actor_state_mask)
+        if isinstance(critic_loss, torch.Tensor):
+            masked_critic_loss = utils.masked_avg(critic_loss, critic_state_mask)
+        else:
+            masked_critic_loss = torch.tensor(0.0, device=masked_actor_loss.device)
+        total_loss = masked_actor_loss + self.critic_loss_weight * masked_critic_loss
+        self.update_info.update(
+            {
+                "Critic Loss": masked_critic_loss,
+                "Actor Loss": masked_actor_loss,
+                "Sequence Length": L_1 + 1,
+                "Batch Size (in Timesteps)": batch_size,
+                "Unmasked Batch Size (in Timesteps)": unmasked_batch_size,
+            }
+        )
+        return total_loss
+
+    def forward(self, batch: Batch, log_step: bool) -> torch.Tensor:
+        """Computes a scalar loss from a Batch of trajectory data.
 
         Args:
             batch: Batch object containing trajectory data including observations,
@@ -455,10 +817,7 @@ class Agent(nn.Module):
                 self.update_info for wandb logging.
 
         Returns:
-            A tuple containing:
-                - critic_loss: Tensor of shape (B, L-1, num_critics, G, 1) where B is batch size,
-                    L is sequence length, G is number of discount factors
-                - actor_loss: Tensor of shape (B, L-1, G, 1)
+            Scalar loss tensor for optimization.
         """
         # fmt: off
         self.update_info = {}  # holds wandb stats
@@ -496,10 +855,10 @@ class Agent(nn.Module):
         d = repeat(batch.dones.float(), f"b l d -> b l 1 {G} d")
         D_emb = self.traj_encoder.emb_dim
         # 1.0 where loss at this index should count, 0.0 where is should be ignored
-        state_mask = (~((batch.rl2s == self.pad_val).all(-1, keepdim=True))).float()[:, 1:, ...]
-        actor_mask = F.pad(state_mask, (0, 0, 0, 1), "constant", 0.0)
+        state_mask = (~((batch.rl2s == self.pad_val).all(-1, keepdim=True))).bool()[:, 1:, ...]
+        actor_mask = F.pad(state_mask.float(), (0, 0, 0, 1), "constant", 0.0)
         actor_mask = repeat(actor_mask, f"b l 1 -> b l {G} 1")
-        critic_mask = repeat(state_mask, f"b l 1 -> b l {C} {G} 1")
+        critic_mask = repeat(state_mask.float(), f"b l 1 -> b l {C} {G} 1")
 
         ########################
         ## Sequence Embedding ##
@@ -541,10 +900,10 @@ class Agent(nn.Module):
                 # Q_target(s', a')
                 q_targ_sp_ap_gp = self.popart(self.target_critics(*sp_ap_gp).mean(0), normalized=False)
                 assert q_targ_sp_ap_gp.shape == (B, L - 1, C, G, 1)
-                # y = r + gamma * (1 - d) * Q_target(s', a')
-                ensemble_td_target = r + gamma * (1.0 - d) * q_targ_sp_ap_gp
-                assert ensemble_td_target.shape == (B, L - 1, C, G, 1)
-                td_target = self._critic_ensemble_to_td_target(ensemble_td_target)
+                q_reduced = self._reduce_critic_ensemble(q_targ_sp_ap_gp)
+                assert q_reduced.shape == (B, L - 1, 1, G, 1)
+                nstep_mask = state_mask.float().unsqueeze(-1).unsqueeze(-1)  # (B, L-1, 1, 1, 1)
+                td_target = self._nstep_fn(r, d, q_reduced, gamma, mask=nstep_mask)
                 assert td_target.shape == (B, L - 1, 1, G, 1)
                 self.popart.update_stats(
                     td_target, mask=critic_mask.all(2, keepdim=True)
@@ -617,7 +976,12 @@ class Agent(nn.Module):
                 self.update_info.update(filter_stats)
 
         # fmt: on
-        return critic_loss, actor_loss
+        return self._compute_loss(
+            batch=batch,
+            actor_loss=actor_loss,
+            critic_loss=critic_loss,
+            state_mask=state_mask,
+        )
 
     def _td_stats(self, mask, raw_q_s_a_g, q_s_a_g, r, d, td_target) -> dict:
         # messy data gathering for wandb console
@@ -719,7 +1083,6 @@ class Agent(nn.Module):
         return stats
 
     def _popart_stats(self) -> dict:
-        # messy data gathering for wandb console
         return {
             "PopArt mu (mean over gamma)": self.popart.mu.data.mean().item(),
             "PopArt nu (mean over gamma)": self.popart.nu.data.mean().item(),
@@ -728,8 +1091,17 @@ class Agent(nn.Module):
             "PopArt sigma (mean over gamma)": self.popart.sigma.mean().item(),
         }
 
+    def get_grad_norms(self) -> dict[str, float]:
+        return {
+            "Actor Grad Norm": utils.get_grad_norm(self.actor),
+            "Critic Grad Norm": utils.get_grad_norm(self.critics),
+            "TrajEncoder Grad Norm": utils.get_grad_norm(self.traj_encoder),
+            "TstepEncoder Grad Norm": utils.get_grad_norm(self.tstep_encoder),
+        }
+
 
 @gin.configurable
+@register_agent("multitask")
 class MultiTaskAgent(Agent):
     """A variant of Agent aimed at learning from distinct reward functions.
 
@@ -771,6 +1143,7 @@ class MultiTaskAgent(Agent):
         num_critics_td: int = 2,
         online_coeff: float = 0.0,
         offline_coeff: float = 1.0,
+        critic_loss_weight: float = 10.0,
         gamma: float = 0.999,
         reward_multiplier: float = 10.0,
         tau: float = 0.003,
@@ -781,6 +1154,7 @@ class MultiTaskAgent(Agent):
         popart: bool = True,
         use_target_actor: bool = True,
         use_multigamma: bool = True,
+        n_step: int = 1,
         actor_type: Type[actor_critic.BaseActorHead] = actor_critic.Actor,
         critic_type: Type[actor_critic.BaseCriticHead] = actor_critic.NCriticsTwoHot,
         pass_obs_keys_to_actor: Optional[Iterable[str]] = None,
@@ -802,8 +1176,10 @@ class MultiTaskAgent(Agent):
             num_actions_for_value_in_actor_loss=num_actions_for_value_in_actor_loss,
             online_coeff=online_coeff,
             offline_coeff=offline_coeff,
+            critic_loss_weight=critic_loss_weight,
             use_target_actor=use_target_actor,
             use_multigamma=use_multigamma,
+            n_step=n_step,
             fbc_filter_func=fbc_filter_func,
             popart=popart,
             actor_type=actor_type,
@@ -845,10 +1221,10 @@ class MultiTaskAgent(Agent):
         gamma = self.gammas.to(r.device).unsqueeze(-1)
         D_emb = self.traj_encoder.emb_dim
         Bins = self.critics.num_bins
-        state_mask = (~((batch.rl2s == self.pad_val).all(-1, keepdim=True))).float()[:, 1:, ...]
-        actor_mask = F.pad(state_mask, (0, 0, 0, 1), "constant", 0.0)
+        state_mask = (~((batch.rl2s == self.pad_val).all(-1, keepdim=True))).bool()[:, 1:, ...]
+        actor_mask = F.pad(state_mask.float(), (0, 0, 0, 1), "constant", 0.0)
         actor_mask = repeat(actor_mask, f"b l 1 -> b l {G} 1")
-        critic_mask = repeat(state_mask, f"b l 1 -> b l {C} {G} 1")
+        critic_mask = repeat(state_mask.float(), f"b l 1 -> b l {C} {G} 1")
 
         ########################
         ## Sequence Embedding ##
@@ -885,10 +1261,10 @@ class MultiTaskAgent(Agent):
                 assert q_targ_sp_ap_gp.probs.shape == (K_c, B, L - 1, C, G, Bins)
                 q_targ_sp_ap_gp = self.target_critics.bin_dist_to_raw_vals(q_targ_sp_ap_gp).mean(0)
                 assert q_targ_sp_ap_gp.shape == (B, L - 1, C, G, 1)
-                # y = r + gamma * (1.0 - d) * Q(s', a')
-                ensemble_td_target = r + gamma * (1.0 - d) * q_targ_sp_ap_gp
-                assert ensemble_td_target.shape == (B, L - 1, C, G, 1)
-                td_target = self._critic_ensemble_to_td_target(ensemble_td_target)
+                q_reduced = self._reduce_critic_ensemble(q_targ_sp_ap_gp)
+                assert q_reduced.shape == (B, L - 1, 1, G, 1)
+                nstep_mask = state_mask.float().unsqueeze(-1).unsqueeze(-1)  # (B, L-1, 1, 1, 1)
+                td_target = self._nstep_fn(r, d, q_reduced, gamma, mask=nstep_mask)
                 assert td_target.shape == (B, L - 1, 1, G, 1)
                 self.popart.update_stats(
                     td_target, mask=critic_mask.all(2, keepdim=True)
@@ -979,13 +1355,17 @@ class MultiTaskAgent(Agent):
             a_agent_dpg = torch.stack([a_dist.rsample() for _ in range(K_a)], dim=0)
             q_s_a_agent = self.maximized_critics(s_rep.detach(), a_agent_dpg)
             q_s_a_agent = self.popart.normalize_values(
-                # mean over K actions, min over critic ensemble
                 self.maximized_critics.bin_dist_to_raw_vals(q_s_a_agent).mean(0).min(2).values
             )
             actor_loss += self.online_coeff * -(q_s_a_agent[:, :-1, ...])
         
 
-        return critic_loss, actor_loss
+        return self._compute_loss(
+            batch=batch,
+            actor_loss=actor_loss,
+            critic_loss=critic_loss,
+            state_mask=state_mask,
+        )
 
     def _td_stats(
         self, mask, raw_q_s_a_g, q_s_a_g, r, d, td_target, raw_q_bins

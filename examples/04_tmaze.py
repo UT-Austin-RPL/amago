@@ -108,7 +108,8 @@ if __name__ == "__main__":
             traj_encoder_type=traj_encoder_type,
             agent_type=agent_type,
             val_timesteps_per_epoch=args.horizon + 1,
-            sample_actions=False,  # even softmax prob .999 isn't good enough for this env...
+            sample_actions_train=False,  # even softmax prob .999 isn't good enough for this env...
+            sample_actions_val=False,
             exploration_wrapper_type=TMazeExploration,
         )
         experiment = cli_utils.switch_async_mode(experiment, args.mode)

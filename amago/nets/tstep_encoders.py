@@ -15,6 +15,53 @@ from amago.nets.utils import InputNorm, add_activation_log, symlog, activation_s
 from amago.nets import ff, cnn
 
 
+###############################
+## TstepEncoder Registration ##
+###############################
+
+_TSTEP_ENCODER_REGISTRY: dict[str, type] = {}
+
+
+def register_tstep_encoder(name: str):
+    """Decorator to register a TstepEncoder class under a shortcut name.
+
+    Args:
+        name: The shortcut name to register the encoder under (e.g., "ff", "cnn").
+
+    Example:
+        @gin.configurable
+        @register_tstep_encoder("my_encoder")
+        class MyCustomTstepEncoder(TstepEncoder):
+            ...
+    """
+
+    def decorator(cls):
+        if name in _TSTEP_ENCODER_REGISTRY:
+            raise ValueError(
+                f"TstepEncoder '{name}' is already registered to {_TSTEP_ENCODER_REGISTRY[name]}. "
+                f"Cannot re-register to {cls}."
+            )
+        _TSTEP_ENCODER_REGISTRY[name] = cls
+        return cls
+
+    return decorator
+
+
+def get_tstep_encoder_cls(name: str) -> type:
+    """Look up a registered TstepEncoder class by its shortcut name."""
+    if name not in _TSTEP_ENCODER_REGISTRY:
+        available = list(_TSTEP_ENCODER_REGISTRY.keys())
+        raise KeyError(
+            f"TstepEncoder '{name}' is not registered. Available: {available}"
+        )
+    return _TSTEP_ENCODER_REGISTRY[name]
+
+
+def list_registered_tstep_encoders() -> list[str]:
+    """Return a list of all registered TstepEncoder shortcut names."""
+    return list(_TSTEP_ENCODER_REGISTRY.keys())
+
+
 class TstepEncoder(nn.Module, ABC):
     """Abstract base class for Timestep Encoders.
 
@@ -33,12 +80,24 @@ class TstepEncoder(nn.Module, ABC):
         obs_space: Environment observation space.
         rl2_space: A gym space declaring the shape of previous action and reward
             features. This is created by the AMAGOEnv wrapper.
+        hide_rl2s: Whether to ignore the previous action and reward features (but
+            otherwise keep the same parameter count and layer dimensions).
+        hide_rewards: Whether to ignore the reward features (but otherwise keep the
+            same parameter count and layer dimensions).
     """
 
-    def __init__(self, obs_space: gym.Space, rl2_space: gym.Space):
+    def __init__(
+        self,
+        obs_space: gym.Space,
+        rl2_space: gym.Space,
+        hide_rl2s: bool = False,
+        hide_rewards: bool = False,
+    ):
         super().__init__()
         self.obs_space = obs_space
         self.rl2_space = rl2_space
+        self.hide_rl2s = hide_rl2s
+        self.hide_rewards = hide_rewards
 
     def forward(
         self,
@@ -46,8 +105,12 @@ class TstepEncoder(nn.Module, ABC):
         rl2s: torch.Tensor,
         log_dict: Optional[dict] = None,
     ) -> torch.Tensor:
-        # outsources customization to inner_forward to maintain control
-        # over future hidden state compatibility.
+        if self.hide_rewards or self.hide_rl2s:
+            rl2s = rl2s.clone()
+            if self.hide_rewards:
+                rl2s[..., 0].zero_()
+            elif self.hide_rl2s:
+                rl2s.zero_()
         out = self.inner_forward(obs, rl2s, log_dict=log_dict)
         return out
 
@@ -82,6 +145,7 @@ class TstepEncoder(nn.Module, ABC):
 
 
 @gin.configurable
+@register_tstep_encoder("ff")
 class FFTstepEncoder(TstepEncoder):
     """A simple MLP-based TstepEncoder.
 
@@ -96,8 +160,11 @@ class FFTstepEncoder(TstepEncoder):
         n_layers: Number of layers in the MLP. Defaults to 2.
         d_hidden: Dimension of the hidden layers. Defaults to 512.
         d_output: Dimension of the output. Defaults to 256.
-        norm: Normalization layer to use. See `nets.ff.Normalization` for options.
-            Defaults to "layer".
+        norm: Normalization layer to use within the MLP (after every layer
+            excluding the final output activation). See `nets.ff.Normalization`
+            for options. Defaults to None.
+        out_norm: Normalization layer to use on the final output. Defaults to
+            "layer" (LayerNorm).
         activation: Activation function to use. See `nets.utils.activation_switch`
             for options. Defaults to "leaky_relu".
         hide_rl2s: Whether to ignore the previous action and reward features (but
@@ -117,13 +184,14 @@ class FFTstepEncoder(TstepEncoder):
         n_layers: int = 2,
         d_hidden: int = 512,
         d_output: int = 256,
-        norm: str = "layer",
+        norm: Optional[str] = None,
+        out_norm: str = "layer",
         activation: str = "leaky_relu",
         hide_rl2s: bool = False,
         normalize_inputs: bool = True,
         specify_obs_keys: Optional[list[str]] = None,
     ):
-        super().__init__(obs_space=obs_space, rl2_space=rl2_space)
+        super().__init__(obs_space=obs_space, rl2_space=rl2_space, hide_rl2s=hide_rl2s)
         if specify_obs_keys is None:
             self.obs_keys = sorted(list(obs_space.keys()))
         else:
@@ -139,10 +207,10 @@ class FFTstepEncoder(TstepEncoder):
             n_layers=n_layers,
             d_output=d_output,
             activation=activation,
+            normalization=norm,
         )
-        self.out_norm = ff.Normalization(norm, d_output)
+        self.out_norm = ff.Normalization(out_norm, d_output)
         self._emb_dim = d_output
-        self.hide_rl2s = hide_rl2s
 
     def _cat_flattened_obs(self, obs):
         # B, L, dim_0, ... -> B L D; in fixed order
@@ -160,8 +228,6 @@ class FFTstepEncoder(TstepEncoder):
         rl2s: torch.Tensor,
         log_dict: Optional[dict] = None,
     ) -> torch.Tensor:
-        if self.hide_rl2s:
-            rl2s = rl2s * 0
         flat_obs = self._cat_flattened_obs(obs)
         flat_obs_rl2 = torch.cat((flat_obs.float(), rl2s), dim=-1)
         if self.training:
@@ -177,6 +243,7 @@ class FFTstepEncoder(TstepEncoder):
 
 
 @gin.configurable
+@register_tstep_encoder("cnn")
 class CNNTstepEncoder(TstepEncoder):
     """A simple CNN-based TstepEncoder.
 
@@ -231,7 +298,7 @@ class CNNTstepEncoder(TstepEncoder):
         aug_pct_of_batch: float = 0.75,
         obs_key: str = "observation",
     ):
-        super().__init__(obs_space=obs_space, rl2_space=rl2_space)
+        super().__init__(obs_space=obs_space, rl2_space=rl2_space, hide_rl2s=hide_rl2s)
         self.data_aug = (
             cnn.DrQv2Aug(4, channels_first=channels_first) if drqv2_aug else lambda x: x
         )
@@ -248,7 +315,6 @@ class CNNTstepEncoder(TstepEncoder):
         mlp_in = img_features + rl2_features
         self.merge = nn.Linear(mlp_in, d_output)
         self.out_norm = ff.Normalization(out_norm, d_output)
-        self.hide_rl2s = hide_rl2s
         self.obs_key = obs_key
         self._emb_dim = d_output
         assert 0 <= aug_pct_of_batch <= 1, "aug_pct_of_batch must be between 0 and 1"
@@ -272,8 +338,6 @@ class CNNTstepEncoder(TstepEncoder):
         add_activation_log("cnn_out", img_rep, log_dict)
         img_rep = self.img_features(img_rep)
         add_activation_log("img_features", img_rep, log_dict)
-        if self.hide_rl2s:
-            rl2s *= 0
         rl2s_rep = self.rl2_features(symlog(rl2s))
         inp = self.activation(torch.cat((img_rep, rl2s_rep), dim=-1))
         merge = self.merge(inp)
