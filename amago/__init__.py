@@ -1,4 +1,4 @@
-__version__ = "3.1.2"
+__version__ = "3.2.0"
 
 from .experiment import Experiment
 from .agent import Agent, register_agent, get_agent_cls, list_registered_agents
