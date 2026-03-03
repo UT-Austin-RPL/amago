@@ -600,25 +600,18 @@ class NCriticsTwoHot(BaseCriticHead):
         )
         return pyd.Categorical(logits=outputs)
 
-    def bin_dist_to_raw_vals(
-        self, bin_dist: pyd.Categorical, temperature: float = 1.0
-    ) -> torch.Tensor:
+    def bin_dist_to_raw_vals(self, bin_dist: pyd.Categorical) -> torch.Tensor:
         """Convert a categorical distribution over bins to a scalar.
 
         Args:
             bin_dist: The categorical distribution over bins (output of `forward`).
-            temperature: Temperature for softening the distribution.
 
         Returns:
             The scalar value.
         """
         assert isinstance(bin_dist, pyd.Categorical)
-        if temperature == 1.0:
-            probs = bin_dist.probs
-        else:
-            probs = torch.softmax(bin_dist.logits / temperature, dim=-1)
-        bin_vals = self.bin_vals.to(probs.device, dtype=probs.dtype)
-        exp_val = (probs * bin_vals).sum(-1, keepdims=True)
+        bin_vals = self.bin_vals.to(bin_dist.probs.device, dtype=bin_dist.probs.dtype)
+        exp_val = (bin_dist.probs * bin_vals).sum(-1, keepdims=True)
         return self.invert_bins(exp_val)
 
     def raw_vals_to_labels(self, raw_td_target: torch.Tensor) -> torch.Tensor:
