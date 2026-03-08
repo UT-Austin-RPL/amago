@@ -473,6 +473,18 @@ class BaseAgent(nn.Module, abc.ABC):
         """
         return pad_mask
 
+    def on_checkpoint_loaded(self, is_resume: bool = False):
+        """Called after checkpoint weights have been loaded into this agent.
+
+        Override to snapshot parameters, build frozen copies, etc.
+
+        Args:
+            is_resume: True when restoring a full accelerate training state
+                (i.e. continuing an in-progress run). False when loading raw
+                policy weights for a new run or inference.
+        """
+        pass
+
 
 @gin.configurable
 @register_agent("agent")
@@ -753,6 +765,75 @@ class Agent(BaseAgent):
         actions = actions[..., -1, :]
         dtype = torch.uint8 if (self.discrete or self.multibinary) else torch.float32
         return actions.to(dtype=dtype), hidden_state
+
+    @torch.no_grad()
+    def get_values(self, batch: Batch) -> dict[str, torch.Tensor]:
+        """Inference-time computation of Q, V, advantage, and filter weights.
+
+        Mirrors the advantage computation in `forward` but without computing
+        any losses or updating any state. Useful for offline analysis of
+        what the critic thinks about a batch of data.
+
+        Args:
+            batch: A collated Batch of trajectories.
+
+        Returns:
+            Dict with keys:
+                - q_sa: Q(s, a_observed), mean over critic ensemble. (B, L-1, G, 1)
+                - v_s: V(s) = E_pi[Q(s, a~pi)], mean over samples and ensemble. (B, L-1, G, 1)
+                - advantage: A(s,a) = Q(s,a) - V(s). (B, L-1, G, 1)
+                - filter_weights: f(A(s,a)) from fbc_filter_func. (B, L-1, G, 1)
+                - state_mask: Valid timestep mask. (B, L-1, 1)
+        """
+        o = self.tstep_encoder(obs=batch.obs, rl2s=batch.rl2s)
+        straight_from_obs = {k: batch.obs[k] for k in self.pass_obs_keys_to_actor}
+        B, L, D_o = o.shape
+        a = batch.actions
+        a = a.clamp(0, 1.0) if self.discrete else a.clamp(-1.0, 1.0)
+        _B, _L, D_action = a.shape
+        G = len(self.gammas)
+        K_a = self.num_actions_for_value_in_actor_loss if not self.discrete else 1
+        a_buffer = F.pad(a, (0, 0, 0, 1), "replicate")
+        a_buffer = repeat(a_buffer, f"b l a -> b l {G} a")
+        state_mask = (~((batch.rl2s == self.pad_val).all(-1, keepdim=True))).bool()[
+            :, 1:, ...
+        ]
+
+        s_rep, _ = self.traj_encoder(
+            seq=o, time_idxs=batch.time_idxs, hidden_state=None
+        )
+
+        a_dist = self.actor(s_rep, straight_from_obs=straight_from_obs)
+
+        # Q(s, a_observed) — raw critic output, (B, L, C, G, 1)
+        q_sa_raw = self.critics(s_rep, a_buffer.unsqueeze(0)).mean(0)
+        # V(s) = E_pi[Q(s, a~pi)] — raw critic output
+        a_agent = self._sample_k_actions(a_dist, k=K_a)
+        v_s_raw = self.critics(s_rep.detach(), a_agent).mean(0)
+
+        # Filter in popart-normalized space (stable, scale-invariant to reward shifts)
+        q_sa_norm = self.popart(q_sa_raw)[:, :-1, ...].mean(2)
+        v_s_norm = self.popart(v_s_raw)[:, :-1, ...].mean(2)
+        filter_weights = self.fbc_filter_func(q_sa_norm - v_s_norm).float()
+
+        # Q, V, advantage in denormalized reward scale for interpretability
+        q_denorm = self.popart(q_sa_raw, normalized=False)[:, :-1, ...]
+        v_denorm = self.popart(v_s_raw, normalized=False)[:, :-1, ...]
+        q_sa = q_denorm.mean(2)
+        q_sa_std = q_denorm.std(2)
+        v_s = v_denorm.mean(2)
+        v_s_std = v_denorm.std(2)
+        advantage = q_sa - v_s
+
+        return {
+            "q_sa": q_sa,
+            "v_s": v_s,
+            "advantage": advantage,
+            "filter_weights": filter_weights,
+            "state_mask": state_mask,
+            "q_sa_std": q_sa_std,
+            "v_s_std": v_s_std,
+        }
 
     def _reduce_critic_ensemble(self, q_ensemble: torch.Tensor) -> torch.Tensor:
         B, L, C, G, _ = q_ensemble.shape
@@ -1189,6 +1270,75 @@ class MultiTaskAgent(Agent):
 
     def _sample_k_actions(self, dist, k: int):
         raise NotImplementedError
+
+    @torch.no_grad()
+    def get_values(self, batch: Batch) -> dict[str, torch.Tensor]:
+        """Inference-time computation of Q, V, advantage, and filter weights.
+
+        MultiTaskAgent override that uses bin-distribution critics
+        (NCriticsTwoHot) instead of scalar critics.
+
+        Args:
+            batch: A collated Batch of trajectories.
+
+        Returns:
+            Dict with keys:
+                - q_sa: Q(s, a_observed), mean over critic ensemble. (B, L-1, G, 1)
+                - v_s: V(s) = E_pi[Q(s, a~pi)], mean over samples and ensemble. (B, L-1, G, 1)
+                - advantage: A(s,a) = Q(s,a) - V(s). (B, L-1, G, 1)
+                - filter_weights: f(A(s,a)) from fbc_filter_func. (B, L-1, G, 1)
+                - state_mask: Valid timestep mask. (B, L-1, 1)
+        """
+        o = self.tstep_encoder(obs=batch.obs, rl2s=batch.rl2s)
+        straight_from_obs = {k: batch.obs[k] for k in self.pass_obs_keys_to_actor}
+        B, L, D_o = o.shape
+        a = batch.actions
+        a = a.clamp(0, 1.0) if self.discrete else a.clamp(-1.0, 1.0)
+        _B, _L, D_action = a.shape
+        G = len(self.gammas)
+        K_a = self.num_actions_for_value_in_actor_loss
+        a_buffer = F.pad(a, (0, 0, 0, 1), "replicate")
+        a_buffer = repeat(a_buffer, f"b l a -> b l {G} a")
+        state_mask = (~((batch.rl2s == self.pad_val).all(-1, keepdim=True))).bool()[
+            :, 1:, ...
+        ]
+
+        s_rep, _ = self.traj_encoder(
+            seq=o, time_idxs=batch.time_idxs, hidden_state=None
+        )
+
+        a_dist = self.actor(s_rep, straight_from_obs=straight_from_obs)
+        if self.discrete:
+            a_dist = DiscreteLikeContinuous(a_dist)
+
+        # Q(s, a_observed) via bin distribution critics
+        q_dist = self.critics(s_rep, a_buffer.unsqueeze(0))
+        scalar_q = self.critics.bin_dist_to_raw_vals(q_dist).squeeze(0)
+        # scalar_q: (B, L, C, G, 1) — C is critic ensemble dim
+        q_sa = scalar_q[:, :-1, ...].mean(2)
+        q_sa_std = scalar_q[:, :-1, ...].std(2)
+
+        # V(s) = E_pi[Q(s, a~pi)] via K_a sampled actions
+        a_agent = a_dist.sample((K_a,))
+        q_v_dist = self.critics(s_rep.detach(), a_agent)
+        val_s = self.critics.bin_dist_to_raw_vals(q_v_dist)
+        # val_s: (K_a, B, L, C, G, 1) — mean over samples (0), keep ensemble (3)
+        val_s_per_critic = val_s[:, :, :-1, ...].mean(0)  # (B, L-1, C, G, 1)
+        v_s = val_s_per_critic.mean(2)
+        v_s_std = val_s_per_critic.std(2)
+
+        advantage = q_sa - v_s
+        filter_weights = self.fbc_filter_func(advantage).float()
+
+        return {
+            "q_sa": q_sa,
+            "v_s": v_s,
+            "advantage": advantage,
+            "filter_weights": filter_weights,
+            "state_mask": state_mask,
+            "q_sa_std": q_sa_std,
+            "v_s_std": v_s_std,
+        }
 
     def forward(self, batch: Batch, log_step: bool):
         # fmt: off
