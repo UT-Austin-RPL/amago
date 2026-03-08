@@ -1,4 +1,9 @@
-__version__ = "3.1.2"
+from importlib.metadata import version, PackageNotFoundError
+
+try:
+    __version__ = version("amago")
+except PackageNotFoundError:
+    __version__ = "unknown"
 
 from .experiment import Experiment
 from .agent import Agent, register_agent, get_agent_cls, list_registered_agents
