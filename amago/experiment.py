@@ -380,6 +380,7 @@ class Experiment:
             self.policy.load_state_dict(ckpt)
         else:
             self.accelerator.load_state(path)
+        self.policy.on_checkpoint_loaded(is_resume=is_accelerate_state)
 
     def load_checkpoint(self, epoch: int, resume_training_state: bool = True) -> None:
         """Load a historical checkpoint from the `ckpts` directory of this experiment.
