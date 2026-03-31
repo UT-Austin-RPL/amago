@@ -327,8 +327,17 @@ class MixtureOfDatasets(RLDataset):
     Args:
         datasets: A list of :py:class:`~amago.loading.RLDataset` objects.
         sampling_weights: Probability of sampling from each dataset. Must sum to 1.
-        smooth_sudden_starts: When a dataset becomes ready for training mid-way through training,
-            anneal its sampling_weight from 0 --> assigned ``sampling_weights[i]`` over ``smooth_sudden_starts`` epochs.
+            These are the *final* target weights after annealing completes.
+        initial_sampling_weights: Optional starting weights before annealing. When
+            provided, each dataset anneals from ``initial_sampling_weights[i]`` to
+            ``sampling_weights[i]`` over ``smooth_sudden_starts`` epochs (starting
+            from the epoch the dataset becomes ready for training).  When ``None``
+            (default), datasets that are ready at the start of training jump
+            straight to their target weight, while datasets that become ready later
+            anneal up from 0.
+        smooth_sudden_starts: Number of epochs over which to anneal each dataset's
+            sampling weight from its initial value to its target value, starting
+            from the epoch the dataset becomes ready for training.
         dset_name: The name of the dataset. Used to identify the dataset in logging metrics. Defaults to the class name.
 
     Note:
@@ -345,6 +354,7 @@ class MixtureOfDatasets(RLDataset):
         self,
         datasets: list[RLDataset],
         sampling_weights: list[float],
+        initial_sampling_weights: Optional[list[float]] = None,
         smooth_sudden_starts: Optional[int] = None,
         dset_name: Optional[str] = None,
     ):
@@ -357,8 +367,15 @@ class MixtureOfDatasets(RLDataset):
             raise ValueError(
                 f"{self.__class__.__name__} requires the sum of sampling weights to be 1.0"
             )
+        if initial_sampling_weights is not None and len(
+            initial_sampling_weights
+        ) != len(datasets):
+            raise ValueError(
+                f"{self.__class__.__name__} requires the same number of initial_sampling_weights ({len(initial_sampling_weights)}) as datasets ({len(datasets)})"
+            )
         self.all_datasets = datasets
         self.sampling_weights = sampling_weights
+        self.initial_sampling_weights = initial_sampling_weights
         self.smooth_sudden_starts = smooth_sudden_starts
 
         # find up to 1 dataset that determines where Experiment will write new trajectories
@@ -378,10 +395,13 @@ class MixtureOfDatasets(RLDataset):
 
         # with datasets configured, initialize our annealing schedule
         self._dsets_status = []
-        for d, w in zip(self.all_datasets, self.sampling_weights):
-            # if the dataset is available from the start of training, turn off its schedule
-            # setting initial_weight to the final weight.
-            initial_weight = w if d.ready_for_training else 0
+        for i, (d, w) in enumerate(zip(self.all_datasets, self.sampling_weights)):
+            if self.initial_sampling_weights is not None:
+                initial_weight = self.initial_sampling_weights[i]
+            else:
+                # legacy behavior: ready datasets start at their final weight,
+                # not-yet-ready datasets anneal up from 0
+                initial_weight = w if d.ready_for_training else 0
             self._dsets_status.append(
                 _DatasetStatus(
                     dataset=d,
@@ -416,22 +436,17 @@ class MixtureOfDatasets(RLDataset):
         for status in self._dsets_status:
             if status.epoch_ready is not None:
                 if self.smooth_sudden_starts is None:
-                    # active datasets jump right to their final weight
                     current_weight = status.final_weight
                 else:
-                    # linear schedule for smooth_sudden_starts epochs
-                    # after the dataset is first discovered to be ready
                     m = (
                         status.final_weight - status.initial_weight
                     ) / self.smooth_sudden_starts
                     x = epoch - status.epoch_ready + 1
-                    current_weight = min(
-                        m * x + status.initial_weight,
-                        status.final_weight,
-                    )
+                    lo = min(status.initial_weight, status.final_weight)
+                    hi = max(status.initial_weight, status.final_weight)
+                    current_weight = np.clip(m * x + status.initial_weight, lo, hi)
                 self._available_datasets.append((status.dataset, current_weight))
             else:
-                # if dataset is not ready for training, set weight to 0
                 self._available_datasets.append((status.dataset, 0.0))
 
     def on_end_of_collection(self, experiment) -> dict[str, Any]:
@@ -455,9 +470,12 @@ class MixtureOfDatasets(RLDataset):
 
         # find datasets that are now ready for training, and adjust their sampling weight
         self.update_dset_weights(experiment.epoch)
-        # log sampling weight logic to wandb
+        # log raw and normalized sampling weights to wandb
+        total_weight = sum(w for _, w in self._available_datasets)
         for dset, active_weight in self._available_datasets:
             metrics[f"{dset.dset_name} Current Sample Weight"] = active_weight
+            normalized = active_weight / total_weight if total_weight > 0 else 0.0
+            metrics[f"{dset.dset_name} Normalized Sample Weight"] = normalized
         return metrics
 
     def delete(self):
