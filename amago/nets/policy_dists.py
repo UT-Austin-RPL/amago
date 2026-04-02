@@ -211,6 +211,15 @@ class PolicyOutput(ABC):
         """
         raise NotImplementedError
 
+    def action_from_buffer(self, action: torch.Tensor) -> torch.Tensor:
+        """Preprocess raw actions loaded from the replay buffer for use in the critic.
+
+        Subclasses override this to align buffer actions with the form the policy
+        actually produces (e.g., softening hard one-hot discrete actions).
+        Default is identity.
+        """
+        return action
+
     @abstractmethod
     def forward(
         self, vec: torch.Tensor, log_dict: Optional[dict] = None
@@ -269,6 +278,13 @@ class Discrete(PolicyOutput):
     def input_dimension(self) -> int:
         return self.d_action
 
+    def clip_and_normalize(self, probs: torch.Tensor) -> torch.Tensor:
+        clipped = probs.clamp(self.clip_prob_low, self.clip_prob_high)
+        return clipped / clipped.sum(-1, keepdim=True)
+
+    def action_from_buffer(self, action: torch.Tensor) -> torch.Tensor:
+        return self.clip_and_normalize(action)
+
     def forward(
         self, vec: torch.Tensor, log_dict: Optional[dict] = None
     ) -> _Categorical:
@@ -278,7 +294,7 @@ class Discrete(PolicyOutput):
         safe_probs = clip_probs / clip_probs.sum(-1, keepdims=True).detach()
         safe_dist = _Categorical(probs=safe_probs)
         if log_dict is not None:
-            add_activation_log("Discrete-probs", probs, log_dict)
+            add_activation_log("Discrete-probs", dist.probs, log_dict)
         return safe_dist
 
 
