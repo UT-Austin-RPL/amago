@@ -423,8 +423,9 @@ class SigmaReparam(nn.Linear):
         super().__init__(d_in, d_out, bias=bias)
         if not fast_init:
             nn.init.trunc_normal_(self.weight, std=0.02)
-            u = torch.linalg.svd(self.weight.T, full_matrices=False)[-1][0].detach()
-            v = torch.linalg.svd(self.weight, full_matrices=False)[-1][0].detach()
+            U, _S, Vh = torch.linalg.svd(self.weight, full_matrices=False)
+            u = U[:, 0].detach()
+            v = Vh[0].detach()
         else:
             # initialization from legacy version used in the original AMAGO paper.
             # This was a guess based on the sigma reparam pseudocode before the code was released,
@@ -469,10 +470,12 @@ class AttentionLayer(nn.Module):
         dropout_qkv: float = 0.0,
         head_scaling: bool = True,
         sigma_reparam: bool = True,
+        use_rope: bool = False,
     ):
         super().__init__()
         assert isinstance(self_attention, SelfAttention)
         self.self_attention = self_attention
+        self.rope = RotaryPosEmb(d_qkv) if use_rope else None
         FF = SigmaReparam if sigma_reparam else nn.Linear
         self.qkv_projection = FF(d_model, 3 * d_qkv * n_heads, bias=False)
         self.dropout_qkv = nn.Dropout(dropout_qkv)
@@ -482,7 +485,14 @@ class AttentionLayer(nn.Module):
         )
         self.n_heads = n_heads
 
-    def forward(self, sequence, key_cache=None, val_cache=None, cache_seqlens=None):
+    def forward(
+        self,
+        sequence,
+        key_cache=None,
+        val_cache=None,
+        cache_seqlens=None,
+        pos_idxs=None,
+    ):
         qkv = self.dropout_qkv(self.qkv_projection(sequence))
         qkv = rearrange(
             qkv,
@@ -490,6 +500,8 @@ class AttentionLayer(nn.Module):
             heads=self.n_heads,
             three=3,
         )
+        if self.rope is not None:
+            qkv = self.rope(qkv, pos_idxs)
         out = self.head_scaler * self.self_attention(
             qkv=qkv,
             key_cache=key_cache,
@@ -538,10 +550,21 @@ class TransformerLayer(nn.Module):
         self.d_model = d_model
 
     @torch.compile
-    def forward(self, self_seq, key_cache=None, val_cache=None, cache_seqlens=None):
+    def forward(
+        self,
+        self_seq,
+        key_cache=None,
+        val_cache=None,
+        cache_seqlens=None,
+        pos_idxs=None,
+    ):
         q1 = self.norm1(self_seq)  # pre-norm
         q1 = self.attention_layer(
-            q1, key_cache=key_cache, val_cache=val_cache, cache_seqlens=cache_seqlens
+            q1,
+            key_cache=key_cache,
+            val_cache=val_cache,
+            cache_seqlens=cache_seqlens,
+            pos_idxs=pos_idxs,
         )
         q1 = self.norm2(q1)  # normformer extra norm 1
         self_seq = self_seq + q1
@@ -667,6 +690,39 @@ class LearnablePosEmb(nn.Module):
         return self.embeddings(pos_idxs)
 
 
+class RotaryPosEmb(nn.Module):
+    """Rotary Position Embedding (RoPE). Half-split (Llama-style) convention."""
+
+    def __init__(self, head_dim: int, base: float = 10000.0):
+        super().__init__()
+        assert head_dim % 2 == 0, f"RoPE requires even head_dim, got {head_dim}"
+        inv_freq = 1.0 / (base ** (torch.arange(0, head_dim, 2).float() / head_dim))
+        self.register_buffer("inv_freq", inv_freq, persistent=False)
+        self.head_dim = head_dim
+
+    def forward(self, qkv: torch.Tensor, pos_idxs: torch.Tensor) -> torch.Tensor:
+        """Rotate Q and K in packed (B, L, 3, H, D) QKV; V is unchanged."""
+        pos = pos_idxs.squeeze(-1).to(self.inv_freq.dtype)
+        freqs = torch.einsum("bl,d->bld", pos, self.inv_freq)
+        cos = freqs.cos().unsqueeze(2)
+        sin = freqs.sin().unsqueeze(2)
+
+        q, k, v = qkv.unbind(dim=2)
+        q = self._apply_rotary(q, cos, sin).to(q.dtype)
+        k = self._apply_rotary(k, cos, sin).to(k.dtype)
+        return torch.stack([q, k, v], dim=2)
+
+    @staticmethod
+    def _apply_rotary(
+        x: torch.Tensor, cos: torch.Tensor, sin: torch.Tensor
+    ) -> torch.Tensor:
+        """x: (B, L, H, D), cos/sin: (B, L, 1, D/2)."""
+        d_half = x.shape[-1] // 2
+        x1 = x[..., :d_half]
+        x2 = x[..., d_half:]
+        return torch.cat([x1 * cos - x2 * sin, x1 * sin + x2 * cos], dim=-1)
+
+
 class Transformer(nn.Module):
     """Build a full Transformer model from a list of layers."""
 
@@ -680,13 +736,16 @@ class Transformer(nn.Module):
         pos_emb: str = "fixed",
     ):
         super().__init__()
+        self.use_rope = pos_emb == "rope"
         if pos_emb == "fixed":
             self.position_embedding = FixedPosEmb(d_model)
         elif pos_emb == "learnable":
             self.position_embedding = LearnablePosEmb(d_model)
+        elif pos_emb == "rope":
+            self.position_embedding = None
         else:
             raise ValueError(
-                f"Unrecognized pos_emb: {pos_emb}. Options are 'fixed' or 'learnable'."
+                f"Unrecognized pos_emb: {pos_emb}. Options are 'fixed', 'learnable', or 'rope'."
             )
         self.inp = nn.Linear(inp_dim, d_model)
         self.dropout = nn.Dropout(dropout_emb)
@@ -701,20 +760,22 @@ class Transformer(nn.Module):
         return self.d_model
 
     def preprocess_seq(self, seq, pos_idxs):
-        pos_emb = self.position_embedding(pos_idxs.squeeze(-1))
         traj_emb = self.inp(seq)
-        traj_emb = self.dropout(traj_emb + pos_emb)
+        if self.position_embedding is not None:
+            pos_emb = self.position_embedding(pos_idxs.squeeze(-1))
+            traj_emb = traj_emb + pos_emb
+        traj_emb = self.dropout(traj_emb)
         return traj_emb
 
     @torch.compile
-    def training_forward(self, seq):
+    def training_forward(self, seq, pos_idxs=None):
         for layer in self.layers:
-            seq = layer(seq)
+            seq = layer(seq, pos_idxs=pos_idxs)
         return self.norm(seq)
 
-    def inference_forward(self, seq, hidden_state):
+    def inference_forward(self, seq, hidden_state, pos_idxs=None):
         for i, layer in enumerate(self.layers):
-            seq = layer(seq, *hidden_state[i])
+            seq = layer(seq, *hidden_state[i], pos_idxs=pos_idxs)
         return self.norm(seq)
 
     def forward(self, seq, pos_idxs, hidden_state: Optional[TformerHiddenState] = None):
@@ -731,10 +792,11 @@ class Transformer(nn.Module):
         """
 
         traj_emb = self.preprocess_seq(seq, pos_idxs)
+        rope_pos = pos_idxs if self.use_rope else None
         if hidden_state is not None:
             assert not self.training
-            traj_emb = self.inference_forward(traj_emb, hidden_state)
+            traj_emb = self.inference_forward(traj_emb, hidden_state, pos_idxs=rope_pos)
             hidden_state.update()
         else:
-            traj_emb = self.training_forward(traj_emb)
+            traj_emb = self.training_forward(traj_emb, pos_idxs=rope_pos)
         return traj_emb, hidden_state

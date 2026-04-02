@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "amago"
-version = "3.2.0"
+version = "3.3.0"
 description = "off-policy RL on long sequences"
 readme = { file = "README.md", content-type = "text/markdown" }
 authors = [

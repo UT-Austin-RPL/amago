@@ -795,6 +795,7 @@ class Agent(BaseAgent):
         K_a = self.num_actions_for_value_in_actor_loss if not self.discrete else 1
         a_buffer = F.pad(a, (0, 0, 0, 1), "replicate")
         a_buffer = repeat(a_buffer, f"b l a -> b l {G} a")
+        a_buffer = self.actor.policy_dist.action_from_buffer(a_buffer)
         state_mask = (~((batch.rl2s == self.pad_val).all(-1, keepdim=True))).bool()[
             :, 1:, ...
         ]
@@ -927,6 +928,7 @@ class Agent(BaseAgent):
         # we give it a fake one to make shape math work.
         a_buffer = F.pad(a, (0, 0, 0, 1), "replicate")
         a_buffer = repeat(a_buffer, f"b l a -> b l {G} a")
+        a_buffer_critic = self.actor.policy_dist.action_from_buffer(a_buffer)
         C = len(self.critics)
         # arrays used by critic update end up in a (B, L, C, G, dim) format
         assert batch.rews.shape == (B, L - 1, 1)
@@ -964,7 +966,7 @@ class Agent(BaseAgent):
             ############################
             s_a_agent_g = (s_rep.detach(), a_agent)
             q_s_a_agent_g = self.maximized_critics(*s_a_agent_g).mean(0)
-            s_a_g = (s_rep[:, :-1, ...], a_buffer[:, :-1, ...].unsqueeze(0))
+            s_a_g = (s_rep[:, :-1, ...], a_buffer_critic[:, :-1, ...].unsqueeze(0))
             q_s_a_g = self.critics(*s_a_g, log_dict=active_log_dict).mean(0)
             assert q_s_a_agent_g.shape == (B, L, C, G, 1)
             assert q_s_a_g.shape == (B, L-1, C, G, 1)
@@ -1078,7 +1080,6 @@ class Agent(BaseAgent):
             stats[f"Q(s, a) (global mean, rescaled) gamma={gamma:.3f}"] = masked_avg(
                 q_s_a_g, i
             )
-            print("here")
             stats["Q Sequence"] = q_s_a_g
             stats[f"Q(s,a) (global mean, raw scale) gamma={gamma:.3f}"] = masked_avg(
                 raw_q_s_a_g, i
@@ -1299,6 +1300,7 @@ class MultiTaskAgent(Agent):
         K_a = self.num_actions_for_value_in_actor_loss
         a_buffer = F.pad(a, (0, 0, 0, 1), "replicate")
         a_buffer = repeat(a_buffer, f"b l a -> b l {G} a")
+        a_buffer = self.actor.policy_dist.action_from_buffer(a_buffer)
         state_mask = (~((batch.rl2s == self.pad_val).all(-1, keepdim=True))).bool()[
             :, 1:, ...
         ]
@@ -1363,6 +1365,7 @@ class MultiTaskAgent(Agent):
         K_c = self.num_actions_for_value_in_critic_loss
         a_buffer = F.pad(a, (0, 0, 0, 1), "replicate")
         a_buffer = repeat(a_buffer, f"b l a -> b l {G} a")
+        a_buffer = self.actor.policy_dist.action_from_buffer(a_buffer)
         C = len(self.critics)
         assert batch.rews.shape == (B, L - 1, 1)
         assert batch.dones.shape == (B, L - 1, 1)

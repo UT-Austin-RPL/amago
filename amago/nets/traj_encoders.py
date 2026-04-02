@@ -345,7 +345,8 @@ class TformerTrajEncoder(TrajEncoder):
         activation: Activation function. Defaults to "leaky_relu".
         norm: Normalization function. Defaults to "layer" (LayerNorm).
         pos_emb: Position embedding type. "fixed" (default) uses sinusoidal
-            embeddings, "learned" uses trainable embeddings per timestep.
+            embeddings, "learned" uses trainable embeddings per timestep,
+            "rope" uses Rotary Position Embeddings applied to Q and K.
         causal: Whether to use causal attention mask. Defaults to True.
         sigma_reparam: Whether to use :math:`\sigma`-reparam feed-forward layers
             from https://arxiv.org/abs/2303.06296. Defaults to True.
@@ -395,6 +396,7 @@ class TformerTrajEncoder(TrajEncoder):
                     dropout_qkv=dropout_qkv,
                     head_scaling=head_scaling,
                     sigma_reparam=sigma_reparam,
+                    use_rope=pos_emb == "rope",
                 ),
                 d_model=self.d_model,
                 d_ff=d_ff,
