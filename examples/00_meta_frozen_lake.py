@@ -57,6 +57,7 @@ if __name__ == "__main__":
         steps_anneal=1_000_000,
         randomize_eps=True,
     )
+    agent_type = cli_utils.switch_agent(config, "agent", tau=0.004)
     cli_utils.use_config(config)
 
     group_name = f"{args.run_name}_{args.seq_model}"
@@ -91,7 +92,7 @@ if __name__ == "__main__":
             traj_save_len=args.max_rollout_length,
             dataset=dset,
             ckpt_base_dir=ckpt_dir,
-            agent_type=amago.agent.Agent,
+            agent_type=agent_type,
             exploration_wrapper_type=exploration_wrapper_type,
             tstep_encoder_type=tstep_encoder_type,
             traj_encoder_type=traj_encoder_type,
@@ -100,12 +101,12 @@ if __name__ == "__main__":
             log_to_wandb=args.log,
             wandb_group_name=group_name,
             epochs=700 if not args.hard_mode else 900,
-            parallel_actors=24,
-            train_timesteps_per_epoch=350,
-            train_batches_per_epoch=800,
+            parallel_actors=32,
+            train_timesteps_per_epoch=args.max_rollout_length,
+            train_batches_per_epoch=1000,
             val_interval=20,
             val_timesteps_per_epoch=args.max_rollout_length * 2,
-            ckpt_interval=50,
+            ckpt_interval=200,
             env_mode="sync",
         )
 
