@@ -36,6 +36,14 @@ class MetaFrozenLake(gym.Env):
         recover_mode: If False, falling through the ice terminates the
             episode. If True, the agent is allowed to recover to its
             previous position but receives a penalty. Defaults to False.
+        max_episode_steps: Maximum steps per attempt before a forced
+            soft reset. Defaults to N² (standard) or 2*N² (hard).
+        show_k_progress: If True, include current_k / k_episodes in
+            observations. Set to False to hide trial progress (useful
+            for testing length extrapolation with different k values).
+            Defaults to True.
+        slip_chance: Probability that a movement action is replaced by
+            a no-op (agent stays in place). Defaults to 0.0.
     """
 
     def __init__(
@@ -44,6 +52,9 @@ class MetaFrozenLake(gym.Env):
         k_episodes: int = 10,
         hard_mode: bool = False,
         recover_mode: bool = False,
+        max_episode_steps: int | None = None,
+        show_k_progress: bool = True,
+        slip_chance: float = 0.0,
     ):
         self.size = size
         self.k_episodes = k_episodes
@@ -51,6 +62,14 @@ class MetaFrozenLake(gym.Env):
         self.observation_space = gym.spaces.Box(shape=(4,), low=0.0, high=1.0)
         self.hard_mode = hard_mode
         self.recover_mode = recover_mode
+        base_steps = size * size * (2 if hard_mode else 1)
+        if slip_chance > 0:
+            base_steps = int(base_steps / (1.0 - slip_chance))
+        self.max_episode_steps = (
+            max_episode_steps if max_episode_steps is not None else base_steps
+        )
+        self.show_k_progress = show_k_progress
+        self.slip_chance = slip_chance
         self.reset()
 
     def reset(self, *args, **kwargs):
@@ -69,30 +88,30 @@ class MetaFrozenLake(gym.Env):
             y = min(max(self.y + random.choice([-1, 0, 1]), 0), self.size - 1)
         else:
             x, y = self.x, self.y
+        k_obs = self.current_k / self.k_episodes if self.show_k_progress else 0.0
         return np.array(
-            [
-                x / self.size,
-                y / self.size,
-                reset_signal,
-                self.current_k / self.k_episodes,
-            ],
+            [x / self.size, y / self.size, reset_signal, k_obs],
             dtype=np.float32,
         )
 
     def soft_reset(self):
         self.active_map = copy.deepcopy(self.current_map)
         self.x, self.y = 0, 0
+        self.episode_steps = 0
         obs = self.make_obs(reset_signal=True)
         return obs, {}
 
     def step(self, action):
         assert self.action_space.contains(action)
+        self.episode_steps += 1
+        if self.slip_chance > 0 and action != 0 and random.random() < self.slip_chance:
+            action = 0
         move_x, move_y = self.action_mapping[action]
         next_x = max(min(self.x + move_x, self.size - 1), 0)
         next_y = max(min(self.y + move_y, self.size - 1), 0)
 
         if (
-            (self.x, self.y) != (next_y, next_y)
+            (self.x, self.y) != (next_x, next_y)
             and self.hard_mode
             and random.random() < 0.33
         ):
@@ -114,6 +133,14 @@ class MetaFrozenLake(gym.Env):
 
         self.x = next_x
         self.y = next_y
+
+        timed_out = (
+            not soft_reset
+            and self.max_episode_steps is not None
+            and self.episode_steps >= self.max_episode_steps
+        )
+        if timed_out:
+            soft_reset = True
 
         if soft_reset:
             next_state, info = self.soft_reset()
