@@ -175,6 +175,9 @@ class FFTstepEncoder(TstepEncoder):
             space. If None, every key in the observation is used. Multi-modal
             observations are handled by flattening and concatenating values in a
             consistent order (alphabetical by key). Defaults to None.
+        auto_scale: If True, d_hidden and d_output are clamped to be at least
+            as large as the flattened input dimension, preventing bottlenecks
+            when observation keys contribute many features. Defaults to False.
     """
 
     def __init__(
@@ -190,6 +193,7 @@ class FFTstepEncoder(TstepEncoder):
         hide_rl2s: bool = False,
         normalize_inputs: bool = True,
         specify_obs_keys: Optional[list[str]] = None,
+        auto_scale: bool = False,
     ):
         super().__init__(obs_space=obs_space, rl2_space=rl2_space, hide_rl2s=hide_rl2s)
         if specify_obs_keys is None:
@@ -200,6 +204,9 @@ class FFTstepEncoder(TstepEncoder):
             math.prod(self.obs_space[key].shape) for key in self.obs_keys
         )
         in_dim = flat_obs_shape + self.rl2_space.shape[-1]
+        if auto_scale:
+            d_hidden = max(d_hidden, in_dim)
+            d_output = max(d_output, in_dim)
         self.in_norm = InputNorm(in_dim, skip=not normalize_inputs)
         self.base = ff.MLP(
             d_inp=in_dim,
