@@ -165,6 +165,26 @@ class TrajEncoder(nn.Module, ABC):
 
 
 @gin.configurable
+@register_traj_encoder("identity")
+class IdentityTrajEncoder(TrajEncoder):
+    """Passthrough trajectory encoder that returns tstep embeddings unchanged."""
+
+    @property
+    def emb_dim(self) -> int:
+        return self.tstep_dim
+
+    def forward(
+        self,
+        seq: torch.Tensor,
+        time_idxs: torch.Tensor,
+        hidden_state: Optional[Any] = None,
+        log_dict: Optional[dict] = None,
+    ) -> Tuple[torch.Tensor, Optional[Any]]:
+        new_hidden = None if hidden_state is None else hidden_state
+        return seq, new_hidden
+
+
+@gin.configurable
 @register_traj_encoder("ff")
 class FFTrajEncoder(TrajEncoder):
     """Feed-forward (memory-free) trajectory encoder.
