@@ -17,9 +17,11 @@ class Normalization(nn.Module):
 
     Args:
         method: Normalization method to use. Options are: "layer", "batch",
-            "rmsnorm", "unitball", "unitball-detach", "none". "unitball" is
-            (x / ||x||), "unitball-detach" is (x / ||x||.detach()). "none" is a
-            no-op and the rest are standard LayerNorm, BatchNorm, RMSNorm.
+            "rmsnorm", "unitball", "unitball-detach", "hypersphere", "none".
+            "unitball" is (x / ||x||), "unitball-detach" is (x / ||x||.detach()),
+            "hypersphere" is (x / ||x|| * sqrt(d)) projecting onto S^{d-1} with
+            ||x|| = sqrt(d). "none" is a no-op and the rest are standard
+            LayerNorm, BatchNorm, RMSNorm.
         d_model: Expected dimension of the input to normalize (scalar). Operates
             on the last dimensions of the input sequence.
     """
@@ -43,6 +45,8 @@ class Normalization(nn.Module):
                     torch.linalg.vector_norm(x, ord=2, dim=-1, keepdim=True) + 1e-5
                 ).detach()
             )
+        elif method == "hypersphere":
+            self.norm = lambda x: F.normalize(x, dim=-1) * (x.shape[-1] ** 0.5)
         elif method == "rmsnorm":
             self.norm = _RMSNorm(size=d_model)
         elif method == "simnorm":
