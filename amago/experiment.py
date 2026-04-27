@@ -77,7 +77,7 @@ class Experiment:
     :param wandb_group_name: Group runs on wandb dashboard. **Default:** None.
     :param verbose: Print tqdm bars and info to console. **Default:** True.
     :param log_interval: Log extra metrics every N batches. **Default:** 300.
-    :param padded_sampling: Padding for sampling training subsequences. "none", "left", "right", "both". **Default:** "none".
+    :param padded_sampling: Padding for sampling training subsequences. "none", "left", "right", "both", "center". **Default:** "none".
     :param dloader_workers: Number of DataLoader workers for disk loading. Increase for compressed/large trajs.
 
     .. note::
@@ -522,6 +522,15 @@ class Experiment:
         """Returns the current Agent policy free from the accelerator wrapper."""
         return self.accelerator.unwrap_model(self.policy_aclr)
 
+    def on_interact_step(self, obs: dict) -> None:
+        """Hook called before each action during ``self.interact(...)``.
+
+        Override in a subclass to mutate agent state between steps
+        (e.g. resample ``agent._inference_alpha`` at episode boundaries by
+        inspecting ``obs["episode_id"]``).  No-op in the base implementation.
+        """
+        pass
+
     def interact(
         self,
         envs,
@@ -603,6 +612,7 @@ class Experiment:
         obs, rl2s, time_idxs = get_t()
         episodes_finished = 0
         for _ in iter_:
+            self.on_interact_step(obs)
             with torch.no_grad():
                 with self.caster():
                     actions, hidden_state = policy.get_actions(
