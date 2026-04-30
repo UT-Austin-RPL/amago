@@ -56,6 +56,14 @@ class WindEnv(gym.Env):
             original (a numpy ``RandomState``, not the global numpy seed,
             so we do not leak into other code).
         wind_max: Max absolute value of each wind component. Default 0.08.
+        dense_reward: If True, replace the sparse 0/1 goal-disk reward with
+            a smooth distance-shaped reward ``exp(-||state - goal||)``.
+            Bounded in ``(0, 1]``, peaks at 1 at the goal, gives non-zero
+            gradient everywhere on the plane. Useful as a sanity-check
+            alternative when debugging a stack that struggles with the
+            sparse signal. Goal-disk success/membership is still tracked
+            for logging (``Trial * Success``) regardless of this setting.
+            Default False (preserves the original sparse reward).
     """
 
     metadata = {"render_modes": []}
@@ -68,12 +76,14 @@ class WindEnv(gym.Env):
         k_episodes: int = 1,
         wind_seed: int = 1337,
         wind_max: float = 0.08,
+        dense_reward: bool = False,
     ):
         super().__init__()
         self.n_tasks = int(n_tasks)
         self._max_episode_steps = int(max_episode_steps)
         self.k_episodes = int(k_episodes)
         self.goal_radius = float(goal_radius)
+        self.dense_reward = bool(dense_reward)
 
         # Local RandomState so the deterministic task set does not affect
         # the global numpy RNG (the original called np.random.seed(1337)).
@@ -153,7 +163,16 @@ class WindEnv(gym.Env):
         self._state = (self._state + action + self._wind).astype(np.float32)
 
         success = self.is_goal_state()
-        reward = 1.0 if success else 0.0
+        if self.dense_reward:
+            # Smooth distance-shaped reward: bounded in (0, 1], peaks at 1
+            # at the goal, decays as exp(-||state - goal||). Gives non-zero
+            # gradient everywhere; with a starting position at origin and
+            # goal at (0, 1) the initial step's reward is ~exp(-1) ≈ 0.37
+            # and rises monotonically as the agent approaches.
+            dist = float(np.linalg.norm(self._state - self._goal))
+            reward = float(np.exp(-dist))
+        else:
+            reward = 1.0 if success else 0.0
         if success:
             self._trial_success = True
 
