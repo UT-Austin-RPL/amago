@@ -1,6 +1,4 @@
 from argparse import ArgumentParser
-import math
-import random
 
 import wandb
 
@@ -32,6 +30,24 @@ def add_cli(parser):
         default=3.0,
         help="Max running velocity the cheetah needs to be capable of to solve the meta-learning problem. Original benchmark used 3. Agents in the default locomotion env (no reward randomization) reach > 10.",
     )
+    parser.add_argument(
+        "--inner_episode_steps",
+        type=int,
+        default=200,
+        help="Step horizon of each inner episode. Default 200 (combined with the default --k_train_episodes=3) keeps total trial length at 600 steps. Set 1000 with --k_train_episodes=1 to recover the unwrapped task.",
+    )
+    parser.add_argument(
+        "--k_train_episodes",
+        type=int,
+        default=3,
+        help="Inner episodes per meta-trial during training. Default 3 makes the env a true meta-RL trial: a single hidden target velocity persists across 3 inner episodes (soft resets between). Set 1 to recover the unwrapped task.",
+    )
+    parser.add_argument(
+        "--k_eval_episodes",
+        type=int,
+        default=None,
+        help="Inner episodes per meta-trial at eval time. Defaults to --k_train_episodes. Larger values (e.g. 10) probe how well the agent keeps adapting beyond its training horizon.",
+    )
     return parser
 
 
@@ -61,50 +77,43 @@ class MyCustomHalfCheetahEval(HalfCheetahV4_MetaVelocity):
         return vel
 
 
-class AMAGOEnvWithVelocityName(AMAGOEnv):
-    """
-    Every eval metric gets logged based on the current
-    `env_name`. You could use this to log metrics for
-    different tasks separately. They get averaged over
-    all the evals with the same name, so you want a discrete
-    number of names that will get sample sizes > 1.
-    """
-
-    @property
-    def env_name(self) -> str:
-        current_task_vel = self.env.unwrapped.target_velocity
-        # need to discretize this somehow; just one example
-        low, high = math.floor(current_task_vel), math.ceil(current_task_vel)
-        return f"HalfCheetahVelocity-Vel-[{low}, {high}]"
-
-
 if __name__ == "__main__":
     parser = ArgumentParser()
     cli_utils.add_common_cli(parser)
     add_cli(parser)
     args = parser.parse_args()
 
-    # setup environment
-    make_train_env = lambda: AMAGOEnvWithVelocityName(
-        MyCustomHalfCheetahTrain(
-            task_min_velocity=args.task_min_velocity,
-            task_max_velocity=args.task_max_velocity,
-        ),
-        # the env_name is totally arbitrary and only impacts logging / data filenames
-        env_name=f"HalfCheetahV4Velocity",
+    k_eval = (
+        args.k_eval_episodes
+        if args.k_eval_episodes is not None
+        else args.k_train_episodes
     )
 
-    make_val_env = lambda: AMAGOEnvWithVelocityName(
-        MyCustomHalfCheetahEval(
-            task_min_velocity=args.task_min_velocity,
-            task_max_velocity=args.task_max_velocity,
-        ),
-        # this would get replaced by the env_name property
-        # defined above.
-        env_name=f"HalfCheetahV4VelocityEval",
-    )
+    def make_train_env():
+        return AMAGOEnv(
+            MyCustomHalfCheetahTrain(
+                task_min_velocity=args.task_min_velocity,
+                task_max_velocity=args.task_max_velocity,
+                max_episode_steps=args.inner_episode_steps,
+                k_episodes=args.k_train_episodes,
+            ),
+            env_name="HalfCheetahV4Velocity",
+        )
 
-    config = {}
+    def make_val_env():
+        return AMAGOEnv(
+            MyCustomHalfCheetahEval(
+                task_min_velocity=args.task_min_velocity,
+                task_max_velocity=args.task_max_velocity,
+                max_episode_steps=args.inner_episode_steps,
+                k_episodes=k_eval,
+            ),
+            env_name="HalfCheetahV4Velocity",
+        )
+
+    config = {
+        "amago.nets.traj_encoders.TformerTrajEncoder.pos_emb": "rope",
+    }
     # switch sequence model
     traj_encoder_type = cli_utils.switch_traj_encoder(
         config,
@@ -142,7 +151,8 @@ if __name__ == "__main__":
             exploration_wrapper_type=exploration_type,
             agent_type=agent_type,
             group_name=group_name,
-            val_timesteps_per_epoch=args.eval_episodes_per_actor * 1001,
+            val_timesteps_per_epoch=args.eval_episodes_per_actor
+            * (args.inner_episode_steps * k_eval + 1),
             grad_clip=2.0,
             learning_rate=3e-4,
         )

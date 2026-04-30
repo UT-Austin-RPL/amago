@@ -3,7 +3,9 @@ HalfCheetah-Velocity implemented with HalfCheetah-v4.
 """
 
 import random
+from typing import List
 
+import gymnasium as gym
 from gymnasium.envs.mujoco.half_cheetah_v4 import HalfCheetahEnv
 import numpy as np
 
@@ -37,7 +39,19 @@ class _HalfCheetahV4ExposeVelReward(HalfCheetahEnv):
 
 
 class HalfCheetahV4LogVelocity(_HalfCheetahV4ExposeVelReward):
-    """A wrapper around HalfCheetah-V4 that will automatically log velocity metrics when used in AMAGO."""
+    """A wrapper around HalfCheetah-V4 that will automatically log velocity metrics when used in AMAGO.
+
+    Args:
+        max_episode_steps: Step horizon at which the inner episode is
+            truncated. Default 1000 matches the original gym registration.
+            Lower values are useful for k-episode meta-trial wrappers that
+            want to fit multiple inner episodes inside a fixed sequence
+            length.
+    """
+
+    def __init__(self, max_episode_steps: int = 1000, **kwargs):
+        super().__init__(**kwargs)
+        self.max_episode_steps = int(max_episode_steps)
 
     def reset(self, *args, **kwargs):
         obs, info = super().reset(*args, **kwargs)
@@ -51,7 +65,7 @@ class HalfCheetahV4LogVelocity(_HalfCheetahV4ExposeVelReward):
         # gym registration that would normally handle it.
         self.step_count += 1
         self._velocity_history.append(info["x_velocity"])
-        truncated = truncated or self.step_count >= 1000
+        truncated = truncated or self.step_count >= self.max_episode_steps
         if terminated or truncated:
             v = np.array(self._velocity_history)
             info[f"{AMAGO_ENV_LOG_PREFIX} Mean Velocity"] = v.mean().item()
@@ -69,6 +83,17 @@ class HalfCheetahV4_MetaVelocity(HalfCheetahV4LogVelocity):
     Reward terms are based on the version featured in the VariBAD codebase
     (https://github.com/lmzintgraf/varibad/blob/57e1795be142ace52d0c353097acf193d9067200/environments/mujoco/half_cheetah_vel.py#L8)
 
+    A single hidden ``target_velocity`` persists across ``k_episodes`` inner
+    episodes (each truncated by the parent class at ``max_episode_steps``).
+    Between inner episodes the simulator is soft-reset; the hidden task is
+    only resampled when ``reset(new_task=True)`` is called from outside (the
+    default at the start of every meta-trial). A soft-reset flag (0/1) is
+    appended to the obs so the agent can detect inner-episode boundaries
+    without losing task identity. Per-episode metrics from the parent class
+    (Mean / Max / Avg. Last 50 Timestep Velocity) are promoted to
+    ``Trial {i} ...`` keys, matching the meta-RL logging convention used by
+    ``KEpisodeMetaworld``.
+
     Args:
         ctrl_cost_weight: Defaults to half the normal ctrl cost, as in the original HalfCheetahVelocity task.
         velocity_reward_weight: Defaults to 1.0.
@@ -80,6 +105,10 @@ class HalfCheetahV4_MetaVelocity(HalfCheetahV4LogVelocity):
 
         task_min_velocity: Minimum target velocity that determines the hidden task. Defaults to 0.0.
         task_max_velocity: Maximum target velocity that determines the hidden task. Defaults to 3.0.
+        k_episodes: Number of inner episodes per meta-trial. Default 1
+            recovers the unwrapped single-episode task. Set ``>=2`` for
+            true meta-RL trials (e.g. 3 inner episodes of 200 steps with
+            ``max_episode_steps=200``).
     """
 
     def __init__(
@@ -93,6 +122,7 @@ class HalfCheetahV4_MetaVelocity(HalfCheetahV4LogVelocity):
         # We can use the HalfCheetahV4LogVelocity env above to verify this.
         task_min_velocity: float = 0.0,
         task_max_velocity: float = 3.0,
+        k_episodes: int = 1,
         **kwargs,
     ):
         super().__init__(
@@ -102,7 +132,23 @@ class HalfCheetahV4_MetaVelocity(HalfCheetahV4LogVelocity):
         )
         self.task_min_velocity = task_min_velocity
         self.task_max_velocity = task_max_velocity
+        self.k_episodes = int(k_episodes)
+
+        # Append a soft-reset flag (0/1) to the parent observation space.
+        flat = self.observation_space
+        low = np.append(flat.low.astype(np.float32), np.float32(0.0))
+        high = np.append(flat.high.astype(np.float32), np.float32(1.0))
+        self.observation_space = gym.spaces.Box(low=low, high=high, dtype=np.float32)
+
+        self.target_velocity: float = 0.0
+        self.current_trial: int = 0
+        self._trial_returns: List[float] = []
+        self._current_trial_return: float = 0.0
         self.reset()
+
+    @staticmethod
+    def _augment(obs: np.ndarray, soft_reset: bool) -> np.ndarray:
+        return np.append(obs, float(soft_reset)).astype(np.float32)
 
     def velocity_reward_term(self, x_velocity):
         return (
@@ -117,16 +163,64 @@ class HalfCheetahV4_MetaVelocity(HalfCheetahV4LogVelocity):
         # tasks are different across async parallel actors!
         return random.uniform(self.task_min_velocity, self.task_max_velocity)
 
-    def reset(self, *args, **kwargs):
-        obs, info = super().reset(*args, **kwargs)
-        self.target_velocity = self.sample_target_velocity()
-        return obs, info
+    def reset(self, *, new_task: bool = True, seed=None, options=None):
+        # ``new_task=False`` is reserved for soft resets *inside* step();
+        # external callers should use the default to start a fresh meta-trial.
+        obs, info = super().reset(seed=seed, options=options)
+        if new_task:
+            self.target_velocity = self.sample_target_velocity()
+            self.current_trial = 0
+            self._trial_returns = []
+        self._current_trial_return = 0.0
+        return self._augment(obs, soft_reset=True), info
+
+    def _log_per_trial_metrics(self, info: dict) -> None:
+        ti = self.current_trial
+        for suffix in (
+            "Mean Velocity",
+            "Max Velocity",
+            "Avg. Last 50 Timestep Velocity",
+        ):
+            src = f"{AMAGO_ENV_LOG_PREFIX} {suffix}"
+            if src in info:
+                info[f"{AMAGO_ENV_LOG_PREFIX} Trial {ti} {suffix}"] = info.pop(src)
+        achieved_key = (
+            f"{AMAGO_ENV_LOG_PREFIX} Trial {ti} Avg. Last 50 Timestep Velocity"
+        )
+        if achieved_key in info:
+            info[
+                f"{AMAGO_ENV_LOG_PREFIX} Trial {ti} Target Velocity Error at Final 50 Timesteps"
+            ] = abs(self.target_velocity - info[achieved_key])
+        info[f"{AMAGO_ENV_LOG_PREFIX} Trial {ti} Return"] = self._current_trial_return
 
     def step(self, action):
         obs, reward, terminated, truncated, info = super().step(action)
+        self._current_trial_return += float(reward)
+        soft_reset = False
+
         if terminated or truncated:
-            achieved = info[f"{AMAGO_ENV_LOG_PREFIX} Avg. Last 50 Timestep Velocity"]
-            info[
-                f"{AMAGO_ENV_LOG_PREFIX} Target Velocity Error at Final 50 Timesteps"
-            ] = abs(self.target_velocity - achieved)
-        return obs, reward, terminated, truncated, info
+            self._log_per_trial_metrics(info)
+            self._trial_returns.append(self._current_trial_return)
+            self.current_trial += 1
+
+            # Always soft-reset the simulator on inner-episode end (mirrors
+            # KEpisodeMetaworld). The augmented obs's soft-reset flag is set
+            # to 1 so the agent can detect the boundary.
+            obs, _ = super().reset()
+            soft_reset = True
+            self._current_trial_return = 0.0
+
+            if self.current_trial >= self.k_episodes:
+                # Meta-trial end is a time-limit truncation, not a terminal
+                # state: the underlying MDP could continue if we kept
+                # observing. Leave terminated=False so the critic
+                # bootstraps as usual.
+                terminated = False
+                truncated = True
+                info[f"{AMAGO_ENV_LOG_PREFIX} Total Return"] = float(
+                    np.sum(self._trial_returns)
+                )
+            else:
+                terminated = truncated = False
+
+        return self._augment(obs, soft_reset), reward, terminated, truncated, info

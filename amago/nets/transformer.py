@@ -604,6 +604,13 @@ class Cache:
 
     def roll_back(self, seq_lens):
         idxs = torch.where(seq_lens == self.max_seq_len)[0]
+        # FIXME: remove after kv-cache validation
+        if idxs.numel() > 0 and not getattr(self, "_logged_first_roll", False):
+            print(
+                f"[Cache] FIRST roll_back triggered: max_seq_len={self.max_seq_len} "
+                f"n_actors_overflowing={idxs.numel()}"
+            )
+            self._logged_first_roll = True
         roll = self.data[:, idxs, 1:].clone()
         self.data[:, idxs, :-1] = roll
         self.data[:, idxs, -1] = torch.nan  # no silent bugs
@@ -624,6 +631,13 @@ class TformerHiddenState:
         self.device = key_cache.device
 
     def reset(self, idxs):
+        # FIXME: remove after kv-cache validation
+        n_reset = int(idxs.sum()) if hasattr(idxs, "sum") else len(idxs)
+        if n_reset > 0:
+            print(
+                f"[TformerHiddenState] reset n_actors_reset={n_reset} "
+                f"max_seq_len={self.key_cache.max_seq_len}"
+            )
         self.seq_lens[idxs] = 0
 
     def update(self):

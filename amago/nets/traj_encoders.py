@@ -461,6 +461,12 @@ class TformerTrajEncoder(TrajEncoder):
             val_cache=make_cache(),
             seq_lens=torch.zeros((batch_size,), dtype=torch.int32, device=device),
         )
+        # FIXME: remove after kv-cache validation
+        print(
+            f"[TformerTrajEncoder] init_hidden_state max_seq_len={self.max_seq_len} "
+            f"batch_size={batch_size} n_layers={self.n_layers} "
+            f"n_heads={self.n_heads} head_dim={self.head_dim}"
+        )
         return hidden_state
 
     def reset_hidden_state(
