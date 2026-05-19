@@ -763,7 +763,7 @@ class Agent(BaseAgent):
                 actions = action_dists.mean
         # get intended gamma distribution (always in -1 idx)
         actions = actions[..., -1, :]
-        dtype = torch.uint8 if (self.discrete or self.multibinary) else torch.float32
+        dtype = torch.int64 if (self.discrete or self.multibinary) else torch.float32
         return actions.to(dtype=dtype), hidden_state
 
     @torch.no_grad()

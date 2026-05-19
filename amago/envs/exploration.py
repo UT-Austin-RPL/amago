@@ -205,7 +205,7 @@ class BilevelEpsilonGreedy(ExplorationWrapper):
             use_random = np.expand_dims(self.rng.random(self.batched_envs) <= noise, 1)
             expl_action = (
                 use_random * random_action + (1 - use_random) * action
-            ).astype(np.uint8)
+            ).astype(np.int64)
             assert expl_action.shape == (self.batched_envs, 1)
         else:
             # random noise (TD3-style)
