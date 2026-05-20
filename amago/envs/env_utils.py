@@ -141,7 +141,7 @@ class DiscreteActionWrapper(gym.ActionWrapper):
         if isinstance(action, int):
             return action
         elif isinstance(action, np.ndarray) and action.ndim == 1:
-            assert action.shape[0] == 1 and action.dtype == np.uint8
+            assert action.shape[0] == 1
             return action[0].item()
         elif isinstance(action, np.ndarray) and action.ndim == 2:
             assert action.shape[1] == 1

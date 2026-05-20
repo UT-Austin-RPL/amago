@@ -33,7 +33,13 @@ class Metaworld(AMAGOEnv):
         k_episodes: The number of attempts the policy has to adapt to the current task.
     """
 
-    def __init__(self, benchmark_name: str, split: str, k_episodes: int):
+    def __init__(
+        self,
+        benchmark_name: str,
+        split: str,
+        k_episodes: int,
+        max_episode_length: int = 500,
+    ):
         if benchmark_name == "ml10":
             benchmark = metaworld.ML10()
         elif benchmark_name == "ml45":
@@ -44,7 +50,7 @@ class Metaworld(AMAGOEnv):
             except:
                 raise ValueError(f"Unrecognized metaworld benchmark {benchmark_name}")
 
-        env = KEpisodeMetaworld(benchmark, split, k_episodes)
+        env = KEpisodeMetaworld(benchmark, split, k_episodes, max_episode_length)
         super().__init__(
             env=env,
             env_name=f"metaworld_{benchmark_name}",

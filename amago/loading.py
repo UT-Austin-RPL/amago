@@ -90,6 +90,9 @@ class RLData:
                 where the start of the training sequence is not always the first timestep of the trajectory.
                 "right" --> sample while effectively padding the right side of the sequence for cases
                 where the end of the trajectory may be undersampled.
+                "center" --> uniform random window center, clamped to valid range.
+                Always returns a full-length (never padded) window. Fixes endpoint
+                undersampling of "none" when the trajectory is longer than `length`.
         """
         if len(self) <= length:
             start = 0
@@ -101,6 +104,9 @@ class RLData:
             start = self._safe_randrange(-length + 1, len(self) - length + 1)
         elif padded_sampling == "right":
             start = self._safe_randrange(0, len(self) - 1)
+        elif padded_sampling == "center":
+            center = self._safe_randrange(0, len(self))
+            start = min(max(center - length // 2, 0), len(self) - length)
         else:
             raise ValueError(
                 f"Unrecognized `padded_sampling` mode: `{padded_sampling}`"

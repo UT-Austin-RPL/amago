@@ -38,6 +38,8 @@ if __name__ == "__main__":
         "amago.nets.actor_critic.NCriticsTwoHot.min_return": -100.0,
         "amago.nets.actor_critic.NCriticsTwoHot.max_return": 5000 * args.k,
         "amago.nets.actor_critic.NCriticsTwoHot.output_bins": 96,
+        #"amago.nets.traj_encoders.TformerTrajEncoder.pos_emb": "rope",
+        "amago.nets.actor_critic.NCriticsTwoHot.d_hidden": 300,
     }
     traj_encoder_type = cli_utils.switch_traj_encoder(
         config,
@@ -49,12 +51,16 @@ if __name__ == "__main__":
         config, args.agent_type, reward_multiplier=1.0, num_critics=4
     )
     exploration_type = cli_utils.switch_exploration(
-        config, "bilevel", steps_anneal=2_000_000, rollout_horizon=args.k * 500
+        config, "bilevel", steps_anneal=2_000_000, rollout_horizon=args.k * 300
     )
     cli_utils.use_config(config, args.configs)
 
-    make_train_env = lambda: Metaworld(args.benchmark, "train", k_episodes=args.k)
-    make_test_env = lambda: Metaworld(args.benchmark, "test", k_episodes=args.k)
+    make_train_env = lambda: Metaworld(
+        args.benchmark, "train", k_episodes=args.k, max_episode_length=300
+    )
+    make_test_env = lambda: Metaworld(
+        args.benchmark, "test", k_episodes=args.k, max_episode_length=300
+    )
 
     group_name = (
         f"{args.run_name}_metaworld_{args.benchmark}_K_{args.k}_L_{args.max_seq_len}"
@@ -66,13 +72,13 @@ if __name__ == "__main__":
             make_train_env=make_train_env,
             make_val_env=make_train_env,
             max_seq_len=args.max_seq_len,
-            traj_save_len=min(500 * args.k + 1, args.max_seq_len * 4),
+            traj_save_len=min(300 * args.k + 1, args.max_seq_len * 4),
             group_name=group_name,
             run_name=run_name,
             tstep_encoder_type=FFTstepEncoder,
             traj_encoder_type=traj_encoder_type,
             agent_type=agent_type,
-            val_timesteps_per_epoch=15 * args.k * 500 + 1,
+            val_timesteps_per_epoch=15 * args.k * 300 + 1,
             learning_rate=5e-4,
             grad_clip=2.0,
             exploration_wrapper_type=exploration_type,
