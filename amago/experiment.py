@@ -6,6 +6,7 @@ import os
 import time
 import warnings
 import contextlib
+from importlib.metadata import version, PackageNotFoundError
 from dataclasses import dataclass
 from collections import defaultdict
 from typing import Optional, Iterable
@@ -230,8 +231,12 @@ class Experiment:
             else "None"
         )
         dset_str = "\n\t\t\t".join(self.dataset.get_description().split("\n"))
+        try:
+            amago_version = version("amago")
+        except PackageNotFoundError:
+            amago_version = "unknown"
         self.accelerator.print(
-            f"""\n\n \t\t {colored('AMAGO v3.1', 'green')}
+            f"""\n\n \t\t {colored(f'AMAGO v{amago_version}', 'green')}
             \t -------------------------
             \t Agent: {self.policy.__class__.__name__}
             \t\t Max Sequence Length: {self.max_seq_len}
