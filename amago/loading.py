@@ -105,13 +105,6 @@ class RLData:
         elif padded_sampling == "right":
             start = self._safe_randrange(0, len(self) - 1)
         elif padded_sampling == "center":
-            # Uniform center over [0, T), window clamped to fit inside [0, T].
-            # Always length `length`, never padded. Compared to "none", which
-            # severely undersamples the first/last (length - 1) timesteps,
-            # this mode gives them ~length/T marginal coverage instead of
-            # ~1/(T-length+1). Trade-off: interior timesteps still get more
-            # coverage than endpoints when T < 2*length - 1, but the
-            # imbalance is dramatically smaller than "none".
             center = self._safe_randrange(0, len(self))
             start = min(max(center - length // 2, 0), len(self) - length)
         else:
