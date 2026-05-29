@@ -9,10 +9,10 @@ from amago import cli_utils
 
 def add_cli(parser):
     parser.add_argument(
-        "--meta_horizon",
+        "--k_episodes",
         type=int,
-        default=500,
-        help="Total meta-adaptation timestep budget for the agent to explore the same room layout.",
+        default=8,
+        help="Number of episodes per meta-rollout. Effective sequence length = k_episodes * episode_length.",
     )
     parser.add_argument(
         "--room_size",
@@ -36,6 +36,11 @@ def add_cli(parser):
         action="store_true",
         help="Randomize the agent's action space to make the task harder.",
     )
+    parser.add_argument(
+        "--finite_horizon",
+        action="store_true",
+        help="Use finite-horizon mode: include time in observations and signal meta-done as terminated. Default is infinite-horizon (no time in obs, meta-done as truncated).",
+    )
     return parser
 
 
@@ -47,22 +52,39 @@ if __name__ == "__main__":
 
     config = {}
     tstep_encoder_type = cli_utils.switch_tstep_encoder(
-        config, arch="ff", n_layers=2, d_hidden=128, d_output=64
+        config,
+        arch="ff",
+        n_layers=2,
+        d_hidden=128,
+        d_output=64,
+        specify_obs_keys=["observed", "prev_action", "prev_reward"],
+        hide_rl2s=True,
+        normalize_inputs=False,
     )
     traj_encoder_type = cli_utils.switch_traj_encoder(
         config,
         arch=args.traj_encoder,
         memory_size=args.memory_size,
         layers=args.memory_layers,
+        pos_emb="rope",
     )
     agent_type = cli_utils.switch_agent(
         config, args.agent_type, reward_multiplier=100.0
     )
+    horizon_type = "finite" if args.finite_horizon else "infinite"
+    dummy_env = RoomKeyDoor(
+        size=args.room_size,
+        max_episode_steps=args.episode_length,
+        k_episodes=args.k_episodes,
+        horizon_type=horizon_type,
+    )
+    meta_horizon = dummy_env.meta_horizon
+    args.timesteps_per_epoch = meta_horizon
     # the fancier exploration schedule mentioned in the appendix can help
     # when the domain is a true meta-RL problem and the "horizon" time limit
     # (above) is actually relevant for resetting the task.
     exploration_type = cli_utils.switch_exploration(
-        config, "bilevel", steps_anneal=500_000, rollout_horizon=args.meta_horizon
+        config, "bilevel", steps_anneal=500_000, rollout_horizon=meta_horizon
     )
     cli_utils.use_config(config, args.configs)
 
@@ -73,11 +95,12 @@ if __name__ == "__main__":
             env=RoomKeyDoor(
                 size=args.room_size,
                 max_episode_steps=args.episode_length,
-                meta_rollout_horizon=args.meta_horizon,
+                k_episodes=args.k_episodes,
                 dark=not args.light_room_observation,
                 randomize_actions=args.randomize_actions,
+                horizon_type=horizon_type,
             ),
-            env_name=f"Dark-Key-To-Door-{args.room_size}x{args.room_size}",
+            env_name=f"Dark-Key-To-Door-{args.room_size}x{args.room_size}-{horizon_type}",
         )
         experiment = cli_utils.create_experiment_from_cli(
             args,
@@ -86,12 +109,14 @@ if __name__ == "__main__":
             traj_encoder_type=traj_encoder_type,
             make_train_env=make_train_env,
             make_val_env=make_train_env,
-            max_seq_len=args.meta_horizon,
-            traj_save_len=args.meta_horizon,
+            max_seq_len=meta_horizon,
+            traj_save_len=meta_horizon * 10,
             group_name=group_name,
             run_name=run_name,
-            val_timesteps_per_epoch=args.meta_horizon * 4,
+            val_timesteps_per_epoch=meta_horizon * 4,
             exploration_wrapper_type=exploration_type,
+            stagger_traj_file_lengths=False,
+            wandb_project="z-room-key-door",
         )
         experiment = cli_utils.switch_async_mode(experiment, args.mode)
         experiment.start()
