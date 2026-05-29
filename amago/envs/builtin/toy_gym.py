@@ -44,6 +44,16 @@ class MetaFrozenLake(gym.Env):
             Defaults to True.
         slip_chance: Probability that a movement action is replaced by
             a no-op (agent stays in place). Defaults to 0.0.
+        use_truncation_for_k_limit: If True, signal the k-episode limit
+            with ``(terminated=False, truncated=True)`` instead of the
+            default ``(terminated=True, truncated=False)``. Routing the
+            meta-trial cap through ``truncated`` keeps ``Batch.dones``
+            (and therefore the n-step bootstrap) live at the k-limit, so
+            the value function learns the true infinite-horizon
+            discounted return rather than collapsing to zero at the
+            training horizon. Essential when ``show_k_progress=False``
+            and the test rollout uses a different ``k_episodes`` than
+            training. Defaults to False.
     """
 
     def __init__(
@@ -55,6 +65,7 @@ class MetaFrozenLake(gym.Env):
         max_episode_steps: int | None = None,
         show_k_progress: bool = True,
         slip_chance: float = 0.0,
+        use_truncation_for_k_limit: bool = False,
     ):
         self.size = size
         self.k_episodes = k_episodes
@@ -70,6 +81,7 @@ class MetaFrozenLake(gym.Env):
         )
         self.show_k_progress = show_k_progress
         self.slip_chance = slip_chance
+        self.use_truncation_for_k_limit = use_truncation_for_k_limit
         self.reset()
 
     def reset(self, *args, **kwargs):
@@ -150,8 +162,12 @@ class MetaFrozenLake(gym.Env):
         else:
             next_state, info = self.make_obs(False), {}
 
-        terminated = self.current_k >= self.k_episodes
-        return next_state, reward, terminated, False, info
+        end_of_meta_trial = self.current_k >= self.k_episodes
+        if self.use_truncation_for_k_limit:
+            terminated, truncated = False, end_of_meta_trial
+        else:
+            terminated, truncated = end_of_meta_trial, False
+        return next_state, reward, terminated, truncated, info
 
     def render(self, *args, **kwargs):
         render_map = copy.deepcopy(self.active_map)
@@ -177,7 +193,11 @@ class RoomKeyDoor(gym.Env):
         meta_rollout_horizon: The agent has this many timsteps to adapt to
             each world layout. The best solution is to infer the key and door locations
             and then solve the task as many times as possible within this time limit.
-            Defaults to 500.
+            Defaults to 500. Ignored if k_episodes is set.
+        k_episodes: If set, the meta-rollout lasts exactly this many episodes
+            instead of a fixed number of timesteps. The effective maximum
+            sequence length becomes k_episodes * max_episode_steps. Defaults
+            to None (use meta_rollout_horizon).
         start_location: The starting location of the agent. Defaults to
             "random". Can also be set to a specific (x, y) coordinate.
         key_location: The location of the key. Defaults to "random". Can
@@ -186,6 +206,12 @@ class RoomKeyDoor(gym.Env):
             Can also be set to a specific (x, y) coordinate.
         randomize_actions: If True, the discrete action indices are
             randomly shuffled on each reset. Defaults to False.
+        horizon_type: Either "finite" or "infinite". In "finite" mode, the
+            normalized episode timestep is included in the observation and
+            meta-done is signaled as terminated (the agent knows the horizon).
+            In "infinite" mode, the timestep is excluded from the observation
+            and meta-done is signaled as truncated (the agent does not know
+            when the meta-rollout will end). Defaults to "infinite".
     """
 
     def __init__(
@@ -194,23 +220,55 @@ class RoomKeyDoor(gym.Env):
         size: int = 9,
         max_episode_steps: int = 50,
         meta_rollout_horizon: int = 500,
+        k_episodes: int | None = None,
         start_location: tuple[int, int] | str = "random",
         key_location: tuple[int, int] | str = "random",
         goal_location: tuple[int, int] | str = "random",
         randomize_actions: bool = False,
+        horizon_type: str = "infinite",
     ):
+        assert horizon_type in (
+            "finite",
+            "infinite",
+        ), f"horizon_type must be 'finite' or 'infinite', got '{horizon_type}'"
         self.dark = dark
         self.size = size
         self.H = max_episode_steps
-        self.H_meta = meta_rollout_horizon
-        self.observation_space = gym.spaces.Box(
-            low=0.0, high=1.0, shape=(4 if self.dark else 8,)
+        self.k_episodes = k_episodes
+        if k_episodes is not None:
+            self.H_meta = k_episodes * max_episode_steps
+        else:
+            self.H_meta = meta_rollout_horizon
+        self._meta_rollout_horizon = meta_rollout_horizon
+        self.horizon_type = horizon_type
+        n_actions = 5
+        time_dim = 1 if self.horizon_type == "finite" else 0
+        obs_dim = (3 if self.dark else 7) + time_dim
+        max_k = (
+            k_episodes
+            if k_episodes is not None
+            else meta_rollout_horizon // max_episode_steps
         )
-        self.action_space = gym.spaces.Discrete(5)
+        self.observation_space = gym.spaces.Dict(
+            {
+                "observed": gym.spaces.Box(low=0.0, high=1.0, shape=(obs_dim,)),
+                "episode_id": gym.spaces.Box(0, max_k, shape=(), dtype=np.int32),
+                "prev_action": gym.spaces.Box(low=0.0, high=1.0, shape=(n_actions,)),
+                "prev_reward": gym.spaces.Box(low=-np.inf, high=np.inf, shape=(1,)),
+            }
+        )
+        self.action_space = gym.spaces.Discrete(n_actions)
         self.goal_location = goal_location
         self.key_location = key_location
         self.start_location = start_location
         self.randomize_actions = randomize_actions
+
+    @property
+    def meta_horizon(self) -> int:
+        """Max trajectory length including soft reset steps between episodes."""
+        if self.k_episodes is not None:
+            return self.k_episodes * (self.H + 1) - 1
+        return self._meta_rollout_horizon
 
     def reset_same_task(self):
         self.pos = self.start
@@ -220,6 +278,10 @@ class RoomKeyDoor(gym.Env):
     def reset(self, *args, **kwargs):
         self.generate_task()
         self.global_time = 0
+        self.episode_number = 0
+        self.episode_return = 0.0
+        self._prev_action = np.zeros(self.action_space.n, dtype=np.float32)
+        self._prev_reward = np.array([0.0], dtype=np.float32)
         self.reset_same_task()
         self.reset_next_step = False
         return self.obs(), {}
@@ -246,7 +308,17 @@ class RoomKeyDoor(gym.Env):
 
     def step(self, action: int):
         self.global_time += 1
+        info = {}
+
         if self.reset_next_step:
+            info[f"{AMAGO_ENV_LOG_PREFIX}Episode {self.episode_number} Return"] = (
+                self.episode_return
+            )
+            info[f"{AMAGO_ENV_LOG_PREFIX}Episode {self.episode_number} Length"] = (
+                self.episode_time
+            )
+            self.episode_number += 1
+            self.episode_return = 0.0
             self.reset_same_task()
             self.reset_next_step = False
             reward = 0.0
@@ -262,19 +334,47 @@ class RoomKeyDoor(gym.Env):
                 self.has_key = True
             if self.episode_time >= self.H:
                 self.reset_next_step = True
-        metadone = self.global_time >= self.H_meta
-        return self.obs(), reward, metadone, metadone, {}
+            self.episode_return += reward
+
+        action_onehot = np.zeros(self.action_space.n, dtype=np.float32)
+        action_onehot[action] = 1.0
+        self._prev_action = action_onehot
+        self._prev_reward = np.array([reward], dtype=np.float32)
+
+        if self.k_episodes is not None:
+            completed = self.episode_number + (1 if self.reset_next_step else 0)
+            metadone = completed >= self.k_episodes
+        else:
+            metadone = self.global_time >= self.H_meta
+        if metadone and self.reset_next_step:
+            info[f"{AMAGO_ENV_LOG_PREFIX}Episode {self.episode_number} Return"] = (
+                self.episode_return
+            )
+            info[f"{AMAGO_ENV_LOG_PREFIX}Episode {self.episode_number} Length"] = (
+                self.episode_time
+            )
+        if self.horizon_type == "finite":
+            terminated, truncated = metadone, False
+        else:
+            terminated, truncated = False, metadone
+        return self.obs(), reward, terminated, truncated, info
 
     def obs(self):
         x, y = self.pos
         norm = lambda j: float(j) / self.size
-        # time and has_key keep this fully observed
-        base = [norm(x), norm(y), self.has_key, float(self.episode_time) / self.H]
+        base = [norm(x), norm(y), self.has_key]
+        if self.horizon_type == "finite":
+            base.append(float(self.episode_time) / self.H)
         if not self.dark:
             goal_x, goal_y = self.goal
             key_x, key_y = self.key
             base += [norm(goal_x), norm(goal_y), norm(key_x), norm(key_y)]
-        return np.array(base, dtype=np.float32)
+        return {
+            "observed": np.array(base, dtype=np.float32),
+            "episode_id": np.int32(self.episode_number),
+            "prev_action": self._prev_action.copy(),
+            "prev_reward": self._prev_reward.copy(),
+        }
 
     def render(self, *args, **kwargs):
         img = [["." for _ in range(self.size)] for _ in range(self.size)]
